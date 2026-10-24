@@ -160,23 +160,10 @@ function kld_share_buy() {
   $qtyClean[$size]=$n;$count+=$n;
  }
  if($count<1||$count>200)wp_die('Pilih 1–200 pcs.', 'Jumlah', ['response'=>400]);
- // Read-only duplication. The owner can revoke sharing without affecting the new order.
- $new=wp_insert_post(['post_type'=>'kld_design','post_status'=>'private','post_title'=>'KLD Share Purchase '.gmdate('Y-m-d H:i:s')],true);
- if(is_wp_error($new))wp_die('Tidak dapat membuat salinan pesanan.', 'Penyimpanan', ['response'=>500]);
- $editToken=bin2hex(random_bytes(32));
- update_post_meta($new,'_kld_edit_hash',hash('sha256',$editToken));
- update_post_meta($new,'_kld_product',$product);
- update_post_meta($new,'_kld_sides',get_post_meta($id,'_kld_sides',true));
- update_post_meta($new,'_kld_color',$color);
- update_post_meta($new,'_kld_status','saved_pending_verify');
- update_post_meta($new,'_kld_fork_of',$id);
- update_post_meta($new,'_kld_created',time());
- foreach(['front','back'] as $side) {
-  foreach(['_kld_file_','_kld_file_details_','_kld_preview_'] as $prefix) {
-   $v=get_post_meta($id,$prefix.$side,true);
-   if($v)update_post_meta($new,$prefix.$side,$v);
-  }
- }
+ // The new private candidate is independent of later source edits/revocation.
+ $copy=kld_clone_shared_design($id,$color);
+ if(is_wp_error($copy))wp_die('Tidak dapat membuat salinan pesanan.', 'Penyimpanan', ['response'=>500]);
+ [$new,$editToken]=$copy;
  // Reuse one WooCommerce cart validation path, not a second price calculation.
  $req=new WP_REST_Request('POST','/kld/v1/add-cart');
  $req->set_header('X-KLD-Token',$editToken);
@@ -194,3 +181,26 @@ function kld_share_buy() {
 }
 add_action('admin_post_kld_share_buy','kld_share_buy');
 add_action('admin_post_nopriv_kld_share_buy','kld_share_buy');
+
+/** Copy references to immutable original files without uploading them again. */
+function kld_clone_shared_design($source, $color) {
+ if(!kld_design_exists($source))return new WP_Error('source_missing','Desain sumber tidak tersedia.');
+ $product=absint(get_post_meta($source,'_kld_product',true));
+ $new=wp_insert_post(['post_type'=>'kld_design','post_status'=>'private','post_title'=>'KLD Salinan '.gmdate('Y-m-d H:i:s')],true);
+ if(is_wp_error($new))return $new;
+ $secret=bin2hex(random_bytes(32));
+ update_post_meta($new,'_kld_edit_hash',hash('sha256',$secret));
+ update_post_meta($new,'_kld_product',$product);
+ update_post_meta($new,'_kld_sides',get_post_meta($source,'_kld_sides',true));
+ update_post_meta($new,'_kld_color',$color);
+ update_post_meta($new,'_kld_status','saved_pending_verify');
+ update_post_meta($new,'_kld_fork_of',$source);
+ update_post_meta($new,'_kld_created',time());
+ foreach(['front','back'] as $side) {
+  foreach(['_kld_file_','_kld_file_details_','_kld_preview_'] as $prefix) {
+   $v=get_post_meta($source,$prefix.$side,true);
+   if($v)update_post_meta($new,$prefix.$side,$v);
+  }
+ }
+ return [$new,$secret];
+}
