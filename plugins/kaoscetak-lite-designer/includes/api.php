@@ -16,7 +16,7 @@ function kld_public_rate_limit($type,$limit,$ttl){
 }
 function kld_api_error($code,$message,$status=400){return new WP_Error($code,$message,['status'=>$status]);}
 add_action('rest_api_init',function(){
- foreach(['init','start-upload','confirm-upload','save','add-cart','request-verify'] as $route){
+ foreach(['init','start-upload','confirm-upload','save','add-cart','request-verify','load'] as $route){
   register_rest_route('kld/v1','/'.$route,['methods'=>'POST','callback'=>'kld_api_'.str_replace('-','_',$route),'permission_callback'=>'__return_true']);
  }
 });
@@ -126,6 +126,19 @@ function kld_api_save(WP_REST_Request $r){
   if(!$bytes||strlen($bytes)>61440||substr($bytes,0,2)!=="\xFF\xD8")return kld_api_error('preview_limit','Target preview maksimal 60 KB per sisi.');
   update_post_meta($id,'_kld_preview_'.$side,base64_encode($bytes));
  }
+ // Small editable layer thumbnails; master PNG/JPEG remains private in Drive.
+ // Only the holder of the separate design edit capability can read these previews.
+ $artwork=$r->get_param('artwork');if(!is_array($artwork))$artwork=[];
+ foreach(['front','back'] as $side){
+  if(($side==='front'?$f:$b)['tier']==='none'){delete_post_meta($id,'_kld_artwork_'.$side);continue;}
+  if(!array_key_exists($side,$artwork))continue; // Keep existing layer preview on metadata-only edits.
+  $encoded=(string)$artwork[$side];
+  if($encoded===''){delete_post_meta($id,'_kld_artwork_'.$side);continue;}
+  if(strlen($encoded)>85000||strpos($encoded,'data:image/webp;base64,')!==0)return kld_api_error('artwork','Preview layer tidak valid.',400);
+  $bytes=base64_decode(substr($encoded,23),true);
+  if(!$bytes||strlen($bytes)>61440||substr($bytes,0,4)!=='RIFF'||substr($bytes,8,4)!=='WEBP')return kld_api_error('artwork','Preview layer harus WebP maksimal 60 KB.',400);
+  update_post_meta($id,'_kld_artwork_'.$side,base64_encode($bytes));
+ }
  update_post_meta($id,'_kld_sides',['front'=>$f,'back'=>$b]);
  $color=sanitize_text_field((string)$r['color']);
  if(!kld_color_allowed($id,$color))return kld_api_error('color','Warna kaos tidak tersedia.');
@@ -212,4 +225,21 @@ function kld_api_request_verify(WP_REST_Request $r){
  $sent=wp_mail($email,'Akses privat desain Kaoscetak',"Klik tautan berikut untuk memverifikasi email dan mengelola desain Anda (verifikasi pertama berlaku 30 menit):\n".$url."\n\nJANGAN BAGIKAN tautan ini karena berisi akses pemilik.");
  if(!$sent){delete_post_meta($id,'_kld_pending_owner');return kld_api_error('mail','Email belum dapat dikirim. Periksa pengaturan SMTP WordPress.',503);}
  return rest_ensure_response(['sent'=>true]);
+}
+/** Private editor reconstruction, authorised by the independent edit capability. */
+function kld_api_load(WP_REST_Request $r){
+ $id=kld_api_auth($r);if(is_wp_error($id))return $id;
+ $product=absint(get_post_meta($id,'_kld_product',true));
+ if(!$product||!wc_get_product($product))return kld_api_error('product_missing','Produk desain tidak tersedia.',404);
+ $sides=get_post_meta($id,'_kld_sides',true);
+ if(!is_array($sides))return kld_api_error('not_saved','Desain belum disimpan.',409);
+ $layers=[];
+ foreach(['front','back'] as $side){
+  $image=(string)get_post_meta($id,'_kld_artwork_'.$side,true);
+  if($image!=='' && strlen($image)<=85000 && preg_match('~^[A-Za-z0-9+/=]+$~D',$image)){
+   $layers[$side]='data:image/webp;base64,'.$image;
+  }
+ }
+ return rest_ensure_response(['design_id'=>$id,'product_id'=>$product,'sides'=>$sides,
+  'color'=>(string)get_post_meta($id,'_kld_color',true),'layers'=>$layers]);
 }
