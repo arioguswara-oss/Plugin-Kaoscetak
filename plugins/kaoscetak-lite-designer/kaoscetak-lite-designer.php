@@ -73,13 +73,10 @@ add_action('kld_cleanup_drafts',function(){
  foreach($ids as $id){
   $status=get_post_meta($id,'_kld_status',true);
   if(!in_array($status,['','saved_pending_verify'],true))continue;
-  foreach(['front','back'] as $side){
-   $file=get_post_meta($id,'_kld_file_'.$side,true);
-   if($file&&kld_drive_connected()){
-    $r=kld_drive_request('DELETE','files/'.rawurlencode($file));
-    if(is_wp_error($r))continue 2; // Retain metadata for retry; do not orphan on known failure.
-   }
-  }
+  // Master Drive files may be shared by forked designs and immutable paid orders.
+  // NEVER delete a Drive master during timed draft cleanup: no reference counting
+  // or order-retention policy has been approved. Only the draft metadata is removed.
+  // Orphan master cleanup requires a separately audited, reference-safe process.
   wp_delete_post($id,true);
  }
 });
