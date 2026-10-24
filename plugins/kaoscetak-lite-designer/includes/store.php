@@ -116,6 +116,7 @@ function kld_prepare_production($order){
   // Shortcuts are idempotent using a per-file completion marker on the order.
   foreach($designs as $id=>$sides){
    foreach(['front','back'] as $side){
+    if(($sides[$side]['tier']??'none')==='none')continue;
     $fileid=$snapshot[$id]['files'][$side]??get_post_meta($id,'_kld_file_'.$side,true);if(!$fileid)continue;
     $tag='_kld_sc_'.$id.'_'.$side;
     if($order->get_meta($tag))continue;
