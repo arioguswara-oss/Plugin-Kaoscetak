@@ -31,19 +31,41 @@ add_action('woocommerce_checkout_create_order_line_item',function($line,$key,$it
  $line->add_meta_data('Cetak Depan',$sides['front']['tier']??'Tanpa cetak',true);
  $line->add_meta_data('Cetak Belakang',$sides['back']['tier']??'Tanpa cetak',true);
 },10,4);
+/** Immutable production snapshot: an order MUST NOT follow later owner edits or revocation. */
+add_action('woocommerce_checkout_create_order',function($order){
+ $records=[];
+ foreach($order->get_items() as $item){
+  $id=absint($item->get_meta('_kld_design_id',true));if(!$id||isset($records[$id]))continue;
+  $sides=get_post_meta($id,'_kld_sides',true);if(!is_array($sides))continue;
+  $records[$id]=['sides'=>$sides,'files'=>[],'previews'=>[]];
+  foreach(['front','back'] as $side){
+   $records[$id]['files'][$side]=(string)get_post_meta($id,'_kld_file_'.$side,true);
+   $records[$id]['previews'][$side]=(string)get_post_meta($id,'_kld_preview_'.$side,true);
+  }
+ }
+ if($records)$order->update_meta_data('_kld_order_design_snapshot',$records);
+},20,1);
+function kld_order_snapshot($order){
+ if(!$order||!method_exists($order,'get_meta'))return [];
+ $raw=$order->get_meta('_kld_order_design_snapshot',true);
+ return is_array($raw)?$raw:[];
+}
 function kld_order_designs($order){
- $found=[];
+ $snapshot=kld_order_snapshot($order);$found=[];
+ if($snapshot){foreach($snapshot as $id=>$data)if(is_array($data['sides']??null))$found[(int)$id]=$data['sides'];return $found;}
+ // Compatibility only: older orders made before snapshots existed.
  foreach($order->get_items() as $item){$id=absint($item->get_meta('_kld_design_id',true));if($id && !isset($found[$id]))$found[$id]=get_post_meta($id,'_kld_sides',true);}
  return $found;
 }
 function kld_render_order_admin($order){
  if(!$order instanceof WC_Order)return;
  $designs=kld_order_designs($order);if(!$designs)return;
+ $snapshot=kld_order_snapshot($order);
  echo '<div class="order_data_column_container" style="clear:both;padding:15px 0"><h3>Kaoscetak - Desain & Produksi</h3>';
  foreach($designs as $id=>$sides){
   echo '<div style="border:1px solid #ddd;margin:8px 0;padding:12px"><strong>Desain #'.esc_html($id).'</strong><div style="display:flex;gap:15px;flex-wrap:wrap">';
   foreach(['front'=>'Depan','back'=>'Belakang'] as $side=>$name){
-   $base=get_post_meta($id,'_kld_preview_'.$side,true);
+   $base=$snapshot[$id]['previews'][$side]??get_post_meta($id,'_kld_preview_'.$side,true);
    echo '<div><div>'.esc_html($name).' — '.esc_html($sides[$side]['tier']??'none').'</div>';
    if($base)echo '<img alt="'.esc_attr($name).'" src="data:image/jpeg;base64,'.esc_attr($base).'" width="150" height="150" style="object-fit:contain;border:1px solid #eee">';
    else echo '<em>Tanpa preview</em>';
@@ -82,6 +104,7 @@ function kld_prepare_production($order){
  $existing=$order->get_meta('_kld_drive_order_folder');
  if($existing)return $existing;
  $designs=kld_order_designs($order);if(!$designs)return new WP_Error('no_design','Tidak ada desain Kaoscetak pada pesanan ini.');
+ $snapshot=kld_order_snapshot($order);
  if(!kld_drive_connected())return new WP_Error('no_drive','Google Drive belum terhubung.');
  $lockkey='kld_prod_lock_'.$order->get_id();
  if(get_transient($lockkey))return new WP_Error('locked','Sinkronisasi sedang berjalan.');
@@ -93,7 +116,7 @@ function kld_prepare_production($order){
   // Shortcuts are idempotent using a per-file completion marker on the order.
   foreach($designs as $id=>$sides){
    foreach(['front','back'] as $side){
-    $fileid=get_post_meta($id,'_kld_file_'.$side,true);if(!$fileid)continue;
+    $fileid=$snapshot[$id]['files'][$side]??get_post_meta($id,'_kld_file_'.$side,true);if(!$fileid)continue;
     $tag='_kld_sc_'.$id.'_'.$side;
     if($order->get_meta($tag))continue;
     $r=kld_drive_shortcut($fileid,$folder,'DESAIN-'.$id.'-'.strtoupper($side));
@@ -135,6 +158,7 @@ function kld_drive_upload_small($name,$mime,$bytes,$parent){
 }
 /** Minimal valid PDF with native JPEG mockups (no heavyweight image rendering on hosting). */
 function kld_make_guide_pdf($order,$designs){
+ $snapshot=kld_order_snapshot($order);
  $objects=[];
  $add=function($s)use(&$objects){$objects[]=$s;return count($objects);};
  $catalog=$add('');$pages=$add('');$page=$add('');$font=$add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
@@ -169,7 +193,7 @@ function kld_make_guide_pdf($order,$designs){
   }
   $imgs=[];
   foreach(['front','back'] as $side){
-   $raw=base64_decode((string)get_post_meta($id,'_kld_preview_'.$side,true),true);
+   $raw=base64_decode((string)($snapshot[$id]['previews'][$side]??get_post_meta($id,'_kld_preview_'.$side,true)),true);
    if(!$raw||strlen($raw)>61440||substr($raw,0,2)!=="\xFF\xD8")continue;
    $info=@getimagesizefromstring($raw);if(!$info||$info[2]!==IMAGETYPE_JPEG)continue;
    $imgName='Im'.(count($xobjs)+1);
