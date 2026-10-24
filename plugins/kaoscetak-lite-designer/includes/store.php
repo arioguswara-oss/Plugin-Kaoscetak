@@ -18,6 +18,14 @@ add_action('woocommerce_before_calculate_totals',function($cart){
   }
  }
 },50);
+// Classic WooCommerce checkout AJAX must recalculate prices after email changes.
+// This sets only the pending billing email; it does NOT bypass guest email verification.
+add_action('woocommerce_checkout_update_order_review',function($postdata){
+ if(!is_string($postdata) || !function_exists('WC') || !WC()->customer)return;
+ $values=[];wp_parse_str($postdata,$values);
+ $email=sanitize_email((string)($values['billing_email']??''));
+ if(is_email($email))WC()->customer->set_billing_email($email);
+},5);
 // Prevent using an earlier discounted cart total with a different checkout email.
 add_action('woocommerce_after_checkout_validation',function($checkout_data,$errors){
  if(!function_exists('WC')||!WC()->cart)return;
