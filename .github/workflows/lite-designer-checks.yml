@@ -1,45 +1,45 @@
 name: Lite Designer source checks
-
 on:
   push:
-    branches:
-      - develop/lite-designer-v1
+    branches: [develop/lite-designer-v1]
   pull_request:
     paths:
       - 'plugins/kaoscetak-lite-designer/**'
       - 'tests/**'
       - '.github/workflows/lite-designer-checks.yml'
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
-  source-and-unit:
-    name: PHP syntax, JS syntax and isolated unit tests
+  lint:
+    name: PHP and JS syntax
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Environment
-        run: |
-          php -v
-          node --version
-      - name: PHP syntax
+      - name: PHP source syntax
         run: |
           set -euo pipefail
-          find plugins/kaoscetak-lite-designer tests -type f -name '*.php' -print0 |
-            xargs -0 -n 1 php -l
+          find plugins/kaoscetak-lite-designer tests -type f -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: JavaScript syntax
         run: node --check plugins/kaoscetak-lite-designer/assets/editor.js
-      - name: Standalone PHP assertions
-        run: |
-          set -euo pipefail
-          for test in tests/test_*.php; do
-            echo "::group::${test}"
-            php "${test}"
-            echo "::endgroup::"
-          done
-      - name: Integration gate notice
-        run: |
-          echo "Unit checks alone do NOT verify WordPress/WooCommerce, Drive or HP performance."
+  isolated-unit:
+    name: "Unit: ${{ matrix.test }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+          - test_rules.php
+          - test_order_snapshot.php
+          - test_share_security.php
+          - test_owner_verification.php
+          - test_share_clone.php
+          - test_price_presets.php
+          - test_repeat.php
+          - test_repeat_checkout.php
+    steps:
+      - uses: actions/checkout@v4
+      - name: Standalone PHP checks (not WordPress integration)
+        run: php tests/${{ matrix.test }}
