@@ -175,6 +175,19 @@ function kld_share_buy() {
  $copy=kld_clone_shared_design($id,$color);
  if(is_wp_error($copy))wp_die('Tidak dapat membuat salinan pesanan.', 'Penyimpanan', ['response'=>500]);
  [$new,$editToken]=$copy;
+ // Reuse one WooCommerce cart validation path, not a second price calculation.
+ $req=new WP_REST_Request('POST','/kld/v1/add-cart');
+ $req->set_header('X-KLD-Token',$editToken);
+ $req->set_param('design_id',$new);
+ $req->set_param('quantities',$qtyClean);
+ $req->set_param('color',$color);
+ $response=kld_api_add_cart($req);
+ if(is_wp_error($response)) {
+  wp_delete_post($new,true); // Does not delete shared master files in Drive.
+  wp_die(esc_html($response->get_error_message()),'Keranjang belum siap',['response'=>409]);
+ }
+ $data=$response instanceof WP_REST_Response?$response->get_data():$response;
+ if(empty($data['added']))wp_die('Gagal menyiapkan keranjang.', 'Keranjang', ['response'=>500]);
  // Buyer may opt into email verification without creating an account.
  // A claimed email alone must NEVER grant the 5% repeat discount.
  $buyerEmail=sanitize_email((string)wp_unslash($_POST['buyer_email']??''));
@@ -190,19 +203,6 @@ function kld_share_buy() {
     :'Periksa email verifikasi desain, lalu kembali ke keranjang/checkout agar diskon repeat dapat dihitung.','notice');
   }
  }
- // Reuse one WooCommerce cart validation path, not a second price calculation.
- $req=new WP_REST_Request('POST','/kld/v1/add-cart');
- $req->set_header('X-KLD-Token',$editToken);
- $req->set_param('design_id',$new);
- $req->set_param('quantities',$qtyClean);
- $req->set_param('color',$color);
- $response=kld_api_add_cart($req);
- if(is_wp_error($response)) {
-  wp_delete_post($new,true); // Does not delete shared master files in Drive.
-  wp_die(esc_html($response->get_error_message()),'Keranjang belum siap',['response'=>409]);
- }
- $data=$response instanceof WP_REST_Response?$response->get_data():$response;
- if(empty($data['added']))wp_die('Gagal menyiapkan keranjang.', 'Keranjang', ['response'=>500]);
  wp_safe_redirect(wc_get_cart_url(),303);exit;
 }
 add_action('admin_post_kld_share_buy','kld_share_buy');
