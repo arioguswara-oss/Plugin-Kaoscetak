@@ -91,7 +91,14 @@ async function openForkFromFragment(){
     if(!preview)throw Error('Preview gambar sisi '+side+' tidak tersedia untuk edit.');
     const img=new Image();img.src=preview;await img.decode();
     state.imagePixels={bitmap:img,w:img.naturalWidth,h:img.naturalHeight,alpha:true};
+    // Restore correct alpha state from the actual preview pixels, not the file extension.
+    const alphaCanvas=document.createElement('canvas');
+    alphaCanvas.width=32;alphaCanvas.height=32;
+    const alphaCtx=alphaCanvas.getContext('2d',{willReadFrequently:true});
+    alphaCtx.drawImage(img,0,0,32,32);
+    const pixels=alphaCtx.getImageData(0,0,32,32).data;
     state.alpha=!!saved.needs_bg_removal;
+    for(let p=3;p<pixels.length;p+=4){if(pixels[p]<245){state.alpha=true;break;}}
     state.upload='done';state.restored=true;
    }
    if(saved.text)state.text={...saved.text};
