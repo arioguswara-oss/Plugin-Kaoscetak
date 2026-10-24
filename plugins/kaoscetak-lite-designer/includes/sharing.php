@@ -100,6 +100,15 @@ add_action('template_redirect', function () {
  echo '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:6px">';
  foreach (array_keys(kld_product_prices($product)) as $size) echo '<label>'.esc_html($size).' <input type="number" min="0" max="100" name="quantities['.esc_attr($size).']" value="0" style="width:72px"></label>';
  echo '</div><p><button type="submit">Masukkan ke Keranjang</button></p></form>';
+ if(kld_fork_has_artwork($id)){
+  echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'">';
+  echo '<input type="hidden" name="action" value="kld_share_fork"><input type="hidden" name="design_id" value="'.esc_attr($id).'">';
+  echo '<input type="hidden" name="token" value="'.esc_attr($token).'">';
+  wp_nonce_field('kld_share_fork_'.$id);
+  echo '<p><button type="submit">Edit Salinan Desain</button></p></form>';
+ }else{
+  echo '<p>Salinan untuk diedit memerlukan preview gambar editable. Desain lama ini tetap bisa dibeli.</p>';
+ }
  kld_guest_page_end();
 });
 
@@ -197,10 +206,44 @@ function kld_clone_shared_design($source, $color) {
  update_post_meta($new,'_kld_fork_of',$source);
  update_post_meta($new,'_kld_created',time());
  foreach(['front','back'] as $side) {
-  foreach(['_kld_file_','_kld_file_details_','_kld_preview_'] as $prefix) {
+  foreach(['_kld_file_','_kld_file_details_','_kld_preview_','_kld_artwork_'] as $prefix) {
    $v=get_post_meta($source,$prefix.$side,true);
    if($v)update_post_meta($new,$prefix.$side,$v);
   }
  }
  return [$new,$secret];
 }
+/** Avoid lying about the visible design when the older source has no artwork layer. */
+function kld_fork_has_artwork($source){
+ if(!kld_design_exists($source))return false;
+ $layout=get_post_meta($source,'_kld_sides',true);
+ if(!is_array($layout))return false;
+ foreach(['front','back'] as $side){
+  if(!empty($layout[$side]['image']) && !get_post_meta($source,'_kld_artwork_'.$side,true))return false;
+ }
+ return true;
+}
+function kld_share_fork(){
+ $source=absint($_POST['design_id']??0);
+ $token=sanitize_text_field(wp_unslash($_POST['token']??''));
+ if(get_option('kld_public_enabled','no')!=='yes'||!kld_share_allowed($source,$token)){
+  wp_die('Tautan berbagi tidak aktif.','Akses ditolak',['response'=>403]);
+ }
+ check_admin_referer('kld_share_fork_'.$source);
+ if(!kld_public_rate_limit('fork',12,HOUR_IN_SECONDS))wp_die('Batas salinan sementara tercapai.','Coba lagi',['response'=>429]);
+ if(!kld_fork_has_artwork($source))wp_die('Preview gambar untuk edit salinan tidak tersedia.','Belum tersedia',['response'=>409]);
+ $product=absint(get_post_meta($source,'_kld_product',true));
+ $p=function_exists('wc_get_product')?wc_get_product($product):null;
+ if(!$p || get_post_meta($product,'_kld_enabled',true)!=='yes')wp_die('Produk tidak tersedia.','Produk',['response'=>404]);
+ $color=(string)get_post_meta($source,'_kld_color',true);
+ if(!kld_color_allowed($source,$color))wp_die('Warna desain tidak tersedia.','Produk',['response'=>409]);
+ $copy=kld_clone_shared_design($source,$color);
+ if(is_wp_error($copy))wp_die('Gagal membuat salinan desain.','Penyimpanan',['response'=>500]);
+ [$id,$editToken]=$copy;
+ // Fragment not transmitted to WordPress or through HTTP Referer.
+ // The editor clears it from browser history as soon as it is read.
+ wp_safe_redirect(get_permalink($product).'#kld-fork='.$id.'.'.$editToken,303);
+ exit;
+}
+add_action('admin_post_kld_share_fork','kld_share_fork');
+add_action('admin_post_nopriv_kld_share_fork','kld_share_fork');
