@@ -1,0 +1,45 @@
+name: Lite Designer source checks
+
+on:
+  push:
+    branches:
+      - develop/lite-designer-v1
+  pull_request:
+    paths:
+      - 'plugins/kaoscetak-lite-designer/**'
+      - 'tests/**'
+      - '.github/workflows/lite-designer-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-and-unit:
+    name: PHP syntax, JS syntax and isolated unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Environment
+        run: |
+          php -v
+          node --version
+      - name: PHP syntax
+        run: |
+          set -euo pipefail
+          find plugins/kaoscetak-lite-designer tests -type f -name '*.php' -print0 |
+            xargs -0 -n 1 php -l
+      - name: JavaScript syntax
+        run: node --check plugins/kaoscetak-lite-designer/assets/editor.js
+      - name: Standalone PHP assertions
+        run: |
+          set -euo pipefail
+          for test in tests/test_*.php; do
+            echo "::group::${test}"
+            php "${test}"
+            echo "::endgroup::"
+          done
+      - name: Integration gate notice
+        run: |
+          echo "Unit checks alone do NOT verify WordPress/WooCommerce, Drive or HP performance."
