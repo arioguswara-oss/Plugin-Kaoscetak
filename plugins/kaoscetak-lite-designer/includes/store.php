@@ -8,10 +8,35 @@ add_action('woocommerce_before_calculate_totals',function($cart){
    $sides=get_post_meta($id,'_kld_sides',true);$product=absint(get_post_meta($id,'_kld_product',true));
    if(!is_array($sides)||!$product)continue;
    $price=kld_unit_price($product,$item['kld_size'],$sides['front']['tier']??'none',$sides['back']['tier']??'none');
-   if($price!==null)$item['data']->set_price($price);
+   if($price!==null){
+    // The verified design owner must match the active checkout billing email.
+    // The rate and prior-payment status are always checked server-side.
+    $customer=WC()->customer;
+    $billing=$customer && method_exists($customer,'get_billing_email')?$customer->get_billing_email():'';
+    $item['data']->set_price(kld_repeat_unit_price($id,$price,$billing));
+   }
   }
  }
 },50);
+// Prevent using an earlier discounted cart total with a different checkout email.
+add_action('woocommerce_after_checkout_validation',function($checkout_data,$errors){
+ if(!function_exists('WC')||!WC()->cart)return;
+ $email=sanitize_email((string)($checkout_data['billing_email']??''));
+ foreach(WC()->cart->get_cart() as $item){
+  if(empty($item['kld_design_id'])||empty($item['data']))continue;
+  $id=absint($item['kld_design_id']);
+  $sides=get_post_meta($id,'_kld_sides',true);
+  $product=absint(get_post_meta($id,'_kld_product',true));
+  if(!is_array($sides)||!$product)continue;
+  $base=kld_unit_price($product,$item['kld_size'],$sides['front']['tier']??'none',$sides['back']['tier']??'none');
+  if($base===null)continue;
+  $expected=kld_repeat_unit_price($id,$base,$email);
+  if((float)$item['data']->get_price() < $expected-0.01){
+   $errors->add('kld_repeat_email_mismatch','Email checkout berbeda dari email terverifikasi untuk diskon repeat order. Perbarui checkout dan coba lagi.');
+   return;
+  }
+ }
+},20,2);
 add_filter('woocommerce_get_item_data',function($data,$item){
  if(empty($item['kld_design_id']))return $data;
  $s=get_post_meta($item['kld_design_id'],'_kld_sides',true);
