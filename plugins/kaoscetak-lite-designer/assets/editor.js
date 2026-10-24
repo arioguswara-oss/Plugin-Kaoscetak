@@ -2,7 +2,7 @@
 const cfg=window.KLD_CONFIG,openBtn=document.getElementById('kld-open-designer'),root=document.getElementById('kld-editor-root');
 if(!cfg||!openBtn||!root)return;
 const T=cfg.tiers, tiers=Object.keys(T), sides={front:makeSide(),back:makeSide()};
-function makeSide(){return{tier:'none',image:null,text:null,file:null,upload:'idle',uploadError:'',imagePixels:null,alpha:false,placement:{dx:0,dy:0}};}
+function makeSide(){return{tier:'none',image:null,text:null,file:null,upload:'idle',uploadError:'',imagePixels:null,alpha:false,restored:false,placement:{dx:0,dy:0}};}
 let current='front',shirtSize='L',color=cfg.colors[0],designId=null,designToken=null,creating=null,busy=false,dragging=null,uploadCounter=0;
 const $=s=>root.querySelector(s),money=n=>'Rp'+Math.round(n).toLocaleString('id-ID');
 function xss(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -60,11 +60,49 @@ root.innerHTML=`<div class="kld-overlay" role="dialog" aria-modal="true" aria-la
  refresh();
 }
 function close(){if(busy){showStatus('Tunggu proses penyimpanan selesai.','warn');return;}const el=$('.kld-overlay');if(el)el.remove();document.body.classList.remove('kld-no-scroll');}
-async function createDraft(){if(cfg.previewOnly)return;if(creating)return creating;
+async function createDraft(){if(cfg.previewOnly)return;if(designId&&designToken)return {design_id:designId,token:designToken};if(creating)return creating;
  creating=api('init',{product_id:cfg.productId}).then(r=>{designId=r.design_id;designToken=r.token;return r;}).catch(e=>{creating=null;showStatus(e.message,'error');throw e;});return creating;
 }
 function open(){if(root.querySelector('.kld-overlay'))return;template();document.body.classList.add('kld-no-scroll');if(!cfg.previewOnly)createDraft().catch(()=>{});}
 openBtn.addEventListener('click',open);
+/** Capability resides in the URL fragment, never the HTTP request or Referer.
+ * A shared public token is not accepted; only the new private edit capability works.
+ */
+async function openForkFromFragment(){
+ const hash=window.location.hash||'';
+ const match=/^#kld-fork=([1-9][0-9]*)\.([a-f0-9]{64})$/.exec(hash);
+ if(!match)return;
+ history.replaceState(null,'',window.location.pathname+window.location.search);
+ if(cfg.previewOnly)return;
+ designId=Number(match[1]);designToken=match[2];
+ template();document.body.classList.add('kld-no-scroll');
+ try{
+  const loaded=await api('load',{});
+  if(Number(loaded.product_id)!==Number(cfg.productId))throw Error('Produk salinan tidak cocok.');
+  const record=loaded.sides||{};
+  for(const side of ['front','back']){
+   const state=sides[side],saved=record[side]||{tier:'none'};
+   state.tier=tiers.includes(saved.tier)?saved.tier:'none';
+   state.placement.dx=Number(saved.placement?.center_offset_cm||0);
+   state.placement.dy=Number(saved.placement?.top_from_collar_cm??10.83)-10.83;
+   if(saved.image){
+    state.image={...saved.image,aspect:saved.image.w/saved.image.h};
+    const preview=loaded.layers?.[side];
+    if(!preview)throw Error('Preview gambar sisi '+side+' tidak tersedia untuk edit.');
+    const img=new Image();img.src=preview;await img.decode();
+    state.imagePixels={bitmap:img,w:img.naturalWidth,h:img.naturalHeight,alpha:true};
+    state.alpha=!!saved.needs_bg_removal;
+    state.upload='done';state.restored=true;
+   }
+   if(saved.text)state.text={...saved.text};
+   if(saved.needs_bg_removal)state.bgPreviewOnly=true;
+  }
+  if(cfg.colors.includes(loaded.color))color=loaded.color;
+  showStatus('Salinan independen berhasil dibuka. Perubahan tidak mengubah desain asli.','ok');
+  refresh();
+ }catch(e){designId=null;designToken=null;showStatus('Salinan tidak dapat dibuka: '+e.message,'error');}
+}
+if(window.location.hash.startsWith('#kld-fork='))openForkFromFragment();
 function addImageLayer(s){if(!s.imagePixels||s.tier==='none')return;const [maxW,maxH]=dims(s.tier);const aspect=s.imagePixels.w/s.imagePixels.h;let w=Math.min(maxW*0.82,24),h=w/aspect;if(h>maxH*.82){h=maxH*.82;w=h*aspect;}s.image={w,h,x:(maxW-w)/2,y:(maxH-h)/2,aspect};}
 async function inspectImageHeader(file){
  // Reading only a short file prefix avoids decoding a giant decompression-bomb image on low-memory phones.
@@ -109,7 +147,7 @@ async function onFile(file,side){
  const id=++uploadCounter;
  sides[side].bgPreviewOnly=false;
  showStatus('Menyiapkan preview ringan…');
- try{const pixels=await getSmallBitmap(file);const s=sides[side];s.file=file;s.imagePixels=pixels;s.alpha=pixels.alpha;s.image=null;addImageLayer(s);s.upload='pending';refresh();showStatus('Gambar siap diatur. File asli sedang dikirim ke Drive.');
+ try{const pixels=await getSmallBitmap(file);const s=sides[side];s.file=file;s.imagePixels=pixels;s.alpha=pixels.alpha;s.restored=false;s.image=null;addImageLayer(s);s.upload='pending';refresh();showStatus('Gambar siap diatur. File asli sedang dikirim ke Drive.');
  if(!cfg.previewOnly)await uploadOriginal(file,side,id);
  else showStatus('Mode preview: gambar hanya ada di browser. Belum dikirim ke Google Drive.','warn');
  }catch(e){showStatus(e.message,'error');}
@@ -128,7 +166,7 @@ async function uploadOriginal(file,side,id){const s=sides[side];s.upload='upload
  }catch(e){s.upload='failed';s.uploadError=e.message;refreshUpload();showStatus(e.message,'error');}
 }
 function refreshUpload(){const s=visible();const el=$('.kld-upload-state');if(!el)return;
- el.textContent=!s.file?'Belum ada gambar':s.upload==='done'?'✓ File asli tersimpan':s.upload==='failed'?'✕ '+s.uploadError:s.upload==='pending'?'Menyiapkan upload…':s.upload==='upload'?'Mengirim file asli…':typeof s.upload==='string'?s.upload:'';
+ el.textContent=s.restored?'✓ File master asli tersedia (salinan)':!s.file?'Belum ada gambar':s.upload==='done'?'✓ File asli tersimpan':s.upload==='failed'?'✕ '+s.uploadError:s.upload==='pending'?'Menyiapkan upload…':s.upload==='upload'?'Mengirim file asli…':typeof s.upload==='string'?s.upload:'';
  $('.kld-retry').hidden=s.upload!=='failed';$('.kld-remove-bg').disabled=!s.imagePixels||s.alpha;
  $('.kld-image-width').disabled=!s.image;$('.kld-image-width-label').textContent=s.image?s.image.w.toFixed(1)+' cm':'';
  if(s.image){$('.kld-image-width').max=dims(s.tier)[0];$('.kld-image-width').value=s.image.w;}
@@ -214,11 +252,26 @@ function renderThumb(side,cb){const old=current;current=side;draw();const src=$(
  if(encoded.length>82000){c.width=290;c.height=345;c.getContext('2d').drawImage(src,0,0,290,345);encoded=c.toDataURL('image/jpeg',.4);}
  current=old;draw();return encoded;
 }
+/** Persist only a small editable artwork thumbnail; never the original 10MB source. */
+function artworkThumbnail(s){
+ if(s.tier==='none'||!s.image||!s.imagePixels)return '';
+ const source=s.imagePixels.bitmap;
+ const sw=source.width||source.naturalWidth,sh=source.height||source.naturalHeight;
+ if(!sw||!sh)return '';
+ for(const config of [[440,.65],[360,.48],[280,.35],[210,.27]]){
+  const [max,q]=config,ratio=Math.min(1,max/Math.max(sw,sh)),c=document.createElement('canvas');
+  c.width=Math.max(1,Math.round(sw*ratio));c.height=Math.max(1,Math.round(sh*ratio));
+  c.getContext('2d').drawImage(source,0,0,c.width,c.height);
+  const encoded=c.toDataURL('image/webp',q);
+  if(encoded.startsWith('data:image/webp;base64,')&&encoded.length<=82000)return encoded;
+ }
+ return ''; // Buying remains possible; fork editing will be disabled for this design.
+}
 async function saveDesign(){if(busy)return false;if(cfg.previewOnly){showStatus('Mode preview admin: hubungkan Google Drive untuk mengaktifkan simpan pesanan.','warn');return false;}
  busy=true;$('.kld-save').disabled=true;
  try{await createDraft();if(!['front','back'].some(k=>sides[k].tier!=='none'))throw Error('Pilih minimal satu sisi cetak.');
   for(const k of ['front','back'])if(sides[k].image&&sides[k].upload!=='done')throw Error('File sisi '+(k==='front'?'depan':'belakang')+' belum selesai tersimpan di Google Drive.');
-  showStatus('Menyimpan desain dan preview…');const r=await api('save',{sides:{front:jsonSide(sides.front),back:jsonSide(sides.back)},previews:{front:renderThumb('front'),back:renderThumb('back')},color});
+  showStatus('Menyimpan desain dan preview…');const r=await api('save',{sides:{front:jsonSide(sides.front),back:jsonSide(sides.back)},previews:{front:renderThumb('front'),back:renderThumb('back')},artwork:{front:artworkThumbnail(sides.front),back:artworkThumbnail(sides.back)},color});
   showStatus('Desain berhasil disimpan.','ok');return true;
  }catch(e){showStatus(e.message,'error');return false;}finally{busy=false;$('.kld-save').disabled=false;}
 }
