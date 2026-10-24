@@ -16,6 +16,7 @@ require_once KLD_DIR . 'includes/admin.php';
 require_once KLD_DIR . 'includes/drive.php';
 require_once KLD_DIR . 'includes/api.php';
 require_once KLD_DIR . 'includes/sharing.php';
+require_once KLD_DIR . 'includes/repeat.php';
 require_once KLD_DIR . 'includes/store.php';
 
 add_action('init', function(){
