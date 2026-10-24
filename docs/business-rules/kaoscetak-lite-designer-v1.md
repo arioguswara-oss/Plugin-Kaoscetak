@@ -35,3 +35,10 @@
 - ZIP v0.1.0 sebelumnya menampilkan `Kaoscetak Desain -> Edit Post` dan bukan editor yang dijanjikan. Ini insiden; **jangan ulangi**.
 - `DECIDED` bukan `IMPLEMENTED` atau `VERIFIED`.
 - Jangan mengklaim final sebelum alur editor, cart, price, produksi, security, responsive dan aktivasi WP/WooCommerce benar-benar teruji; Drive baru VERIFIED sesudah uji akun nyata.
+
+## Preset harga dan pemisahan produk
+- DECIDED: setelah instalasi, tabel harga resmi yang sudah diberikan Owner tersedia otomatis dan tetap dapat diedit melalui admin. Perubahan admin harus bertahan saat upgrade plugin.
+- Custom kaos reguler, custom hoodie, dan custom sweatshirt adalah produk WooCommerce berbeda; masing-masing memiliki tabel harga independen. Jangan menggunakan harga reguler sebagai fallback hoodie/sweatshirt.
+- Tabel yang telah disetujui: Cotton Combed 24s, lengan panjang +Rp10.000, dan Tunik Oversize 3/4.
+- Harga hoodie dan sweatshirt belum disampaikan Owner. Status nominal **OPEN**, jangan membuat asumsi; blokir pemesanan custom untuk kombinasi yang belum memiliki harga sah.
+- Preset dapat dipilih per produk; harga khusus produk boleh mengesampingkan preset tanpa mengubah produk lainnya.
