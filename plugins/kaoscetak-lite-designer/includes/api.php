@@ -177,11 +177,13 @@ function kld_api_add_cart(WP_REST_Request $r){
   }
   $items[]=[$size,$n,$unit,$variation,$attrs];
  }
- // No partial cart changes until all input is validated.
+ // Validate all variations and prices before mutating the cart. Roll back partial insertions.
  WC()->session->set_customer_session_cookie(true);
+ $inserted=[];
  foreach($items as [$size,$n,$unit,$variation,$attrs]){
   $key=WC()->cart->add_to_cart($product,$n,$variation,$attrs,['kld_design_id'=>$id,'kld_size'=>$size,'kld_color'=>$color,'kld_unit_price'=>$unit,'kld_unique'=>wp_generate_uuid4()]);
-  if(!$key)return kld_api_error('cart_error','Gagal memasukkan item ke keranjang.',500);
+  if(!$key){foreach($inserted as $added)WC()->cart->remove_cart_item($added);return kld_api_error('cart_error','Gagal memasukkan item ke keranjang. Tidak ada item parsial yang disimpan.',500);}
+  $inserted[]=$key;
  }
  update_post_meta($id,'_kld_status','cart');
  return rest_ensure_response(['added'=>true,'count'=>$count,'cart_url'=>wc_get_cart_url()]);
@@ -189,19 +191,15 @@ function kld_api_add_cart(WP_REST_Request $r){
 function kld_api_request_verify(WP_REST_Request $r){
  $id=kld_api_auth($r);if(is_wp_error($id))return $id;
  if(!kld_public_rate_limit('verify',8,HOUR_IN_SECONDS))return kld_api_error('rate_limit','Coba lagi nanti.',429);
- $email=sanitize_email((string)$r['email']);if(!is_email($email))return kld_api_error('email','Alamat email tidak valid.');
- $token=bin2hex(random_bytes(24));
+ $provided=sanitize_email((string)$r['email']);if(!is_email($provided))return kld_api_error('email','Alamat email tidak valid.');
+ // Once verified, an editor session must NEVER be able to transfer ownership to another email.
+ $existing=sanitize_email((string)get_post_meta($id,'_kld_owner_email',true));
+ if($existing && strcasecmp($provided,$existing)!==0)return kld_api_error('owner_email','Desain sudah mempunyai pemilik. Pemulihan akses hanya dapat dikirim ke email pemilik.',403);
+ $email=$existing?:$provided;
+ $token=bin2hex(random_bytes(32));
  update_post_meta($id,'_kld_pending_owner',['email'=>$email,'hash'=>hash('sha256',$token),'expires'=>time()+1800]);
- $url=add_query_arg(['kld_verify'=>$id,'key'=>$token],home_url('/'));
- $sent=wp_mail($email,'Verifikasi desain Kaoscetak',"Klik tautan berikut untuk memverifikasi kepemilikan desain (berlaku 30 menit):\n".$url);
- if(!$sent)return kld_api_error('mail','Email belum dapat dikirim. Periksa pengaturan SMTP WordPress.',503);
+ $url=add_query_arg(['kld_owner'=>$id,'key'=>$token],home_url('/'));
+ $sent=wp_mail($email,'Akses privat desain Kaoscetak',"Klik tautan berikut untuk memverifikasi email dan mengelola desain Anda (verifikasi pertama berlaku 30 menit):\n".$url."\n\nJANGAN BAGIKAN tautan ini karena berisi akses pemilik.");
+ if(!$sent){delete_post_meta($id,'_kld_pending_owner');return kld_api_error('mail','Email belum dapat dikirim. Periksa pengaturan SMTP WordPress.',503);}
  return rest_ensure_response(['sent'=>true]);
 }
-add_action('template_redirect',function(){
- $id=absint($_GET['kld_verify']??0);$key=sanitize_text_field(wp_unslash($_GET['key']??''));
- if(!$id||!$key)return;
- $p=get_post_meta($id,'_kld_pending_owner',true);
- if(!is_array($p)||time()>($p['expires']??0)||!hash_equals((string)($p['hash']??''),hash('sha256',$key)))wp_die('Tautan verifikasi sudah kedaluwarsa atau tidak valid.');
- update_post_meta($id,'_kld_owner_email',$p['email']);update_post_meta($id,'_kld_status','saved');delete_post_meta($id,'_kld_pending_owner');
- wp_die('Email berhasil diverifikasi. Desain tersimpan dan terhubung dengan email Anda. Anda dapat kembali ke halaman produk.','Verifikasi Kaoscetak',['response'=>200]);
-});
