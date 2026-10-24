@@ -24,7 +24,7 @@ class FakeErrors {public $errors=[];function add($code,$message){$this->errors[$
 $GLOBALS['wc']=new FakeWoo;
 function WC(){return $GLOBALS['wc'];}
 require __DIR__.'/../plugins/kaoscetak-lite-designer/includes/repeat.php';
-require __DIR__.'/../legacy/kaoscetak-lite-designer/includes/store.php';
+require __DIR__.'/../plugins/kaoscetak-lite-designer/includes/store.php';
 function expect($condition,$message){if(!$condition)throw new Exception('FAIL '.$message);}
 $checkout=$GLOBALS['hooks']['woocommerce_after_checkout_validation'][0];
 $priceHook=$GLOBALS['hooks']['woocommerce_before_calculate_totals'][0];
