@@ -4,7 +4,7 @@ function kld_api_auth(WP_REST_Request $r){
  $id=absint($r->get_param('design_id'));
  $token=(string)$r->get_header('X-KLD-Token');
  $hash=(string)get_post_meta($id,'_kld_edit_hash',true);
- if(!$id||get_post_type($id)!=='kld_design'||strlen($token)!==64||!$hash||!hash_equals($hash,hash('sha256',$token)))return new WP_Error('no_access','Akses desain tidak valid.',['status'=>403]);
+ if(!$id||get_post_type($id)!=='kld_design'||get_post_meta($id,'_kld_deleted',true)==='yes'||strlen($token)!==64||!$hash||!hash_equals($hash,hash('sha256',$token)))return new WP_Error('no_access','Akses desain tidak valid.',['status'=>403]);
  return $id;
 }
 function kld_public_rate_limit($type,$limit,$ttl){
@@ -127,10 +127,19 @@ function kld_api_save(WP_REST_Request $r){
   update_post_meta($id,'_kld_preview_'.$side,base64_encode($bytes));
  }
  update_post_meta($id,'_kld_sides',['front'=>$f,'back'=>$b]);
- update_post_meta($id,'_kld_color',sanitize_text_field((string)$r['color']));
+ $color=sanitize_text_field((string)$r['color']);
+ if(!kld_color_allowed($id,$color))return kld_api_error('color','Warna kaos tidak tersedia.');
+ update_post_meta($id,'_kld_color',$color);
  if(!get_post_meta($id,'_kld_owner_email',true))update_post_meta($id,'_kld_status','saved_pending_verify');
  else update_post_meta($id,'_kld_status','saved');
  return rest_ensure_response(['saved'=>true,'design_id'=>$id]);
+}
+/** Resolve allowed garment colors on the server: never trust a client-supplied option. */
+function kld_color_allowed($design,$color){
+ $product=absint(get_post_meta($design,'_kld_product',true));
+ $colors=array_values(array_filter(array_map('trim',explode('|',(string)get_post_meta($product,'_kld_colors',true)))));
+ if(!$colors)$colors=['Hitam','Putih','Army Green','Navy'];
+ return in_array($color,$colors,true);
 }
 function kld_api_add_cart(WP_REST_Request $r){
  $id=kld_api_auth($r);if(is_wp_error($id))return $id;
@@ -145,6 +154,7 @@ function kld_api_add_cart(WP_REST_Request $r){
   if(!empty($sides[$side]['image'])&&!get_post_meta($id,'_kld_file_'.$side,true))return kld_api_error('file_missing','File master desain tidak tersedia; checkout ditolak.',409);
  }
  $qty=$r->get_param('quantities');$color=sanitize_text_field((string)$r['color']);
+ if(!kld_color_allowed($id,$color))return kld_api_error('color','Warna kaos tidak tersedia.');
  if(!is_array($qty))return kld_api_error('qty','Jumlah tidak valid.');
  $validated=[];$count=0;
  foreach(kld_sizes() as $size){
