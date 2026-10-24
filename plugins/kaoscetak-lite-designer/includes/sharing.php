@@ -99,7 +99,9 @@ add_action('template_redirect', function () {
  echo '<p><label>Warna <select name="color">';foreach ($colors as $c) echo '<option value="'.esc_attr($c).'">'.esc_html($c).'</option>';echo '</select></label></p>';
  echo '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:6px">';
  foreach (array_keys(kld_product_prices($product)) as $size) echo '<label>'.esc_html($size).' <input type="number" min="0" max="100" name="quantities['.esc_attr($size).']" value="0" style="width:72px"></label>';
- echo '</div><p><button type="submit">Masukkan ke Keranjang</button></p></form>';
+ echo '</div><p><label>Email untuk verifikasi pelanggan lama (opsional) <input type="email" name="buyer_email" autocomplete="email" placeholder="email@contoh.com"></label></p>';
+ echo '<p>Diskon repeat order 5% baru berlaku setelah email terverifikasi dan riwayat pembayaran sebelumnya ditemukan.</p>';
+ echo '<p><button type="submit">Masukkan ke Keranjang</button></p></form>';
  if(kld_fork_has_artwork($id)){
   echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'">';
   echo '<input type="hidden" name="action" value="kld_share_fork"><input type="hidden" name="design_id" value="'.esc_attr($id).'">';
@@ -173,6 +175,21 @@ function kld_share_buy() {
  $copy=kld_clone_shared_design($id,$color);
  if(is_wp_error($copy))wp_die('Tidak dapat membuat salinan pesanan.', 'Penyimpanan', ['response'=>500]);
  [$new,$editToken]=$copy;
+ // Buyer may opt into email verification without creating an account.
+ // A claimed email alone must NEVER grant the 5% repeat discount.
+ $buyerEmail=sanitize_email((string)wp_unslash($_POST['buyer_email']??''));
+ if($buyerEmail && is_email($buyerEmail)){
+  $request=new WP_REST_Request('POST','/kld/v1/request-verify');
+  $request->set_header('X-KLD-Token',$editToken);
+  $request->set_param('design_id',$new);
+  $request->set_param('email',$buyerEmail);
+  $verification=kld_api_request_verify($request);
+  if(function_exists('wc_add_notice')){
+   wc_add_notice(is_wp_error($verification)
+    ?'Pesanan dapat dilanjutkan, tetapi pengiriman email verifikasi desain gagal. Diskon repeat belum diaktifkan.'
+    :'Periksa email verifikasi desain, lalu kembali ke keranjang/checkout agar diskon repeat dapat dihitung.','notice');
+  }
+ }
  // Reuse one WooCommerce cart validation path, not a second price calculation.
  $req=new WP_REST_Request('POST','/kld/v1/add-cart');
  $req->set_header('X-KLD-Token',$editToken);
