@@ -55,7 +55,7 @@ function kld_api_confirm_upload(WP_REST_Request $r){
  if(is_wp_error($data))return kld_api_error('verify_failed',$data->get_error_message(),409);
  $prior=get_post_meta($id,'_kld_file_'.$side,true);
  update_post_meta($id,'_kld_file_'.$side,$fileid);
- if($prior&&$prior!==$fileid)kld_drive_request('DELETE','files/'.rawurlencode($prior));
+ // Never delete an earlier master here: it might already be referenced by a paid order.
  update_post_meta($id,'_kld_file_details_'.$side,['name'=>$data['name'],'size'=>(int)$data['size'],'mime'=>$data['mimeType']]);
  delete_post_meta($id,'_kld_pending_'.$side);
  return rest_ensure_response(['verified'=>true,'name'=>$data['name']]);
