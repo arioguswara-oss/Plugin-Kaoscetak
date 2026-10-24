@@ -24,3 +24,11 @@
 - Benchmark on Android RAM 4 GB.
 
 **Public switch stays OFF.** Do not claim `FINAL`, `DEPLOY_READY` or `VERIFIED` based on browser + unit tests alone. The live Lumise plugin must remain active and untouched.
+
+## Pembaruan pengembangan (belum rilis)
+- Tautan pengelolaan guest dikirim melalui email verifikasi, dengan token pemilik terpisah dari link publik.
+- Pemilik terverifikasi bisa membagikan, mencabut link, dan menghapus desain dari koleksi. File master terkait arsip pesanan tidak dihapus otomatis.
+- Penerima link publik dapat melihat thumbnail dan memesan desain yang sama. Saat membeli, sistem membuat snapshot/salinan privat untuk pesanan agar pencabutan tautan tidak mempengaruhinya.
+- Fitur "edit salinan" pada penerima link masih belum selesai; jangan klaim V1 lengkap.
+- Publik dinonaktifkan hingga gate uji integrasi WordPress/WooCommerce dan Drive selesai.
+- Pengujian lokal: 330 pemeriksaan harga/area, 20 share & owner token, 11 verifikasi email, PHP/JS lint, Chromium editor smoke, PDF panduan lokal. Tes terisolasi bukan verifikasi deployment.
