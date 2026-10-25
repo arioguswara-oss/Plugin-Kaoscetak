@@ -7,6 +7,8 @@
  * Requires Plugins: woocommerce
  * Requires PHP: 7.4
  * Text Domain: kaoscetak-lite-designer
+ * License: GPL-2.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  */
 if (!defined('ABSPATH')) exit;
 define('KLD_VERSION','0.2.0-dev');
