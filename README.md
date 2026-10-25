@@ -1,26 +1,27 @@
 # Plugin Kaoscetak
 
-Repository privat untuk **berbagai plugin WordPress/WooCommerce khusus kaoscetak.id**. Bukan hanya satu plugin.
+Repository untuk berbagai plugin WordPress + WooCommerce milik Kaoscetak.
+
+## Plugin yang dikembangkan
+
+**Kaoscetak Lite Designer** — editor custom desain produk yang ringan dan mobile-first, terintegrasi WooCommerce.
+
+- Source pengembangan: [`develop/lite-designer-v1`](https://github.com/arioguswara-oss/Plugin-Kaoscetak/tree/develop/lite-designer-v1/plugins/kaoscetak-lite-designer)
+- Perubahan dan catatan pengujian: [Draft PR #2](https://github.com/arioguswara-oss/Plugin-Kaoscetak/pull/2)
+- Versi source terkini pada branch pengembangan: **v0.3.1-owner-test**.
+
+**Belum FINAL / belum VERIFIED untuk produksi.** Kode dan ZIP pengujian tidak boleh dianggap sudah lulus instalasi WordPress, checkout WooCommerce, atau upload Google Drive nyata. Editor pelanggan umum harus tetap nonaktif sampai lulus pengujian integrasi.
 
 ## Struktur
 
-- `plugins/`: setiap plugin memiliki direktori sendiri; source dan versi tidak bercampur.
-- `docs/architecture/`: prinsip dan batasan teknis lintas plugin.
-- `docs/business-rules/`: keputusan resmi Owner per plugin.
-- `tests/`: pedoman dan pengujian; pengujian tiap plugin dapat berada di folder plugin terkait.
+- `plugins/` — direktori dan lisensi tiap plugin.
+- `docs/` — arsitektur dan aturan produk.
+- `tests/` — pengujian otomatis dan checklist.
 
-## Plugin pertama
+`main` dipertahankan sebagai acuan dokumentasi, sedangkan fitur berkembang dalam branch tersendiri sebelum ditinjau untuk digabung.
 
-`plugins/kaoscetak-lite-designer/` — editor custom desain kaos ringan, mobile-first, terintegrasi WooCommerce.
+## Lisensi
 
-**Status: dalam pengembangan; belum ada rilis yang dinyatakan VERIFIED.** Jangan memasang ZIP lama v0.1.0 sebagai produk final.
+Source code Kaoscetak Lite Designer menggunakan **GNU GPL v2 or later** (`GPL-2.0-or-later`). Lihat [LICENSE](LICENSE) dan [lisensi khusus plugin](https://github.com/arioguswara-oss/Plugin-Kaoscetak/blob/develop/lite-designer-v1/plugins/kaoscetak-lite-designer/LICENSE).
 
-## Tata kelola
-
-- Owner/final approver: Rio.
-- Pengembangan: Rio dan ChatGPT langsung; tanpa Hermes/Codex kecuali diminta.
-- `DECIDED` = disetujui Owner, `IMPLEMENTED` = ada kode, `VERIFIED` = lulus uji. Status tidak saling menggantikan.
-- Source code dipisahkan per plugin; `main` hanya menerima artefak yang sudah ditinjau dan diperiksa sesuai tahapnya. Rilis membutuhkan bukti uji.
-- Jangan ubah hosting live, Lumise, pembayaran, database, atau tema tanpa izin Owner.
-
-Source code, pengujian dan rilis dibuat bertahap; tidak ada klaim plugin siap instalasi hanya karena struktur repository sudah tersedia.
+Nama, logo, dan merek Kaoscetak tidak otomatis menjadi lisensi merek dagang bagi pihak ketiga.
