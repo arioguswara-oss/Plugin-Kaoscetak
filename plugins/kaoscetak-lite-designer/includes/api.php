@@ -36,7 +36,10 @@ function kld_api_init(WP_REST_Request $r){
 }
 function kld_api_start_upload(WP_REST_Request $r){
  $id=kld_api_auth($r);if(is_wp_error($id))return $id;
+ if(get_post_meta($id,'_kld_status',true)==='cart')return kld_api_error('locked','Desain di keranjang tidak dapat diubah.',409);
  $side=(string)$r['side'];$size=absint($r['size']);$mime=(string)$r['mime'];
+ $product=absint(get_post_meta($id,'_kld_product',true));
+ if(kld_is_mug($product)&&$side!=='front')return kld_api_error('side','Mug 11 oz hanya memiliki satu bidang cetak.',400);
  if(!in_array($side,['front','back'],true)||!in_array($mime,['image/png','image/jpeg'],true)||$size<=0||$size>10485760)return kld_api_error('upload_invalid','Hanya PNG/JPEG maksimal 10 MB per sisi.');
  if(!kld_public_rate_limit('upload',35,HOUR_IN_SECONDS))return kld_api_error('rate_limit','Terlalu banyak percobaan upload.',429);
  $name='KLD-'.$id.'-'.strtoupper($side).'-'.bin2hex(random_bytes(6)).($mime==='image/png'?'.png':'.jpg');
@@ -47,30 +50,37 @@ function kld_api_start_upload(WP_REST_Request $r){
 }
 function kld_api_confirm_upload(WP_REST_Request $r){
  $id=kld_api_auth($r);if(is_wp_error($id))return $id;
+ if(get_post_meta($id,'_kld_status',true)==='cart')return kld_api_error('locked','Desain di keranjang tidak dapat diganti.',409);
  $side=(string)$r['side'];$fileid=(string)$r['file_id'];
+ $product=absint(get_post_meta($id,'_kld_product',true));
+ if(kld_is_mug($product)&&$side!=='front')return kld_api_error('side','Mug 11 oz hanya memiliki satu bidang cetak.',400);
  if(!in_array($side,['front','back'],true))return kld_api_error('side','Sisi tidak valid.');
  $pending=get_post_meta($id,'_kld_pending_'.$side,true);
  if(!is_array($pending)||time()-($pending['at']??0)>7200)return kld_api_error('expired','Sesi upload kedaluwarsa.');
  $data=kld_drive_verify($fileid,$pending['mime'],$pending['size'],$pending['name']);
  if(is_wp_error($data))return kld_api_error('verify_failed',$data->get_error_message(),409);
- $prior=get_post_meta($id,'_kld_file_'.$side,true);
+ // Keep previous files for reference-safe archives.
  update_post_meta($id,'_kld_file_'.$side,$fileid);
- // Never delete an earlier master here: it might already be referenced by a paid order.
+ // Earlier masters may be referenced by paid orders. Never delete them during replacement.
  update_post_meta($id,'_kld_file_details_'.$side,['name'=>$data['name'],'size'=>(int)$data['size'],'mime'=>$data['mimeType']]);
  delete_post_meta($id,'_kld_pending_'.$side);
  return rest_ensure_response(['verified'=>true,'name'=>$data['name']]);
 }
-function kld_validate_side($side){
+function kld_validate_side($side,$product=0,$which='front'){
  if(!is_array($side))return false;
  $tier=$side['tier']??'none';
  if($tier==='none')return ['tier'=>'none'];
- $tiers=kld_tiers();if(!isset($tiers[$tier]))return false;
+ if($product && kld_is_mug($product) && ($which!=='front'||$tier!=='MUG'))return false;
+ $tiers=$product?kld_product_tiers($product):kld_tiers();if(!isset($tiers[$tier]))return false;
  $limitW=$tiers[$tier][0];$limitH=$tiers[$tier][1];
- $p=$side['placement']??[];
- if(!is_array($p))return false;
- $offset=(float)($p['center_offset_cm']??0);$top=(float)($p['top_from_collar_cm']??10.83);
- if(!is_finite($offset)||!is_finite($top)||abs($offset)>40||$top<0||$top>70)return false;
- $result=['tier'=>$tier,'placement'=>['center_offset_cm'=>round($offset,2),'top_from_collar_cm'=>round($top,2)],'needs_bg_removal'=>!empty($side['needs_bg_removal'])];
+ $placement=$side['placement']??[];
+ if(!is_array($placement))return false;
+ $offset=(float)($placement['center_offset_cm']??0);$top=(float)($placement['top_from_collar_cm']??10.83);
+ if(!is_finite($offset)||!is_finite($top))return false;
+ if($product && kld_is_mug($product)){if(abs($offset)>0.02||abs($top)>0.02)return false;}
+ elseif(!is_finite($offset)||!is_finite($top)||abs($offset)>40||$top<0||$top>70)return false;
+ $result=['tier'=>$tier, 'needs_bg_removal'=>!empty($side['needs_bg_removal']),
+  'placement'=>['center_offset_cm'=>round($offset,2),'top_from_collar_cm'=>round($top,2)]];
  foreach(['image','text'] as $type){
   if(empty($side[$type])||!is_array($side[$type]))continue;
   $a=$side[$type];$x=(float)($a['x']??-1);$y=(float)($a['y']??-1);$w=(float)($a['w']??-1);$h=(float)($a['h']??-1);
@@ -87,32 +97,39 @@ function kld_validate_side($side){
  if(empty($result['image'])&&empty($result['text']))return false;
  return $result;
 }
-/** Product default garment dimensions in cm. Admin/product-specific geometry will be configurable separately. */
-function kld_default_garments(){return ['S'=>[43,65],'M'=>[46,69],'L'=>[49,73],'XL'=>[51,73],'2XL'=>[54,76],'3XL'=>[60,78],'4XL'=>[63,80],'5XL'=>[66,80]];}
-function kld_design_fits_size($sides,$size){
- $measure=kld_default_garments()[$size]??null;
+/** Conservative garment safe zone (cm); product-specific measurements remain OPEN. */
+function kld_default_garments(){return kld_garment_defaults();}
+function kld_design_fits_size($sides,$size,$product=0){
+ if($product && kld_is_mug($product)){
+  return $size==='ONE' && is_array($sides) && ($sides['back']['tier']??'none')==='none'
+   && kld_validate_side($sides['front']??[], $product, 'front')!==false
+   && ($sides['front']['tier']??'none')==='MUG';
+ }
+ $measure=($product?kld_product_garments($product):kld_default_garments())[$size]??null;
  if(!$measure||!is_array($sides))return false;
  foreach(['front','back'] as $key){
-  $s=$sides[$key]??[];$tier=$s['tier']??'none';if($tier==='none')continue;
+  $side=$sides[$key]??[];$tier=$side['tier']??'none';if($tier==='none')continue;
   $d=kld_tiers()[$tier]??null;if(!$d)return false;
-  $place=$s['placement']??[];
-  $center=(float)($place['center_offset_cm']??0);$top=(float)($place['top_from_collar_cm']??10.83);
-  $bounds=[];
-  foreach(['image','text'] as $kind)if(isset($s[$kind]))$bounds[]=$s[$kind];
-  if(!$bounds)return false;
-  $safeWidth=$measure[0]-8;
-  foreach($bounds as $layer){
-   $left=$center-$d[0]/2+(float)$layer['x'];$right=$left+(float)$layer['w'];
-   $layerTop=$top+(float)$layer['y'];$layerBottom=$layerTop+(float)$layer['h'];
-   if($left<-$safeWidth/2-0.03||$right>$safeWidth/2+0.03||$layerTop<3.33||$layerBottom>$measure[1]-5+0.03)return false;
+  $position=$side['placement']??[];
+  $center=(float)($position['center_offset_cm']??0);$top=(float)($position['top_from_collar_cm']??10.83);
+  $layers=array_values(array_filter([$side['image']??null,$side['text']??null], 'is_array'));
+  if(!$layers)return false;
+  $margin=$product?kld_product_safe_margins($product):['side'=>4,'top'=>3.33,'bottom'=>5];
+  $safeWidth=$measure[0]-2*$margin['side'];
+  foreach($layers as $l){
+   $left=$center-$d[0]/2+(float)$l['x'];$right=$left+(float)$l['w'];
+   $upper=$top+(float)$l['y'];$lower=$upper+(float)$l['h'];
+   if($left<-$safeWidth/2-0.03||$right>$safeWidth/2+0.03||$upper<$margin['top']||$lower>$measure[1]-$margin['bottom']+0.03)return false;
   }
  }
  return true;
 }
 function kld_api_save(WP_REST_Request $r){
  $id=kld_api_auth($r);if(is_wp_error($id))return $id;
+ if(get_post_meta($id,'_kld_status',true)==='cart')return kld_api_error('locked','Desain sudah masuk keranjang dan dikunci agar file produksi tidak berubah. Buat salinan untuk revisi.',409);
  $sides=$r->get_param('sides');if(!is_array($sides))return kld_api_error('sides','Data sisi tidak valid.');
- $f=kld_validate_side($sides['front']??[]);$b=kld_validate_side($sides['back']??[]);
+ $product=absint(get_post_meta($id,'_kld_product',true));
+ $f=kld_validate_side($sides['front']??[],$product,'front');$b=kld_validate_side($sides['back']??[],$product,'back');
  if($f===false||$b===false||($f['tier']==='none'&&$b['tier']==='none'))return kld_api_error('bounds','Gambar/teks melewati batas area cetak atau tidak ada area terpilih.');
  foreach(['front'=>$f,'back'=>$b] as $side=>$data){
   if($data['tier']!=='none'&&!empty($data['image'])&&!get_post_meta($id,'_kld_file_'.$side,true))return kld_api_error('upload_pending','File asli sisi '.($side==='front'?'depan':'belakang').' belum tersimpan di Google Drive.',409);
@@ -126,33 +143,31 @@ function kld_api_save(WP_REST_Request $r){
   if(!$bytes||strlen($bytes)>61440||substr($bytes,0,2)!=="\xFF\xD8")return kld_api_error('preview_limit','Target preview maksimal 60 KB per sisi.');
   update_post_meta($id,'_kld_preview_'.$side,base64_encode($bytes));
  }
- // Small editable layer thumbnails; master PNG/JPEG remains private in Drive.
- // Only the holder of the separate design edit capability can read these previews.
+ // Keep very small WebP layer previews to restore an editable private fork.
  $artwork=$r->get_param('artwork');if(!is_array($artwork))$artwork=[];
  foreach(['front','back'] as $side){
-  if(($side==='front'?$f:$b)['tier']==='none'){delete_post_meta($id,'_kld_artwork_'.$side);continue;}
-  if(!array_key_exists($side,$artwork))continue; // Keep existing layer preview on metadata-only edits.
-  $encoded=(string)$artwork[$side];
-  if($encoded===''){delete_post_meta($id,'_kld_artwork_'.$side);continue;}
-  if(strlen($encoded)>85000||strpos($encoded,'data:image/webp;base64,')!==0)return kld_api_error('artwork','Preview layer tidak valid.',400);
-  $bytes=base64_decode(substr($encoded,23),true);
-  if(!$bytes||strlen($bytes)>61440||substr($bytes,0,4)!=='RIFF'||substr($bytes,8,4)!=='WEBP')return kld_api_error('artwork','Preview layer harus WebP maksimal 60 KB.',400);
+  $selected=$side==='front'?$f:$b;
+  if($selected['tier']==='none'){delete_post_meta($id,'_kld_artwork_'.$side);continue;}
+  if(!array_key_exists($side,$artwork))continue;
+  $image=(string)$artwork[$side];
+  if($image===''){delete_post_meta($id,'_kld_artwork_'.$side);continue;}
+  if(strlen($image)>85000||strpos($image,'data:image/webp;base64,')!==0)return kld_api_error('artwork','Preview layer tidak valid.');
+  $bytes=base64_decode(substr($image,23),true);
+  if(!$bytes||strlen($bytes)>61440||substr($bytes,0,4)!=='RIFF'||substr($bytes,8,4)!=='WEBP')return kld_api_error('artwork','Preview layer maksimal 60 KB WebP.');
   update_post_meta($id,'_kld_artwork_'.$side,base64_encode($bytes));
  }
  update_post_meta($id,'_kld_sides',['front'=>$f,'back'=>$b]);
- $color=sanitize_text_field((string)$r['color']);
- if(!kld_color_allowed($id,$color))return kld_api_error('color','Warna kaos tidak tersedia.');
- update_post_meta($id,'_kld_color',$color);
+ $chosen=sanitize_text_field((string)$r['color']);
+ if(!kld_color_allowed($id,$chosen))return kld_api_error('color','Warna produk tidak tersedia.',400);
+ update_post_meta($id,'_kld_color',$chosen);
  if(!get_post_meta($id,'_kld_owner_email',true))update_post_meta($id,'_kld_status','saved_pending_verify');
  else update_post_meta($id,'_kld_status','saved');
  return rest_ensure_response(['saved'=>true,'design_id'=>$id]);
 }
-/** Resolve allowed garment colors on the server: never trust a client-supplied option. */
 function kld_color_allowed($design,$color){
- $product=absint(get_post_meta($design,'_kld_product',true));
- $colors=array_values(array_filter(array_map('trim',explode('|',(string)get_post_meta($product,'_kld_colors',true)))));
- if(!$colors)$colors=['Hitam','Putih','Army Green','Navy'];
- return in_array($color,$colors,true);
+ $p=absint(get_post_meta($design,'_kld_product',true));
+ if(kld_is_mug($p))return $color==='Putih';
+ return in_array($color,kld_product_active_colors($p),true);
 }
 function kld_api_add_cart(WP_REST_Request $r){
  $id=kld_api_auth($r);if(is_wp_error($id))return $id;
@@ -162,21 +177,21 @@ function kld_api_add_cart(WP_REST_Request $r){
  $product=absint(get_post_meta($id,'_kld_product',true));$p=wc_get_product($product);
  if(!$p||!$p->is_purchasable())return kld_api_error('bad_product','Produk tidak tersedia.');
  $sides=get_post_meta($id,'_kld_sides',true);
+ if(!is_array($sides))return kld_api_error('not_saved','Desain belum tersedia.',409);
  $front=$sides['front']['tier']??'none';$back=$sides['back']['tier']??'none';
  foreach(['front','back'] as $side){
-  if(!empty($sides[$side]['image'])&&!get_post_meta($id,'_kld_file_'.$side,true))return kld_api_error('file_missing','File master desain tidak tersedia; checkout ditolak.',409);
+  if(!empty($sides[$side]['image'])&&!get_post_meta($id,'_kld_file_'.$side,true))return kld_api_error('file_missing','File asli belum tersimpan valid.',409);
  }
  $qty=$r->get_param('quantities');$color=sanitize_text_field((string)$r['color']);
- if(!kld_color_allowed($id,$color))return kld_api_error('color','Warna kaos tidak tersedia.');
+ if(!kld_color_allowed($id,$color))return kld_api_error('color','Warna kaos tidak tersedia.',400);
  if(!is_array($qty))return kld_api_error('qty','Jumlah tidak valid.');
  $validated=[];$count=0;
- foreach(kld_sizes() as $size){
-  $raw=$qty[$size]??0;
-  if(!is_int($raw)&&(!is_string($raw)||!preg_match('/^(0|[1-9][0-9]{0,2})$/',$raw)))return kld_api_error('qty','Jumlah harus bilangan bulat 0 sampai 100.');
-  $n=(int)$raw;
-  if($n<0||$n>100)return kld_api_error('qty','Maksimal 100 pcs per ukuran.');
-  if(!$n)continue;
-  if(!kld_design_fits_size($sides,$size))return kld_api_error('placement','Posisi area cetak tidak muat pada kaos size '.$size.'. Sesuaikan di editor sebelum checkout.');
+ // Prevent an invalid S-5XL payload from being silently accepted for a mug.
+ foreach($qty as $key=>$value){if(!in_array($key,kld_product_sizes($product),true))return kld_api_error('qty','Size atau jenis satuan tidak sesuai produk.',400);}
+ foreach(kld_product_sizes($product) as $size){$raw=$qty[$size]??0;
+  if(!is_int($raw)&&(!is_string($raw)||!preg_match('/^(0|[1-9][0-9]{0,2})$/D',$raw)))return kld_api_error('qty','Jumlah harus bilangan bulat 0–100.');
+  $n=(int)$raw;if($n<0||$n>100)return kld_api_error('qty','Maksimal 100 pcs per ukuran.');if(!$n)continue;
+  if(!kld_design_fits_size($sides,$size,$product))return kld_api_error('placement','Area cetak tidak muat untuk size '.$size,409);
   $unit=kld_unit_price($product,$size,$front,$back);if($unit===null)return kld_api_error('price','Harga untuk ukuran '.$size.' belum dikonfigurasi.');
   $validated[]=[$size,$n,$unit];$count+=$n;
  }
@@ -185,6 +200,7 @@ function kld_api_add_cart(WP_REST_Request $r){
  $items=[];
  foreach($validated as [$size,$n,$unit]){
   $variation=0;$attrs=[];
+  if(kld_is_mug($product) && $p->is_type('variable'))return kld_api_error('variation','Produk Mug 11 oz harus menggunakan Simple Product.',409);
   if($p->is_type('variable')){
    $available=$p->get_available_variations();
    foreach($available as $v){
@@ -200,12 +216,12 @@ function kld_api_add_cart(WP_REST_Request $r){
   }
   $items[]=[$size,$n,$unit,$variation,$attrs];
  }
- // Validate all variations and prices before mutating the cart. Roll back partial insertions.
+ // No partial cart changes until all input is validated.
  WC()->session->set_customer_session_cookie(true);
  $inserted=[];
  foreach($items as [$size,$n,$unit,$variation,$attrs]){
   $key=WC()->cart->add_to_cart($product,$n,$variation,$attrs,['kld_design_id'=>$id,'kld_size'=>$size,'kld_color'=>$color,'kld_unit_price'=>$unit,'kld_unique'=>wp_generate_uuid4()]);
-  if(!$key){foreach($inserted as $added)WC()->cart->remove_cart_item($added);return kld_api_error('cart_error','Gagal memasukkan item ke keranjang. Tidak ada item parsial yang disimpan.',500);}
+  if(!$key){foreach($inserted as $added)WC()->cart->remove_cart_item($added);return kld_api_error('cart_error','Keranjang gagal; item parsial dibatalkan.',500);}
   $inserted[]=$key;
  }
  update_post_meta($id,'_kld_status','cart');
@@ -214,32 +230,41 @@ function kld_api_add_cart(WP_REST_Request $r){
 function kld_api_request_verify(WP_REST_Request $r){
  $id=kld_api_auth($r);if(is_wp_error($id))return $id;
  if(!kld_public_rate_limit('verify',8,HOUR_IN_SECONDS))return kld_api_error('rate_limit','Coba lagi nanti.',429);
- $provided=sanitize_email((string)$r['email']);if(!is_email($provided))return kld_api_error('email','Alamat email tidak valid.');
- // Once verified, an editor session must NEVER be able to transfer ownership to another email.
- $existing=sanitize_email((string)get_post_meta($id,'_kld_owner_email',true));
- if($existing && strcasecmp($provided,$existing)!==0)return kld_api_error('owner_email','Desain sudah mempunyai pemilik. Pemulihan akses hanya dapat dikirim ke email pemilik.',403);
- $email=$existing?:$provided;
+ $email=sanitize_email((string)$r['email']);if(!is_email($email))return kld_api_error('email','Alamat email tidak valid.');
+ $verified=sanitize_email((string)get_post_meta($id,'_kld_owner_email',true));
+ if($verified&&strcasecmp($verified,$email)!==0)return kld_api_error('owner','Email pemilik tidak boleh diganti melalui token edit.',403);
  $token=bin2hex(random_bytes(32));
  update_post_meta($id,'_kld_pending_owner',['email'=>$email,'hash'=>hash('sha256',$token),'expires'=>time()+1800]);
- $url=add_query_arg(['kld_owner'=>$id,'key'=>$token],home_url('/'));
- $sent=wp_mail($email,'Akses privat desain Kaoscetak',"Klik tautan berikut untuk memverifikasi email dan mengelola desain Anda (verifikasi pertama berlaku 30 menit):\n".$url."\n\nJANGAN BAGIKAN tautan ini karena berisi akses pemilik.");
- if(!$sent){delete_post_meta($id,'_kld_pending_owner');return kld_api_error('mail','Email belum dapat dikirim. Periksa pengaturan SMTP WordPress.',503);}
+ $url=add_query_arg(['kld_verify'=>$id,'key'=>$token],home_url('/'));
+ $sent=wp_mail($email,'Verifikasi desain Kaoscetak',"Klik tautan berikut untuk memverifikasi kepemilikan desain (berlaku 30 menit):\n".$url);
+ if(!$sent)return kld_api_error('mail','Email belum dapat dikirim. Periksa pengaturan SMTP WordPress.',503);
  return rest_ensure_response(['sent'=>true]);
 }
-/** Private editor reconstruction, authorised by the independent edit capability. */
+add_action('template_redirect',function(){
+ $id=absint($_GET['kld_verify']??0);$key=sanitize_text_field(wp_unslash($_GET['key']??''));
+ if(!$id||!$key)return;
+ $p=get_post_meta($id,'_kld_pending_owner',true);
+ if(!is_array($p)||time()>($p['expires']??0)||!hash_equals((string)($p['hash']??''),hash('sha256',$key)))wp_die('Tautan verifikasi sudah kedaluwarsa atau tidak valid.');
+ $verified=sanitize_email((string)get_post_meta($id,'_kld_owner_email',true));
+ if($verified&&strcasecmp($verified,(string)$p['email'])!==0)wp_die('Identitas pemilik tidak dapat dialihkan.');
+ $verified=sanitize_email((string)get_post_meta($id,'_kld_owner_email',true));
+ if($verified&&strcasecmp($verified,(string)$p['email'])!==0)wp_die('Pemilik desain tidak dapat dialihkan.');
+ update_post_meta($id,'_kld_owner_email',$p['email']);
+ update_post_meta($id,'_kld_owner_hash',hash('sha256',$key));
+ update_post_meta($id,'_kld_status','saved');delete_post_meta($id,'_kld_pending_owner');
+ wp_safe_redirect(add_query_arg(['kld_owner'=>$id,'key'=>$key],home_url('/')),303);exit;
+});
+
+/** Token-protected restoration; shared public tokens cannot use this endpoint. */
 function kld_api_load(WP_REST_Request $r){
  $id=kld_api_auth($r);if(is_wp_error($id))return $id;
  $product=absint(get_post_meta($id,'_kld_product',true));
- if(!$product||!wc_get_product($product))return kld_api_error('product_missing','Produk desain tidak tersedia.',404);
- $sides=get_post_meta($id,'_kld_sides',true);
- if(!is_array($sides))return kld_api_error('not_saved','Desain belum disimpan.',409);
+ if(!$product||!wc_get_product($product))return kld_api_error('product','Produk tidak tersedia.',404);
+ $sides=get_post_meta($id,'_kld_sides',true);if(!is_array($sides))return kld_api_error('empty','Desain belum disimpan.',409);
  $layers=[];
  foreach(['front','back'] as $side){
-  $image=(string)get_post_meta($id,'_kld_artwork_'.$side,true);
-  if($image!=='' && strlen($image)<=85000 && preg_match('~^[A-Za-z0-9+/=]+$~D',$image)){
-   $layers[$side]='data:image/webp;base64,'.$image;
-  }
+  $data=(string)get_post_meta($id,'_kld_artwork_'.$side,true);
+  if($data!==''&&strlen($data)<=85000&&preg_match('/^[a-zA-Z0-9+\/=]+$/D',$data))$layers[$side]='data:image/webp;base64,'.$data;
  }
- return rest_ensure_response(['design_id'=>$id,'product_id'=>$product,'sides'=>$sides,
-  'color'=>(string)get_post_meta($id,'_kld_color',true),'layers'=>$layers]);
+ return rest_ensure_response(['design_id'=>$id,'product_id'=>$product,'sides'=>$sides,'color'=>(string)get_post_meta($id,'_kld_color',true),'layers'=>$layers]);
 }

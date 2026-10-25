@@ -9,8 +9,6 @@ add_action('woocommerce_before_calculate_totals',function($cart){
    if(!is_array($sides)||!$product)continue;
    $price=kld_unit_price($product,$item['kld_size'],$sides['front']['tier']??'none',$sides['back']['tier']??'none');
    if($price!==null){
-    // The verified design owner must match the active checkout billing email.
-    // The rate and prior-payment status are always checked server-side.
     $customer=WC()->customer;
     $billing=$customer && method_exists($customer,'get_billing_email')?$customer->get_billing_email():'';
     $item['data']->set_price(kld_repeat_unit_price($id,$price,$billing));
@@ -18,18 +16,29 @@ add_action('woocommerce_before_calculate_totals',function($cart){
   }
  }
 },50);
-// Classic WooCommerce checkout AJAX must recalculate prices after email changes.
-// This sets only the pending billing email; it does NOT bypass guest email verification.
-add_action('woocommerce_checkout_update_order_review',function($postdata){
- if(!is_string($postdata) || !function_exists('WC') || !WC()->customer)return;
- $values=[];wp_parse_str($postdata,$values);
- $email=sanitize_email((string)($values['billing_email']??''));
- if(is_email($email))WC()->customer->set_billing_email($email);
-},5);
-// Prevent using an earlier discounted cart total with a different checkout email.
+/** Re-check colour availability on cart/checkout. Disabling a colour must also block an old cart. */
+function kld_cart_unavailable_colors($cart){
+ $missing=[];
+ if(!$cart||!method_exists($cart,'get_cart'))return $missing;
+ foreach($cart->get_cart() as $item){
+  if(empty($item['kld_design_id']))continue;
+  $id=absint($item['kld_design_id']);
+  $product=absint(get_post_meta($id,'_kld_product',true));
+  $color=(string)($item['kld_color']??'');
+  if(!$product||!kld_color_allowed($id,$color))$missing[]=$color?:'(tanpa warna)';
+ }
+ return array_unique($missing);
+}
+add_action('woocommerce_check_cart_items',function(){
+ if(!function_exists('WC')||!WC()->cart)return;
+ foreach(kld_cart_unavailable_colors(WC()->cart) as $name){
+  wc_add_notice('Warna '.esc_html($name).' sudah tidak tersedia. Hapus produk custom tersebut dari keranjang lalu pilih warna lain.','error');
+ }
+});
 add_action('woocommerce_after_checkout_validation',function($checkout_data,$errors){
  if(!function_exists('WC')||!WC()->cart)return;
  $email=sanitize_email((string)($checkout_data['billing_email']??''));
+ foreach(kld_cart_unavailable_colors(WC()->cart) as $name)$errors->add('kld_colour_unavailable','Warna '.sanitize_text_field($name).' sudah tidak tersedia. Hapus item tersebut dari keranjang.');
  foreach(WC()->cart->get_cart() as $item){
   if(empty($item['kld_design_id'])||empty($item['data']))continue;
   $id=absint($item['kld_design_id']);
@@ -48,29 +57,35 @@ add_action('woocommerce_after_checkout_validation',function($checkout_data,$erro
 add_filter('woocommerce_get_item_data',function($data,$item){
  if(empty($item['kld_design_id']))return $data;
  $s=get_post_meta($item['kld_design_id'],'_kld_sides',true);
- $data[]=['key'=>'Ukuran kaos','value'=>sanitize_text_field($item['kld_size'])];
- $data[]=['key'=>'Warna kaos','value'=>sanitize_text_field($item['kld_color'])];
- $data[]=['key'=>'Cetak depan','value'=>sanitize_text_field($s['front']['tier']??'none')];
- $data[]=['key'=>'Cetak belakang','value'=>sanitize_text_field($s['back']['tier']??'none')];
+ $product=absint(get_post_meta($item['kld_design_id'],'_kld_product',true));
+ if(kld_is_mug($product))$data[]=['key'=>'Produk','value'=>'Mug Putih 11 oz | Cetak 18 × 8,5 cm'];
+ else $data[]=['key'=>'Ukuran kaos','value'=>sanitize_text_field($item['kld_size'])];
+ $data[]=['key'=>kld_is_mug($product)?'Warna mug':'Warna kaos','value'=>sanitize_text_field($item['kld_color'])];
+ $data[]=['key'=>kld_is_mug($product)?'Cetak mug':'Cetak depan','value'=>kld_is_mug($product)?'18 × 8,5 cm':sanitize_text_field($s['front']['tier']??'none')];
+ if(!kld_is_mug($product))$data[]=['key'=>'Cetak belakang','value'=>sanitize_text_field($s['back']['tier']??'none')];
  return $data;
 },10,2);
 add_action('woocommerce_checkout_create_order_line_item',function($line,$key,$item,$order){
  if(empty($item['kld_design_id']))return;
  $id=absint($item['kld_design_id']);
  $line->add_meta_data('_kld_design_id',$id,true);
- $line->add_meta_data('Ukuran Kaos',sanitize_text_field($item['kld_size']),true);
- $line->add_meta_data('Warna Kaos',sanitize_text_field($item['kld_color']),true);
+ $product=absint(get_post_meta($id,'_kld_product',true));
+ if(kld_is_mug($product))$line->add_meta_data('Produk Cetak','Mug putih 11 oz | 18 x 8.5 cm',true);
+ else $line->add_meta_data('Ukuran Kaos',sanitize_text_field($item['kld_size']),true);
+ $line->add_meta_data(kld_is_mug($product)?'Warna Mug':'Warna Kaos',sanitize_text_field($item['kld_color']),true);
  $sides=get_post_meta($id,'_kld_sides',true);
- $line->add_meta_data('Cetak Depan',$sides['front']['tier']??'Tanpa cetak',true);
- $line->add_meta_data('Cetak Belakang',$sides['back']['tier']??'Tanpa cetak',true);
+ $line->add_meta_data(kld_is_mug($product)?'Area Mug':'Cetak Depan',kld_is_mug($product)?'18 x 8.5 cm':($sides['front']['tier']??'Tanpa cetak'),true);
+ if(!kld_is_mug($product))$line->add_meta_data('Cetak Belakang',$sides['back']['tier']??'Tanpa cetak',true);
 },10,4);
-/** Immutable production snapshot: an order MUST NOT follow later owner edits or revocation. */
+/** Freeze print layout/master IDs and mockup at checkout; owner edits must not change an order. */
 add_action('woocommerce_checkout_create_order',function($order){
  $records=[];
  foreach($order->get_items() as $item){
-  $id=absint($item->get_meta('_kld_design_id',true));if(!$id||isset($records[$id]))continue;
-  $sides=get_post_meta($id,'_kld_sides',true);if(!is_array($sides))continue;
-  $records[$id]=['sides'=>$sides,'files'=>[],'previews'=>[]];
+  $id=absint($item->get_meta('_kld_design_id',true));
+  if(!$id||isset($records[$id]))continue;
+  $layout=get_post_meta($id,'_kld_sides',true);
+  if(!is_array($layout))continue;
+  $records[$id]=['sides'=>$layout,'files'=>[],'previews'=>[]];
   foreach(['front','back'] as $side){
    $records[$id]['files'][$side]=(string)get_post_meta($id,'_kld_file_'.$side,true);
    $records[$id]['previews'][$side]=(string)get_post_meta($id,'_kld_preview_'.$side,true);
@@ -80,13 +95,13 @@ add_action('woocommerce_checkout_create_order',function($order){
 },20,1);
 function kld_order_snapshot($order){
  if(!$order||!method_exists($order,'get_meta'))return [];
- $raw=$order->get_meta('_kld_order_design_snapshot',true);
- return is_array($raw)?$raw:[];
+ $saved=$order->get_meta('_kld_order_design_snapshot',true);
+ return is_array($saved)?$saved:[];
 }
 function kld_order_designs($order){
  $snapshot=kld_order_snapshot($order);$found=[];
- if($snapshot){foreach($snapshot as $id=>$data)if(is_array($data['sides']??null))$found[(int)$id]=$data['sides'];return $found;}
- // Compatibility only: older orders made before snapshots existed.
+ if($snapshot){foreach($snapshot as $id=>$data){if(is_array($data['sides']??null))$found[(int)$id]=$data['sides'];}return $found;}
+ // Compatibility path only for legacy orders without a snapshot.
  foreach($order->get_items() as $item){$id=absint($item->get_meta('_kld_design_id',true));if($id && !isset($found[$id]))$found[$id]=get_post_meta($id,'_kld_sides',true);}
  return $found;
 }
@@ -98,6 +113,8 @@ function kld_render_order_admin($order){
  foreach($designs as $id=>$sides){
   echo '<div style="border:1px solid #ddd;margin:8px 0;padding:12px"><strong>Desain #'.esc_html($id).'</strong><div style="display:flex;gap:15px;flex-wrap:wrap">';
   foreach(['front'=>'Depan','back'=>'Belakang'] as $side=>$name){
+   if($side==='back'&&($sides['front']['tier']??'none')==='MUG')continue;
+   if($side==='front'&&($sides['front']['tier']??'none')==='MUG')$name='Bidang Mug';
    $base=$snapshot[$id]['previews'][$side]??get_post_meta($id,'_kld_preview_'.$side,true);
    echo '<div><div>'.esc_html($name).' — '.esc_html($sides[$side]['tier']??'none').'</div>';
    if($base)echo '<img alt="'.esc_attr($name).'" src="data:image/jpeg;base64,'.esc_attr($base).'" width="150" height="150" style="object-fit:contain;border:1px solid #eee">';
@@ -201,27 +218,33 @@ function kld_make_guide_pdf($order,$designs){
  $line=function($text,$size=11,$x=40)use(&$stream,&$y,$esc){$stream.="BT /F1 {$size} Tf {$x} {$y} Td (".$esc($text).") Tj ET\n";$y-=($size+8);};
  $line('KAOSCETAK - PANDUAN PRODUKSI',17);
  $line('ORDER #'.$order->get_order_number().' | '.wp_date('d-m-Y H:i'),10);
- $line('Jenis output: FILE ASLI + PANDUAN. Siapkan RIP/DTF di komputer produksi.',9);
+ $line('Jenis output: FILE ASLI + PANDUAN. Siapkan file cetak sesuai jenis produk di komputer produksi.',9);
  $line('Ukuran fisik mengikuti tata letak desain dan kategori area yang dipilih.',9);
  foreach($order->get_items() as $item){
   $id=absint($item->get_meta('_kld_design_id',true));if(!$id||!isset($designs[$id]))continue;
-  $line('Produk: '.$item->get_name().' | Qty '.$item->get_quantity().' | '.$item->get_meta('Ukuran Kaos').' | '.$item->get_meta('Warna Kaos'),10);
+  $line('Produk: '.$item->get_name().' | Qty '.$item->get_quantity().' | '.($item->get_meta('Produk Cetak')?:$item->get_meta('Ukuran Kaos')).' | '.($item->get_meta('Warna Mug')?:$item->get_meta('Warna Kaos')),10);
  }
  foreach($designs as $id=>$sides){
   if($y<350){$line('Lihat rincian desain tambahan di metadata order WooCommerce.',10);break;}
   $line('DESAIN #'.$id,13);
   foreach(['front'=>'DEPAN','back'=>'BELAKANG'] as $side=>$name){
+   if($side==='back'&&($sides['front']['tier']??'none')==='MUG')continue;
    $d=$sides[$side]??[];
-   $line($name.' | Kategori: '.($d['tier']??'none'),11);
-   if(($d['tier']??'none')!=='none'){
-    $pos=$d['placement']??[];
-    $line('Letak area cetak: '.($pos['center_offset_cm']??0).' cm dari tengah; '.($pos['top_from_collar_cm']??10.83).' cm di bawah kerah',9);
-   }
+   $line(($d['tier']??'none')==='MUG'?'MUG PUTIH 11 oz | Bidang maks. 18 x 8.5 cm':$name.' | Kategori: '.($d['tier']??'none'),11);
    if(!empty($d['needs_bg_removal']))$line('PERHATIAN: hapus background dari FILE ASLI di komputer produksi.',9);
-   foreach(['image'=>'Gambar','text'=>'Teks'] as $layer){
-    if(!empty($d[$layer])){
-     $v=$d[$layer];$line($layer.': '.($v['w']??'?').' x '.($v['h']??'?').' cm | X '.($v['x']??'?').' cm | Y '.($v['y']??'?').' cm',9);
-     if($layer==='text')$line('Teks: '.preg_replace('/\s+/',' ',(string)($v['value']??'')),9);
+   if(($d['tier']??'none')!=='none'){
+    $position=$d['placement']??[];
+    if(($d['tier']??'none')==='MUG')$line('Acuan posisi X/Y adalah pojok kiri atas bidang 18 x 8.5 cm (terbentang).',9);
+    else $line('Posisi cetak: geser tengah '.($position['center_offset_cm']??0).' cm | Jarak dari kerah '.($position['top_from_collar_cm']??10.83).' cm',9);
+   }
+   foreach(['image'=>'Gambar','text'=>'Teks'] as $key=>$label){
+    if(!empty($d[$key])){
+     $v=$d[$key];
+     $line($label.': '.($v['w']??'?').' x '.($v['h']??'?').' cm | X '.($v['x']??'?').' cm | Y '.($v['y']??'?').' cm',9);
+     if($key==='text'){
+      $line('Teks: '.preg_replace('/\s+/',' ',(string)($v['value']??'')),9);
+      $line('Font: '.($v['font']??'Arial').' | Warna: '.($v['color']??'#ffffff'),9);
+     }
     }
    }
   }
