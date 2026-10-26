@@ -212,6 +212,48 @@ function stageMetrics(){
  const allowedX=Math.max(minX,Math.min(maxX,dx)),allowedY=Math.max(minY,Math.min(maxY,dy));
  return {w,h,px:baseX+allowedX*scale,py:baseY+allowedY*scale,scale,tierW:ti[0],tierH:ti[1],minX,maxX,minY,maxY};
 }
+/** Cloth-lighting fallback; renders on the existing canvas without network requests. */
+function kldClothColor(hex,delta){
+ const match=/^#([0-9a-f]{6})$/i.exec(String(hex||''));
+ const raw=match?match[1]:'363c44';
+ const channels=[0,2,4].map(i=>parseInt(raw.slice(i,i+2),16));
+ return 'rgb('+channels.map(x=>Math.max(0,Math.min(255,Math.round(x+delta)))).join(',')+')';
+}
+function kldDrawFabric(ctx,pathInfo,hex){
+ const {left,right,hem,edge,far,scale}=pathInfo;
+ const base=String(hex||'#363c44');
+ const gradient=ctx.createLinearGradient(edge,0,far,0);
+ gradient.addColorStop(0,kldClothColor(base,-29));
+ gradient.addColorStop(.13,kldClothColor(base,-12));
+ gradient.addColorStop(.30,kldClothColor(base,8));
+ gradient.addColorStop(.55,kldClothColor(base,0));
+ gradient.addColorStop(.82,kldClothColor(base,5));
+ gradient.addColorStop(1,kldClothColor(base,-23));
+ ctx.save();ctx.clip();ctx.fillStyle=gradient;ctx.fillRect(edge,70,far-edge,hem-70+14);
+ const shade=ctx.createLinearGradient(0,120,0,hem);
+ shade.addColorStop(0,'rgba(0,0,0,.08)');
+ shade.addColorStop(.28,'rgba(255,255,255,.035)');
+ shade.addColorStop(.76,'rgba(255,255,255,0)');
+ shade.addColorStop(1,'rgba(0,0,0,.10)');
+ ctx.fillStyle=shade;ctx.fillRect(edge,80,far-edge,hem-75);
+ const fold=(startX,startY,endX,endY,width,dark)=>{
+  ctx.beginPath();ctx.moveTo(startX,startY);
+  ctx.bezierCurveTo(startX+16,startY+38,endX-12,endY-60,endX,endY);
+  const g=ctx.createLinearGradient(startX-12,0,startX+width,0);
+  g.addColorStop(0,'rgba(0,0,0,0)');
+  g.addColorStop(.5,dark?'rgba(0,0,0,.13)':'rgba(255,255,255,.10)');
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.strokeStyle=g;ctx.lineWidth=width;ctx.stroke();
+ };
+ fold(left+19,212,left+30,hem-22,29,true);
+ fold(right-21,230,right-41,hem-17,25,true);
+ fold(left+55,315,left+73,hem-32,23,false);
+ fold(right-58,340,right-78,hem-26,22,false);
+ // Soft underarm folds keep the short sleeve readable at phone scale.
+ fold(left-8,155,left+45,224,18,true);
+ fold(right+6,160,right-43,233,18,true);
+ ctx.restore();
+}
 function draw(){const cv=$('.kld-stage');if(!cv)return;const ctx=cv.getContext('2d'),{px,py,scale,tierW,tierH}=stageMetrics();ctx.clearRect(0,0,600,710);ctx.fillStyle='#f2f4f7';ctx.fillRect(0,0,600,710);
  if(isMug){drawMug(ctx,{px,py,scale,tierW,tierH});return;}
  ctx.fillStyle=cfg.colorSwatches?.[color]||'#363c44';ctx.strokeStyle='#b8bcc2';ctx.lineWidth=2;
@@ -228,9 +270,20 @@ function draw(){const cv=$('.kld-stage');if(!cv)return;const ctx=cv.getContext('
  ctx.lineTo(far,180);ctx.lineTo(right+27,sleeveDrop);ctx.lineTo(right,Math.min(sleeveDrop-25,260));
  ctx.lineTo(right,hem);ctx.quadraticCurveTo(300,hem+9,left,hem);
  ctx.lineTo(left,Math.min(sleeveDrop-25,260));ctx.lineTo(left-27,sleeveDrop);ctx.lineTo(edge,180);
- ctx.closePath();ctx.fill();ctx.stroke();
- ctx.strokeStyle=color==='Putih'?'#bbbbbb':'#20262c';ctx.lineWidth=6;
- ctx.beginPath();ctx.moveTo(left+75,86);ctx.quadraticCurveTo(300,162,right-75,86);ctx.stroke();
+ ctx.closePath();
+ const short24s=kind==='reguler-24s';
+ if(short24s)kldDrawFabric(ctx,{left,right,hem,edge,far,scale},cfg.colorSwatches?.[color]||'#363c44');
+ else ctx.fill();
+ ctx.stroke();
+ const collarY=current==='front'?162:120;
+ ctx.strokeStyle=kldClothColor(cfg.colorSwatches?.[color]||'#363c44',-22);ctx.lineWidth=6;
+ ctx.beginPath();ctx.moveTo(left+75,86);ctx.quadraticCurveTo(300,collarY,right-75,86);ctx.stroke();
+ if(short24s){
+  ctx.strokeStyle=kldClothColor(cfg.colorSwatches?.[color]||'#363c44',11);ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(left+76,91);ctx.quadraticCurveTo(300,collarY+3,right-76,91);ctx.stroke();
+  ctx.strokeStyle=kldClothColor(cfg.colorSwatches?.[color]||'#363c44',-13);ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(left+5,hem-14);ctx.quadraticCurveTo(300,hem-8,right-5,hem-14);ctx.stroke();
+ }
  if(kind==='hoodie'){
   ctx.strokeStyle=color==='Putih'?'#b3b3b3':'#171e25';ctx.lineWidth=5;
   ctx.beginPath();ctx.moveTo(left+76,100);ctx.quadraticCurveTo(300,-5,right-76,100);ctx.stroke();
