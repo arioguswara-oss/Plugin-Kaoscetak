@@ -57,7 +57,7 @@ def open_editor(browser, viewport, config):
     page = browser.new_page(viewport=viewport, device_scale_factor=1, is_mobile=viewport["width"] <= 430, has_touch=viewport["width"] <= 430)
     errors = []
     page.on("pageerror", lambda err: errors.append(str(err)))
-    page.set_content('<h1>Halaman Produk</h1><button id="kld-open-designer">Custom Desain</button><div id="kld-editor-root"></div>')
+    page.set_content('<meta name="viewport" content="width=device-width, initial-scale=1"><h1>Halaman Produk</h1><button id="kld-open-designer">Custom Desain</button><div id="kld-editor-root"></div>')
     page.add_style_tag(content=(PLUGIN / "assets/editor.css").read_text(encoding="utf-8"))
     page.evaluate("window.KLD_CONFIG = " + json.dumps(config))
     page.add_script_tag(content=(PLUGIN / "assets/editor.js").read_text(encoding="utf-8"))
