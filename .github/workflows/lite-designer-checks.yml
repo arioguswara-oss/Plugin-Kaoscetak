@@ -46,7 +46,7 @@ jobs:
         run: php tests/${{ matrix.test }}
 
   responsive-browser:
-    name: Browser: phone/tablet editor (Chromium)
+    name: "Browser: phone/tablet editor (Chromium)"
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
