@@ -1,0 +1,62 @@
+name: Lite Designer source checks
+on:
+  push:
+    branches: [develop/lite-designer-v1]
+  pull_request:
+    paths:
+      - 'plugins/kaoscetak-lite-designer/**'
+      - 'tests/**'
+      - '.github/workflows/lite-designer-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  lint:
+    name: PHP and JS syntax
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP source syntax
+        run: |
+          set -euo pipefail
+          find plugins/kaoscetak-lite-designer tests -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: JavaScript syntax
+        run: node --check plugins/kaoscetak-lite-designer/assets/editor.js
+  isolated-unit:
+    name: "Unit: ${{ matrix.test }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+          - test_rules.php
+          - test_order_snapshot.php
+          - test_share_security.php
+          - test_owner_verification.php
+          - test_share_clone.php
+          - test_editable_fork.php
+          - test_price_presets.php
+          - test_repeat.php
+          - test_repeat_checkout.php
+    steps:
+      - uses: actions/checkout@v4
+      - name: Standalone PHP checks (not WordPress integration)
+        run: php tests/${{ matrix.test }}
+
+  responsive-browser:
+    name: "Browser: phone/tablet editor (Chromium)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install isolated browser test dependency
+        run: python -m pip install playwright==1.55.0
+      - name: Verify real Chromium UI interactions
+        env:
+          CHROMIUM_PATH: /usr/bin/google-chrome
+        run: python tests/test_editor_responsive.py
