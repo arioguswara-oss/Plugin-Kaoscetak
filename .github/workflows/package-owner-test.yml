@@ -1,0 +1,102 @@
+name: Package Kaoscetak Owner Test (WordPress + WooCommerce)
+on:
+  push:
+    branches: [develop/lite-designer-v1]
+    paths:
+      - 'plugins/kaoscetak-lite-designer/**'
+      - 'tests/wordpress_smoke.php'
+      - '.github/workflows/package-owner-test.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wordpress-smoke-and-package:
+    name: WordPress activation, WooCommerce smoke & test ZIP
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: kld_local_ci_only
+          MYSQL_DATABASE: kld_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pkld_local_ci_only"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure PHP with WordPress extensions
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, mysqli, pdo_mysql, curl, gd, zip
+          tools: none
+          coverage: none
+
+      - name: Build correctly rooted WordPress plugin ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          test -f plugins/kaoscetak-lite-designer/kaoscetak-lite-designer.php
+          (cd plugins && zip -q -r ../dist/Kaoscetak-Lite-Designer-0.3.1-OWNER-TEST.zip kaoscetak-lite-designer/ -x '*__MACOSX*' '*.DS_Store')
+          unzip -t dist/Kaoscetak-Lite-Designer-0.3.1-OWNER-TEST.zip | tail -1
+          unzip -Z -1 dist/Kaoscetak-Lite-Designer-0.3.1-OWNER-TEST.zip | grep -qx 'kaoscetak-lite-designer/kaoscetak-lite-designer.php'
+          sha256sum dist/Kaoscetak-Lite-Designer-0.3.1-OWNER-TEST.zip > dist/SHA256SUMS.txt
+
+      - name: Install isolated WordPress and WooCommerce
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o wp-cli.phar
+          export WP_CLI="php $GITHUB_WORKSPACE/wp-cli.phar"
+          export WP_ROOT="$RUNNER_TEMP/wordpress"
+          $WP_CLI core download --path="$WP_ROOT" --quiet
+          $WP_CLI config create --path="$WP_ROOT" --dbname=kld_ci --dbuser=root --dbpass=kld_local_ci_only --dbhost=127.0.0.1 --dbprefix=kld_ --skip-check --quiet
+          $WP_CLI core install --path="$WP_ROOT" --url=http://localhost:8080 --title="Kaoscetak CI only" --admin_user=kld_admin --admin_password=local_ci_nonproduction --admin_email=admin@example.test --skip-email --quiet
+          $WP_CLI plugin install woocommerce --activate --path="$WP_ROOT" --quiet
+          $WP_CLI plugin install "$GITHUB_WORKSPACE/dist/Kaoscetak-Lite-Designer-0.3.1-OWNER-TEST.zip" --activate --path="$WP_ROOT"
+          $WP_CLI plugin status kaoscetak-lite-designer --path="$WP_ROOT"
+          $WP_CLI eval-file "$GITHUB_WORKSPACE/tests/wordpress_smoke.php" --path="$WP_ROOT"
+
+      - name: Include usage limits and verification report
+        shell: bash
+        run: |
+          cat > dist/BACA-SEBELUM-INSTAL.txt <<'TXT'
+          KAOSCETAK LITE DESIGNER v0.3.1-owner-test — BUKAN FINAL
+          Plugin ZIP: Kaoscetak-Lite-Designer-0.3.1-OWNER-TEST.zip
+          Install hanya di website staging atau website pengujian terisolasi.
+          WordPress+WooCommerce activation smoke diperiksa dalam GitHub Actions.
+          Integrasi Flatsome, upload Google Drive nyata, checkout, PDF produksi,
+          keseluruhan privasi/share, perangkat RAM 4 GB, dan performa website live
+          BELUM VERIFIED. Tidak untuk menerima order publik.
+
+          Saat uji: tetap pertahankan Lumise di website live. Di staging boleh
+          nonaktifkan Lumise setelah backup. Jangan mengaktifkan public checkout
+          sebelum penyimpanan file dan checkout diverifikasi.
+
+          Cara instal: WordPress Admin > Plugins > Add New > Upload Plugin >
+          pilih file ZIP plugin DI DALAM ZIP ARTIFACT, Install, Activate.
+          Buka produk WooCommerce dan aktifkan Kaoscetak Designer pada produk.
+          Gunakan admin login untuk preview walaupun Drive belum tersambung.
+
+          Rollback: nonaktifkan plugin Kaoscetak Lite Designer, aktifkan kembali
+          Lumise di staging bila diperlukan; jangan hapus database sebelum backup.
+          Plugin ini mungkin membuat custom post type dan meta; nonaktif tidak
+          otomatis menghapusnya.
+          TXT
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Kaoscetak-Lite-Designer-v0.3.1-OWNER-TEST
+          path: |
+            dist/Kaoscetak-Lite-Designer-0.3.1-OWNER-TEST.zip
+            dist/SHA256SUMS.txt
+            dist/BACA-SEBELUM-INSTAL.txt
+          retention-days: 30
+          if-no-files-found: error
