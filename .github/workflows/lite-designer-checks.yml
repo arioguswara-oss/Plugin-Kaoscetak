@@ -44,3 +44,19 @@ jobs:
       - uses: actions/checkout@v4
       - name: Standalone PHP checks (not WordPress integration)
         run: php tests/${{ matrix.test }}
+
+  responsive-browser:
+    name: Browser: phone/tablet editor (Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install isolated browser test dependency
+        run: python -m pip install playwright==1.55.0
+      - name: Verify real Chromium UI interactions
+        env:
+          CHROMIUM_PATH: /usr/bin/google-chrome
+        run: python tests/test_editor_responsive.py
