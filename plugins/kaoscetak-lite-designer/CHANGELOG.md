@@ -1,3 +1,8 @@
+## Development / 26 Oktober 2026 — Mockup shading ringan (bukan foto FINAL)
+- Preview kaos reguler 24s diberi shading kain, lipatan, jahitan leher/hem, dan beda tampilan depan-belakang lewat Canvas tanpa file master atau request tambahan.
+- Katalog warna tetap memakai HEX perkiraan; bentuk hoodie, sweatshirt, tunik, dan lengan panjang tetap di renderer fallback, tidak dipalsukan dengan foto kaos pendek.
+- Foto mockup realistis final belum terintegrasi; ilustrasi Canvas yang lebih rinci ini hanya pengganti sementara dan memerlukan pengujian visual HP/WooCommerce.
+
 ## 0.3.1-owner-test — Katalog warna & ketersediaan per produk
 - Katalog 24 warna dengan swatch digital ringan, hanya empat warna kompatibilitas aktif secara bawaan; warna tambahan diaktifkan admin per produk.
 - Preservasi nama warna lama dari v0.3.0, termasuk warna custom di field lama.
