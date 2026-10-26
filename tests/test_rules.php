@@ -22,6 +22,7 @@ $matrix=[
 ];
 $tiers=['A5','A4','A3','A3+'];$extra=['A5'=>15000,'A4'=>25000,'A3'=>35000,'A3+'=>40000];
 foreach($matrix as $size=>$priceRow){$GLOBALS['prices'][1]['_kld_matrix'][$size]=array_combine($tiers,$priceRow);}
+$GLOBALS['prices'][1]['_kld_price_custom']='yes';
 foreach($matrix as $size=>$priceRow){
  foreach($tiers as $i=>$a){
   check(kld_unit_price(1,$size,$a,'none')===$priceRow[$i], "$size $a one side");

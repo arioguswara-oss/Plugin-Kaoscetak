@@ -8,6 +8,7 @@ function get_post_meta($id,$key,$single=true){return $GLOBALS['meta'][$id][$key]
 function update_post_meta($id,$key,$value){$GLOBALS['meta'][$id][$key]=$value;}
 function delete_post_meta($id,$key){unset($GLOBALS['meta'][$id][$key]);}
 function sanitize_email($s){return filter_var($s,FILTER_VALIDATE_EMAIL)?$s:'';}
+function is_email($s){return !!filter_var($s,FILTER_VALIDATE_EMAIL);}
 function wp_salt($scheme){return 'test-salt-never-for-production-'.$scheme;}
 function home_url($s){return 'https://kaoscetak.example'.$s;}
 function add_query_arg($args,$url){return $url.'?'.http_build_query($args);}
@@ -19,7 +20,8 @@ check(!kld_verify_owner_token(42,$owner),'unverified owner cannot manage');
 check(kld_share_token(42)==='','private by default');
 update_post_meta(42,'_kld_pending_owner',['email'=>'owner@example.com','hash'=>hash('sha256',$owner),'expires'=>time()+120]);
 check(!kld_verify_owner_token(42,$wrong),'wrong owner token rejected');
-check(kld_verify_owner_token(42,$owner),'valid email token verified');
+check(kld_complete_owner_verification(42,$owner),'valid email token verified');
+check(kld_verify_owner_token(42,$owner),'verified management token is accepted');
 check(get_post_meta(42,'_kld_owner_email',true)==='owner@example.com','owner email saved');
 check(get_post_meta(42,'_kld_status',true)==='saved','saved status only after verified');
 check(kld_verify_owner_token(42,$owner),'owner can return using same private email link');

@@ -7,6 +7,23 @@ function kld_verify_owner_token($id,$token){
  $hash=(string)get_post_meta($id,'_kld_owner_hash',true);
  return $hash!==''&&hash_equals($hash,hash('sha256',$token));
 }
+/** Complete ownership only after the emailed verification key is presented. */
+function kld_complete_owner_verification($id,$key){
+ if(!kld_design_exists($id)||!is_string($key)||!preg_match('/^[a-f0-9]{64}$/D',$key))return false;
+ $pending=get_post_meta($id,'_kld_pending_owner',true);
+ if(!is_array($pending)||time()>(int)($pending['expires']??0))return false;
+ $expected=(string)($pending['hash']??'');
+ if(strlen($expected)!==64||!hash_equals($expected,hash('sha256',$key)))return false;
+ $email=sanitize_email((string)($pending['email']??''));
+ if(!is_email($email))return false;
+ $owner=sanitize_email((string)get_post_meta($id,'_kld_owner_email',true));
+ if($owner!==''&&strcasecmp($owner,$email)!==0)return false;
+ update_post_meta($id,'_kld_owner_email',$email);
+ update_post_meta($id,'_kld_owner_hash',hash('sha256',$key));
+ update_post_meta($id,'_kld_status','saved');
+ delete_post_meta($id,'_kld_pending_owner');
+ return true;
+}
 function kld_share_token($id){
  if(!kld_design_exists($id)||!get_post_meta($id,'_kld_owner_email',true))return '';
  $seed=(string)get_post_meta($id,'_kld_share_seed',true);

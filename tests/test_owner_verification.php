@@ -28,12 +28,13 @@ $result=kld_api_request_verify($a);check(!is_wp_error($result)&&($result['sent']
 check(count($GLOBALS['mail'])===1,'one email sent');check(strpos($GLOBALS['mail'][0]['body'],'JANGAN BAGIKAN')!==false,'private token warning');
 preg_match('/key=([a-f0-9]{64})/',$GLOBALS['mail'][0]['body'],$m);
 check(!empty($m[1]),'email contains management URL');
-check(kld_verify_owner_token(42,$m[1]),'visiting magic link establishes ownership');
+check(kld_complete_owner_verification(42,$m[1]),'valid emailed key completes verification');
+check(kld_verify_owner_token(42,$m[1]),'verified management link permits ownership');
 $hijack=new WP_REST_Request(['design_id'=>42,'email'=>'attacker@example.com'],['X-KLD-Token'=>$edit]);
-$r=kld_api_request_verify($hijack);check(is_wp_error($r)&&$r->get_error_code()==='owner_email','reassignment to attacker rejected');
+$r=kld_api_request_verify($hijack);check(is_wp_error($r)&&$r->get_error_code()==='owner','reassignment to attacker rejected');
 check(count($GLOBALS['mail'])===1,'no email sent to attacker');
 $r=kld_api_request_verify($a);check(!is_wp_error($r),'verified owner can recover management link');
 check(count($GLOBALS['mail'])===2,'owner gets recovery email');
 check($GLOBALS['mail'][1]['email']==='owner@example.com','recovery only to owner');
 check(get_post_meta(42,'_kld_owner_email',true)==='owner@example.com','owner unchanged');
-echo "PASS: 11 email verification / ownership assertions\n";
+echo "PASS: 12 email verification / ownership assertions\n";

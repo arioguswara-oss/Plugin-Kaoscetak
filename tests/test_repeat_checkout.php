@@ -16,6 +16,7 @@ function wc_get_is_paid_statuses(){return ['processing','completed'];}
 function is_admin(){return false;}
 function wp_doing_ajax(){return false;}
 function kld_unit_price($product,$size,$front,$back){return $product===501&&$size==='L'&&$front==='A5'&&$back==='A3'?103000:null;}
+function kld_color_allowed($id,$color){return true;} // Colour policy is tested separately.
 class FakeProduct {public $price=0;function set_price($n){$this->price=$n;}function get_price(){return $this->price;}}
 class FakeCustomer {public $email='';function get_billing_email(){return $this->email;}}
 class FakeCart {public $items=[];function get_cart(){return $this->items;}}

@@ -31,7 +31,7 @@ require __DIR__.'/../plugins/kaoscetak-lite-designer/includes/sharing.php';
 require __DIR__.'/../plugins/kaoscetak-lite-designer/includes/api.php';
 function check($truth,$message){global $count;$count++;if(!$truth)throw new Exception('FAIL: '.$message);}
 $count=0;
-check(kld_fork_has_artwork(42),'original with image and artwork can be forked');
+check(kld_fork_editable(42),'original with image and artwork can be forked');
 $clone=kld_clone_shared_design(42,'Hitam');
 check(is_array($clone),'fork generated');
 [$new,$token]=$clone;
@@ -56,7 +56,7 @@ $request->set_header('X-KLD-Token',$token);
 $restored=kld_api_load($request);
 check(!is_wp_error($restored)&&$restored['layers']['front']===$loaded['layers']['front'],'fork unchanged after source mutation/revocation');
 $GLOBALS['meta'][55]=['_kld_sides'=>['front'=>['tier'=>'A5','image'=>['x'=>1,'y'=>1,'w'=>3,'h'=>3]]]];$GLOBALS['types'][55]='kld_design';
-check(!kld_fork_has_artwork(55),'older design without editable art cannot claim working editor');
+check(!kld_fork_editable(55),'older design without editable art cannot claim working editor');
 $GLOBALS['meta'][56]=['_kld_sides'=>['front'=>['tier'=>'A5','text'=>['value'=>'ABC']]]];$GLOBALS['types'][56]='kld_design';
-check(kld_fork_has_artwork(56),'text-only design remains editable');
+check(kld_fork_editable(56),'text-only design remains editable');
 echo "PASS: $count editable fork security/restore assertions\n";

@@ -12,13 +12,13 @@ function get_the_title($id) { return $GLOBALS['kld_test_titles'][$id]??''; }
 require __DIR__.'/../plugins/kaoscetak-lite-designer/includes/admin.php';
 $count=0;
 function check_price($v,$desc){global $count; ++$count; if(!$v)throw new Exception("FAIL: $desc");}
-$defaults=kld_price_templates();
-check_price(isset($defaults['cotton-24s-short'],$defaults['cotton-24s-long'],$defaults['tunik-oversize34'],$defaults['hoodie'],$defaults['sweatshirt']),'five independent categories');
+$defaults=kld_price_presets();
+check_price(isset($defaults['reguler-24s'],$defaults['lengan-panjang-24s'],$defaults['tunik-oversize34'],$defaults['hoodie'],$defaults['sweatshirt']),'five independent categories');
 check_price($defaults['hoodie']['matrix']===[],'hoodie not assigned regular shirt prices');
 check_price($defaults['sweatshirt']['matrix']===[],'sweatshirt not assigned regular shirt prices');
 // Select products' pricing independently.
-$GLOBALS['kld_test_meta'][21]['_kld_price_preset']='cotton-24s-short';
-$GLOBALS['kld_test_meta'][22]['_kld_price_preset']='cotton-24s-long';
+$GLOBALS['kld_test_meta'][21]['_kld_price_preset']='reguler-24s';
+$GLOBALS['kld_test_meta'][22]['_kld_price_preset']='lengan-panjang-24s';
 $GLOBALS['kld_test_meta'][23]['_kld_price_preset']='tunik-oversize34';
 $GLOBALS['kld_test_meta'][24]['_kld_price_preset']='hoodie';
 $GLOBALS['kld_test_meta'][25]['_kld_price_preset']='sweatshirt';
@@ -40,7 +40,7 @@ check_price(kld_unit_price(24,'L','A4','none')===145000,'hoodie custom price');
 check_price(kld_unit_price(25,'L','A4','none')===null,'sweatshirt unaffected by hoodie custom');
 check_price(kld_unit_price(21,'L','A4','none')===78000,'reguler unaffected by hoodie custom');
 // Admin's template override persists without modifying per-product custom pricing.
-$GLOBALS['kld_test_options']['kld_price_templates']=['cotton-24s-short'=>['L'=>['A4'=>80000]]];
+$GLOBALS['kld_test_options']['kld_price_presets']=['reguler-24s'=>['L'=>['A4'=>80000]]];
 check_price(kld_unit_price(21,'L','A4','none')===80000,'updated regular template retained');
 check_price(kld_unit_price(22,'L','A4','none')===90000,'long sleeve follows template plus extra');
 check_price(kld_unit_price(24,'L','A4','none')===145000,'hoodie custom unaffected by regular template edit');

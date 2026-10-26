@@ -236,22 +236,14 @@ function kld_api_request_verify(WP_REST_Request $r){
  $token=bin2hex(random_bytes(32));
  update_post_meta($id,'_kld_pending_owner',['email'=>$email,'hash'=>hash('sha256',$token),'expires'=>time()+1800]);
  $url=add_query_arg(['kld_verify'=>$id,'key'=>$token],home_url('/'));
- $sent=wp_mail($email,'Verifikasi desain Kaoscetak',"Klik tautan berikut untuk memverifikasi kepemilikan desain (berlaku 30 menit):\n".$url);
+ $sent=wp_mail($email,'Verifikasi desain Kaoscetak',"JANGAN BAGIKAN tautan ini. Tautan ini memberi akses pengelolaan desain.\nKlik tautan berikut untuk memverifikasi kepemilikan desain (berlaku 30 menit):\n".$url);
  if(!$sent)return kld_api_error('mail','Email belum dapat dikirim. Periksa pengaturan SMTP WordPress.',503);
  return rest_ensure_response(['sent'=>true]);
 }
 add_action('template_redirect',function(){
  $id=absint($_GET['kld_verify']??0);$key=sanitize_text_field(wp_unslash($_GET['key']??''));
  if(!$id||!$key)return;
- $p=get_post_meta($id,'_kld_pending_owner',true);
- if(!is_array($p)||time()>($p['expires']??0)||!hash_equals((string)($p['hash']??''),hash('sha256',$key)))wp_die('Tautan verifikasi sudah kedaluwarsa atau tidak valid.');
- $verified=sanitize_email((string)get_post_meta($id,'_kld_owner_email',true));
- if($verified&&strcasecmp($verified,(string)$p['email'])!==0)wp_die('Identitas pemilik tidak dapat dialihkan.');
- $verified=sanitize_email((string)get_post_meta($id,'_kld_owner_email',true));
- if($verified&&strcasecmp($verified,(string)$p['email'])!==0)wp_die('Pemilik desain tidak dapat dialihkan.');
- update_post_meta($id,'_kld_owner_email',$p['email']);
- update_post_meta($id,'_kld_owner_hash',hash('sha256',$key));
- update_post_meta($id,'_kld_status','saved');delete_post_meta($id,'_kld_pending_owner');
+ if(!kld_complete_owner_verification($id,$key))wp_die('Tautan verifikasi sudah kedaluwarsa atau tidak valid.');
  wp_safe_redirect(add_query_arg(['kld_owner'=>$id,'key'=>$key],home_url('/')),303);exit;
 });
 
