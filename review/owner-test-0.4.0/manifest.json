@@ -1,0 +1,32 @@
+{
+  "file": "kaoscetak-lite-designer-0.4.0-owner-test.1.zip",
+  "version": "0.4.0-owner-test.1",
+  "sha256": "ab70701d17308777e34075806671dbe02ade37cfc108a840db0ff8840924606a",
+  "bytes": 80731,
+  "files": 20,
+  "entries": {
+    "CHANGELOG.md": "b8b0c40a82172534a51381cfca2515d84e23ffac5d53088bd27d43137837efea",
+    "LICENSE": "aaf135472f81c5b4a0dca9367e5bb5e9750032b5bebe5442b36e4c0a47430df3",
+    "OWNER-TEST-0.4.0.md": "a556b77e6c74d3059de2c8d838808f480accf6cc924304a50107c34adf019af2",
+    "README-PENTING.md": "d058697ffe266b52a0c48df736907d1337f2b690810251e80c9dcc1d854d27d7",
+    "README.md": "9a6a07bde301d5c8060133c0b4797ff1b1e86b63fcabdc0d6e2ab001aeb81410",
+    "RELEASE-CANDIDATE.md": "a3dc869f2c4900b4f250b5893332a9b193b358e4591cb2a4720bcfbbb3e9841b",
+    "assets/editor.css": "7109167c0f6589037a490b620ef006abfd4d7920de6788023bfe0747d210222e",
+    "assets/editor.js": "7b39808cf8cbe9db66018ea24a180317b5a79a389466c3f4b41ff330feb42221",
+    "assets/index.php": "c48fe6b757ddc30cc6d27924bbbdd8ec8a46bba76754c4ce8adb99ea32046fbe",
+    "includes/admin.php": "a9c3ce3b0a09befe5aaec5586733286a1d99144536ed8574069435755b014c6b",
+    "includes/api.php": "821225d291882cd0e33de7cb57839acac669bf3c7d2be9d892eedeaa27ba5427",
+    "includes/drive.php": "cc0d4eb127b10883cefc513c489f66f42690696f981720530cec533a74f65b70",
+    "includes/index.php": "c48fe6b757ddc30cc6d27924bbbdd8ec8a46bba76754c4ce8adb99ea32046fbe",
+    "includes/repeat.php": "8e47f2f426d84b86addd41bcf6b8a38a2111f675743be23dc6bd94af9a63a365",
+    "includes/sharing.php": "63e43f8d89c3ecff0c1c4e2d3d649ea55aa3dbc42abfdaa9fe6467e3385bdd25",
+    "includes/store.php": "c85411fcf849ac8379480a1cc51ae027dd33139a08035ec393e7b67c1445598d",
+    "includes/validation.php": "c0014d84951bbb15f3d2f478d4fec3f59b095785eef67692d838397ff4f45c42",
+    "index.php": "c48fe6b757ddc30cc6d27924bbbdd8ec8a46bba76754c4ce8adb99ea32046fbe",
+    "kaoscetak-lite-designer.php": "7bfc721655401b6912e997854049c3b47c418f81c6f84a20438e5064e14d2bdb",
+    "tests/pricing-smoke.php": "aaaf4459908586c21e2f567135ac352c72c69de70aca80cbe9ddc8aa1977697f"
+  },
+  "status": "OWNER-TEST candidate; native/source evidence separate; WordPress/Flatsome/live unverified; not FINAL",
+  "source_commit": "ba57511e5d7b8e53032edc67abee3d6685c47544",
+  "owner_decision": "Combine additional roadmap before direct owner testing on kaoscetak.id; no staging prerequisite for this owner test"
+}
