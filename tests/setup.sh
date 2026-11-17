@@ -12,7 +12,8 @@ wp(){ docker compose -f tests/compose.yml exec -T wordpress php /fixtures/tests/
 for attempt in 1 2 3 4 5 6 7 8 9 10; do if wp core is-installed >/dev/null 2>&1; then break; fi; if wp core install --url=http://127.0.0.1:8893 --title='KLD synthetic only' --admin_user=fixture --admin_password=fixture-local-only --admin_email=admin@example.test --skip-email; then break; fi; sleep 2; done
 if ! wp plugin is-installed woocommerce; then wp plugin install /fixtures/tests/.downloads/woocommerce.zip --activate; fi
 wp plugin activate woocommerce
-wp plugin install /fixtures/dist/kaoscetak-lite-designer-0.3.2-rc.1.zip --activate --force
+KLD_QA_ZIP=$(python3 -c 'import json; print(json.load(open("dist/manifest.json"))["file"])')
+wp plugin install "/fixtures/dist/$KLD_QA_ZIP" --activate --force
 wp theme install /fixtures/tests/.downloads/twentytwentyone.zip --activate --force
 wp rewrite structure '/%postname%/' --hard
 wp option update woocommerce_currency IDR

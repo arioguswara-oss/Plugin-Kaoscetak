@@ -1,4 +1,16 @@
-# 0.3.2-rc.1 — DRAFT, isolated QA / owner review only
+# 0.3.2 — release archive and upgrade status
+
+Owner requested a normal release archive continuing the active 0.3.2-rc.1 plugin,
+with the additional roadmap included. See UPGRADE-0.3.2.md. The plugin directory,
+option keys and existing Google OAuth/Drive settings remain unchanged. Loading,
+activation and deactivation are tested against an existing configuration fixture
+to reject any settings write or network request. No real secrets are read.
+
+Source checks PASS; actual installation/rendering/checkout/Drive for this version
+remain unverified until the Owner installs and exercises it. The archive does
+not claim those runtime gates passed. No installation/merge/deploy was performed.
+
+# 0.3.2-rc.1 — historical DRAFT QA notes
 
 Continues actual v0.3.1 checkpoint 4381a5e. Not a new plugin. No automatic
 activation, option migration, price reset or production deployment. Automatic

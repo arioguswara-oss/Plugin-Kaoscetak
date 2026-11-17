@@ -9,6 +9,7 @@ function add_filter() {}
 function get_option($key, $default=[]) { return $GLOBALS['kld_test_options'][$key] ?? $default; }
 function get_post_meta($id,$key,$single=true) { return $GLOBALS['kld_test_meta'][$id][$key]??null; }
 function get_the_title($id) { return $GLOBALS['kld_test_titles'][$id]??''; }
+function sanitize_text_field($value){return trim(strip_tags((string)$value));}
 require __DIR__.'/../plugins/kaoscetak-lite-designer/includes/admin.php';
 $count=0;
 function check_price($v,$desc){global $count; ++$count; if(!$v)throw new Exception("FAIL: $desc");}
@@ -46,3 +47,24 @@ check_price(kld_unit_price(22,'L','A4','none')===90000,'long sleeve follows temp
 check_price(kld_unit_price(24,'L','A4','none')===145000,'hoodie custom unaffected by regular template edit');
 check_price(kld_unit_price(23,'M','A4','none')===95000,'tunik template unaffected by regular template edit');
 echo "PASS: $count independent pricing preset assertions\n";
+// Real mockup normalizer: calibrated, small media on this site's own origin only.
+function get_post_mime_type($id){return $GLOBALS['mockup_media'][$id]['mime']??'';}
+function wp_get_attachment_metadata($id){return $GLOBALS['mockup_media'][$id]['meta']??[];}
+function get_attached_file($id){return $GLOBALS['mockup_media'][$id]['file']??'';}
+function wp_get_attachment_url($id){return $GLOBALS['mockup_media'][$id]['url']??'';}
+function wp_parse_url($url){return parse_url($url);}function home_url($path='/'){return 'https://fixture.invalid'.$path;}
+$small=tempnam(sys_get_temp_dir(),'kld-photo-');$large=tempnam(sys_get_temp_dir(),'kld-photo-');
+try{
+ file_put_contents($small,'synthetic-media-fixture');file_put_contents($large,str_repeat('x',204801));
+ $base=['mime'=>'image/jpeg','meta'=>['width'=>600,'height'=>710],'file'=>$small,'url'=>'https://fixture.invalid/uploads/mockup.jpg'];
+ $GLOBALS['mockup_media']=[1=>$base];
+ check_price(kld_mockup_attachment_url(1)===$base['url'],'valid small calibrated photo accepted');
+ foreach([['mime'=>'image/svg+xml'],['meta'=>['width'=>1200,'height'=>1420]],['file'=>$large],['url'=>'https://cdn.invalid/photo.jpg'],['url'=>'http://fixture.invalid/photo.jpg'],['url'=>'https://fixture.invalid:9999/photo.jpg'],['url'=>'https://user:password@fixture.invalid/photo.jpg']] as $bad){$GLOBALS['mockup_media'][2]=array_replace($base,$bad);check_price(kld_mockup_attachment_url(2)==='','unsafe, oversized or uncalibrated photo rejected');}
+ foreach([[],new stdClass,1.5,-1,'1e2','1\n'] as $bad)check_price(kld_mockup_attachment_url($bad)==='','malformed attachment ID rejected');
+ $map=kld_normalize_mockup_ids(21,['Hitam'=>['front'=>1,'back'=>2],'unknown'=>['front'=>1]]);
+ check_price($map===['Hitam'=>['front'=>1]],'only allowed colour and validated photo survive');
+ $GLOBALS['kld_test_meta'][21]['_kld_mockups']=$map;
+ check_price(kld_product_mockups(21)===['Hitam'=>['front'=>$base['url']]],'frontend config contains photo URL only, no filesystem path');
+ check_price(kld_normalize_mockup_ids(21,'malformed')===[],'malformed photo map fails closed');
+}finally{@unlink($small);@unlink($large);}
+echo "PASS: $count total pricing preset / mockup assertions\n";
