@@ -1,0 +1,5 @@
+[
+  "PASS admin preview without Drive; guest hidden; save blocked; Escape returns focus",
+  "PASS deactivate/reactivate preserves synthetic designs/products/orders",
+  "PASS missing WooCommerce API returns 503 without fatal"
+]

@@ -1,0 +1,49 @@
+{
+  "status": "DRAFT \u2014 owner QA candidate, not production verified",
+  "baseline_commit": "4381a5e6b81af9266eec1168d6f8afd0b38c8db8",
+  "source_commit": "5c60e111dc29606b0b67bb3f0a0ef9af2b18aa07",
+  "version": "0.3.2-rc.1",
+  "package": {
+    "file": "kaoscetak-lite-designer-0.3.2-rc.1.zip",
+    "sha256": "ef04d7b83d0bd31be35dafb23068270e3a48af8d7b495fcb650f513fde6f2dfd",
+    "bytes": 66819,
+    "files": 18
+  },
+  "crc": "PASS",
+  "single_root": "kaoscetak-lite-designer/",
+  "source_archive_installed_byte_match": "PASS",
+  "deterministic_rebuild": "PASS",
+  "credential_pattern_scan": "no matches; not an absolute security guarantee",
+  "full_local_suite_exit_code": 0,
+  "real_wp_assertions": 193,
+  "standalone_php_suites": 9,
+  "real_custom_wildcard_variation": "PASS S/L",
+  "customer_viewports": [
+    [
+      320,
+      740
+    ],
+    [
+      390,
+      844
+    ],
+    [
+      768,
+      1024
+    ],
+    [
+      1440,
+      900
+    ]
+  ],
+  "screenshots": 14,
+  "synthetic_native_cod_order": "PASS 390px with exact total and snapshot",
+  "synthetic_original_byte_retry": "PASS 9437264 bytes, interrupted/resumed",
+  "public_production_deployment": false,
+  "google_oauth_real_upload": "NOT VERIFIED",
+  "flatsome_lumise": "NOT VERIFIED",
+  "hpos": "NOT VERIFIED (fixture used legacy order storage)",
+  "physical_phone_performance_score": "NOT VERIFIED",
+  "blocks": "RC rejects KLD Store API carts explicitly; Classic required",
+  "ci_status": "Fresh run is reported separately on the PR; no PASS assumed"
+}

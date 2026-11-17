@@ -1,0 +1,336 @@
+No syntax errors detected in /fixtures/plugins/kaoscetak-lite-designer/kaoscetak-lite-designer.php
+No syntax errors detected in /fixtures/plugins/kaoscetak-lite-designer/includes/api.php
+No syntax errors detected in /fixtures/plugins/kaoscetak-lite-designer/includes/admin.php
+No syntax errors detected in /fixtures/plugins/kaoscetak-lite-designer/includes/repeat.php
+No syntax errors detected in /fixtures/plugins/kaoscetak-lite-designer/includes/drive.php
+No syntax errors detected in /fixtures/plugins/kaoscetak-lite-designer/includes/sharing.php
+No syntax errors detected in /fixtures/plugins/kaoscetak-lite-designer/includes/store.php
+No syntax errors detected in /fixtures/plugins/kaoscetak-lite-designer/includes/validation.php
+No syntax errors detected in /fixtures/plugins/kaoscetak-lite-designer/includes/index.php
+No syntax errors detected in /fixtures/plugins/kaoscetak-lite-designer/index.php
+No syntax errors detected in /fixtures/plugins/kaoscetak-lite-designer/assets/index.php
+No syntax errors detected in /fixtures/tests/fixture.php
+No syntax errors detected in /fixtures/tests/test_editable_fork.php
+No syntax errors detected in /fixtures/tests/test_owner_verification.php
+No syntax errors detected in /fixtures/tests/test_repeat_checkout.php
+No syntax errors detected in /fixtures/tests/drive-fixture.php
+No syntax errors detected in /fixtures/tests/test_share_clone.php
+No syntax errors detected in /fixtures/tests/test_repeat.php
+No syntax errors detected in /fixtures/tests/test_order_snapshot.php
+No syntax errors detected in /fixtures/tests/wordpress_regression.php
+No syntax errors detected in /fixtures/tests/test_price_presets.php
+No syntax errors detected in /fixtures/tests/router.php
+No syntax errors detected in /fixtures/tests/variable_integration.php
+No syntax errors detected in /fixtures/tests/test_share_security.php
+No syntax errors detected in /fixtures/tests/wordpress_smoke.php
+No syntax errors detected in /fixtures/tests/test_rules.php
+PASS: 16 editable fork security/restore assertions
+PASS: order snapshot remains unchanged after owner edits design master
+PASS: 12 email verification / ownership assertions
+PASS: 33 independent pricing preset assertions
+PASS repeat: 10 assertions, email ownership, paid-order eligibility, rounding, caching
+PASS: 7 isolated cart and checkout email assertions
+PASS: 330 PHP assertions (price matrix, both sides, dimension rules)
+PASS: 11 independent share-copy assertions
+PASS: 21 share/owner authorization assertions
+{
+    "status": "PASS",
+    "checks": [
+        "official S A5 62000",
+        "official long sleeve S A5 72000",
+        "symmetry S A5 A5",
+        "symmetry S A5 A4",
+        "symmetry S A5 A3",
+        "symmetry S A5 A3+",
+        "symmetry S A4 A5",
+        "symmetry S A4 A4",
+        "symmetry S A4 A3",
+        "symmetry S A4 A3+",
+        "symmetry S A3 A5",
+        "symmetry S A3 A4",
+        "symmetry S A3 A3",
+        "symmetry S A3 A3+",
+        "symmetry S A3+ A5",
+        "symmetry S A3+ A4",
+        "symmetry S A3+ A3",
+        "symmetry S A3+ A3+",
+        "symmetry M A5 A5",
+        "symmetry M A5 A4",
+        "symmetry M A5 A3",
+        "symmetry M A5 A3+",
+        "symmetry M A4 A5",
+        "symmetry M A4 A4",
+        "symmetry M A4 A3",
+        "symmetry M A4 A3+",
+        "symmetry M A3 A5",
+        "symmetry M A3 A4",
+        "symmetry M A3 A3",
+        "symmetry M A3 A3+",
+        "symmetry M A3+ A5",
+        "symmetry M A3+ A4",
+        "symmetry M A3+ A3",
+        "symmetry M A3+ A3+",
+        "symmetry L A5 A5",
+        "symmetry L A5 A4",
+        "symmetry L A5 A3",
+        "symmetry L A5 A3+",
+        "symmetry L A4 A5",
+        "symmetry L A4 A4",
+        "symmetry L A4 A3",
+        "symmetry L A4 A3+",
+        "symmetry L A3 A5",
+        "symmetry L A3 A4",
+        "symmetry L A3 A3",
+        "symmetry L A3 A3+",
+        "symmetry L A3+ A5",
+        "symmetry L A3+ A4",
+        "symmetry L A3+ A3",
+        "symmetry L A3+ A3+",
+        "symmetry XL A5 A5",
+        "symmetry XL A5 A4",
+        "symmetry XL A5 A3",
+        "symmetry XL A5 A3+",
+        "symmetry XL A4 A5",
+        "symmetry XL A4 A4",
+        "symmetry XL A4 A3",
+        "symmetry XL A4 A3+",
+        "symmetry XL A3 A5",
+        "symmetry XL A3 A4",
+        "symmetry XL A3 A3",
+        "symmetry XL A3 A3+",
+        "symmetry XL A3+ A5",
+        "symmetry XL A3+ A4",
+        "symmetry XL A3+ A3",
+        "symmetry XL A3+ A3+",
+        "symmetry 2XL A5 A5",
+        "symmetry 2XL A5 A4",
+        "symmetry 2XL A5 A3",
+        "symmetry 2XL A5 A3+",
+        "symmetry 2XL A4 A5",
+        "symmetry 2XL A4 A4",
+        "symmetry 2XL A4 A3",
+        "symmetry 2XL A4 A3+",
+        "symmetry 2XL A3 A5",
+        "symmetry 2XL A3 A4",
+        "symmetry 2XL A3 A3",
+        "symmetry 2XL A3 A3+",
+        "symmetry 2XL A3+ A5",
+        "symmetry 2XL A3+ A4",
+        "symmetry 2XL A3+ A3",
+        "symmetry 2XL A3+ A3+",
+        "symmetry 3XL A5 A5",
+        "symmetry 3XL A5 A4",
+        "symmetry 3XL A5 A3",
+        "symmetry 3XL A5 A3+",
+        "symmetry 3XL A4 A5",
+        "symmetry 3XL A4 A4",
+        "symmetry 3XL A4 A3",
+        "symmetry 3XL A4 A3+",
+        "symmetry 3XL A3 A5",
+        "symmetry 3XL A3 A4",
+        "symmetry 3XL A3 A3",
+        "symmetry 3XL A3 A3+",
+        "symmetry 3XL A3+ A5",
+        "symmetry 3XL A3+ A4",
+        "symmetry 3XL A3+ A3",
+        "symmetry 3XL A3+ A3+",
+        "symmetry 4XL A5 A5",
+        "symmetry 4XL A5 A4",
+        "symmetry 4XL A5 A3",
+        "symmetry 4XL A5 A3+",
+        "symmetry 4XL A4 A5",
+        "symmetry 4XL A4 A4",
+        "symmetry 4XL A4 A3",
+        "symmetry 4XL A4 A3+",
+        "symmetry 4XL A3 A5",
+        "symmetry 4XL A3 A4",
+        "symmetry 4XL A3 A3",
+        "symmetry 4XL A3 A3+",
+        "symmetry 4XL A3+ A5",
+        "symmetry 4XL A3+ A4",
+        "symmetry 4XL A3+ A3",
+        "symmetry 4XL A3+ A3+",
+        "symmetry 5XL A5 A5",
+        "symmetry 5XL A5 A4",
+        "symmetry 5XL A5 A3",
+        "symmetry 5XL A5 A3+",
+        "symmetry 5XL A4 A5",
+        "symmetry 5XL A4 A4",
+        "symmetry 5XL A4 A3",
+        "symmetry 5XL A4 A3+",
+        "symmetry 5XL A3 A5",
+        "symmetry 5XL A3 A4",
+        "symmetry 5XL A3 A3",
+        "symmetry 5XL A3 A3+",
+        "symmetry 5XL A3+ A5",
+        "symmetry 5XL A3+ A4",
+        "symmetry 5XL A3+ A3",
+        "symmetry 5XL A3+ A3+",
+        "official L A3+A5 103000",
+        "mug 11 oz preserved",
+        "24 colours preserved",
+        "invalid category rejected",
+        "no automatic draft deletion before approved retention",
+        "guest init",
+        "private by default",
+        "wrong edit token rejected",
+        "save multiline text",
+        "actual combined area cm",
+        "invalid colour has no partial writes",
+        "malformed layer rejected",
+        "malformed layer rejected",
+        "malformed layer rejected",
+        "malformed layer rejected",
+        "invalid quantity -1",
+        "invalid quantity 1.5",
+        "invalid quantity \"1e2\"",
+        "invalid quantity 101",
+        "multi-size native cart",
+        "buyer cart preserved",
+        "cart replay no duplicates",
+        "cart layout locked",
+        "verification email intercepted locally",
+        "email verification cannot unlock cart",
+        "email verification does not share",
+        "separate share token",
+        "share cannot load private editor",
+        "fork no inherited identity\/lock",
+        "share revoked",
+        "fork leaves source untouched",
+        "XSS payload sanitized with safe font\/colour",
+        "spoofed thumbnail bytes rejected",
+        "real HTTP guest cannot escalate owner privileges",
+        "real HTTP owner action rejects CSRF nonce",
+        "valid checkout extension gates",
+        "disabled colour blocks old cart",
+        "guest init",
+        "unuploaded image cannot save",
+        "invalid image size rejected",
+        "invalid image size rejected",
+        "invalid image size rejected",
+        "invalid image size rejected",
+        "invalid image size rejected",
+        "synthetic upload session",
+        "exact pending metadata confirmed",
+        "confirmed image saves",
+        "synthetic master rechecked",
+        "trashed Drive master rejected",
+        "pending replacement blocks old master",
+        "retry confirmation",
+        "repeat 5 percent one piece",
+        "different email no repeat",
+        "production guide PDF",
+        "false image bytes rejected",
+        "public folder rejected before upload",
+        "Blocks fails closed with explicit Classic mode",
+        "production folder + guide synthetic pipeline",
+        "completed production retry makes no new files",
+        "lost response after folder creation",
+        "lost folder response recovered without duplicate",
+        "folder retry idempotency",
+        "atomic second writer rejected"
+    ],
+    "count": 193,
+    "real_drive": "NOT VERIFIED",
+    "flatsome": "NOT VERIFIED"
+}
+PASS real Woo custom wildcard variation across S/L
+{"test": "responsive frontend editor isolated from WordPress", "checks": ["shirt 320x740: PASS", "shirt 360x740: PASS", "shirt 390x844: PASS", "shirt 768x1024: PASS", "shirt 1440x900: PASS", "mug 390x844: PASS"]}
+{"browser": "PASS", "preview_image": "PASS", "price": "Rp103.000", "multiline_text": "PASS", "page_errors": []}
+START 320 740
+CART_QUANTITIES { S: 2, M: 0, L: 1, XL: 0, '2XL': 0, '3XL': 0, '4XL': 0, '5XL': 0 }
+CART_RESPONSE ordinary:1,S:2,L:1
+PERSISTED_CART {
+  count: 4,
+  lines: [
+    { size: 'ordinary', quantity: 1 },
+    { size: 'S', quantity: 2 },
+    { size: 'L', quantity: 1 }
+  ]
+}
+START 390 844
+CART_QUANTITIES { S: 2, M: 0, L: 1, XL: 0, '2XL': 0, '3XL': 0, '4XL': 0, '5XL': 0 }
+CART_RESPONSE ordinary:1,S:2,L:1
+PERSISTED_CART {
+  count: 4,
+  lines: [
+    { size: 'ordinary', quantity: 1 },
+    { size: 'S', quantity: 2 },
+    { size: 'L', quantity: 1 }
+  ]
+}
+START 768 1024
+CART_QUANTITIES { S: 2, M: 0, L: 1, XL: 0, '2XL': 0, '3XL': 0, '4XL': 0, '5XL': 0 }
+CART_RESPONSE ordinary:1,S:2,L:1
+PERSISTED_CART {
+  count: 4,
+  lines: [
+    { size: 'ordinary', quantity: 1 },
+    { size: 'S', quantity: 2 },
+    { size: 'L', quantity: 1 }
+  ]
+}
+START 1440 900
+CART_QUANTITIES { S: 2, M: 0, L: 1, XL: 0, '2XL': 0, '3XL': 0, '4XL': 0, '5XL': 0 }
+CART_RESPONSE ordinary:1,S:2,L:1
+PERSISTED_CART {
+  count: 4,
+  lines: [
+    { size: 'ordinary', quantity: 1 },
+    { size: 'S', quantity: 2 },
+    { size: 'L', quantity: 1 }
+  ]
+}
+[
+  {
+    "viewport": [
+      320,
+      740
+    ],
+    "status": "PASS",
+    "flow": "product → editor → original-byte synthetic upload → saved cm → multi-size preserved cart → native checkout validation",
+    "real_drive": false,
+    "original_bytes": 68,
+    "resumed_after_network_failure": false,
+    "native_synthetic_cod_order": false
+  },
+  {
+    "viewport": [
+      390,
+      844
+    ],
+    "status": "PASS",
+    "flow": "product → editor → original-byte synthetic upload → saved cm → multi-size preserved cart → native checkout validation",
+    "real_drive": false,
+    "original_bytes": 9437264,
+    "resumed_after_network_failure": true,
+    "native_synthetic_cod_order": true
+  },
+  {
+    "viewport": [
+      768,
+      1024
+    ],
+    "status": "PASS",
+    "flow": "product → editor → original-byte synthetic upload → saved cm → multi-size preserved cart → native checkout validation",
+    "real_drive": false,
+    "original_bytes": 68,
+    "resumed_after_network_failure": false,
+    "native_synthetic_cod_order": false
+  },
+  {
+    "viewport": [
+      1440,
+      900
+    ],
+    "status": "PASS",
+    "flow": "product → editor → original-byte synthetic upload → saved cm → multi-size preserved cart → native checkout validation",
+    "real_drive": false,
+    "original_bytes": 68,
+    "resumed_after_network_failure": false,
+    "native_synthetic_cod_order": false
+  }
+]
+PASS admin preview without Drive; guest hidden; save blocked; Escape returns focus
+PASS deactivate/reactivate preserves synthetic designs/products/orders
+PASS missing WooCommerce API returns 503 without fatal
