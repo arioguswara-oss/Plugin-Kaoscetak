@@ -28,4 +28,17 @@ check(kld_drive_order_folder($order,'fixture-order-parent')==='recovered-folder-
 $url=$GLOBALS['requests'][count($GLOBALS['requests'])-1][0];parse_str(parse_url($url,PHP_URL_QUERY),$query);
 check(strpos($query['q'],"'fixture-order-parent' in parents")!==false,'folder recovery bound to selected parent');
 check(is_wp_error(kld_drive_order_folder($order,"bad'parent")),'invalid parent rejected before Drive query');
+$artifactKey=str_repeat('a',64);
+$GLOBALS['response']=['files'=>[['id'=>'existing-artifact-42']]];
+check(kld_drive_find_artifact('fixture-order-parent',$artifactKey,'application/pdf')==='existing-artifact-42','lost PDF response recovered');
+$GLOBALS['response']=['files'=>[['id'=>'first'],['id'=>'second']]];
+check(is_wp_error(kld_drive_find_artifact('fixture-order-parent',$artifactKey,'application/pdf')),'duplicate PDF blocks unsafe retry');
+$GLOBALS['response']=['files'=>[]];
+check(kld_drive_find_artifact('fixture-order-parent',$artifactKey,'application/pdf')==='','missing artifact allows creation');
+check(is_wp_error(kld_drive_find_artifact("bad'parent",$artifactKey,'application/pdf')),'invalid artifact parent rejected');
+$GLOBALS['response']=['files'=>[['id'=>'existing-shortcut-42']]];
+$before=count($GLOBALS['requests']);
+$shortcut=kld_drive_shortcut('master-file-42','fixture-order-parent','DESAIN-42-FRONT',$artifactKey);
+check(($shortcut['id']??'')==='existing-shortcut-42','existing shortcut recovered without recreation');
+check(count($GLOBALS['requests'])===$before+1,'shortcut recovery performs lookup only');
 echo "PASS: $count Drive privacy/content/recovery assertions (mock HTTP)\n";
