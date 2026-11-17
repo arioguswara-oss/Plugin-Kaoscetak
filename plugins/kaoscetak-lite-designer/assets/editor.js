@@ -42,7 +42,7 @@ root.innerHTML=`<div class="kld-overlay" role="dialog" aria-modal="true" aria-la
     <div class="kld-total"><span>Total pesanan <small class="kld-count"></small></span><strong class="kld-total-number">Pilih area cetak</strong></div>
     <div class="kld-status" role="status" aria-live="polite"></div>
     <div class="kld-actions"><button class="kld-save" type="button">Simpan Desain</button><button class="kld-cart" type="button">Masukkan Keranjang</button></div>
-    <div class="kld-mail"><strong>Kelola desain tanpa akun</strong><p>Masukkan email untuk menerima tautan verifikasi kepemilikan.</p><div class="kld-row2"><input aria-label="Email pemilik desain" type="email" class="kld-email" placeholder="email@contoh.com"><button type="button" class="kld-verify">Kirim verifikasi</button></div></div>
+    <p class="kld-save-explainer">Desain bisa disimpan tanpa akun. Agar tersimpan sebagai koleksi pribadi dan dapat dibuka kembali nanti, verifikasi email Anda di bawah ini.</p>\n    <div class="kld-mail"><strong>Verifikasi email untuk menyimpan permanen</strong><p>Setelah menyimpan desain, masukkan email untuk menerima tautan privat pengelolaan desain. Jangan bagikan tautan tersebut.</p><div class="kld-row2"><input aria-label="Email pemilik desain" type="email" class="kld-email" placeholder="email@contoh.com"><button type="button" class="kld-verify">Kirim verifikasi</button></div></div>
     <p class="kld-footnote">Preview adalah simulasi. File asli tetap disimpan untuk operator cetak, tanpa diproses di hosting WordPress.</p>
   </section></div></div></div>`;
  $('.kld-back').addEventListener('click',close);
