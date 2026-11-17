@@ -414,7 +414,7 @@ async function saveDesign(){if(!color){showStatus('Tidak ada warna yang aktif un
  try{await createDraft();if(!['front','back'].some(k=>sides[k].tier!=='none'))throw Error('Pilih minimal satu sisi cetak.');
   for(const k of ['front','back'])if(sides[k].image&&sides[k].upload!=='done')throw Error('File sisi '+(k==='front'?'depan':'belakang')+' belum selesai tersimpan di Google Drive.');
   showStatus('Menyimpan desain dan preview…');const r=await api('save',{sides:{front:jsonSide(sides.front),back:jsonSide(sides.back)},previews:{front:renderThumb('front'),back:isMug?'':renderThumb('back')},artwork:{front:artworkThumbnail(sides.front),back:isMug?'':artworkThumbnail(sides.back)},color});
-  showStatus('Desain KLD-'+designId+' berhasil disimpan. Untuk membuka kembali, isi email pada bagian Kelola desain tanpa akun, tekan Kirim Verifikasi, lalu buka tautan privat dari email.','ok');return true;
+  showStatus('Desain KLD-'+designId+' berhasil disimpan. Untuk mengelola desain secara permanen, isi email pada bagian Verifikasi email untuk menyimpan permanen, tekan Kirim verifikasi, lalu buka tautan privat dari email.','ok');return true;
  }catch(e){showStatus(e.message,'error');return false;}finally{busy=false;lockControls(cartPending);}
 }
 async function addCart(){if(cartPending||busy)return;if(!color){showStatus('Tidak ada warna yang aktif untuk produk ini. Hubungi admin Kaoscetak.','error');return;}if(cfg.previewOnly){showStatus('Mode preview: checkout dinonaktifkan sampai Drive terhubung.','warn');return;}
