@@ -79,7 +79,7 @@ add_filter('woocommerce_checkout_cart_item_thumbnail',function($thumbnail,$item)
 },10,2);
 /** Classic WooCommerce checkout does not render the cart thumbnail hook by default. */
 add_filter('woocommerce_cart_item_name',function($name,$item,$key){
- if(!function_exists('is_checkout')||!is_checkout()||(function_exists('is_cart')&&is_cart())||is_order_received_page())return $name;
+ if(!function_exists('is_checkout')||!is_checkout()||(function_exists('is_cart')&&is_cart())||(function_exists('is_order_received_page')&&is_order_received_page()))return $name;
  if(empty($item['kld_design_id']))return $name;
  $preview=kld_cart_preview_image($item);
  if($preview==='')return $name;
