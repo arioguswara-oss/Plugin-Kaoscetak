@@ -1,3 +1,14 @@
+# 0.3.2-rc.1 — DRAFT QA candidate
+
+- Preserve cart locks through email verification; serialize design writes and replay cart additions safely.
+- Revalidate product, stock via WooCommerce, size/quantity/colour, physical bounds and private Drive master at checkout.
+- Stage save validation before metadata writes; record actual combined cm dimensions.
+- Correct product-specific preview measurements/margins; keep physical layouts invariant across preview sizes.
+- Inspect actual source alpha in bounded browser strips; preserve original uploads, chunk/resume/retry and timeout.
+- Recover order folders by app property after lost responses; atomic production lock; private folder selection.
+- Add real WP/WooCommerce synthetic regression, browser flow and deterministic QA packaging.
+- Classic-only RC compatibility for KLD checkout; Blocks/real Drive/Flatsome/physical phone/performance score remain unverified.
+
 ## Development / 26 Oktober 2026 — Mockup shading ringan (bukan foto FINAL)
 - Preview kaos reguler 24s diberi shading kain, lipatan, jahitan leher/hem, dan beda tampilan depan-belakang lewat Canvas tanpa file master atau request tambahan.
 - Katalog warna tetap memakai HEX perkiraan; bentuk hoodie, sweatshirt, tunik, dan lengan panjang tetap di renderer fallback, tidak dipalsukan dengan foto kaos pendek.

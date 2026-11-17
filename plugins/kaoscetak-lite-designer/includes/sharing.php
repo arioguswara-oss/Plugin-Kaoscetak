@@ -1,6 +1,7 @@
 <?php
 /** Private guest ownership, optional sharing, buying and independent editable forks. */
 if(!defined('ABSPATH'))exit;
+require_once __DIR__.'/validation.php';
 function kld_design_exists($id){return $id>0&&get_post_type($id)==='kld_design'&&get_post_meta($id,'_kld_deleted',true)!=='yes';}
 function kld_verify_owner_token($id,$token){
  if(!kld_design_exists($id)||!is_string($token)||!preg_match('/^[a-f0-9]{64}$/D',$token))return false;
@@ -20,7 +21,7 @@ function kld_complete_owner_verification($id,$key){
  if($owner!==''&&strcasecmp($owner,$email)!==0)return false;
  update_post_meta($id,'_kld_owner_email',$email);
  update_post_meta($id,'_kld_owner_hash',hash('sha256',$key));
- update_post_meta($id,'_kld_status','saved');
+ if(!kld_design_locked($id))update_post_meta($id,'_kld_status','saved');
  delete_post_meta($id,'_kld_pending_owner');
  return true;
 }
@@ -80,6 +81,7 @@ add_action('template_redirect',function(){
   else echo '<p>Desain masih privat.</p>';
   echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'"><input type="hidden" name="action" value="kld_owner_action"><input type="hidden" name="design_id" value="'.esc_attr($id).'"><input type="hidden" name="key" value="'.esc_attr($key).'">';
   wp_nonce_field('kld_owner_'.$id);
+  if(kld_fork_editable($id))echo '<button name="operation" value="edit">Edit / Pesan Ulang Salinan</button>';
   if($shared)echo '<button name="operation" value="revoke">Nonaktifkan link berbagi</button>';
   else echo '<button name="operation" value="share">Aktifkan link berbagi</button>';
   echo '<p><label><input type="checkbox" name="confirm_delete" value="yes"> Hapus dari koleksi (arsip order tidak ikut dihapus)</label></p><button name="operation" value="delete">Hapus desain</button></form>';
@@ -93,8 +95,7 @@ add_action('template_redirect',function(){
  if(!$p||get_post_meta($product,'_kld_enabled',true)!=='yes'){echo '<p>Produk tidak tersedia untuk checkout.</p>';kld_guest_end();}
  echo '<h2>'.esc_html($p->get_name()).'</h2><form method="post" action="'.esc_url(admin_url('admin-post.php')).'"><input type="hidden" name="action" value="kld_share_buy"><input type="hidden" name="design_id" value="'.esc_attr($id).'"><input type="hidden" name="token" value="'.esc_attr($token).'">';
  wp_nonce_field('kld_share_buy_'.$id);
- $colors=kld_is_mug($product)?['Putih']:array_values(array_filter(array_map('trim',explode('|',(string)get_post_meta($product,'_kld_colors',true)))));
- if(!$colors)$colors=['Hitam','Putih','Army Green','Navy'];
+ $colors=kld_product_active_colors($product);
  echo '<p><label>Warna <select name="color">';foreach($colors as $c)echo '<option value="'.esc_attr($c).'">'.esc_html($c).'</option>';echo '</select></label></p><div class="kld-grid">';
  foreach(array_keys(kld_product_prices($product)) as $size)echo '<label>'.esc_html($size==='ONE'?'Jumlah pcs':$size).' <input style="width:80px" type="number" min="0" max="100" name="quantities['.esc_attr($size).']" value="0"></label>';
  echo '</div><p><label>Email pembeli untuk verifikasi repeat order <input name="buyer_email" type="email" placeholder="email@contoh.com"></label></p>';
@@ -110,7 +111,13 @@ function kld_owner_action(){
  if(!kld_verify_owner_token($id,$key))wp_die('Akses pemilik ditolak.','Akses ditolak',['response'=>403]);
  check_admin_referer('kld_owner_'.$id);
  $action=sanitize_key(wp_unslash($_POST['operation']??''));
- if($action==='share'){
+ if($action==='edit'){
+  if(!kld_fork_editable($id))wp_die('Preview editable tidak tersedia.');
+  $copy=kld_clone_shared_design($id,(string)get_post_meta($id,'_kld_color',true));
+  if(is_wp_error($copy))wp_die('Salinan tidak dapat dibuat.');
+  [$new,$edit]=$copy;update_post_meta($new,'_kld_owner_email',get_post_meta($id,'_kld_owner_email',true));
+  wp_safe_redirect(get_permalink((int)get_post_meta($new,'_kld_product',true)).'#kld-fork='.$new.'.'.$edit,303);exit;
+ }elseif($action==='share'){
   if(get_option('kld_public_enabled','no')!=='yes')wp_die('Editor publik belum diaktifkan.');
   if(!kld_share_token($id))update_post_meta($id,'_kld_share_seed',bin2hex(random_bytes(20)));
  }elseif($action==='revoke'){delete_post_meta($id,'_kld_share_seed');}

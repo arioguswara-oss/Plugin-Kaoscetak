@@ -46,11 +46,11 @@ MUG = {
     "colors": ["Putih"],
 }
 
-def sample_png():
+def sample_png(alpha=None):
     def chunk(tag, content):
         return struct.pack("!I", len(content)) + tag + content + struct.pack("!I", zlib.crc32(tag + content) & 0xffffffff)
-    header = chunk(b"IHDR", struct.pack("!2I5B", 64, 64, 8, 2, 0, 0, 0))
-    pixel_rows = (b"\x00" + b"\x75\xc0\xf2" * 64) * 64
+    header = chunk(b"IHDR", struct.pack("!2I5B", 64, 64, 8, 6 if alpha is not None else 2, 0, 0, 0))
+    pixel_rows = (b"\x00" + (b"\x75\xc0\xf2" + (bytes([alpha]) if alpha is not None else b"")) * 64) * 64
     return b"\x89PNG\r\n\x1a\n" + header + chunk(b"IDAT", zlib.compress(pixel_rows)) + chunk(b"IEND", b"")
 
 def open_editor(browser, viewport, config):
@@ -76,6 +76,9 @@ def verify_shirt(browser, viewport):
     assert page.locator(".kld-total-number").inner_text() == "Rp68.000"
     page.locator(".kld-fileinput").set_input_files({"name": "design.png", "mimeType": "image/png", "buffer": sample_png()})
     expect(page.locator(".kld-image-width")).to_be_enabled(timeout=5000)
+    expect(page.locator(".kld-remove-bg")).to_be_enabled()
+    page.locator(".kld-fileinput").set_input_files({"name":"transparent.png","mimeType":"image/png","buffer":sample_png(254)})
+    expect(page.locator(".kld-remove-bg")).to_be_disabled()
     page.locator(".kld-text").fill("DESAIN\nDEPAN")
     canvas_front = page.locator(".kld-stage").screenshot()
     page.locator('[data-side="back"]').click()
@@ -123,10 +126,11 @@ if __name__ == "__main__":
         browser = driver.chromium.launch(headless=True, executable_path=path, args=["--no-sandbox"])
         results = []
         for viewport in (
-            {"width": 320, "height": 680},
+            {"width": 320, "height": 740},
             {"width": 360, "height": 740},
             {"width": 390, "height": 844},
             {"width": 768, "height": 1024},
+            {"width": 1440, "height": 900},
         ):
             results.append(verify_shirt(browser, viewport))
         results.append(verify_mug(browser))

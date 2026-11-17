@@ -1,3 +1,7 @@
+# 0.3.2-rc.1 — kandidat DRAFT, bukan produksi
+
+Baca RELEASE-CANDIDATE.md untuk status terkini, batas Drive/Classic Checkout, QA, backup dan rollback. Catatan versi lama di bawah bersifat historis. Jangan aktifkan editor publik berdasarkan tes sintetis.
+
 # TAMBAHAN OWNER TEST — VERSI 0.3.0 (MUG 11 OZ)
 
 ## Mug Putih 11 oz
