@@ -1,0 +1,33 @@
+{
+  "file": "kaoscetak-lite-designer-0.3.2.zip",
+  "version": "0.3.2",
+  "sha256": "40532af089dd743e2e0ab301f9d8b26be596f30edc60e9839d97d11807987cb6",
+  "bytes": 80169,
+  "files": 20,
+  "entries": {
+    "CHANGELOG.md": "15407ceb910d6e51706be83e3a74b5e9dc12769231b1fe84e8527c3c93b69a1d",
+    "LICENSE": "aaf135472f81c5b4a0dca9367e5bb5e9750032b5bebe5442b36e4c0a47430df3",
+    "README-PENTING.md": "8539b0394c6d50ec0131522d1a50842773ee04dc53a4f0a81433855c3a6778e4",
+    "README.md": "6a5cf5b501f90501d415d30214ae7e36e0e1dff32cef93ee1ba242f6608fa372",
+    "RELEASE-CANDIDATE.md": "0573d3f1bd07b3f4891711ab01e788723983b877cd715f54450ccbfa4915e5b3",
+    "UPGRADE-0.3.2.md": "091bf649bab857328e09eb60ab919f1057a0594dc005fe6ec0e374eda571ae25",
+    "assets/editor.css": "7109167c0f6589037a490b620ef006abfd4d7920de6788023bfe0747d210222e",
+    "assets/editor.js": "7b39808cf8cbe9db66018ea24a180317b5a79a389466c3f4b41ff330feb42221",
+    "assets/index.php": "c48fe6b757ddc30cc6d27924bbbdd8ec8a46bba76754c4ce8adb99ea32046fbe",
+    "includes/admin.php": "a9c3ce3b0a09befe5aaec5586733286a1d99144536ed8574069435755b014c6b",
+    "includes/api.php": "821225d291882cd0e33de7cb57839acac669bf3c7d2be9d892eedeaa27ba5427",
+    "includes/drive.php": "cc0d4eb127b10883cefc513c489f66f42690696f981720530cec533a74f65b70",
+    "includes/index.php": "c48fe6b757ddc30cc6d27924bbbdd8ec8a46bba76754c4ce8adb99ea32046fbe",
+    "includes/repeat.php": "8e47f2f426d84b86addd41bcf6b8a38a2111f675743be23dc6bd94af9a63a365",
+    "includes/sharing.php": "63e43f8d89c3ecff0c1c4e2d3d649ea55aa3dbc42abfdaa9fe6467e3385bdd25",
+    "includes/store.php": "c85411fcf849ac8379480a1cc51ae027dd33139a08035ec393e7b67c1445598d",
+    "includes/validation.php": "c0014d84951bbb15f3d2f478d4fec3f59b095785eef67692d838397ff4f45c42",
+    "index.php": "c48fe6b757ddc30cc6d27924bbbdd8ec8a46bba76754c4ce8adb99ea32046fbe",
+    "kaoscetak-lite-designer.php": "2be1aab1e6936f5d9fac144126b5e11c3a5c2c9c685852168825ef0ca35104da",
+    "tests/pricing-smoke.php": "aaaf4459908586c21e2f567135ac352c72c69de70aca80cbe9ddc8aa1977697f"
+  },
+  "status": "Release archive requested by Owner; native/source evidence separate; post-install runtime verification pending",
+  "published_source_commit": "8faecb48788dcb96dae686160acf8b54b3249519",
+  "tested_and_published_source_trees_identical": true,
+  "previous_live_version": "0.3.2-rc.1"
+}

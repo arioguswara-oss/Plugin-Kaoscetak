@@ -1,6 +1,9 @@
 # Kaoscetak Lite Designer
 
-**Status: IMPLEMENTED, 0.3.2-rc.1 DRAFT QA — belum VERIFIED pada website/Drive asli.** Ini folder plugin pertama dalam repository multi-plugin.
+**Versi paket: 0.3.2**, kelanjutan 0.3.2-rc.1 yang aktif di kaoscetak.id.
+Lihat [UPGRADE-0.3.2.md](UPGRADE-0.3.2.md) untuk pembaruan tanpa reset Google Drive.
+Source tests PASS; hasil runtime versi baru dicatat setelah pemasangan.
+Ini folder plugin pertama dalam repository multi-plugin.
 
 Sasaran: editor **frontend**, dibuka dari tombol **Custom Desain** pada produk WooCommerce. Mobile-first, ringan, tidak membuat editor seperti Canva/Lumise. Jangan mengganti editor dengan halaman WordPress **Edit Post**.
 

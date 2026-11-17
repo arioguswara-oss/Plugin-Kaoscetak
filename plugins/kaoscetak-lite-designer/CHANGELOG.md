@@ -1,5 +1,16 @@
+# 0.3.2 — kelanjutan 0.3.2-rc.1 dan roadmap tambahan
+
+- Melanjutkan plugin 0.3.2-rc.1 yang terverifikasi aktif di kaoscetak.id; paket rilis biasa diminta Owner. Nama folder dan opsi OAuth/Drive tetap, tanpa reset atau migrasi konfigurasi.
+- Undo/Redo 30 metadata states per sisi, pengelompokan input/drag, pemulihan layer dan kategori; tidak menggandakan file, bitmap, atau token dan tidak memundurkan upload Drive.
+- Snap/alignment aman dalam cm, tombol tengah dan toolbar kontekstual ramah sentuh; garis bantu tidak masuk thumbnail order.
+- DPI efektif memakai piksel master asli dan dimensi cetak aktual; resolusi legacy yang tidak diketahui tidak ditebak dari thumbnail.
+- Dukungan mockup foto ringan per produk/warna/sisi dari Media, dengan validasi dimensi, ukuran, MIME dan origin; foto resmi masih perlu disediakan Owner.
+- Kontrol baru tersedia untuk admin; pengaktifan pelanggan terpisah dan bawaan OFF. Harga, tipe checkout dan konfigurasi lama dipertahankan.
+- Baca UPGRADE-0.3.2.md untuk penggantian plugin dan rollback. Native source tests dicatat terpisah dari runtime versi baru yang belum diuji.
+
 # 0.3.2-rc.1 — DRAFT QA candidate
 
+- PR #12 follow-up: reserve non-autoloaded Drive IDs before creating order folders, shortcuts and guide PDFs; retry the same ID after lost responses and validate exact resource metadata before saving completion markers. Native PHP source evidence is in `docs/qa/milestone-a-native-20261118.md`; actual provider/staging gates remain separate.
 - Preserve cart locks through email verification; serialize design writes and replay cart additions safely.
 - Revalidate product, stock via WooCommerce, size/quantity/colour, physical bounds and private Drive master at checkout.
 - Stage save validation before metadata writes; record actual combined cm dimensions.

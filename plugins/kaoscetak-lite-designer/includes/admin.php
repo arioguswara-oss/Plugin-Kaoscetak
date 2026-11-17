@@ -155,7 +155,32 @@ function kld_product_safe_margins($product){
  foreach($d as $key=>$v){$n=(float)($raw[$key]??$v);if(is_finite($n)&&$n>=0&&$n<=15)$d[$key]=$n;}
  return $d;
 }
+/** Only small, calibrated same-origin media photos. Never accept arbitrary customer URLs or SVG. */
+function kld_mockup_attachment_url($id){
+ if(!is_int($id)&&(!is_string($id)||!preg_match('/^[1-9][0-9]{0,9}$/D',$id)))return '';
+ $id=(int)$id;if($id<=0||!in_array(get_post_mime_type($id),['image/png','image/jpeg','image/webp'],true))return '';
+ $meta=wp_get_attachment_metadata($id);$file=get_attached_file($id);
+ if(!is_array($meta)||($meta['width']??0)!==600||($meta['height']??0)!==710||!is_string($file)||!is_file($file)||filesize($file)>204800)return '';
+ $url=wp_get_attachment_url($id);if(!is_string($url))return '';
+ $a=wp_parse_url($url);$b=wp_parse_url(home_url('/'));
+ if(!is_array($a)||!is_array($b)||($a['host']??'')!==($b['host']??'')||($a['scheme']??'')!==($b['scheme']??'')||($a['port']??null)!==($b['port']??null)||isset($a['user'])||isset($a['pass']))return '';
+ return $url;
+}
+function kld_normalize_mockup_ids($product,$input){
+ if(!is_array($input))return [];$result=[];
+ foreach(kld_product_color_palette($product) as $color=>$unused){
+  $entry=$input[$color]??[];if(!is_array($entry))continue;
+  foreach(['front','back'] as $side)if(kld_mockup_attachment_url($entry[$side]??0)!=='')$result[$color][$side]=(int)$entry[$side];
+ }
+ return $result;
+}
+function kld_product_mockups($product){
+ $saved=get_post_meta($product,'_kld_mockups',true);$result=[];
+ foreach(kld_normalize_mockup_ids($product,$saved) as $color=>$sides)foreach($sides as $side=>$id){$url=kld_mockup_attachment_url($id);if($url!=='')$result[$color][$side]=$url;}
+ return $result;
+}
 function kld_unit_price($id,$size,$front,$back){
+ if(!is_string($size)||!is_string($front)||!is_string($back))return null;
  if(kld_is_mug($id))return $size==='ONE' && $front==='MUG' && $back==='none'?kld_mug_price($id):null;
  if(!in_array($front,array_merge(['none'],array_keys(kld_tiers())),true)||!in_array($back,array_merge(['none'],array_keys(kld_tiers())),true))return null;
  $matrix=kld_product_prices($id);$tiers=array_keys(kld_tiers());
@@ -182,6 +207,7 @@ add_action('admin_init',function(){
   }
  }
  update_option('kld_public_enabled',isset($_POST['kld_public_enabled'])?'yes':'no',false);
+ update_option('kld_ux_enabled',isset($_POST['kld_ux_enabled'])?'yes':'no',false);
  $secret=trim((string)wp_unslash($_POST['kld_client_secret']??''));
  if($secret!=='')update_option('kld_client_secret',kld_encrypt_secret($secret),false);
  $rates=[];foreach(kld_tiers() as $tier=>$unused)$rates[$tier]=max(0,absint($_POST['rates'][$tier]??0));
@@ -210,6 +236,7 @@ function kld_render_settings(){
  echo '<tr><th>Authorized redirect URI</th><td><code>'.esc_html(admin_url('admin-post.php?action=kld_oauth_callback')).'</code></td></tr></table>';
  foreach(['kld_master_folder'=>'Folder master privat','kld_orders_folder'=>'Folder pesanan privat'] as $key=>$label)echo '<p><label>'.esc_html($label).' <input name="'.esc_attr($key).'" value="'.esc_attr(get_option($key,'')).'" autocomplete="off"></label></p>';
  echo '<h2>Publikasi</h2><p><label><input type="checkbox" name="kld_public_enabled" value="yes" '.checked(get_option('kld_public_enabled','no'),'yes',false).'> Aktifkan editor publik setelah diuji</label></p>';
+ echo '<p><label><input type="checkbox" name="kld_ux_enabled" value="yes" '.checked(get_option('kld_ux_enabled','no'),'yes',false).'> Aktifkan Undo/Redo, Snap, indikator DPI dan toolbar baru untuk pelanggan</label><br><small>Admin dapat menguji tambahan ini terlebih dahulu. Pilihan ini tidak otomatis aktif saat plugin diperbarui.</small></p>';
  echo '<h2>Tambahan sisi kedua (Rp)</h2><table class="form-table">';
  foreach($rates as $tier=>$v)echo '<tr><th>'.esc_html($tier).'</th><td><input type="number" name="rates['.esc_attr($tier).']" value="'.esc_attr($v).'" min="0"></td></tr>';
  echo '</table><h2>Preset harga paket termasuk sablon 1 sisi</h2>';
@@ -272,10 +299,31 @@ function kld_product_box($post){
  foreach(['side'=>'Tepi kiri/kanan','top'=>'Dari kerah','bottom'=>'Dari bawah kaos'] as $key=>$label){echo '<label style="display:inline-block;margin-right:15px">'.esc_html($label).' <input type="number" min="0" max="15" step="0.1" name="kld_safe_margins['.esc_attr($key).']" value="'.esc_attr($margin[$key]).'"></label>';}
  }
  if($on)echo '<p><a class="button" href="'.esc_url(get_permalink($post->ID)).'" target="_blank" rel="noopener">Buka editor visual produk (login admin)</a></p>';
+ if($current!=='mug-11oz'){
+  $mockups=get_post_meta($post->ID,'_kld_mockups',true);if(!is_array($mockups))$mockups=[];
+  echo '<details><summary><strong>Foto mockup produk per warna (opsional)</strong></summary><p>Gunakan foto milik Kaoscetak sesuai produk dan warna, PNG/JPEG/WebP 600 × 710 piksel, maksimal 200 KB. Template acuan L: tengah badan X=300, ketiak Y=155, lebar badan 294 piksel, panjang badan 438 piksel. Foto tanpa kalibrasi ini tidak cocok untuk panduan posisi cetak. Warna tanpa foto tetap memakai ilustrasi.</p><input type="hidden" name="kld_mockups_present" value="1">';
+  foreach(kld_product_active_colors($post->ID) as $color){echo '<p><strong>'.esc_html($color).'</strong></p>';
+   foreach(['front'=>'Depan','back'=>'Belakang'] as $side=>$label){$media=(int)($mockups[$color][$side]??0);$url=$media?kld_mockup_attachment_url($media):'';
+    echo '<div class="kld-mockup-picker" style="display:inline-flex;align-items:center;gap:8px;margin:5px"><span>'.esc_html($label).'</span><input type="hidden" name="kld_mockups['.esc_attr($color).']['.esc_attr($side).']" value="'.esc_attr($media).'"><img alt="" style="max-width:60px;max-height:71px" '.($url!==''?'src="'.esc_url($url).'"':'').'><button class="button kld-pick-mockup" type="button">Pilih foto</button><button class="button kld-clear-mockup" type="button">Hapus</button></div>';
+   }
+  }
+  echo '</details>';
+ }
 }
+add_action('admin_enqueue_scripts',function(){
+ $screen=function_exists('get_current_screen')?get_current_screen():null;if(!$screen||$screen->post_type!=='product')return;
+ wp_enqueue_media();
+ wp_add_inline_script('media-editor',"document.addEventListener('click',function(e){const pick=e.target.closest('.kld-pick-mockup'),clear=e.target.closest('.kld-clear-mockup');if(!pick&&!clear)return;e.preventDefault();const box=(pick||clear).closest('.kld-mockup-picker'),input=box.querySelector('input'),img=box.querySelector('img');if(clear){input.value='';img.removeAttribute('src');return;}const frame=wp.media({title:'Pilih foto produk 600 × 710 px, maksimal 200 KB',multiple:false,library:{type:'image'}});frame.on('select',function(){const a=frame.state().get('selection').first().toJSON();input.value=a.id;img.src=a.url;});frame.open();});");
+});
 add_action('save_post_product',function($id){
  if(!isset($_POST['kld_product_nonce'])||!wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['kld_product_nonce'])),'kld_product_save'))return;
  if(!current_user_can('edit_post',$id)||wp_is_post_revision($id))return;
+ if(isset($_POST['kld_mockups_present'])){
+  $old=get_post_meta($id,'_kld_mockups',true);if(!is_array($old))$old=[];
+  $input=isset($_POST['kld_mockups'])&&is_array($_POST['kld_mockups'])?wp_unslash($_POST['kld_mockups']):[];
+  // Preserve inactive-colour photos when their controls are not part of this form.
+  update_post_meta($id,'_kld_mockups',kld_normalize_mockup_ids($id,array_replace($old,$input)));
+ }
  update_post_meta($id,'_kld_enabled',isset($_POST['kld_enabled'])?'yes':'no');
  // Only the apparel checkbox field changes product colour availability.
  // On a mug/older editor/form without that field, retain existing saved colours.

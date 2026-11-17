@@ -1,12 +1,13 @@
 <?php
 if (!defined('ABSPATH')) exit;
+require_once __DIR__.'/validation.php';
 add_action('woocommerce_before_calculate_totals',function($cart){
  if(is_admin()&&!wp_doing_ajax())return;
  foreach($cart->get_cart() as $item){
   if(!empty($item['kld_design_id'])&&isset($item['kld_unit_price'])){
    $id=absint($item['kld_design_id']);
    $sides=get_post_meta($id,'_kld_sides',true);$product=absint(get_post_meta($id,'_kld_product',true));
-   if(!is_array($sides)||!$product)continue;
+   if(!is_array($sides)||!$product||!is_string($item['kld_size']??null)||!is_object($item['data']??null)||!method_exists($item['data'],'set_price'))continue;
    $price=kld_unit_price($product,$item['kld_size'],$sides['front']['tier']??'none',$sides['back']['tier']??'none');
    if($price!==null){
     $customer=WC()->customer;
@@ -34,6 +35,16 @@ add_action('woocommerce_check_cart_items',function(){
  foreach(kld_cart_unavailable_colors(WC()->cart) as $name){
   wc_add_notice('Warna '.esc_html($name).' sudah tidak tersedia. Hapus produk custom tersebut dari keranjang lalu pilih warna lain.','error');
  }
+ foreach(WC()->cart->get_cart() as $item){
+  if(empty($item['kld_design_id']))continue;
+  $id=absint($item['kld_design_id']);
+  $sides=get_post_meta($id,'_kld_sides',true);
+  $product=absint(get_post_meta($id,'_kld_product',true));
+  if(!is_array($sides)||!$product||empty($item['kld_size'])||!isset($item['kld_unit_price'])||
+   kld_unit_price($product,$item['kld_size'],$sides['front']['tier']??'none',$sides['back']['tier']??'none')===null){
+   wc_add_notice('Data atau harga desain custom tidak valid. Hapus item tersebut dari keranjang dan tambahkan kembali.','error');
+  }
+ }
 });
 add_action('woocommerce_after_checkout_validation',function($checkout_data,$errors){
  if(!function_exists('WC')||!WC()->cart)return;
@@ -44,18 +55,56 @@ add_action('woocommerce_after_checkout_validation',function($checkout_data,$erro
   $id=absint($item['kld_design_id']);
   $sides=get_post_meta($id,'_kld_sides',true);
   $product=absint(get_post_meta($id,'_kld_product',true));
-  if(!is_array($sides)||!$product)continue;
+  if(!is_array($sides)||!$product||!is_string($item['kld_size']??null)||$item['kld_size']===''){
+   $errors->add('kld_invalid_design','Data desain tidak lengkap. Hapus produk custom dari keranjang dan tambahkan kembali.');
+   continue;
+  }
   $base=kld_unit_price($product,$item['kld_size'],$sides['front']['tier']??'none',$sides['back']['tier']??'none');
-  if($base===null)continue;
+  if($base===null){
+   $errors->add('kld_invalid_price','Kategori cetak atau ukuran desain tidak valid. Perbarui produk custom sebelum checkout.');
+   continue;
+  }
   $expected=kld_repeat_unit_price($id,$base,$email);
-  if((float)$item['data']->get_price() < $expected-0.01){
-   $errors->add('kld_repeat_email_mismatch','Email checkout berbeda dari email terverifikasi untuk diskon repeat order. Perbarui checkout dan coba lagi.');
+  if(abs((float)$item['data']->get_price()-(float)$expected)>0.01){
+   $errors->add('kld_price_mismatch','Harga desain tidak sesuai dengan perhitungan server atau status diskon repeat order. Perbarui checkout dan coba lagi.');
    return;
   }
  }
 },20,2);
+/** Cart-only preview from the already-saved, size-limited JPEG; never expose Drive masters. */
+function kld_cart_preview_image($item){
+ $id=kld_positive_id($item['kld_design_id']??0);
+ if(!$id)return '';
+ foreach(['front','back'] as $side){
+  $encoded=(string)get_post_meta($id,'_kld_preview_'.$side,true);
+  if($encoded===''||strlen($encoded)>82000||!preg_match('/^[A-Za-z0-9+\/=]+$/D',$encoded))continue;
+  $bytes=base64_decode($encoded,true);
+  if(!$bytes||strlen($bytes)>61440||substr($bytes,0,2)!=="\xFF\xD8")continue;
+  $info=@getimagesizefromstring($bytes);
+  if(!$info||$info[2]!==IMAGETYPE_JPEG||$info[0]>1200||$info[1]>1200)continue;
+  return '<img src="data:image/jpeg;base64,'.esc_attr($encoded).'" alt="'.esc_attr('Preview desain '.($side==='front'?'depan':'belakang')).'" class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail" style="width:64px;height:auto;max-width:100%;object-fit:contain" loading="lazy" decoding="async" />';
+ }
+ return '';
+}
+add_filter('woocommerce_cart_item_thumbnail',function($thumbnail,$item){
+ $preview=kld_cart_preview_image($item);
+ return $preview!==''?$preview:$thumbnail;
+},10,2);
+add_filter('woocommerce_checkout_cart_item_thumbnail',function($thumbnail,$item){
+ $preview=kld_cart_preview_image($item);
+ return $preview!==''?$preview:$thumbnail;
+},10,2);
+/** Classic WooCommerce checkout does not render the cart thumbnail hook by default. */
+add_filter('woocommerce_cart_item_name',function($name,$item,$key){
+ if(!function_exists('is_checkout')||!is_checkout()||(function_exists('is_cart')&&is_cart())||(function_exists('is_order_received_page')&&is_order_received_page()))return $name;
+ if(empty($item['kld_design_id']))return $name;
+ $preview=kld_cart_preview_image($item);
+ if($preview==='')return $name;
+ return '<span class="kld-checkout-preview" style="display:inline-block;vertical-align:middle;margin-right:8px;width:64px;max-width:25%">'.$preview.'</span>'.$name;
+},20,3);
 add_filter('woocommerce_get_item_data',function($data,$item){
  if(empty($item['kld_design_id']))return $data;
+ $data[]=['key'=>'Design ID','value'=>'KLD-'.absint($item['kld_design_id'])];
  $s=get_post_meta($item['kld_design_id'],'_kld_sides',true);
  $product=absint(get_post_meta($item['kld_design_id'],'_kld_product',true));
  if(kld_is_mug($product))$data[]=['key'=>'Produk','value'=>'Mug Putih 11 oz | Cetak 18 × 8,5 cm'];
@@ -170,14 +219,15 @@ function kld_prepare_production($order){
   $roots=kld_drive_roots();if(is_wp_error($roots))throw new RuntimeException($roots->get_error_message());
   $folder=$order->get_meta('_kld_drive_order_pending');
   if(!$folder){$folder=kld_drive_order_folder($order,$roots['orders']);if(is_wp_error($folder))throw new RuntimeException($folder->get_error_message());$order->update_meta_data('_kld_drive_order_pending',$folder);$order->save();}
-  // Shortcuts are idempotent using a per-file completion marker on the order.
+  // Durable provider IDs protect the interval before each order completion marker is saved.
   foreach($designs as $id=>$sides){
    foreach(['front','back'] as $side){
     if(($sides[$side]['tier']??'none')==='none')continue;
     $fileid=$snapshot[$id]['files'][$side]??get_post_meta($id,'_kld_file_'.$side,true);if(!$fileid)continue;
     $tag='_kld_sc_'.$id.'_'.$side;
     if($order->get_meta($tag))continue;
-    $r=kld_drive_shortcut($fileid,$folder,'DESAIN-'.$id.'-'.strtoupper($side));
+    $artifactKey=hash('sha256',home_url('/').'|shortcut|'.$order->get_id().'|'.$id.'|'.$side.'|'.$fileid);
+    $r=kld_drive_shortcut($fileid,$folder,'DESAIN-'.$id.'-'.strtoupper($side),$artifactKey);
     if(is_wp_error($r))throw new RuntimeException($r->get_error_message());
     $order->update_meta_data($tag,$r['id']);$order->save();
    }
@@ -187,7 +237,8 @@ function kld_prepare_production($order){
    if($order->get_meta($guidekey))continue;
    $pdf=kld_make_guide_pdf($order,[$designid=>$layout]);
    if(is_wp_error($pdf))throw new RuntimeException($pdf->get_error_message());
-   $r=kld_drive_upload_small('ORDER-'.$order->get_order_number().'-DESAIN-'.$designid.'-PANDUAN.pdf','application/pdf',$pdf,$folder);
+   $artifactKey=hash('sha256',home_url('/').'|guide|'.$order->get_id().'|'.$designid);
+   $r=kld_drive_upload_small('ORDER-'.$order->get_order_number().'-DESAIN-'.$designid.'-PANDUAN.pdf','application/pdf',$pdf,$folder,$artifactKey);
    if(is_wp_error($r))throw new RuntimeException($r->get_error_message());
    $order->update_meta_data($guidekey,$r['id']);$order->save();
   }
@@ -200,15 +251,23 @@ function kld_prepare_production($order){
   return new WP_Error('production_failed',$e->getMessage());
  }finally{kld_lock_release($lockkey,$lock);}
 }
-function kld_drive_upload_small($name,$mime,$bytes,$parent){
+function kld_drive_upload_small($name,$mime,$bytes,$parent,$key=''){
  if(strlen($bytes)>1000000)return new WP_Error('too_large','Panduan produksi melebihi 1 MB.');
+ $meta=['name'=>$name,'mimeType'=>$mime,'parents'=>[$parent]];
+ if($key!==''){
+  if($mime!=='application/pdf')return new WP_Error('artifact_type','Panduan produksi harus berupa PDF.');
+  $plan=kld_drive_artifact_plan($parent,$key,$mime);if(is_wp_error($plan))return $plan;
+  $meta=array_merge($meta,$plan);$existing=kld_drive_artifact_probe($meta);
+  if($existing!==false)return $existing;
+ }
  $token=kld_drive_token();if(is_wp_error($token))return $token;
  $boundary='kld'.bin2hex(random_bytes(8));
- $metadata=wp_json_encode(['name'=>$name,'mimeType'=>$mime,'parents'=>[$parent]]);
+ $metadata=wp_json_encode($meta);
  $body='--'.$boundary."\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n".$metadata."\r\n";
  $body.='--'.$boundary."\r\nContent-Type: ".$mime."\r\n\r\n".$bytes."\r\n--".$boundary."--\r\n";
  $r=wp_remote_post('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',[
   'timeout'=>40,'headers'=>['Authorization'=>'Bearer '.$token,'Content-Type'=>'multipart/related; boundary='.$boundary], 'body'=>$body]);
+ if($key!=='')return kld_drive_artifact_finish($meta,$r);
  if(is_wp_error($r))return $r;
  $data=json_decode(wp_remote_retrieve_body($r),true);
  if(wp_remote_retrieve_response_code($r)<200||wp_remote_retrieve_response_code($r)>=300||empty($data['id']))return new WP_Error('drive_pdf','Upload PDF panduan gagal (HTTP '.wp_remote_retrieve_response_code($r).').');

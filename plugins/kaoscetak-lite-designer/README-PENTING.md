@@ -1,4 +1,10 @@
-# 0.3.2-rc.1 — kandidat DRAFT, bukan produksi
+# 0.3.2 — pembaruan plugin yang sama
+
+Baca **UPGRADE-0.3.2.md**. Nama folder, opsi Google Drive, produk dan desain
+tetap dipertahankan; tidak perlu menghubungkan ulang Google saat pembaruan normal.
+Source tests PASS; runtime versi ini belum dinyatakan VERIFIED.
+
+# 0.3.2-rc.1 — catatan kandidat sebelumnya
 
 Baca RELEASE-CANDIDATE.md untuk status terkini, batas Drive/Classic Checkout, QA, backup dan rollback. Catatan versi lama di bawah bersifat historis. Jangan aktifkan editor publik berdasarkan tes sintetis.
 

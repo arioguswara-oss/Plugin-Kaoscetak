@@ -33,8 +33,9 @@ function kld_drive_request($method,$path,$body=null,$extra=[]){
  $res=wp_remote_request($url,$args);
  if(is_wp_error($res))return $res;
  $status=wp_remote_retrieve_response_code($res);
- if($status<200||$status>=300){return new WP_Error('drive_api','Google Drive API error: HTTP '.$status.' '.substr(wp_strip_all_tags(wp_remote_retrieve_body($res)),0,250));}
- return json_decode(wp_remote_retrieve_body($res),true);
+ if($status<200||$status>=300){return new WP_Error('drive_api','Google Drive API error: HTTP '.$status.' '.substr(wp_strip_all_tags(wp_remote_retrieve_body($res)),0,250),['status'=>$status]);}
+ $data=json_decode(wp_remote_retrieve_body($res),true);
+ return is_array($data)?$data:new WP_Error('drive_response','Respons Google Drive tidak valid.');
 }
 function kld_drive_create_folder($name,$parent=''){
  $meta=['name'=>$name,'mimeType'=>'application/vnd.google-apps.folder'];
@@ -93,27 +94,93 @@ function kld_drive_initiate($name,$mime,$bytes){
  return $location;
 }
 function kld_drive_verify($fileid,$mime,$size,$expectedName,$parent=''){
- if(!preg_match('/^[a-zA-Z0-9_-]{10,200}$/',$fileid))return new WP_Error('file_id','File ID invalid.');
+ if(!is_string($fileid)||!preg_match('/^[a-zA-Z0-9_-]{10,200}$/D',$fileid))return new WP_Error('file_id','File ID invalid.');
+ if(!in_array($mime,['image/png','image/jpeg'],true)||(!is_int($size)&&(!is_string($size)||!preg_match('/^[1-9][0-9]{0,7}$/D',$size)))||$size<1||$size>10485760||!is_string($expectedName)||$expectedName==='')return new WP_Error('verification','Metadata master tidak valid.');
  $data=kld_drive_request('GET','files/'.rawurlencode($fileid).'?fields=id,name,size,mimeType,parents,trashed,permissions(type)');
  if(is_wp_error($data))return $data;
- foreach($data['permissions']??[] as $permission)if(in_array($permission['type']??'',['anyone','domain'],true))return new WP_Error('file_public','File produksi harus privat.');
+ if(!is_array($data)||!isset($data['permissions'])||!is_array($data['permissions']))return new WP_Error('file_permissions','Izin file produksi tidak dapat diverifikasi.');
+ foreach($data['permissions'] as $permission){
+  if(!is_array($permission)||!in_array($permission['type']??'',['user','group','anyone','domain'],true))return new WP_Error('file_permissions','Izin file produksi tidak dapat diverifikasi.');
+  if(in_array($permission['type'],['anyone','domain'],true))return new WP_Error('file_public','File produksi harus privat.');
+ }
  if(!empty($data['trashed'])||($data['mimeType']??'')!==$mime||($data['name']??'')!==$expectedName||(int)($data['size']??-1)!==(int)$size||!in_array($parent?:get_option('kld_master_folder'),$data['parents']??[],true))return new WP_Error('verification','Metadata file di Google Drive tidak cocok dengan sesi upload.');
  $header=kld_drive_image_header($fileid,$mime);if(is_wp_error($header))return $header;
  return array_merge($data,$header);
 }
-function kld_drive_shortcut($targetid,$folder,$name){
- return kld_drive_request('POST','files?fields=id',['name'=>$name,'mimeType'=>'application/vnd.google-apps.shortcut','shortcutDetails'=>['targetId'=>$targetid],'parents'=>[$folder]]);
+/** Find an artifact created before a lost Drive response; fail closed on ambiguous matches. */
+function kld_drive_find_artifact($folder,$key,$mime,$property='kldArtifact'){
+ if(!is_string($folder)||!preg_match('/^[A-Za-z0-9_-]{10,200}$/D',$folder)||!is_string($key)||!preg_match('/^[a-f0-9]{64}$/D',$key))return new WP_Error('artifact_key','Identitas artefak tidak valid.');
+ $allowed=['application/vnd.google-apps.shortcut','application/pdf','application/vnd.google-apps.folder'];
+ if(!in_array($mime,$allowed,true)||!in_array($property,['kldArtifact','kldOrder'],true))return new WP_Error('artifact_type','Jenis artefak tidak valid.');
+ $q="trashed = false and '".$folder."' in parents and mimeType = '".$mime."' and appProperties has { key='".$property."' and value='".$key."' }";
+ $res=kld_drive_request('GET','files?'.http_build_query(['q'=>$q,'fields'=>'nextPageToken,incompleteSearch,files(id)','pageSize'=>2]));
+ if(is_wp_error($res))return $res;
+ if(!is_array($res)||!isset($res['files'])||!is_array($res['files'])||!empty($res['incompleteSearch']))return new WP_Error('artifact_lookup','Pencarian artefak tidak dapat diverifikasi.');
+ if(count($res['files'])>1||!empty($res['nextPageToken']))return new WP_Error('artifact_duplicate','Artefak Drive duplikat ditemukan; perlu pemeriksaan admin.');
+ if(!$res['files'])return '';
+ $id=$res['files'][0]['id']??null;
+ return is_string($id)&&preg_match('/^[A-Za-z0-9_-]{10,200}$/D',$id)?$id:new WP_Error('artifact_lookup','ID artefak Drive tidak valid.');
+}
+/** Persist a generated ID BEFORE any create. A stale list/timeout must never allocate a new resource. */
+function kld_drive_artifact_plan($folder,$key,$mime,$target='',$property='kldArtifact'){
+ if(!is_string($key)||!preg_match('/^[a-f0-9]{64}$/D',$key)||!is_string($folder)||!preg_match('/^[A-Za-z0-9_-]{10,200}$/D',$folder)||!in_array($mime,['application/pdf','application/vnd.google-apps.shortcut','application/vnd.google-apps.folder'],true)||!in_array($property,['kldArtifact','kldOrder'],true))return new WP_Error('artifact_key','Identitas artefak tidak valid.');
+ if($mime==='application/vnd.google-apps.shortcut'&&(!is_string($target)||!preg_match('/^[A-Za-z0-9_-]{10,200}$/D',$target)))return new WP_Error('artifact_target','Master shortcut tidak valid.');
+ $option='kld_drive_artifact_'.hash('sha256',$folder.'|'.$property.'|'.$key.'|'.$mime);
+ $id=get_option($option,false);
+ if($id===false){
+  // Adopt pre-existing artifacts from older versions before reserving a fresh provider ID.
+  $id=kld_drive_find_artifact($folder,$key,$mime,$property);if(is_wp_error($id))return $id;
+  if($id===''){
+   $generated=kld_drive_request('GET','files/generateIds?'.http_build_query(['count'=>1,'space'=>'drive','type'=>$mime==='application/vnd.google-apps.shortcut'?'shortcuts':'files']));
+   if(is_wp_error($generated))return $generated;
+   $id=$generated['ids'][0]??null;
+  }
+  if(!is_string($id)||!preg_match('/^[A-Za-z0-9_-]{10,200}$/D',$id))return new WP_Error('artifact_id','Drive tidak mengembalikan ID artefak yang valid.');
+  if(!add_option($option,$id,'',false)){
+   // Another worker may have won. Discard negative option caches and use only its durable ID.
+   wp_cache_delete($option,'options');wp_cache_delete('notoptions','options');$id=get_option($option,false);
+  }
+ }
+ if(!is_string($id)||!preg_match('/^[A-Za-z0-9_-]{10,200}$/D',$id))return new WP_Error('artifact_reservation','ID artefak belum tersimpan; pembuatan Drive dibatalkan.');
+ $meta=['id'=>$id,'mimeType'=>$mime,'parents'=>[$folder],'appProperties'=>[$property=>$key]];
+ if($target!=='')$meta['shortcutDetails']=['targetId'=>$target];
+ return $meta;
+}
+/** Exact-ID read; only an explicit 404 permits a create using the SAME reserved ID. */
+function kld_drive_artifact_probe($meta){
+ $data=kld_drive_request('GET','files/'.rawurlencode($meta['id']).'?fields=id,mimeType,parents,trashed,appProperties,shortcutDetails(targetId)');
+ if(is_wp_error($data))return ($data->get_error_data()['status']??0)===404?false:$data;
+ if(($data['id']??'')!==$meta['id']||($data['mimeType']??'')!==$meta['mimeType']||($data['trashed']??true)!==false||!is_array($data['parents']??null)||!in_array($meta['parents'][0],$data['parents'],true)||!is_array($data['appProperties']??null))return new WP_Error('artifact_mismatch','Artefak Drive tidak cocok dengan pesanan.');
+ foreach($meta['appProperties'] as $key=>$value)if(($data['appProperties'][$key]??'')!==$value)return new WP_Error('artifact_mismatch','Identitas artefak Drive tidak cocok.');
+ if(isset($meta['shortcutDetails'])&&($data['shortcutDetails']['targetId']??'')!==$meta['shortcutDetails']['targetId'])return new WP_Error('artifact_mismatch','Master shortcut Drive tidak cocok.');
+ return ['id'=>$meta['id']];
+}
+function kld_drive_artifact_finish($meta,$response){
+ $confirmed=kld_drive_artifact_probe($meta);
+ if($confirmed!==false)return $confirmed;
+ return is_wp_error($response)?$response:new WP_Error('artifact_unconfirmed','Artefak Drive belum terkonfirmasi. Coba lagi dengan ID tersimpan.');
+}
+function kld_drive_shortcut($targetid,$folder,$name,$key=''){
+ $meta=['name'=>$name,'mimeType'=>'application/vnd.google-apps.shortcut','shortcutDetails'=>['targetId'=>$targetid],'parents'=>[$folder]];
+ if($key!==''){
+  $plan=kld_drive_artifact_plan($folder,$key,$meta['mimeType'],$targetid);if(is_wp_error($plan))return $plan;
+  $meta=array_merge($meta,$plan);$existing=kld_drive_artifact_probe($meta);
+  if($existing!==false)return $existing;
+ }
+ $created=kld_drive_request('POST','files?fields=id',$meta);
+ return $key!==''?kld_drive_artifact_finish($meta,$created):$created;
 }
 
 /** Recover an order folder even after a lost POST response. No public permissions are created. */
 function kld_drive_order_folder($order,$parent){
  $key=hash('sha256',home_url('/').'|order|'.$order->get_id());
- $q="trashed = false and mimeType = 'application/vnd.google-apps.folder' and appProperties has { key='kldOrder' and value='".$key."' }";
- $found=kld_drive_request('GET','files?'.http_build_query(['q'=>$q,'fields'=>'files(id)','pageSize'=>1]));
- if(is_wp_error($found))return $found;
- if(!empty($found['files'][0]['id']))return $found['files'][0]['id'];
- $created=kld_drive_request('POST','files?fields=id',['name'=>'ORDER-'.$order->get_order_number(),'mimeType'=>'application/vnd.google-apps.folder','parents'=>[$parent],'appProperties'=>['kldOrder'=>$key]]);
- return is_wp_error($created)?$created:($created['id']??new WP_Error('folder','Folder order tidak tersedia.'));
+ if(!is_string($parent)||!preg_match('/^[A-Za-z0-9_-]{10,200}$/D',$parent))return new WP_Error('folder','Folder induk order tidak valid.');
+ $meta=kld_drive_artifact_plan($parent,$key,'application/vnd.google-apps.folder','','kldOrder');if(is_wp_error($meta))return $meta;
+ $found=kld_drive_artifact_probe($meta);if(is_wp_error($found))return $found;if($found!==false)return $found['id'];
+ $meta['name']='ORDER-'.$order->get_order_number();
+ $created=kld_drive_request('POST','files?fields=id',$meta);
+ $confirmed=kld_drive_artifact_finish($meta,$created);
+ return is_wp_error($confirmed)?$confirmed:$confirmed['id'];
 }
 
 function kld_drive_select_folder($id){

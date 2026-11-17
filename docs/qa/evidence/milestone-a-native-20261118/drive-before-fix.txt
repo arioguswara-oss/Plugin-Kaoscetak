@@ -1,0 +1,7 @@
+PASS: 25 Drive privacy/content/recovery assertions (mock HTTP)
+
+Fatal error: Uncaught RuntimeException: FAIL shortcut stale listing cannot cause duplicate creation in /workspace/scratch/72df3ab2da51/kaoscetak/tests/test_drive_security.php:17
+Stack trace:
+#0 /workspace/scratch/72df3ab2da51/kaoscetak/tests/test_drive_security.php(78): check(false, 'shortcut stale ...')
+#1 {main}
+  thrown in /workspace/scratch/72df3ab2da51/kaoscetak/tests/test_drive_security.php on line 17

@@ -1,0 +1,552 @@
+{
+  "checked_at_utc": "2026-11-17T19:53:56.303665+00:00",
+  "source_base": "92f1c45dc4fcab07b4f951943448e9e48084c4c6",
+  "results": [
+    {
+      "command": [
+        "node",
+        "--version"
+      ],
+      "exit_code": 0,
+      "status": "PASS",
+      "stdout": "v22.22.1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "plugins/kaoscetak-lite-designer/assets/editor.js"
+      ],
+      "exit_code": 0,
+      "status": "PASS",
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "tests/customer-flow.cjs"
+      ],
+      "exit_code": 0,
+      "status": "PASS",
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "tests/lifecycle.cjs"
+      ],
+      "exit_code": 0,
+      "status": "PASS",
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "tests/test_editor_unit.cjs"
+      ],
+      "exit_code": 0,
+      "status": "PASS",
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "tests/test_editor_unit.cjs"
+      ],
+      "exit_code": 0,
+      "status": "PASS",
+      "stdout": "TAP version 13\n# Subtest: actual editor tariff: regular\nok 1 - actual editor tariff: regular\n  ---\n  duration_ms: 19.054187\n  type: 'test'\n  ...\n# Subtest: actual editor tariff: long sleeves\nok 2 - actual editor tariff: long sleeves\n  ---\n  duration_ms: 8.147081\n  type: 'test'\n  ...\n# Subtest: actual editor tariff: tunic\nok 3 - actual editor tariff: tunic\n  ---\n  duration_ms: 7.32392\n  type: 'test'\n  ...\n# Subtest: editor empty, missing size and mug prices\nok 4 - editor empty, missing size and mug prices\n  ---\n  duration_ms: 3.605027\n  type: 'test'\n  ...\n# Subtest: editor escapes HTML and serializes layout without upload capabilities\nok 5 - editor escapes HTML and serializes layout without upload capabilities\n  ---\n  duration_ms: 5.851993\n  type: 'test'\n  ...\n# Subtest: editor REST nonce handling and same-origin credentials\nok 6 - editor REST nonce handling and same-origin credentials\n  ---\n  duration_ms: 4.228661\n  type: 'test'\n  ...\n1..6\n# tests 6\n# suites 0\n# pass 6\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 86.998298\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/assets/index.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/admin.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/api.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/drive.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/index.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/repeat.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/sharing.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/store.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/validation.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/index.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/kaoscetak-lite-designer.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/tests/pricing-smoke.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/drive-fixture.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/fixture.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/router.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/test_drive_security.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/test_editable_fork.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/test_lock_security.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/test_order_snapshot.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/test_owner_verification.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/test_price_presets.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/test_repeat.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/test_repeat_checkout.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/test_rules.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/test_server_validation.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/test_share_clone.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/test_share_security.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/variable_integration.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/wordpress_regression.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "-l",
+        "tests/wordpress_smoke.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "plugins/kaoscetak-lite-designer/tests/pricing-smoke.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "tests/test_drive_security.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "tests/test_editable_fork.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "tests/test_lock_security.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "tests/test_order_snapshot.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "tests/test_owner_verification.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "tests/test_price_presets.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "tests/test_repeat.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "tests/test_repeat_checkout.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "tests/test_rules.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "tests/test_server_validation.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "tests/test_share_clone.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "php",
+        "tests/test_share_security.php"
+      ],
+      "exit_code": 127,
+      "status": "BLOCKED",
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'php'"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "status": "PASS",
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "sh",
+        "-n",
+        "tests/run-source.sh"
+      ],
+      "exit_code": 0,
+      "status": "PASS",
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

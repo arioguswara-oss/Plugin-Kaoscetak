@@ -2,10 +2,10 @@
 if (!defined('ABSPATH')) exit;
 require_once __DIR__.'/validation.php';
 function kld_api_auth(WP_REST_Request $r){
- $id=absint($r->get_param('design_id'));
+ $id=kld_positive_id($r->get_param('design_id'));
  $token=(string)$r->get_header('X-KLD-Token');
  $hash=(string)get_post_meta($id,'_kld_edit_hash',true);
- if(!$id||get_post_type($id)!=='kld_design'||get_post_meta($id,'_kld_deleted',true)==='yes'||strlen($token)!==64||!$hash||!hash_equals($hash,hash('sha256',$token)))return new WP_Error('no_access','Akses desain tidak valid.',['status'=>403]);
+ if(!$id||get_post_type($id)!=='kld_design'||(function_exists('get_post_status')&&get_post_status($id)!=='private')||get_post_meta($id,'_kld_deleted',true)==='yes'||strlen($token)!==64||!$hash||!hash_equals($hash,hash('sha256',$token)))return new WP_Error('no_access','Akses desain tidak valid.',['status'=>403]);
  return $id;
 }
 function kld_public_rate_limit($type,$limit,$ttl){
@@ -31,7 +31,7 @@ add_action('rest_api_init',function(){
 function kld_api_init(WP_REST_Request $r){
  if(!kld_public_rate_limit('new',12,HOUR_IN_SECONDS))return kld_api_error('rate_limit','Batas pembuatan desain sementara tercapai. Coba lagi nanti.',429);
  if(!function_exists('wc_get_product'))return kld_api_error('wc','WooCommerce tidak aktif.',503);
- $id=absint($r['product_id']);$p=wc_get_product($id);
+ $id=kld_positive_id($r['product_id']);$p=$id?wc_get_product($id):false;
  if(!$p||get_post_meta($id,'_kld_enabled',true)!=='yes')return kld_api_error('bad_product','Produk tidak tersedia untuk custom.');
  if(!kld_drive_connected())return kld_api_error('drive_not_ready','Penyimpanan produksi belum dikonfigurasi.');
  if(get_option('kld_public_enabled','no')!=='yes'&&!current_user_can('manage_woocommerce'))return kld_api_error('not_public','Editor masih dalam mode pengujian.',503);
@@ -71,7 +71,7 @@ function kld_api_confirm_upload(WP_REST_Request $r){
  // Keep previous files for reference-safe archives.
  update_post_meta($id,'_kld_file_'.$side,$fileid);
  // Earlier masters may be referenced by paid orders. Never delete them during replacement.
- update_post_meta($id,'_kld_file_details_'.$side,['name'=>$data['name'],'size'=>(int)$data['size'],'mime'=>$data['mimeType'],'folder'=>get_option('kld_master_folder')]);
+ update_post_meta($id,'_kld_file_details_'.$side,['name'=>$data['name'],'size'=>(int)$data['size'],'mime'=>$data['mimeType'],'folder'=>get_option('kld_master_folder'),'width'=>(int)($data['width']??0),'height'=>(int)($data['height']??0)]);
  delete_post_meta($id,'_kld_pending_'.$side);
  return rest_ensure_response(['verified'=>true,'name'=>$data['name']]);
 }
@@ -309,10 +309,14 @@ function kld_api_load(WP_REST_Request $r){
  $product=absint(get_post_meta($id,'_kld_product',true));
  if(!$product||!wc_get_product($product))return kld_api_error('product','Produk tidak tersedia.',404);
  $sides=get_post_meta($id,'_kld_sides',true);if(!is_array($sides))return kld_api_error('empty','Desain belum disimpan.',409);
- $layers=[];
+ $layers=[];$pixels=[];
  foreach(['front','back'] as $side){
   $data=(string)get_post_meta($id,'_kld_artwork_'.$side,true);
   if($data!==''&&strlen($data)<=85000&&preg_match('/^[a-zA-Z0-9+\/=]+$/D',$data))$layers[$side]='data:image/webp;base64,'.$data;
+  $details=get_post_meta($id,'_kld_file_details_'.$side,true);
+  if(!is_array($details))$details=[];
+  $width=(int)($details['width']??0);$height=(int)($details['height']??0);
+  if($width>0&&$height>0&&$width<=16000&&$height<=16000&&$width*$height<=26000000)$pixels[$side]=['width'=>$width,'height'=>$height];
  }
- return rest_ensure_response(['design_id'=>$id,'product_id'=>$product,'sides'=>$sides,'color'=>(string)get_post_meta($id,'_kld_color',true),'layers'=>$layers]);
+ return rest_ensure_response(['design_id'=>$id,'product_id'=>$product,'sides'=>$sides,'color'=>(string)get_post_meta($id,'_kld_color',true),'layers'=>$layers,'source_pixels'=>$pixels]);
 }
