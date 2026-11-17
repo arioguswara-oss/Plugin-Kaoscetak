@@ -24,3 +24,9 @@ Repository privat untuk **berbagai plugin WordPress/WooCommerce khusus kaoscetak
 - Jangan ubah hosting live, Lumise, pembayaran, database, atau tema tanpa izin Owner.
 
 Source code, pengujian dan rilis dibuat bertahap; tidak ada klaim plugin siap instalasi hanya karena struktur repository sudah tersedia.
+
+## Checkpoint kandidat QA 0.3.2-rc.1
+
+Kelanjutan source develop/lite-designer-v1 HEAD 4381a5e, bukan proyek baru.
+[Laporan implementasi, tes, batas Drive/Classic/Flatsome, QA dan rollback](docs/qa-0.3.2-rc.1.md).
+Kandidat tetap DRAFT; tidak ada perubahan production atau merge main.

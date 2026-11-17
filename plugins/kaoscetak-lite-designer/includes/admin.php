@@ -157,6 +157,7 @@ function kld_product_safe_margins($product){
 }
 function kld_unit_price($id,$size,$front,$back){
  if(kld_is_mug($id))return $size==='ONE' && $front==='MUG' && $back==='none'?kld_mug_price($id):null;
+ if(!in_array($front,array_merge(['none'],array_keys(kld_tiers())),true)||!in_array($back,array_merge(['none'],array_keys(kld_tiers())),true))return null;
  $matrix=kld_product_prices($id);$tiers=array_keys(kld_tiers());
  if(!isset($matrix[$size]))return null;
  $chosen=array_values(array_filter([$front,$back],function($tier)use($tiers){return in_array($tier,$tiers,true);}));
@@ -172,6 +173,14 @@ add_action('admin_init',function(){
  if(!current_user_can('manage_woocommerce')||!isset($_POST['kld_save_settings']))return;
  check_admin_referer('kld_settings');
  update_option('kld_client_id',sanitize_text_field(wp_unslash($_POST['kld_client_id']??'')),false);
+ foreach(['kld_master_folder','kld_orders_folder'] as $folderOption){
+  $folder=trim((string)wp_unslash($_POST[$folderOption]??''));
+  if($folder!==''&&$folder!==get_option($folderOption,'')){
+   $checked=kld_drive_select_folder($folder);
+   if(is_wp_error($checked)){add_settings_error('kld','folder',$checked->get_error_message(),'error');return;}
+   update_option($folderOption,$checked,false);
+  }
+ }
  update_option('kld_public_enabled',isset($_POST['kld_public_enabled'])?'yes':'no',false);
  $secret=trim((string)wp_unslash($_POST['kld_client_secret']??''));
  if($secret!=='')update_option('kld_client_secret',kld_encrypt_secret($secret),false);
@@ -199,6 +208,7 @@ function kld_render_settings(){
  echo '<table class="form-table"><tr><th>OAuth Client ID</th><td><input class="regular-text" name="kld_client_id" value="'.esc_attr(get_option('kld_client_id','')).'" autocomplete="off"></td></tr>';
  echo '<tr><th>OAuth Client Secret</th><td><input class="regular-text" type="password" name="kld_client_secret" autocomplete="new-password" value="" placeholder="Kosongkan untuk mempertahankan"></td></tr>';
  echo '<tr><th>Authorized redirect URI</th><td><code>'.esc_html(admin_url('admin-post.php?action=kld_oauth_callback')).'</code></td></tr></table>';
+ foreach(['kld_master_folder'=>'Folder master privat','kld_orders_folder'=>'Folder pesanan privat'] as $key=>$label)echo '<p><label>'.esc_html($label).' <input name="'.esc_attr($key).'" value="'.esc_attr(get_option($key,'')).'" autocomplete="off"></label></p>';
  echo '<h2>Publikasi</h2><p><label><input type="checkbox" name="kld_public_enabled" value="yes" '.checked(get_option('kld_public_enabled','no'),'yes',false).'> Aktifkan editor publik setelah diuji</label></p>';
  echo '<h2>Tambahan sisi kedua (Rp)</h2><table class="form-table">';
  foreach($rates as $tier=>$v)echo '<tr><th>'.esc_html($tier).'</th><td><input type="number" name="rates['.esc_attr($tier).']" value="'.esc_attr($v).'" min="0"></td></tr>';

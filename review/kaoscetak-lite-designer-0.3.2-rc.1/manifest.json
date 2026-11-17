@@ -1,0 +1,28 @@
+{
+  "file": "kaoscetak-lite-designer-0.3.2-rc.1.zip",
+  "version": "0.3.2-rc.1",
+  "sha256": "ef04d7b83d0bd31be35dafb23068270e3a48af8d7b495fcb650f513fde6f2dfd",
+  "bytes": 66819,
+  "files": 18,
+  "entries": {
+    "CHANGELOG.md": "620f9b554313179e1544e86408e1ece6a383722e618c2ce6774ece86ea3be6a6",
+    "LICENSE": "aaf135472f81c5b4a0dca9367e5bb5e9750032b5bebe5442b36e4c0a47430df3",
+    "README-PENTING.md": "c3f4fbbe2a2b864d9fc6f04f4ae38c99b91e76f508bb4afbe8128e47cf67d2df",
+    "README.md": "52bdf6d95753ea2a5a3b588cccd856e0c093f794fe5a7be19027ada59c11b7d7",
+    "RELEASE-CANDIDATE.md": "3b5813d5e03e7cbf7771f8ee2126a473b2fdb25d0ea08bdf9cd8dc0c3a0d9e02",
+    "assets/editor.css": "f9271e82c3f6e90d0c9f8f22f781663f5efb28ea8f43aa77771c11fc3170ae3e",
+    "assets/editor.js": "2c49dfb50852969f35a8cc82e8eae4b40ecdb2922a826fddda6e79ed423dd3fa",
+    "assets/index.php": "c48fe6b757ddc30cc6d27924bbbdd8ec8a46bba76754c4ce8adb99ea32046fbe",
+    "includes/admin.php": "ba4ebf277afbf4eeea67e51f37643ba380c78de565f1bfea9a86d9053fb65eb0",
+    "includes/api.php": "44c906d7ab5a73cfe0d771d8a1b27947cab0455d8b1206b6907e87c704445353",
+    "includes/drive.php": "fb2c8a4c2d8ebaceeda15a1feba00741d45dcaefe92bdcd7c42b1f91fdb2cb84",
+    "includes/index.php": "c48fe6b757ddc30cc6d27924bbbdd8ec8a46bba76754c4ce8adb99ea32046fbe",
+    "includes/repeat.php": "8e47f2f426d84b86addd41bcf6b8a38a2111f675743be23dc6bd94af9a63a365",
+    "includes/sharing.php": "3ed8c58e07aac600ca370fa2c24203c38236e24551ab87f55064095098269ccd",
+    "includes/store.php": "060d9b3258b4d1afcdd3f268efeeba7441095a53999b0bb1fa85d4d7726abefe",
+    "includes/validation.php": "ff8e0c9cd022b03492ab2696745225afcdd2c17ecbc33aeaa9efa9a187d8f18b",
+    "index.php": "c48fe6b757ddc30cc6d27924bbbdd8ec8a46bba76754c4ce8adb99ea32046fbe",
+    "kaoscetak-lite-designer.php": "7e53969132699844a84d5722e08686d810c17458ad30a48301e0f81a745f7177"
+  },
+  "status": "DRAFT \u2014 isolated QA only; Drive/Flatsome/live unverified"
+}

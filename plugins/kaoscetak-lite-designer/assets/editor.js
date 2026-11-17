@@ -5,11 +5,12 @@ const isMug=cfg.productType==='mug-11oz';
 const T=cfg.tiers, tiers=Object.keys(T), sides={front:makeSide(),back:makeSide()};
 if(isMug)sides.front.tier='MUG';
 function makeSide(){return{tier:'none',image:null,text:null,file:null,upload:'idle',uploadError:'',imagePixels:null,alpha:false,restored:false,placement:{dx:0,dy:0}};}
-let current='front',shirtSize=isMug?'ONE':'L',color=cfg.colors[0]||'',designId=null,designToken=null,creating=null,busy=false,dragging=null,uploadCounter=0;
+let current='front',shirtSize=isMug?'ONE':(cfg.sizes.includes('L')?'L':cfg.sizes[0]),color=cfg.colors[0]||'',designId=null,designToken=null,creating=null,busy=false,cartPending=false,dragging=null,uploadCounter=0;
+const orderQty=Object.fromEntries(cfg.sizes.map(s=>[s,s===shirtSize?1:0]));
 const $=s=>root.querySelector(s),money=n=>'Rp'+Math.round(n).toLocaleString('id-ID');
 function xss(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function visible(){return sides[current]};
-function api(path,data){return fetch(cfg.rest+path,{method:'POST',headers:{'Content-Type':'application/json','X-KLD-Token':designToken||'','X-WP-Nonce':cfg.nonce},body:JSON.stringify({...data,design_id:designId}),credentials:'same-origin'}).then(async r=>{let j;try{j=await r.json();}catch(e){j={message:'Respons server tidak dikenal.'};}if(!r.ok)throw new Error(j.message||'Gagal memproses permintaan.');return j;});}
+function api(path,data){return fetch(cfg.rest+path,{method:'POST',headers:{'Content-Type':'application/json','X-KLD-Token':designToken||'',...(cfg.nonce?{'X-WP-Nonce':cfg.nonce}:{})},body:JSON.stringify({...data,design_id:designId}),credentials:'same-origin'}).then(async r=>{let j;try{j=await r.json();}catch(e){j={message:'Respons server tidak dikenal.'};}if(!r.ok)throw new Error(j.message||'Gagal memproses permintaan.');return j;});}
 function showStatus(s,type='info'){const el=$('.kld-status');if(el){el.textContent=s;el.dataset.type=type;}}
 function dims(t){return T[t]||[0,0]};
 function resetLayer(side){const s=sides[side];if(s.tier==='none')return;const [w,h]=dims(s.tier);if(s.image){const factor=Math.min(1,w/s.image.w,h/s.image.h);s.image.w*=factor;s.image.h*=factor;s.image.x=Math.max(0,Math.min(s.image.x,w-s.image.w));s.image.y=Math.max(0,Math.min(s.image.y,h-s.image.h));}if(s.text){s.text.w=Math.min(s.text.w,w);s.text.h=Math.min(s.text.h,h);s.text.x=Math.max(0,Math.min(s.text.x,w-s.text.w));s.text.y=Math.max(0,Math.min(s.text.y,h-s.text.h));}}
@@ -21,7 +22,7 @@ root.innerHTML=`<div class="kld-overlay" role="dialog" aria-modal="true" aria-la
  <div class="kld-content">
   <section class="kld-workspace">${isMug?'<div class="kld-mug-label">Mug Putih 11 oz · Bidang cetak 18 × 8,5 cm</div>':'<div class="kld-tabs"><button type="button" data-side="front" class="active">Depan</button><button type="button" data-side="back">Belakang</button></div>'}
   <div class="kld-preview-wrap"><canvas class="kld-stage" width="600" height="710" aria-label="Preview desain produk"></canvas></div>
-  <div class="kld-hint">${isMug?'Geser gambar atau teks di bidang 18 × 8,5 cm. Ini pratinjau bidang cetak terbentang, bukan simulasi keliling mug 3D.':'Geser gambar atau teks di dalam area cetak. Geser bagian kosong dalam garis putus-putus untuk memindahkan seluruh area cetak di kaos.'}</div>
+  <div class="kld-area-info" role="status"></div><div class="kld-hint">${isMug?'Geser gambar atau teks di bidang 18 × 8,5 cm. Ini pratinjau bidang cetak terbentang, bukan simulasi keliling mug 3D.':'Geser gambar atau teks di dalam area cetak. Geser bagian kosong dalam garis putus-putus untuk memindahkan seluruh area cetak di kaos.'}</div>
   </section>
   <section class="kld-controls">
     <div class="kld-row2"><label>${isMug?'Warna mug':'Warna kaos'}<select class="kld-color">${cfg.colors.length?cfg.colors.map(x=>`<option value="${xss(x)}">${xss(x)}</option>`).join(''):'<option value="">Semua warna sedang tidak tersedia</option>'}</select></label><label>${isMug?'Jenis produk':'Preview size'}<select class="kld-size">${cfg.sizes.map(x=>`<option value="${xss(x)}">${x==='ONE'?'Mug 11 oz':xss(x)}</option>`).join('')}</select></label></div>
@@ -29,21 +30,25 @@ root.innerHTML=`<div class="kld-overlay" role="dialog" aria-modal="true" aria-la
     <label>${isMug?'Area cetak tetap':'Ukuran cetak'} <strong class="kld-current-side">depan</strong><select class="kld-tier">${isMug?'':'<option value="none">Tidak cetak</option>'}${tiers.map(x=>`<option value="${xss(x)}">${xss(x)} — ${T[x][0]} × ${T[x][1]} cm</option>`).join('')}</select></label>
     <div class="kld-pane kld-image-pane"><div class="kld-pane-title">Gambar (maks. 1 ${isMug?'per mug':'per sisi'})</div><label class="kld-file"><span>+ Pilih PNG / JPEG (maks. 10 MB)</span><input type="file" class="kld-fileinput" accept="image/png,image/jpeg"/></label>
      <div class="kld-upload-state" role="status"></div>
-     <div class="kld-image-actions"><button class="kld-remove-bg" type="button" disabled>Hapus background</button><button class="kld-retry" type="button" hidden>Coba upload ulang</button></div>
+     <div class="kld-image-actions"><button class="kld-remove-image" type="button">Hapus gambar</button><button class="kld-remove-bg" type="button" disabled>Hapus background</button><button class="kld-retry" type="button" hidden>Coba upload ulang</button></div>
      <label>Lebar gambar <span class="kld-image-width-label"></span><input class="kld-image-width" type="range" min="1" max="32" step="0.2" value="10" disabled></label>
     </div>
-    <div class="kld-pane"><div class="kld-pane-title">Teks (maks. 1 blok ${isMug?'per mug':'per sisi'})</div><textarea class="kld-text" rows="2" maxlength="160" placeholder="Opsional: nama, slogan, atau teks desain"></textarea>
+    <div class="kld-pane"><div class="kld-pane-title">Teks (maks. 1 blok ${isMug?'per mug':'per sisi'})</div><textarea aria-label="Teks desain" class="kld-text" rows="2" maxlength="160" placeholder="Opsional: nama, slogan, atau teks desain"></textarea>
      <div class="kld-row2"><label>Font<select class="kld-font"><option>Arial</option><option>Georgia</option><option>Verdana</option><option>Tahoma</option></select></label><label>Warna teks<input class="kld-text-color" type="color" value="#ffffff"></label></div>
      <label>Ukuran teks <span class="kld-text-width-label"></span><input class="kld-text-width" type="range" min="1" max="32" step="0.2" value="10"></label>
     </div>
-    <div class="kld-pane"><div class="kld-pane-title">${isMug?'Jumlah mug (pcs)':'Jumlah pesanan per size'}</div><div class="kld-qty-grid">${cfg.sizes.map(s=>`<label class="kld-qty"><span>${s==='ONE'?'Jumlah':xss(s)}</span><input type="number" min="0" max="100" step="1" data-qty="${xss(s)}" value="${s==='L'||s==='ONE'?'1':'0'}"></label>`).join('')}</div></div>
+    <div class="kld-pane kld-position"><label>Posisi layer<select class="kld-position-layer"><option value="image">Gambar</option><option value="text">Teks</option></select></label><div role="group" aria-label="Geser layer 0,5 cm">${[['left','←'],['up','↑'],['down','↓'],['right','→']].map(([key,label])=>`<button type="button" data-nudge="${key}" aria-label="Geser ${key} 0,5 cm">${label}</button>`).join('')}</div></div>
+    <div class="kld-pane"><div class="kld-pane-title">${isMug?'Jumlah mug (pcs)':'Jumlah pesanan per size'}</div><div class="kld-qty-grid">${cfg.sizes.map(s=>`<label class="kld-qty"><span>${s==='ONE'?'Jumlah':xss(s)}</span><input type="number" min="0" max="100" step="1" data-qty="${xss(s)}" value="${orderQty[s]}"></label>`).join('')}</div></div>
     <div class="kld-total"><span>Total pesanan <small class="kld-count"></small></span><strong class="kld-total-number">Pilih area cetak</strong></div>
     <div class="kld-status" role="status" aria-live="polite"></div>
     <div class="kld-actions"><button class="kld-save" type="button">Simpan Desain</button><button class="kld-cart" type="button">Masukkan Keranjang</button></div>
-    <div class="kld-mail"><strong>Kelola desain tanpa akun</strong><p>Masukkan email untuk menerima tautan verifikasi kepemilikan.</p><div class="kld-row2"><input type="email" class="kld-email" placeholder="email@contoh.com"><button type="button" class="kld-verify">Kirim verifikasi</button></div></div>
+    <div class="kld-mail"><strong>Kelola desain tanpa akun</strong><p>Masukkan email untuk menerima tautan verifikasi kepemilikan.</p><div class="kld-row2"><input aria-label="Email pemilik desain" type="email" class="kld-email" placeholder="email@contoh.com"><button type="button" class="kld-verify">Kirim verifikasi</button></div></div>
     <p class="kld-footnote">Preview adalah simulasi. File asli tetap disimpan untuk operator cetak, tanpa diproses di hosting WordPress.</p>
   </section></div></div></div>`;
  $('.kld-back').addEventListener('click',close);
+ $('.kld-overlay').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();close();}if(e.key==='Tab'){const items=[...root.querySelectorAll('button,input,select,textarea')].filter(x=>!x.disabled&&x.getClientRects().length);if(!items.length)return;const first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
+ root.querySelectorAll('[data-nudge]').forEach(b=>b.addEventListener('click',()=>{const layer=visible()[$('.kld-position-layer').value];if(!layer)return;const delta={left:[-.5,0],right:[.5,0],up:[0,-.5],down:[0,.5]}[b.dataset.nudge],d=dims(visible().tier);layer.x=Math.max(0,Math.min(d[0]-layer.w,layer.x+delta[0]));layer.y=Math.max(0,Math.min(d[1]-layer.h,layer.y+delta[1]));refresh(false);}));
+ queueMicrotask(()=>$('.kld-back')?.focus());
  root.querySelectorAll('[data-side]').forEach(btn=>btn.addEventListener('click',()=>{current=btn.dataset.side;refresh();}));
  $('.kld-tier').addEventListener('change',e=>setTier(current,e.target.value));
  $('.kld-color').addEventListener('change',e=>{color=e.target.value;refresh();});
@@ -51,6 +56,7 @@ root.innerHTML=`<div class="kld-overlay" role="dialog" aria-modal="true" aria-la
  $('.kld-size').addEventListener('change',e=>{shirtSize=e.target.value;refresh();});
  $('.kld-fileinput').addEventListener('change',async e=>{if(e.target.files[0])await onFile(e.target.files[0],current);e.target.value='';});
  $('.kld-remove-bg').addEventListener('click',removeSolidBackground);
+ $('.kld-remove-image').addEventListener('click',()=>{const s=visible();if(['preparing','upload'].includes(s.upload)||String(s.upload).startsWith('Mengirim')){showStatus('Tunggu upload selesai sebelum menghapus gambar.','warn');return;}s.imagePixels?.bitmap?.close?.();Object.assign(s,{image:null,imagePixels:null,file:null,restored:false,bgPreviewOnly:false,upload:'idle',uploadSession:null});refresh();});
  $('.kld-retry').addEventListener('click',()=>{if(visible().file)uploadOriginal(visible().file,current);});
  $('.kld-image-width').addEventListener('input',e=>{const s=visible(),L=dims(s.tier);if(!s.image)return;const ratio=s.image.aspect;let w=Math.min(L[0],+e.target.value),h=w/ratio;if(h>L[1]){h=L[1];w=h*ratio;}s.image.w=w;s.image.h=h;resetLayer(current);refresh(false);});
  $('.kld-text').addEventListener('input',e=>{if(visible().tier==='none'){showStatus('Pilih kategori ukuran cetak terlebih dahulu.','warn');return;}updateText();});
@@ -63,9 +69,9 @@ root.innerHTML=`<div class="kld-overlay" role="dialog" aria-modal="true" aria-la
  const canvas=$('.kld-stage');canvas.addEventListener('pointerdown',pointerDown);canvas.addEventListener('pointermove',pointerMove);canvas.addEventListener('pointerup',pointerUp);canvas.addEventListener('pointercancel',pointerUp);
  refresh();
 }
-function close(){if(busy){showStatus('Tunggu proses penyimpanan selesai.','warn');return;}const el=$('.kld-overlay');if(el)el.remove();document.body.classList.remove('kld-no-scroll');}
+function close(){if(busy||cartPending){showStatus('Tunggu proses penyimpanan selesai.','warn');return;}const el=$('.kld-overlay');if(el)el.remove();document.body.classList.remove('kld-no-scroll');openBtn.focus();}
 async function createDraft(){if(cfg.previewOnly)return;if(designId&&designToken)return {design_id:designId,token:designToken};if(creating)return creating;
- creating=api('init',{product_id:cfg.productId}).then(r=>{designId=r.design_id;designToken=r.token;return r;}).catch(e=>{showStatus(e.message,'error');throw e;});return creating;
+ creating=api('init',{product_id:cfg.productId}).then(r=>{designId=r.design_id;designToken=r.token;return r;}).catch(e=>{showStatus(e.message,'error');throw e;}).finally(()=>{creating=null;});return creating;
 }
 function open(){if(root.querySelector('.kld-overlay'))return;template();document.body.classList.add('kld-no-scroll');if(!cfg.previewOnly)createDraft().catch(()=>{});}
 openBtn.addEventListener('click',open);
@@ -91,7 +97,7 @@ async function openForkFromFragment(){
     const cv=document.createElement('canvas');cv.width=32;cv.height=32;
     const ctx=cv.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0,32,32);
     const bytes=ctx.getImageData(0,0,32,32).data;
-    for(let i=3;i<bytes.length;i+=4){if(bytes[i]<245){s.alpha=true;break;}}
+    for(let i=3;i<bytes.length;i+=4){if(bytes[i]<255){s.alpha=true;break;}}
     s.upload='done';s.restored=true;
    }
    if(saved.text)s.text={...saved.text};
@@ -138,36 +144,52 @@ async function getSmallBitmap(file){
  let bitmap;
  try{bitmap=await createImageBitmap(file,{resizeWidth:w,resizeHeight:h,resizeQuality:'high'});}
  catch(e){const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);bitmap=c;}
- URL.revokeObjectURL(url);
- const c=document.createElement('canvas');c.width=64;c.height=64;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(bitmap,0,0,64,64);
- const rgba=ctx.getImageData(0,0,64,64).data;let alpha=false;
- for(let i=3;i<rgba.length;i+=4){if(rgba[i]<245){alpha=true;break;}}
+ // Scan actual source alpha in bounded strips, yielding between work. PNG can be fully opaque.
+ let alpha=false;
+ if(file.type==='image/png'){
+  const c=document.createElement('canvas');c.width=naturalW;c.height=64;
+  const ctx=c.getContext('2d',{willReadFrequently:true});
+  for(let y=0;y<naturalH&&!alpha;y+=64){ctx.clearRect(0,0,c.width,64);const height=Math.min(64,naturalH-y);ctx.drawImage(img,0,y,naturalW,height,0,0,naturalW,height);
+   const rgba=ctx.getImageData(0,0,naturalW,height).data;for(let i=3;i<rgba.length;i+=4)if(rgba[i]<255){alpha=true;break;}
+   if(y%256===0)await new Promise(requestAnimationFrame);
+  }
+ }
+ img.src='';URL.revokeObjectURL(url);
  return {bitmap,w:naturalW,h:naturalH,alpha};
 }
 async function onFile(file,side){
  if(!['image/jpeg','image/png'].includes(file.type)){showStatus('Pilih file PNG atau JPEG.','error');return;}
- if(file.size>cfg.maxBytes){showStatus('Ukuran file maksimal 10 MB.','error');return;}
+ if(!file.size||file.size>cfg.maxBytes){showStatus('Ukuran file maksimal 10 MB.','error');return;}
  if(sides[side].tier==='none'){showStatus('Pilih ukuran cetak terlebih dahulu.','warn');return;}
- if(sides[side].upload==='upload'||String(sides[side].upload).startsWith('Mengirim')){showStatus('Tunggu upload sebelumnya selesai sebelum mengganti gambar.','warn');return;}
- const id=++uploadCounter;
- sides[side].bgPreviewOnly=false;
+ if(['preparing','upload'].includes(sides[side].upload)||String(sides[side].upload).startsWith('Mengirim')){showStatus('Tunggu upload sebelumnya selesai sebelum mengganti gambar.','warn');return;}
+ const id=++uploadCounter,previousUpload=sides[side].upload;
+ sides[side].upload='preparing';
  showStatus('Menyiapkan preview ringan…');
- try{const pixels=await getSmallBitmap(file);const s=sides[side];s.file=file;s.imagePixels=pixels;s.alpha=pixels.alpha;s.restored=false;s.image=null;addImageLayer(s);s.upload=cfg.previewOnly?'preview':'pending';refresh();
+ try{const pixels=await getSmallBitmap(file);const s=sides[side];s.bgPreviewOnly=false;s.imagePixels?.bitmap?.close?.();s.file=file;s.uploadSession=null;s.imagePixels=pixels;s.alpha=pixels.alpha;s.restored=false;s.image=null;addImageLayer(s);s.upload=cfg.previewOnly?'preview':'pending';refresh();
  if(!cfg.previewOnly){showStatus('Gambar siap diatur. File asli sedang dikirim ke Drive.');await uploadOriginal(file,side,id);}
  else showStatus('Mode preview: gambar hanya ada di browser. Belum dikirim ke Google Drive.','warn');
- }catch(e){showStatus(e.message,'error');}
+ }catch(e){sides[side].upload=sides[side].file===file?'failed':previousUpload;refreshUpload();showStatus(e.message,'error');}
 }
-async function uploadOriginal(file,side,id){const s=sides[side];s.upload='upload';s.uploadError='';refreshUpload();
- try{await createDraft();const start=await api('start-upload',{side,size:file.size,mime:file.type});
-  const reply=await new Promise((resolve,reject)=>{
-   const xhr=new XMLHttpRequest();xhr.open('PUT',start.upload_url,true);xhr.setRequestHeader('Content-Type',file.type);
-   xhr.upload.onprogress=e=>{if(e.lengthComputable){s.upload='Mengirim '+Math.round(e.loaded/e.total*100)+'%';refreshUpload();}};
-   xhr.onload=()=>{if(xhr.status>=200&&xhr.status<300){try{resolve(JSON.parse(xhr.responseText));}catch(e){reject(new Error('Respons penyimpanan file tidak dikenali.'));}}else reject(new Error('Upload Google Drive gagal (HTTP '+xhr.status+').'));};
-   xhr.onerror=()=>reject(new Error('Upload langsung ke Google Drive gagal. Periksa koneksi/CORS di domain asli.'));
-   xhr.send(file);
-  });
-  if(!reply.id)throw Error('Google Drive tidak mengembalikan file ID.');
-  await api('confirm-upload',{side,file_id:reply.id});s.upload='done';refreshUpload();showStatus('File asli sisi '+(side==='front'?'depan':'belakang')+' telah tersimpan.','ok');
+async function uploadOriginal(file,side,id){const s=sides[side];if(s.upload==='upload'||String(s.upload).startsWith('Mengirim'))return;s.upload='upload';s.uploadError='';refreshUpload();
+ const send=(url,body,range)=>new Promise((resolve,reject)=>{
+  const xhr=new XMLHttpRequest();xhr.open('PUT',url,true);xhr.timeout=60000;xhr.setRequestHeader('Content-Type',file.type);xhr.setRequestHeader('Content-Range',range);
+  xhr.onerror=()=>reject(Error('Koneksi/CORS Drive gagal. File belum dikonfirmasi; coba upload ulang.'));
+  xhr.ontimeout=()=>reject(Error('Upload melewati batas waktu. Coba upload ulang untuk melanjutkan.'));
+  xhr.onload=()=>{let data={};try{data=JSON.parse(xhr.responseText||'{}');}catch(e){}resolve({status:xhr.status,data,range:xhr.getResponseHeader('Range')});};xhr.send(body);
+ });
+ try{await createDraft();
+  if(!s.uploadSession||Date.now()-s.uploadSession.at>7000000){const start=await api('start-upload',{side,size:file.size,mime:file.type});s.uploadSession={url:start.upload_url,at:Date.now()};}
+  const session=s.uploadSession;let state=await send(session.url,null,'bytes */'+file.size),offset=0;
+  if(state.status===308){const m=/^bytes=0-([0-9]+)$/.exec(state.range||'');offset=m?Number(m[1])+1:0;}
+  else if(state.status<200||state.status>=300){s.uploadSession=null;throw Error('Sesi upload kedaluwarsa atau tidak tersedia. Coba lagi.');}
+  while(!state.data.id&&offset<file.size){const end=Math.min(file.size,offset+1048576);s.upload='Mengirim '+Math.round(offset/file.size*100)+'%';refreshUpload();
+   state=await send(session.url,file.slice(offset,end),'bytes '+offset+'-'+(end-1)+'/'+file.size);
+   if(state.status===308){const m=/^bytes=0-([0-9]+)$/.exec(state.range||'');const next=m?Number(m[1])+1:0;if(next<=offset||next>end)throw Error('Offset upload tidak valid. Coba lagi.');offset=next;}
+   else if(state.status<200||state.status>=300)throw Error('Upload Drive gagal (HTTP '+state.status+'). Coba lagi.');
+   else break;
+  }
+  if(!state.data.id)throw Error('File ID belum tersedia. Coba lagi untuk memeriksa status upload.');
+  await api('confirm-upload',{side,file_id:state.data.id});s.upload='done';refreshUpload();showStatus('File asli sisi '+(side==='front'?'depan':'belakang')+' telah tersimpan.','ok');
  }catch(e){s.upload='failed';s.uploadError=e.message;refreshUpload();showStatus(e.message,'error');}
 }
 function refreshUpload(){const s=visible();const el=$('.kld-upload-state');if(!el)return;
@@ -178,7 +200,7 @@ function refreshUpload(){const s=visible();const el=$('.kld-upload-state');if(!e
 }
 function removeSolidBackground(){
  const s=visible();if(!s.imagePixels||s.alpha)return;
- const original=s.imagePixels.bitmap,c=document.createElement('canvas');c.width=Math.min(original.width||1100,900);c.height=Math.min(original.height||1100,900);
+ const original=s.imagePixels.bitmap,c=document.createElement('canvas'),ow=original.width||original.naturalWidth,oh=original.height||original.naturalHeight,factor=Math.min(1,900/Math.max(ow,oh));c.width=Math.max(1,Math.round(ow*factor));c.height=Math.max(1,Math.round(oh*factor));
  const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(original,0,0,c.width,c.height);
  const data=ctx.getImageData(0,0,c.width,c.height),px=data.data,w=c.width,h=c.height;
  const ref=[px[0],px[1],px[2]],tol=48,seen=new Uint8Array(w*h),queue=[];
@@ -189,8 +211,12 @@ function removeSolidBackground(){
  showStatus('Background dihapus hanya pada preview. File asli di Drive tetap utuh; operator produksi perlu memeriksa penghapusan background sebelum cetak.','warn');
 }
 function updateText(){let s=visible();if(s.tier==='none')return;
- const val=$('.kld-text').value.slice(0,160);if(!val.trim()){s.text=null;refresh(false);return;}
- const [maxW,maxH]=dims(s.tier),w=Math.min(+$('.kld-text-width').value,maxW),lines=val.split('\n').slice(0,5),h=Math.min(maxH,Math.max(2.2,lines.length*1.65));
+ const val=$('.kld-text').value.slice(0,160).split('\n').slice(0,5).join('\n');$('.kld-text').value=val;if(!val.trim()){s.text=null;refresh(false);return;}
+ const [maxW,maxH]=dims(s.tier),lines=val.split('\n').slice(0,5),measure=$('.kld-stage').getContext('2d');
+ measure.save();measure.font='100px '+$('.kld-font').value;const textPixels=Math.max(1,...lines.map(line=>measure.measureText(line).width));measure.restore();
+ let w=Math.min(+$('.kld-text-width').value,maxW),h=w*lines.length*120/textPixels;
+ if(h>maxH){w*=maxH/h;h=maxH;}
+
  if(!s.text)s.text={x:(maxW-w)/2,y:Math.max(0,maxH-h-1),w,h};
  Object.assign(s.text,{value:val,font:$('.kld-font').value,color:$('.kld-text-color').value,w,h});resetLayer(current);refresh(false);
 }
@@ -198,9 +224,10 @@ const garments=cfg.garments&&Object.keys(cfg.garments).length?cfg.garments:{S:[4
 function stageMetrics(){
  if(isMug)return {w:600,h:710,px:156,py:325,scale:16,tierW:18,tierH:8.5,minX:0,maxX:0,minY:0,maxY:0};
  const w=600,h=710,ti=dims(visible().tier),g=garments[shirtSize]||garments.L,scale=Math.min(6,490/g[1],480/g[0]);
- const safeLeft=300-(g[0]-8)*scale/2,safeRight=300+(g[0]-8)*scale/2;
- const safeTop=180,safeBottom=155+g[1]*scale-25;
- const baseX=300-ti[0]*scale/2,baseY=225;
+ const margin=cfg.safeMargins||{side:4,top:3.33,bottom:5};
+ const safeLeft=300-(g[0]-2*margin.side)*scale/2,safeRight=300+(g[0]-2*margin.side)*scale/2;
+ const safeTop=155+margin.top*scale,safeBottom=155+(g[1]-margin.bottom)*scale;
+ const baseX=300-ti[0]*scale/2,baseY=155+10.83*scale;
  const state=visible(),dx=state.placement.dx,dy=state.placement.dy;
  const placed=['image','text'].map(k=>state[k]).filter(Boolean);
  const minLayerX=placed.length?Math.min(...placed.map(v=>v.x)):0;
@@ -209,7 +236,8 @@ function stageMetrics(){
  const maxLayerY=placed.length?Math.max(...placed.map(v=>v.y+v.h)):ti[1];
  const minX=(safeLeft-baseX)/scale-minLayerX,maxX=(safeRight-baseX)/scale-maxLayerX;
  const minY=(safeTop-baseY)/scale-minLayerY,maxY=(safeBottom-baseY)/scale-maxLayerY;
- const allowedX=Math.max(minX,Math.min(maxX,dx)),allowedY=Math.max(minY,Math.min(maxY,dy));
+ // Preview size never silently moves or rescales a physical design. Server rejects unsafe sizes.
+ const allowedX=dx,allowedY=dy;
  return {w,h,px:baseX+allowedX*scale,py:baseY+allowedY*scale,scale,tierW:ti[0],tierH:ti[1],minX,maxX,minY,maxY};
 }
 /** Cloth-lighting fallback; renders on the existing canvas without network requests. */
@@ -259,7 +287,7 @@ function draw(){const cv=$('.kld-stage');if(!cv)return;const ctx=cv.getContext('
  ctx.fillStyle=cfg.colorSwatches?.[color]||'#363c44';ctx.strokeStyle='#b8bcc2';ctx.lineWidth=2;
  // Standard adult 24s dimensions, centimetres: front panel width x shirt length.
  const garment={S:[43,65],M:[46,69],L:[49,73],XL:[51,73],'2XL':[54,76],'3XL':[60,78],'4XL':[63,80],'5XL':[66,80]};
- const g=garment[shirtSize]||garment.L, left=300-g[0]*scale/2,right=300+g[0]*scale/2,hem=155+g[1]*scale;
+ const g=garments[shirtSize]||garment[shirtSize]||garment.L, left=300-g[0]*scale/2,right=300+g[0]*scale/2,hem=155+g[1]*scale;
  const kind=cfg.productType||'reguler-24s';
  const longSleeve=['hoodie','sweatshirt','lengan-panjang-24s'].includes(kind);
  const tunik=kind==='tunik-oversize34';
@@ -298,7 +326,7 @@ function draw(){const cv=$('.kld-stage');if(!cv)return;const ctx=cv.getContext('
  if(visible().tier==='none'){ctx.fillStyle='#555';ctx.font='20px Arial';ctx.textAlign='center';ctx.fillText('Pilih ukuran cetak pada sisi ini',300,355);return;}
  ctx.strokeStyle='#4993f5';ctx.lineWidth=2;ctx.setLineDash([9,7]);ctx.strokeRect(px,py,tierW*scale,tierH*scale);ctx.setLineDash([]);
  const s=visible();if(s.image&&s.imagePixels){ctx.drawImage(s.imagePixels.bitmap,px+s.image.x*scale,py+s.image.y*scale,s.image.w*scale,s.image.h*scale);}
- if(s.text&&s.text.value){const t=s.text;ctx.fillStyle=t.color;ctx.textAlign='center';ctx.font=(t.w*scale/Math.max(3,t.value.split('\n').reduce((n,a)=>Math.max(n,a.length),0))*1.1)+'px '+t.font;
+ if(s.text&&s.text.value){const t=s.text;ctx.fillStyle=t.color;ctx.textAlign='center';ctx.font=(t.h*scale/t.value.split('\n').length/1.2)+'px '+t.font;
  const lines=t.value.split('\n').slice(0,5),lineHeight=t.h*scale/Math.max(1,lines.length);
  lines.forEach((line,i)=>ctx.fillText(line,px+(t.x+t.w/2)*scale,py+(t.y+(i+0.7)*t.h/lines.length)*scale,t.w*scale));}
  ctx.fillStyle='#46586a';ctx.font='13px Arial';ctx.textAlign='center';ctx.fillText((current==='front'?'DEPAN':'BELAKANG')+' • '+s.tier+' • '+tierW+'×'+tierH+' cm',300,686);
@@ -323,7 +351,7 @@ function drawMug(ctx,{px,py,scale,tierW,tierH}){
  if(state.image&&state.imagePixels)c.drawImage(state.imagePixels.bitmap,px+state.image.x*scale,py+state.image.y*scale,state.image.w*scale,state.image.h*scale);
  if(state.text&&state.text.value){
   const t=state.text;c.fillStyle=t.color;c.textAlign='center';
-  c.font=(t.w*scale/Math.max(3,t.value.split('\n').reduce((n,a)=>Math.max(n,a.length),0))*1.1)+'px '+t.font;
+  c.font=(t.h*scale/t.value.split('\n').length/1.2)+'px '+t.font;
   t.value.split('\n').slice(0,5).forEach((line,i,arr)=>c.fillText(line,px+(t.x+t.w/2)*scale,py+(t.y+(i+0.7)*t.h/arr.length)*scale,t.w*scale));
  }
  c.textAlign='center';c.fillStyle='#4d6275';c.font='13px Arial';
@@ -356,8 +384,9 @@ function refresh(updateTextControls=true){const s=visible();root.querySelectorAl
  root.querySelectorAll('.kld-swatch').forEach(b=>{const selected=b.dataset.color===color;b.classList.toggle('active',selected);b.setAttribute('aria-pressed',selected?'true':'false');});
  if(updateTextControls){$('.kld-text').value=s.text?s.text.value:'';$('.kld-font').value=s.text?s.text.font:'Arial';$('.kld-text-color').value=s.text?s.text.color:'#ffffff';$('.kld-text-width').value=s.text?s.text.w:Math.max(1,dims(s.tier)[0]||10);}
  $('.kld-text-width').max=dims(s.tier)[0]||32;$('.kld-text-width-label').textContent=s.text?s.text.w.toFixed(1)+' cm':'';
+ const layers=[s.image,s.text].filter(Boolean);$('.kld-area-info').textContent=layers.length?'Gabungan gambar + teks: '+(Math.max(...layers.map(v=>v.x+v.w))-Math.min(...layers.map(v=>v.x))).toFixed(1)+' × '+(Math.max(...layers.map(v=>v.y+v.h))-Math.min(...layers.map(v=>v.y))).toFixed(1)+' cm':'';
  refreshUpload();refreshTotal();draw();}
-function quantities(){const q={};root.querySelectorAll('[data-qty]').forEach(i=>q[i.dataset.qty]=Math.max(0,Math.min(100,Math.floor(Number(i.value)||0))));return q;}
+function quantities(){const q={};root.querySelectorAll('[data-qty]').forEach(i=>{q[i.dataset.qty]=Math.max(0,Math.min(100,Math.floor(Number(i.value)||0)));orderQty[i.dataset.qty]=q[i.dataset.qty];});return q;}
 function refreshTotal(){let n=0,total=0,q=quantities();for(const size in q){n+=q[size];total+=q[size]*pricePerSize(size);}$('.kld-count').textContent=n+' pcs';$('.kld-total-number').textContent=total?money(total):'Pilih area cetak';}
 function jsonSide(s){const result={tier:s.tier,placement:isMug?{center_offset_cm:0,top_from_collar_cm:0}:{center_offset_cm:Math.round(s.placement.dx*100)/100,top_from_collar_cm:Math.round((10.83+s.placement.dy)*100)/100}};if(s.tier!=='none'&&s.image)result.image=roundLayer(s.image);if(s.tier!=='none'&&s.text)result.text={...roundLayer(s.text),value:s.text.value,font:s.text.font,color:s.text.color};if(s.bgPreviewOnly)result.needs_bg_removal=true;return result;}
 function roundLayer(l){const r={};for(const k of ['x','y','w','h'])r[k]=Math.round(l[k]*100)/100;return r;}
@@ -379,19 +408,21 @@ function artworkThumbnail(s){
  }
  return '';
 }
+function lockControls(value){root.querySelectorAll('.kld-controls input,.kld-controls select,.kld-controls textarea,.kld-controls button').forEach(el=>el.disabled=value);if(!value)refreshUpload();}
 async function saveDesign(){if(!color){showStatus('Tidak ada warna yang aktif untuk produk ini. Hubungi admin Kaoscetak.','error');return;}if(busy)return false;if(cfg.previewOnly){showStatus('Mode preview admin: hubungkan Google Drive untuk mengaktifkan simpan pesanan.','warn');return false;}
- busy=true;$('.kld-save').disabled=true;
+ busy=true;lockControls(true);
  try{await createDraft();if(!['front','back'].some(k=>sides[k].tier!=='none'))throw Error('Pilih minimal satu sisi cetak.');
   for(const k of ['front','back'])if(sides[k].image&&sides[k].upload!=='done')throw Error('File sisi '+(k==='front'?'depan':'belakang')+' belum selesai tersimpan di Google Drive.');
   showStatus('Menyimpan desain dan preview…');const r=await api('save',{sides:{front:jsonSide(sides.front),back:jsonSide(sides.back)},previews:{front:renderThumb('front'),back:isMug?'':renderThumb('back')},artwork:{front:artworkThumbnail(sides.front),back:isMug?'':artworkThumbnail(sides.back)},color});
   showStatus('Desain berhasil disimpan.','ok');return true;
- }catch(e){showStatus(e.message,'error');return false;}finally{busy=false;$('.kld-save').disabled=false;}
+ }catch(e){showStatus(e.message,'error');return false;}finally{busy=false;lockControls(cartPending);}
 }
-async function addCart(){if(!color){showStatus('Tidak ada warna yang aktif untuk produk ini. Hubungi admin Kaoscetak.','error');return;}if(cfg.previewOnly){showStatus('Mode preview: checkout dinonaktifkan sampai Drive terhubung.','warn');return;}
- if(!await saveDesign())return;
- busy=true;$('.kld-cart').disabled=true;
+async function addCart(){if(cartPending||busy)return;if(!color){showStatus('Tidak ada warna yang aktif untuk produk ini. Hubungi admin Kaoscetak.','error');return;}if(cfg.previewOnly){showStatus('Mode preview: checkout dinonaktifkan sampai Drive terhubung.','warn');return;}
+ cartPending=true;$('.kld-cart').disabled=true;
+ if(!await saveDesign()){cartPending=false;lockControls(false);return;}
+ busy=true;
  try{showStatus('Menyiapkan keranjang…');const r=await api('add-cart',{quantities:quantities(),color});if(!r.added)throw Error('Keranjang belum siap.');window.location.assign(r.cart_url);}
- catch(e){showStatus(e.message,'error');}finally{busy=false;$('.kld-cart').disabled=false;}
+ catch(e){showStatus(e.message,'error');}finally{busy=false;cartPending=false;lockControls(false);}
 }
 async function requestVerify(){if(cfg.previewOnly)return;const email=$('.kld-email').value.trim();if(!email){showStatus('Isi email yang valid.','warn');return;}
  if(!await saveDesign())return;

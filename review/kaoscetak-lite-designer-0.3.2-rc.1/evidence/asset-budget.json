@@ -1,0 +1,13 @@
+{
+  "javascript": {
+    "bytes": 40645,
+    "gzip_bytes": 13687
+  },
+  "css": {
+    "bytes": 6673,
+    "gzip_bytes": 2075
+  },
+  "external_runtime_libraries": 0,
+  "pagespeed_mobile_score": "NOT VERIFIED",
+  "physical_4GB_phone": "NOT VERIFIED"
+}

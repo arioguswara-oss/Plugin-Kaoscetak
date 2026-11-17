@@ -1,0 +1,50 @@
+[
+  {
+    "viewport": [
+      320,
+      740
+    ],
+    "status": "PASS",
+    "flow": "product → editor → original-byte synthetic upload → saved cm → multi-size preserved cart → native checkout validation",
+    "real_drive": false,
+    "original_bytes": 68,
+    "resumed_after_network_failure": false,
+    "native_synthetic_cod_order": false
+  },
+  {
+    "viewport": [
+      390,
+      844
+    ],
+    "status": "PASS",
+    "flow": "product → editor → original-byte synthetic upload → saved cm → multi-size preserved cart → native checkout validation",
+    "real_drive": false,
+    "original_bytes": 9437264,
+    "resumed_after_network_failure": true,
+    "native_synthetic_cod_order": true
+  },
+  {
+    "viewport": [
+      768,
+      1024
+    ],
+    "status": "PASS",
+    "flow": "product → editor → original-byte synthetic upload → saved cm → multi-size preserved cart → native checkout validation",
+    "real_drive": false,
+    "original_bytes": 68,
+    "resumed_after_network_failure": false,
+    "native_synthetic_cod_order": false
+  },
+  {
+    "viewport": [
+      1440,
+      900
+    ],
+    "status": "PASS",
+    "flow": "product → editor → original-byte synthetic upload → saved cm → multi-size preserved cart → native checkout validation",
+    "real_drive": false,
+    "original_bytes": 68,
+    "resumed_after_network_failure": false,
+    "native_synthetic_cod_order": false
+  }
+]

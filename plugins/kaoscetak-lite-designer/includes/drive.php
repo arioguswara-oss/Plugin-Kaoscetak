@@ -80,9 +80,10 @@ add_action('admin_post_kld_test_drive',function(){
 });
 function kld_drive_initiate($name,$mime,$bytes){
  $roots=kld_drive_roots();if(is_wp_error($roots))return $roots;
+ $private=kld_drive_select_folder($roots['master']);if(is_wp_error($private))return $private;
  $token=kld_drive_token();if(is_wp_error($token))return $token;
  $args=['method'=>'POST','timeout'=>25,'redirection'=>0,'headers'=>[
-  'Authorization'=>'Bearer '.$token,'Content-Type'=>'application/json; charset=UTF-8',
+  'Authorization'=>'Bearer '.$token,'Content-Type'=>'application/json; charset=UTF-8','Origin'=>rtrim(home_url('/'),'/'),
   'X-Upload-Content-Type'=>$mime,'X-Upload-Content-Length'=>(string)$bytes],
   'body'=>wp_json_encode(['name'=>$name,'mimeType'=>$mime,'parents'=>[$roots['master']]])];
  $res=wp_remote_request('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,mimeType,size,parents',$args);
@@ -91,13 +92,49 @@ function kld_drive_initiate($name,$mime,$bytes){
  if($status<200||$status>=300||!is_string($location)||strpos($location,'https://www.googleapis.com/upload/')!==0)return new WP_Error('drive_upload_init','Tidak dapat membuka sesi upload Google Drive (HTTP '.$status.').');
  return $location;
 }
-function kld_drive_verify($fileid,$mime,$size,$expectedName){
+function kld_drive_verify($fileid,$mime,$size,$expectedName,$parent=''){
  if(!preg_match('/^[a-zA-Z0-9_-]{10,200}$/',$fileid))return new WP_Error('file_id','File ID invalid.');
- $data=kld_drive_request('GET','files/'.rawurlencode($fileid).'?fields=id,name,size,mimeType,parents,trashed');
+ $data=kld_drive_request('GET','files/'.rawurlencode($fileid).'?fields=id,name,size,mimeType,parents,trashed,permissions(type)');
  if(is_wp_error($data))return $data;
- if(!empty($data['trashed'])||($data['mimeType']??'')!==$mime||($data['name']??'')!==$expectedName||(int)($data['size']??-1)!==(int)$size||!in_array(get_option('kld_master_folder'),$data['parents']??[],true))return new WP_Error('verification','Metadata file di Google Drive tidak cocok dengan sesi upload.');
- return $data;
+ foreach($data['permissions']??[] as $permission)if(in_array($permission['type']??'',['anyone','domain'],true))return new WP_Error('file_public','File produksi harus privat.');
+ if(!empty($data['trashed'])||($data['mimeType']??'')!==$mime||($data['name']??'')!==$expectedName||(int)($data['size']??-1)!==(int)$size||!in_array($parent?:get_option('kld_master_folder'),$data['parents']??[],true))return new WP_Error('verification','Metadata file di Google Drive tidak cocok dengan sesi upload.');
+ $header=kld_drive_image_header($fileid,$mime);if(is_wp_error($header))return $header;
+ return array_merge($data,$header);
 }
 function kld_drive_shortcut($targetid,$folder,$name){
  return kld_drive_request('POST','files?fields=id',['name'=>$name,'mimeType'=>'application/vnd.google-apps.shortcut','shortcutDetails'=>['targetId'=>$targetid],'parents'=>[$folder]]);
+}
+
+/** Recover an order folder even after a lost POST response. No public permissions are created. */
+function kld_drive_order_folder($order,$parent){
+ $key=hash('sha256',home_url('/').'|order|'.$order->get_id());
+ $q="trashed = false and mimeType = 'application/vnd.google-apps.folder' and appProperties has { key='kldOrder' and value='".$key."' }";
+ $found=kld_drive_request('GET','files?'.http_build_query(['q'=>$q,'fields'=>'files(id)','pageSize'=>1]));
+ if(is_wp_error($found))return $found;
+ if(!empty($found['files'][0]['id']))return $found['files'][0]['id'];
+ $created=kld_drive_request('POST','files?fields=id',['name'=>'ORDER-'.$order->get_order_number(),'mimeType'=>'application/vnd.google-apps.folder','parents'=>[$parent],'appProperties'=>['kldOrder'=>$key]]);
+ return is_wp_error($created)?$created:($created['id']??new WP_Error('folder','Folder order tidak tersedia.'));
+}
+
+function kld_drive_select_folder($id){
+ if(!is_string($id)||!preg_match('/^[A-Za-z0-9_-]{10,200}$/D',$id))return new WP_Error('folder','Folder ID tidak valid.');
+ $data=kld_drive_request('GET','files/'.rawurlencode($id).'?fields=id,mimeType,trashed,permissions(type),capabilities(canAddChildren)');
+ if(is_wp_error($data))return $data;
+ if(!empty($data['trashed'])||($data['mimeType']??'')!=='application/vnd.google-apps.folder'||empty($data['capabilities']['canAddChildren'])||!isset($data['permissions']))return new WP_Error('folder','Folder tidak dapat digunakan. Pilih folder milik akun aplikasi dengan izin menambah file.');
+ foreach($data['permissions'] as $permission)if(in_array($permission['type']??'',['anyone','domain'],true))return new WP_Error('folder_public','Gunakan folder privat, bukan folder publik/domain.');
+ return $id;
+}
+
+/** Bounded header inspection only: never download/render/store a full production master. */
+function kld_drive_image_header($fileid,$mime){
+ $token=kld_drive_token();if(is_wp_error($token))return $token;
+ $r=wp_remote_get('https://www.googleapis.com/drive/v3/files/'.rawurlencode($fileid).'?alt=media',[
+  'timeout'=>20,'redirection'=>0,'limit_response_size'=>262144,
+  'headers'=>['Authorization'=>'Bearer '.$token,'Range'=>'bytes=0-262143']]);
+ if(is_wp_error($r))return $r;
+ if(!in_array(wp_remote_retrieve_response_code($r),[200,206],true))return new WP_Error('image_header','Header file master tidak dapat dibaca.');
+ $bytes=wp_remote_retrieve_body($r);$info=@getimagesizefromstring($bytes);
+ $type=$mime==='image/png'?IMAGETYPE_PNG:IMAGETYPE_JPEG;
+ if(!$info||$info[2]!==$type||$info[0]>16000||$info[1]>16000||$info[0]*$info[1]>26000000)return new WP_Error('image_header','Master bukan PNG/JPEG yang didukung (maks. 26 megapiksel).');
+ return ['width'=>$info[0],'height'=>$info[1]];
 }

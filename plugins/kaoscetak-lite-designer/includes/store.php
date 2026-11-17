@@ -78,7 +78,7 @@ add_action('woocommerce_checkout_create_order_line_item',function($line,$key,$it
  if(!kld_is_mug($product))$line->add_meta_data('Cetak Belakang',$sides['back']['tier']??'Tanpa cetak',true);
 },10,4);
 /** Freeze print layout/master IDs and mockup at checkout; owner edits must not change an order. */
-add_action('woocommerce_checkout_create_order',function($order){
+function kld_capture_order_snapshot($order){
  $records=[];
  foreach($order->get_items() as $item){
   $id=absint($item->get_meta('_kld_design_id',true));
@@ -92,7 +92,9 @@ add_action('woocommerce_checkout_create_order',function($order){
   }
  }
  if($records)$order->update_meta_data('_kld_order_design_snapshot',$records);
-},20,1);
+}
+add_action('woocommerce_checkout_create_order','kld_capture_order_snapshot',20,1);
+add_action('woocommerce_store_api_checkout_update_order_meta','kld_capture_order_snapshot',20,1);
 function kld_order_snapshot($order){
  if(!$order||!method_exists($order,'get_meta'))return [];
  $saved=$order->get_meta('_kld_order_design_snapshot',true);
@@ -135,6 +137,11 @@ add_action('woocommerce_admin_order_data_after_order_details','kld_render_order_
 add_action('woocommerce_order_status_processing','kld_auto_production',20);
 add_action('woocommerce_order_status_completed','kld_auto_production',20);
 function kld_auto_production($order_id){
+ if(function_exists('as_enqueue_async_action'))as_enqueue_async_action('kld_prepare_production_job',['order_id'=>(int)$order_id],'kaoscetak-lite-designer',true);
+ elseif(!wp_next_scheduled('kld_prepare_production_job',[(int)$order_id]))wp_schedule_single_event(time()+5,'kld_prepare_production_job',[(int)$order_id]);
+}
+add_action('kld_prepare_production_job','kld_run_production_job');
+function kld_run_production_job($order_id){
  $order=wc_get_order($order_id);
  if(!$order||!$order->is_paid())return;
  $r=kld_prepare_production($order);
@@ -157,12 +164,12 @@ function kld_prepare_production($order){
  $snapshot=kld_order_snapshot($order);
  if(!kld_drive_connected())return new WP_Error('no_drive','Google Drive belum terhubung.');
  $lockkey='kld_prod_lock_'.$order->get_id();
- if(get_transient($lockkey))return new WP_Error('locked','Sinkronisasi sedang berjalan.');
- set_transient($lockkey,1,180);
+ $lock=kld_lock_acquire($lockkey,300);
+ if(!$lock)return new WP_Error('locked','Sinkronisasi sedang berjalan.');
  try {
   $roots=kld_drive_roots();if(is_wp_error($roots))throw new RuntimeException($roots->get_error_message());
   $folder=$order->get_meta('_kld_drive_order_pending');
-  if(!$folder){$folder=kld_drive_create_folder('ORDER-'.$order->get_order_number(),$roots['orders']);if(is_wp_error($folder))throw new RuntimeException($folder->get_error_message());$order->update_meta_data('_kld_drive_order_pending',$folder);$order->save();}
+  if(!$folder){$folder=kld_drive_order_folder($order,$roots['orders']);if(is_wp_error($folder))throw new RuntimeException($folder->get_error_message());$order->update_meta_data('_kld_drive_order_pending',$folder);$order->save();}
   // Shortcuts are idempotent using a per-file completion marker on the order.
   foreach($designs as $id=>$sides){
    foreach(['front','back'] as $side){
@@ -191,7 +198,7 @@ function kld_prepare_production($order){
  }catch(Throwable $e){
   $order->update_meta_data('_kld_drive_last_error',$e->getMessage());$order->save();
   return new WP_Error('production_failed',$e->getMessage());
- }finally{delete_transient($lockkey);}
+ }finally{kld_lock_release($lockkey,$lock);}
 }
 function kld_drive_upload_small($name,$mime,$bytes,$parent){
  if(strlen($bytes)>1000000)return new WP_Error('too_large','Panduan produksi melebihi 1 MB.');
@@ -231,6 +238,7 @@ function kld_make_guide_pdf($order,$designs){
    if($side==='back'&&($sides['front']['tier']??'none')==='MUG')continue;
    $d=$sides[$side]??[];
    $line(($d['tier']??'none')==='MUG'?'MUG PUTIH 11 oz | Bidang maks. 18 x 8.5 cm':$name.' | Kategori: '.($d['tier']??'none'),11);
+   if(!empty($d['actual_cm']))$line('Gabungan aktual: '.$d['actual_cm']['width'].' x '.$d['actual_cm']['height'].' cm',9);
    if(!empty($d['needs_bg_removal']))$line('PERHATIAN: hapus background dari FILE ASLI di komputer produksi.',9);
    if(($d['tier']??'none')!=='none'){
     $position=$d['placement']??[];
@@ -278,3 +286,18 @@ function kld_make_guide_pdf($order,$designs){
  $pdf.='trailer << /Size '.(count($objects)+1).' /Root '.$catalog.' 0 R >>'."\nstartxref\n".$xref."\n%%EOF";
  return $pdf;
 }
+
+// Revalidate immutable design, current product policy and master availability at native gates.
+add_action('woocommerce_check_cart_items',function(){
+ if(!function_exists('WC')||!WC()->cart)return;
+ foreach(kld_validate_cart_designs(WC()->cart) as $message)wc_add_notice($message,'error');
+});
+add_action('woocommerce_after_checkout_validation',function($data,$errors){
+ if(!WC()->cart)return;
+ foreach(kld_validate_cart_designs(WC()->cart,true) as $message)$errors->add('kld_design_unavailable',$message);
+},30,2);
+add_filter('woocommerce_store_api_cart_errors',function($errors,$cart){
+ foreach($cart->get_cart() as $item)if(!empty($item['kld_design_id'])){$errors->add('kld_classic_required','Kaoscetak Lite Designer RC memerlukan Classic Checkout. Hubungi admin untuk halaman checkout yang kompatibel.');break;}
+ foreach(kld_validate_cart_designs($cart,true) as $message)$errors->add('kld_design_unavailable',$message);
+ return $errors;
+},10,2);
