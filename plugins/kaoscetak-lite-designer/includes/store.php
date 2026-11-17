@@ -77,6 +77,14 @@ add_filter('woocommerce_checkout_cart_item_thumbnail',function($thumbnail,$item)
  $preview=kld_cart_preview_image($item);
  return $preview!==''?$preview:$thumbnail;
 },10,2);
+/** Classic WooCommerce checkout does not render the cart thumbnail hook by default. */
+add_filter('woocommerce_cart_item_name',function($name,$item,$key){
+ if(!function_exists('is_checkout')||!is_checkout()||(function_exists('is_cart')&&is_cart())||is_order_received_page())return $name;
+ if(empty($item['kld_design_id']))return $name;
+ $preview=kld_cart_preview_image($item);
+ if($preview==='')return $name;
+ return '<span class="kld-checkout-preview" style="display:inline-block;vertical-align:middle;margin-right:8px;width:64px;max-width:25%">'.$preview.'</span>'.$name;
+},20,3);
 add_filter('woocommerce_get_item_data',function($data,$item){
  if(empty($item['kld_design_id']))return $data;
  $data[]=['key'=>'Design ID','value'=>'KLD-'.absint($item['kld_design_id'])];
