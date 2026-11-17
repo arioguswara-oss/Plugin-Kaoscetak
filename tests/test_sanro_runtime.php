@@ -45,7 +45,7 @@ try {
     ss_assert(sanro_studio_check_runtime($root, $source) === 'package_incomplete', 'missing entrypoint rejected');
     $outside = $root . '-outside.php'; file_put_contents($outside, $original);
     symlink($outside, $path);
-    ss_assert(sanro_studio_check_runtime($root, $source) === 'package_incomplete', 'file symlink escaping package rejected');
+    ss_assert(sanro_studio_check_runtime($root, $source) === 'package_changed', 'file symlink escaping package rejected');
     unlink($path); unlink($outside); file_put_contents($path, $original);
     // A symlink to an otherwise valid file inside the package must also be rejected.
     $internal = $root . '/internal-copy.php';
