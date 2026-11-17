@@ -18,11 +18,19 @@ $check('SANRO Studio runtime function loaded', function_exists('sanro_studio_run
 if (function_exists('sanro_studio_runtime_status')) {
     $state = sanro_studio_runtime_status();
     $check('Core runtime internal and loaded', ($state['mode'] ?? '') === 'internal' && ($state['state'] ?? '') === 'internal_loaded', (string) ($state['state'] ?? 'unknown'));
+    $check('Legacy external core not substituted', ($state['mode'] ?? '') !== 'external', (string) ($state['mode'] ?? 'unknown'));
 }
 $check('Vendor editor instance available', function_exists('LW') && class_exists('LumiseWoo', false));
 // has_action('init') alone is not evidence that the vendor callback was registered.
 $check('SANRO core entrypoint defined', defined('LUMISE_FILE') && strpos((string) constant('LUMISE_FILE'), '/sanro-studio/runtime/editor/') !== false);
-$check('WooCommerce session manager available', function_exists('WC') && is_object(WC()) && isset(WC()->session));
+// WP-CLI has no browser cookies; WooCommerce may intentionally defer session creation.
+$check('WooCommerce singleton available', function_exists('WC') && is_object(WC()));
+$wc = function_exists('WC') ? WC() : null;
+if (is_object($wc) && isset($wc->session)) {
+    $check('WooCommerce session object initialized', is_object($wc->session));
+} else {
+    echo "NOT CHECKED: customer HTTP session (WP-CLI has no browser cookies).\n";
+}
 if (function_exists('wp_get_theme')) {
     $theme = wp_get_theme();
     $parent = $theme->parent();
