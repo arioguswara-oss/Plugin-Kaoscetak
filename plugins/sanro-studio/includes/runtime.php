@@ -26,7 +26,14 @@ function sanro_studio_check_runtime($directory, $source) {
         if (!is_string($relative) || !preg_match('~^[a-zA-Z0-9_./-]+$~D', $relative)
             || substr($relative, 0, 1) === '/' || strpos($relative, '..') !== false
             || !is_string($digest) || !preg_match('/^[a-f0-9]{64}$/D', $digest)) return 'manifest_invalid';
-        $file = realpath($root . '/' . $relative);
+        // Refuse symlinks at every path component, including links resolving inside the package.
+        $parts = explode('/', $relative);
+        $candidate = $root;
+        foreach ($parts as $part) {
+            $candidate .= DIRECTORY_SEPARATOR . $part;
+            if (is_link($candidate)) return 'package_changed';
+        }
+        $file = realpath($candidate);
         if (!$file || strpos($file, $root . DIRECTORY_SEPARATOR) !== 0 || !is_file($file) || !is_readable($file)) return 'package_incomplete';
         $actual = hash_file('sha256', $file);
         if (!is_string($actual) || !hash_equals($digest, $actual)) return 'package_changed';
