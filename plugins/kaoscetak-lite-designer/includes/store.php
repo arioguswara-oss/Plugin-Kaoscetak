@@ -44,9 +44,15 @@ add_action('woocommerce_after_checkout_validation',function($checkout_data,$erro
   $id=absint($item['kld_design_id']);
   $sides=get_post_meta($id,'_kld_sides',true);
   $product=absint(get_post_meta($id,'_kld_product',true));
-  if(!is_array($sides)||!$product)continue;
+  if(!is_array($sides)||!$product||empty($item['kld_size'])){
+   $errors->add('kld_invalid_design','Data desain tidak lengkap. Hapus produk custom dari keranjang dan tambahkan kembali.');
+   continue;
+  }
   $base=kld_unit_price($product,$item['kld_size'],$sides['front']['tier']??'none',$sides['back']['tier']??'none');
-  if($base===null)continue;
+  if($base===null){
+   $errors->add('kld_invalid_price','Kategori cetak atau ukuran desain tidak valid. Perbarui produk custom sebelum checkout.');
+   continue;
+  }
   $expected=kld_repeat_unit_price($id,$base,$email);
   if((float)$item['data']->get_price() < $expected-0.01){
    $errors->add('kld_repeat_email_mismatch','Email checkout berbeda dari email terverifikasi untuk diskon repeat order. Perbarui checkout dan coba lagi.');
