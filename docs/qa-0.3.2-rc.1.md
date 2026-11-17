@@ -19,6 +19,8 @@ Issue #1 remains open until actual service/store/device gates pass.
   assets or editor instantiation. System fonts, canvas and browser APIs only.
 - One PNG/JPEG <=10 MiB plus one multiline text layer per side. Proportional
   resize/drag, keyboard position controls, remove image, colour/size preview.
+- Host-theme button padding/colours are scoped out of the fullscreen editor;
+  native font measurement drives proportional text size within its saved box.
 - Category maximums and per-product safe margins; measured product dimensions
   used in preview and server. Actual combined image/text cm bounds persisted.
   Switching preview size does not alter physical layout. Invalid ordered sizes

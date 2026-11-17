@@ -212,7 +212,11 @@ function removeSolidBackground(){
 }
 function updateText(){let s=visible();if(s.tier==='none')return;
  const val=$('.kld-text').value.slice(0,160).split('\n').slice(0,5).join('\n');$('.kld-text').value=val;if(!val.trim()){s.text=null;refresh(false);return;}
- const [maxW,maxH]=dims(s.tier),w=Math.min(+$('.kld-text-width').value,maxW),lines=val.split('\n').slice(0,5),h=Math.min(maxH,Math.max(2.2,lines.length*1.65));
+ const [maxW,maxH]=dims(s.tier),lines=val.split('\n').slice(0,5),measure=$('.kld-stage').getContext('2d');
+ measure.save();measure.font='100px '+$('.kld-font').value;const textPixels=Math.max(1,...lines.map(line=>measure.measureText(line).width));measure.restore();
+ let w=Math.min(+$('.kld-text-width').value,maxW),h=w*lines.length*120/textPixels;
+ if(h>maxH){w*=maxH/h;h=maxH;}
+
  if(!s.text)s.text={x:(maxW-w)/2,y:Math.max(0,maxH-h-1),w,h};
  Object.assign(s.text,{value:val,font:$('.kld-font').value,color:$('.kld-text-color').value,w,h});resetLayer(current);refresh(false);
 }
@@ -322,7 +326,7 @@ function draw(){const cv=$('.kld-stage');if(!cv)return;const ctx=cv.getContext('
  if(visible().tier==='none'){ctx.fillStyle='#555';ctx.font='20px Arial';ctx.textAlign='center';ctx.fillText('Pilih ukuran cetak pada sisi ini',300,355);return;}
  ctx.strokeStyle='#4993f5';ctx.lineWidth=2;ctx.setLineDash([9,7]);ctx.strokeRect(px,py,tierW*scale,tierH*scale);ctx.setLineDash([]);
  const s=visible();if(s.image&&s.imagePixels){ctx.drawImage(s.imagePixels.bitmap,px+s.image.x*scale,py+s.image.y*scale,s.image.w*scale,s.image.h*scale);}
- if(s.text&&s.text.value){const t=s.text;ctx.fillStyle=t.color;ctx.textAlign='center';ctx.font=Math.min(t.w*scale/Math.max(3,t.value.split('\n').reduce((n,a)=>Math.max(n,a.length),0))*1.1,t.h*scale/t.value.split('\n').length*.8)+'px '+t.font;
+ if(s.text&&s.text.value){const t=s.text;ctx.fillStyle=t.color;ctx.textAlign='center';ctx.font=(t.h*scale/t.value.split('\n').length/1.2)+'px '+t.font;
  const lines=t.value.split('\n').slice(0,5),lineHeight=t.h*scale/Math.max(1,lines.length);
  lines.forEach((line,i)=>ctx.fillText(line,px+(t.x+t.w/2)*scale,py+(t.y+(i+0.7)*t.h/lines.length)*scale,t.w*scale));}
  ctx.fillStyle='#46586a';ctx.font='13px Arial';ctx.textAlign='center';ctx.fillText((current==='front'?'DEPAN':'BELAKANG')+' • '+s.tier+' • '+tierW+'×'+tierH+' cm',300,686);
@@ -347,7 +351,7 @@ function drawMug(ctx,{px,py,scale,tierW,tierH}){
  if(state.image&&state.imagePixels)c.drawImage(state.imagePixels.bitmap,px+state.image.x*scale,py+state.image.y*scale,state.image.w*scale,state.image.h*scale);
  if(state.text&&state.text.value){
   const t=state.text;c.fillStyle=t.color;c.textAlign='center';
-  c.font=Math.min(t.w*scale/Math.max(3,t.value.split('\n').reduce((n,a)=>Math.max(n,a.length),0))*1.1,t.h*scale/t.value.split('\n').length*.8)+'px '+t.font;
+  c.font=(t.h*scale/t.value.split('\n').length/1.2)+'px '+t.font;
   t.value.split('\n').slice(0,5).forEach((line,i,arr)=>c.fillText(line,px+(t.x+t.w/2)*scale,py+(t.y+(i+0.7)*t.h/arr.length)*scale,t.w*scale));
  }
  c.textAlign='center';c.fillStyle='#4d6275';c.font='13px Arial';

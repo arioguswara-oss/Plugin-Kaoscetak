@@ -8,3 +8,14 @@
 .kld-swatch span{display:block;width:24px;height:24px;border:1px solid #9ca3af;border-radius:50%}
 .kld-swatch.active{border-color:#2563eb;box-shadow:0 0 0 2px #dbeafe}
 .kld-swatch:focus-visible{outline:3px solid #2563eb;outline-offset:2px}
+/* Keep host-theme button padding/colour rules outside the fullscreen editor. */
+#kld-editor-root .kld-overlay button{font-family:inherit;font-size:14px;line-height:1.25;letter-spacing:normal;text-transform:none;margin:0;padding:9px;min-width:0;min-height:0;background:#e8eff7;color:#1d3650;display:inline-flex;align-items:center;justify-content:center}
+#kld-editor-root .kld-overlay .kld-back{flex:0 0 36px;width:36px;height:36px;padding:0;font-size:23px;background:#e8edf3;color:#1b2735}
+#kld-editor-root .kld-overlay .kld-tabs button{background:transparent;color:#384553}
+#kld-editor-root .kld-overlay .kld-tabs button.active{background:#fff;color:#14243a}
+#kld-editor-root .kld-overlay .kld-swatch{display:grid;place-items:center;width:34px;height:34px;padding:3px;background:#fff}
+#kld-editor-root .kld-overlay .kld-save{background:#fff;color:#0a497c}
+#kld-editor-root .kld-overlay .kld-cart{background:#1169a2;color:#fff}
+#kld-editor-root .kld-overlay .kld-actions button{min-height:44px}
+#kld-editor-root .kld-overlay button:focus-visible{outline:3px solid #2563eb;outline-offset:2px}
+#kld-editor-root .kld-overlay [hidden]{display:none!important}
