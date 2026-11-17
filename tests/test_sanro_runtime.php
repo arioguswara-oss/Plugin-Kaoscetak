@@ -47,6 +47,13 @@ try {
     symlink($outside, $path);
     ss_assert(sanro_studio_check_runtime($root, $source) === 'package_incomplete', 'file symlink escaping package rejected');
     unlink($path); unlink($outside); file_put_contents($path, $original);
+    // A symlink to an otherwise valid file inside the package must also be rejected.
+    $internal = $root . '/internal-copy.php';
+    file_put_contents($internal, $original);
+    unlink($path);
+    symlink($internal, $path);
+    ss_assert(sanro_studio_check_runtime($root, $source) === 'package_changed', 'internal symlink rejected despite matching digest');
+    unlink($path); unlink($internal); file_put_contents($path, $original);
     ss_assert(sanro_studio_check_runtime($root, $source) === 'valid', 'original source can be restored');
     $_GET['core_path'] = '/tmp/customer-controlled'; $_POST['runtime_file'] = 'https://example.test/bad.php';
     ss_assert(sanro_studio_runtime_directory() === dirname(__DIR__) . '/plugins/sanro-studio/runtime/editor', 'request cannot select runtime source');
