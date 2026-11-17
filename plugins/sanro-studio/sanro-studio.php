@@ -1,0 +1,21 @@
+<?php
+/**
+ * Plugin Name: SANRO Studio
+ * Description: Fondasi editor SANRO Studio untuk Kaoscetak. Tahap pengembangan, pratinjau admin saja.
+ * Version: 0.1.0-dev
+ * Author: SANRO
+ * Requires Plugins: woocommerce
+ * Requires PHP: 7.4
+ * Text Domain: sanro-studio
+ * License: GPL-2.0-or-later
+ */
+defined('ABSPATH') || exit;
+
+define('SANRO_STUDIO_VERSION', '0.1.0-dev');
+require_once __DIR__ . '/includes/core.php';
+require_once __DIR__ . '/includes/admin.php';
+
+// Register before Lumise initializes its core at init priority 4, regardless of plugin load order.
+add_filter('lumise_settings', 'sanro_studio_filter_settings', 100);
+add_action('admin_menu', 'sanro_studio_admin_menu');
+add_action('admin_post_sanro_studio_save', 'sanro_studio_save_settings');

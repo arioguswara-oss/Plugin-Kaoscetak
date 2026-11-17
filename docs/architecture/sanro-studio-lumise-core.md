@@ -9,7 +9,7 @@ Status keputusan: **DECIDED oleh Owner**. Implementasi integrasi Lumise: **belum
 - Nama produk: **SANRO Studio**.
 - Core editor: **Lumise**, mempertahankan alur yang memudahkan Owner dan pelanggan.
 - Repository tetap `arioguswara-oss/Plugin-Kaoscetak`; tidak perlu repository baru untuk modul tambahan.
-- Pengembangan memakai branch terisolasi. Folder modul baru: `plugins/sanro-studio/`, namespace `sanro_studio_`. Folder tersebut baru dibuat ketika implementasi modul dimulai.
+- Pengembangan memakai branch terisolasi. Folder modul baru: `plugins/sanro-studio/`, namespace `sanro_studio_`. Fondasi 0.1.0-dev sudah dibuat: bootstrap, status dependensi, pengaturan, dan profil runtime khusus pratinjau administrator. Integrasi harga/Drive belum diaktifkan.
 - Core Lumise tetap merupakan dependensi di instalasi berlisensi. Source/ZIP core, aset vendor, kredensial, dan data pelanggan tidak dimasukkan ke repository publik ini. Branding SANRO Studio diterapkan melalui modul sendiri; perubahan branding vendor mengikuti hak lisensi yang tersedia.
 - Mesin harga Kaoscetak dipertahankan: tabel per produk, kategori per sisi, tambahan sisi kedua, dan repeat order terverifikasi. Owner menyatakan kalkulasi saat ini sudah benar; penggantian core tidak menjadi alasan mengubah tarif atau rumusnya.
 - Pilihan ini menggantikan usulan membangun ulang seluruh core editor secara independen. KLD yang sudah tersedia menjadi sumber reuse modul milik proyek, tanpa reset opsi Google Drive atau migrasi data otomatis.
@@ -49,4 +49,4 @@ Keberadaan hook belum membuktikan kompatibilitas runtime. Mapping ukuran, katego
 
 HEAD PR #12 diperiksa melalui GitHub: `df3174b746161551943b9df63e1f3e003aae04e6`, masih Draft dan belum merged; sesuai HEAD lokal saat keputusan ini dicatat. Pemeriksaan source terarah mengonfirmasi nama hook dan fungsi di atas.
 
-Perubahan ini hanya dokumentasi: `git diff --check` dan pemeriksaan tautan lokal. Tidak ada tes PHP/JavaScript/runtime baru yang diklaim lulus, dan belum ada paket SANRO Studio yang siap dipasang.
+Keputusan awal dicatat sebagai dokumentasi saja pada commit `352bbdc`. Implementasi fondasi berikutnya beserta hasil tes dicatat di [laporan fondasi](../qa/sanro-studio-foundation-20261118.md). Belum ada paket SANRO Studio FINAL atau pemasangan ke produksi.
