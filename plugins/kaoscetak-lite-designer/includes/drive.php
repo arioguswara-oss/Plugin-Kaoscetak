@@ -106,8 +106,27 @@ function kld_drive_verify($fileid,$mime,$size,$expectedName,$parent=''){
  $header=kld_drive_image_header($fileid,$mime);if(is_wp_error($header))return $header;
  return array_merge($data,$header);
 }
-function kld_drive_shortcut($targetid,$folder,$name){
- return kld_drive_request('POST','files?fields=id',['name'=>$name,'mimeType'=>'application/vnd.google-apps.shortcut','shortcutDetails'=>['targetId'=>$targetid],'parents'=>[$folder]]);
+/** Find an artifact created before a lost Drive response; fail closed on ambiguous matches. */
+function kld_drive_find_artifact($folder,$key,$mime){
+ if(!is_string($folder)||!preg_match('/^[A-Za-z0-9_-]{10,200}$/D',$folder)||!preg_match('/^[a-f0-9]{64}$/D',$key))return new WP_Error('artifact_key','Identitas artefak tidak valid.');
+ $allowed=['application/vnd.google-apps.shortcut','application/pdf'];
+ if(!in_array($mime,$allowed,true))return new WP_Error('artifact_type','Jenis artefak tidak valid.');
+ $q="trashed = false and '".$folder."' in parents and mimeType = '".$mime."' and appProperties has { key='kldArtifact' and value='".$key."' }";
+ $res=kld_drive_request('GET','files?'.http_build_query(['q'=>$q,'fields'=>'nextPageToken,files(id)','pageSize'=>2]));
+ if(is_wp_error($res))return $res;
+ if(!is_array($res)||!isset($res['files'])||!is_array($res['files']))return new WP_Error('artifact_lookup','Pencarian artefak tidak dapat diverifikasi.');
+ if(count($res['files'])>1||!empty($res['nextPageToken']))return new WP_Error('artifact_duplicate','Artefak Drive duplikat ditemukan; perlu pemeriksaan admin.');
+ return $res['files'][0]['id']??'';
+}
+function kld_drive_shortcut($targetid,$folder,$name,$key=''){
+ if($key!==''){
+  $existing=kld_drive_find_artifact($folder,$key,'application/vnd.google-apps.shortcut');
+  if(is_wp_error($existing))return $existing;
+  if($existing!=='')return ['id'=>$existing];
+ }
+ $meta=['name'=>$name,'mimeType'=>'application/vnd.google-apps.shortcut','shortcutDetails'=>['targetId'=>$targetid],'parents'=>[$folder]];
+ if($key!=='')$meta['appProperties']=['kldArtifact'=>$key];
+ return kld_drive_request('POST','files?fields=id',$meta);
 }
 
 /** Recover an order folder even after a lost POST response. No public permissions are created. */
