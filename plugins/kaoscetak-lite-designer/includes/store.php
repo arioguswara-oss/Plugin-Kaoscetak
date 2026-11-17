@@ -226,7 +226,8 @@ function kld_prepare_production($order){
     $fileid=$snapshot[$id]['files'][$side]??get_post_meta($id,'_kld_file_'.$side,true);if(!$fileid)continue;
     $tag='_kld_sc_'.$id.'_'.$side;
     if($order->get_meta($tag))continue;
-    $r=kld_drive_shortcut($fileid,$folder,'DESAIN-'.$id.'-'.strtoupper($side));
+    $artifactKey=hash('sha256',home_url('/').'|shortcut|'.$order->get_id().'|'.$id.'|'.$side.'|'.$fileid);
+    $r=kld_drive_shortcut($fileid,$folder,'DESAIN-'.$id.'-'.strtoupper($side),$artifactKey);
     if(is_wp_error($r))throw new RuntimeException($r->get_error_message());
     $order->update_meta_data($tag,$r['id']);$order->save();
    }
@@ -236,7 +237,8 @@ function kld_prepare_production($order){
    if($order->get_meta($guidekey))continue;
    $pdf=kld_make_guide_pdf($order,[$designid=>$layout]);
    if(is_wp_error($pdf))throw new RuntimeException($pdf->get_error_message());
-   $r=kld_drive_upload_small('ORDER-'.$order->get_order_number().'-DESAIN-'.$designid.'-PANDUAN.pdf','application/pdf',$pdf,$folder);
+   $artifactKey=hash('sha256',home_url('/').'|guide|'.$order->get_id().'|'.$designid);
+   $r=kld_drive_upload_small('ORDER-'.$order->get_order_number().'-DESAIN-'.$designid.'-PANDUAN.pdf','application/pdf',$pdf,$folder,$artifactKey);
    if(is_wp_error($r))throw new RuntimeException($r->get_error_message());
    $order->update_meta_data($guidekey,$r['id']);$order->save();
   }
@@ -249,11 +251,18 @@ function kld_prepare_production($order){
   return new WP_Error('production_failed',$e->getMessage());
  }finally{kld_lock_release($lockkey,$lock);}
 }
-function kld_drive_upload_small($name,$mime,$bytes,$parent){
+function kld_drive_upload_small($name,$mime,$bytes,$parent,$key=''){
  if(strlen($bytes)>1000000)return new WP_Error('too_large','Panduan produksi melebihi 1 MB.');
+ if($key!==''){
+  $existing=kld_drive_find_artifact($parent,$key,'application/pdf');
+  if(is_wp_error($existing))return $existing;
+  if($existing!=='')return ['id'=>$existing];
+ }
  $token=kld_drive_token();if(is_wp_error($token))return $token;
  $boundary='kld'.bin2hex(random_bytes(8));
- $metadata=wp_json_encode(['name'=>$name,'mimeType'=>$mime,'parents'=>[$parent]]);
+ $meta=['name'=>$name,'mimeType'=>$mime,'parents'=>[$parent]];
+ if($key!=='')$meta['appProperties']=['kldArtifact'=>$key];
+ $metadata=wp_json_encode($meta);
  $body='--'.$boundary."\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n".$metadata."\r\n";
  $body.='--'.$boundary."\r\nContent-Type: ".$mime."\r\n\r\n".$bytes."\r\n--".$boundary."--\r\n";
  $r=wp_remote_post('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',[
