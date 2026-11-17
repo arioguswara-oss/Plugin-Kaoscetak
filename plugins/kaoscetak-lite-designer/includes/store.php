@@ -65,7 +65,7 @@ function kld_cart_preview_image($item){
   if(!$bytes||strlen($bytes)>61440||substr($bytes,0,2)!=="\xFF\xD8")continue;
   $info=@getimagesizefromstring($bytes);
   if(!$info||$info[2]!==IMAGETYPE_JPEG||$info[0]>1200||$info[1]>1200)continue;
-  return '<img src="data:image/jpeg;base64,'.esc_attr($encoded).'" alt="'.esc_attr('Preview desain '.($side==='front'?'depan':'belakang')).'" class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail" loading="lazy" decoding="async" />';
+  return '<img src="data:image/jpeg;base64,'.esc_attr($encoded).'" alt="'.esc_attr('Preview desain '.($side==='front'?'depan':'belakang')).'" class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail" style="width:64px;height:auto;max-width:100%;object-fit:contain" loading="lazy" decoding="async" />';
  }
  return '';
 }
