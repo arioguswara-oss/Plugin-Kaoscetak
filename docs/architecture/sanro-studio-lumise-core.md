@@ -8,9 +8,10 @@ Status keputusan: **DECIDED oleh Owner**. Implementasi integrasi Lumise: **belum
 
 - Nama produk: **SANRO Studio**.
 - Core editor: **Lumise**, mempertahankan alur yang memudahkan Owner dan pelanggan.
+- Penyempurnaan keputusan Owner berikutnya: SANRO Studio harus menjadi satu plugin editor aktif; kedua plugin editor lama dapat dinonaktifkan setelah seluruh integrasi dan QA lulus. Ini menggantikan target awal addon yang selalu membutuhkan plugin Lumise aktif. Core berlisensi dipakai sebagai komponen runtime internal privat, dengan source/atribusi tetap dipertahankan.
 - Repository tetap `arioguswara-oss/Plugin-Kaoscetak`; tidak perlu repository baru untuk modul tambahan.
 - Pengembangan memakai branch terisolasi. Folder modul baru: `plugins/sanro-studio/`, namespace `sanro_studio_`. Fondasi 0.1.0-dev sudah dibuat: bootstrap, status dependensi, pengaturan, dan profil runtime khusus pratinjau administrator. Integrasi harga/Drive belum diaktifkan.
-- Core Lumise tetap merupakan dependensi di instalasi berlisensi. Source/ZIP core, aset vendor, kredensial, dan data pelanggan tidak dimasukkan ke repository publik ini. Branding SANRO Studio diterapkan melalui modul sendiri; perubahan branding vendor mengikuti hak lisensi yang tersedia.
+- Core Lumise tetap merupakan komponen berlisensi. Source/ZIP core, aset vendor, kredensial, dan data pelanggan tidak dimasukkan ke repository publik ini. Pemuat internal 0.1.1-dev dan tool penyiapan lokal tersedia; belum ada ZIP distribusi core atau sertifikasi runtime penuh. Branding SANRO Studio diterapkan melalui modul sendiri; perubahan branding vendor mengikuti hak lisensi yang tersedia.
 - Mesin harga Kaoscetak dipertahankan: tabel per produk, kategori per sisi, tambahan sisi kedua, dan repeat order terverifikasi. Owner menyatakan kalkulasi saat ini sudah benar; penggantian core tidak menjadi alasan mengubah tarif atau rumusnya.
 - Pilihan ini menggantikan usulan membangun ulang seluruh core editor secara independen. KLD yang sudah tersedia menjadi sumber reuse modul milik proyek, tanpa reset opsi Google Drive atau migrasi data otomatis.
 

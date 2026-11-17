@@ -9,7 +9,7 @@ $settings = [
     'stages' => '4', 'editor_page' => 52, 'price' => ['total' => 113000],
 ];
 ss_assert($GLOBALS['ss_options'] === $before && !$GLOBALS['ss_writes'], 'bootstrap preserves all options');
-ss_assert(count($GLOBALS['ss_hooks']) === 3, 'only expected filter and admin hooks registered');
+ss_assert(count($GLOBALS['ss_hooks']) === 4, 'only expected profile, runtime and admin hooks registered');
 $GLOBALS['ss_options']['sanro_studio_options'] = ['admin_preview' => 'yes'];
 if ($scenario !== 'normal') {
     ss_assert(apply_filters('lumise_settings', $settings) === $settings, 'unavailable/unknown/vendor-admin context remains unchanged');

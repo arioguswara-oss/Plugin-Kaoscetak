@@ -17,7 +17,7 @@ Repository untuk **berbagai plugin WordPress/WooCommerce khusus kaoscetak.id**. 
 
 ## SANRO Studio
 
-`plugins/sanro-studio/` — fondasi modul integrasi editor dengan core Lumise berlisensi yang dipasang terpisah. Nama tampilan modul: SANRO Studio. Pengembangan dimulai dari fondasi editor, kemudian adapter modul KLD dipilih sesuai kebutuhan. Lihat [status dan batas implementasi](plugins/sanro-studio/README.md).
+`plugins/sanro-studio/` — fondasi editor dengan komponen core berlisensi internal yang disiapkan privat. Target satu plugin editor aktif, sehingga kedua plugin editor lama dapat dinonaktifkan setelah integrasi dan QA. Nama tampilan: SANRO Studio. Lihat [status implementasi](plugins/sanro-studio/README.md) dan [8 tahap/progres](docs/architecture/sanro-studio-roadmap.md).
 
 ## Tata kelola
 

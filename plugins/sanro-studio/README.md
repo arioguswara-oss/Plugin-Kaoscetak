@@ -1,10 +1,13 @@
-# SANRO Studio 0.1.0-dev
+# SANRO Studio 0.1.1-dev
 
-Fondasi modul tambahan untuk **Lumise 2.1.2 + WooCommerce**, bukan pengganti biner core Lumise. Core berlisensi tetap dipasang terpisah dan tidak didistribusikan di repository ini. KLD tidak diperlukan untuk menjalankan fondasi ini.
+Target terbaru: **satu plugin editor SANRO Studio aktif**, dengan core berlisensi sebagai komponen internal dan kedua plugin editor lama dapat dinonaktifkan setelah QA. Pemuat internal 0.1.1-dev sudah tersedia; source core privat tidak didistribusikan di repository publik ini. KLD tidak diperlukan untuk bootstrap. WooCommerce tetap diperlukan. Lihat [roadmap dan progres](../../docs/architecture/sanro-studio-roadmap.md).
 
 ## Yang tersedia
 
 - Bootstrap dan namespace terpisah dari KLD; aman ketika dependensi belum aktif atau versi belum dikenali.
+- Pemuat core pada `plugins_loaded`: kompatibilitas dengan plugin lama yang masih aktif, atau memuat core dari paket internal yang sudah disiapkan tanpa mengaktifkan plugin lama. Enam fingerprint file inti diperiksa sebelum pemuatan.
+- Penyiapan core privat dari arsip Owner dengan SHA256 tetap: validasi path/symlink/duplikat ZIP, metadata Git dikeluarkan, lisensi dipertahankan, pengulangan tanpa menimpa file yang berubah.
+- Mode internal hanya memakai schema yang sudah ada. Callback lifecycle vendor dilepas agar aktivasi plugin lain tidak memicu impor SQL contoh. Tidak ada auto-install database atau migrasi desain.
 - Menu WooCommerce → SANRO Studio untuk administrator: status dependensi dan tautan ke halaman editor Lumise yang sudah dikonfigurasi.
 - Pratinjau profil sederhana, OFF secara default dan hanya berlaku untuk administrator frontend. Filter `lumise_settings` dijalankan setelah pembacaan opsi vendor sehingga tidak ditimpa opsi tersimpan.
 - Profil mempertahankan produk, unggah, teks, keranjang dan kembali sesuai komponen yang sebelumnya aktif. Template, clipart, shapes, drawing, layers, dan toolbar efek dikeluarkan dari profil pratinjau. Profil tidak menambah fitur yang sudah dinonaktifkan Owner.
@@ -24,6 +27,15 @@ Menyembunyikan menu belum mengurangi bundle atau menegakkan maksimum satu gambar
 
 ## Verifikasi dan penggunaan
 
-Jalankan `PHP_BIN=/path/to/php sh tests/run-source.sh` dari root repository. Tes fondasi memakai harness WordPress untuk perilaku hook, hak akses, nonce, preservasi opsi dan output admin. Uji source vendor tambahan dapat dijalankan dengan `SANRO_LUMISE_CONFIG_FILE=/private/path/core/includes/config.php php tests/sanro-vendor-contract.php`; source Lumise tidak disertakan.
+Jalankan `PHP_BIN=/path/to/php sh tests/run-source.sh` dari root repository (PHP, Node.js dan Python 3.9+). Tes fondasi memakai harness WordPress untuk perilaku hook, hak akses, nonce, preservasi opsi dan output admin. Source privat dikecualikan dari runner source publik. Uji tambahan lokal:
 
-Belum FINAL dan belum dipasang ke produksi. QA berikutnya membutuhkan WordPress, WooCommerce, Lumise 2.1.2 dan Flatsome terisolasi: aktifkan modul, buka pengaturan, nyalakan pratinjau, buka halaman editor, periksa produk/mockup, unggah/teks serta tombol simpan/keranjang, lalu matikan pratinjau dan pastikan setelan vendor tetap. Revert cukup menonaktifkan modul SANRO Studio; opsi Lumise/KLD tidak dihapus.
+```sh
+python3 tools/prepare-sanro-runtime.py /private/path/lumise.zip
+php tests/sanro-core-boot-contract.php
+php tests/sanro-core-boot-contract.php missing_schema
+SANRO_LUMISE_CONFIG_FILE=/private/path/core/includes/config.php php tests/sanro-vendor-contract.php
+```
+
+Bootstrap contract menjalankan entrypoint core asli, mendaftarkan hook, mengecek callback lifecycle dan preservasi opsi dengan fungsi WordPress sintetis. Contract tidak menjalankan WordPress `init`, database core, sesi pembeli, render kanvas atau checkout. Source vendor tidak disertakan.
+
+Belum FINAL dan belum dipasang ke produksi. QA berikutnya memakai WordPress/WooCommerce/Flatsome dengan core internal yang disiapkan, kedua plugin editor lama tidak aktif, serta data sintetis/salinan terisolasi. Uji inisialisasi penuh, sesi, halaman editor, produk/mockup dan operasi desain. Harga/Drive belum diintegrasikan. Tampilkan screenshot backend dan buyer hasil implementasi sebelum instalasi produksi, sesuai permintaan Owner. Revert modul tidak menghapus opsi Lumise/KLD.

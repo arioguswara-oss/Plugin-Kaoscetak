@@ -23,6 +23,11 @@ function add_filter($name, $callback, $priority = 10, $args = 1) {
     $GLOBALS['ss_hooks'][$name][$priority][] = [$callback, $args];
 }
 function add_action($name, $callback, $priority = 10, $args = 1) { add_filter($name, $callback, $priority, $args); }
+function remove_action($name, $callback, $priority = 10) {
+    foreach ($GLOBALS['ss_hooks'][$name][$priority] ?? [] as $index => $entry) {
+        if ($entry[0] === $callback) unset($GLOBALS['ss_hooks'][$name][$priority][$index]);
+    }
+}
 function apply_filters($name, $value, ...$args) {
     $hooks = $GLOBALS['ss_hooks'][$name] ?? []; ksort($hooks);
     foreach ($hooks as $callbacks) foreach ($callbacks as [$callback, $count]) {

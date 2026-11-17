@@ -1,0 +1,98 @@
+✔ actual editor tariff: regular (9.869162ms)
+✔ actual editor tariff: long sleeves (3.778662ms)
+✔ actual editor tariff: tunic (2.608241ms)
+✔ editor empty, missing size and mug prices (4.075445ms)
+✔ editor escapes HTML and serializes layout without upload capabilities (3.516093ms)
+✔ editor REST nonce handling and same-origin credentials (4.391033ms)
+✔ Undo/Redo restores typed text through actual editor event handlers (36.711065ms)
+✔ history is bounded metadata and never rewinds master or upload state (1.858103ms)
+✔ fresh edit after Undo invalidates redo; new master resets only that side (1.782181ms)
+✔ side switching preserves independent histories, category and server layout (4.052572ms)
+✔ context alignment, deletion and Undo retain pixels for an image (3.231753ms)
+✔ text fields keep native keyboard Undo; canvas keyboard Undo uses editor history (2.81148ms)
+✔ Snap centers near objects without altering dimensions or tier; toggle disables it (2.830635ms)
+✔ Snap respects category and garment safe bounds across many positions (11.991047ms)
+✔ pointer gesture is one history action; pointer cancellation restores it (4.98489ms)
+✔ effective DPI uses original pixels at actual cm, never preview pixels (2.654767ms)
+✔ P1 UI state and original pixels are excluded from saved layout (2.730178ms)
+✔ photo config rejects foreign origins and capability schemes (4.681605ms)
+✔ public opt-in disables new history, Snap and contextual UI together (3.86885ms)
+✔ selection guides never enter exported order thumbnail (3.623713ms)
+✔ calibrated photos load anonymously; cache retains only current colour pair (6.276567ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 138.995545
+No syntax errors detected in plugins/sanro-studio/sanro-studio.php
+No syntax errors detected in plugins/sanro-studio/includes/runtime.php
+No syntax errors detected in plugins/sanro-studio/includes/core.php
+No syntax errors detected in plugins/sanro-studio/includes/admin.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/includes/repeat.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/includes/api.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/includes/validation.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/includes/index.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/includes/drive.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/includes/sharing.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/includes/store.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/includes/admin.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/index.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/kaoscetak-lite-designer.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/assets/index.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/tests/pricing-smoke.php
+No syntax errors detected in tests/test_server_validation.php
+No syntax errors detected in tests/test_order_snapshot.php
+No syntax errors detected in tests/variable_integration.php
+No syntax errors detected in tests/test_rules.php
+No syntax errors detected in tests/test_owner_verification.php
+No syntax errors detected in tests/test_drive_security.php
+No syntax errors detected in tests/test_repeat.php
+No syntax errors detected in tests/test_upgrade_settings.php
+No syntax errors detected in tests/test_price_presets.php
+No syntax errors detected in tests/test_sanro_runtime.php
+No syntax errors detected in tests/test_repeat_checkout.php
+No syntax errors detected in tests/test_share_security.php
+No syntax errors detected in tests/sanro-studio-fixture.php
+No syntax errors detected in tests/wordpress_regression.php
+No syntax errors detected in tests/test_share_clone.php
+No syntax errors detected in tests/drive-fixture.php
+No syntax errors detected in tests/test_lock_security.php
+No syntax errors detected in tests/router.php
+No syntax errors detected in tests/test_editable_fork.php
+No syntax errors detected in tests/sanro-vendor-contract.php
+No syntax errors detected in tests/test_sanro_studio.php
+No syntax errors detected in tests/fixture.php
+No syntax errors detected in tests/wordpress_smoke.php
+No syntax errors detected in tests/sanro-core-boot-contract.php
+PASS: 780 source pricing assertions
+PASS: 25 Drive privacy/content/recovery assertions (mock HTTP)
+PASS: 72 total Drive assertions including lost responses, stale search and repeated retries
+PASS: 19 editable fork security/restore assertions
+PASS: 10 atomic lock assertions (synthetic interleaving)
+PASS: order snapshot remains unchanged after owner edits design master
+PASS: 12 email verification / ownership assertions
+PASS: 33 independent pricing preset assertions
+PASS: 50 total pricing preset / mockup assertions
+PASS repeat: 10 assertions, email ownership, paid-order eligibility, rounding, caching
+PASS: 7 isolated cart and checkout email assertions
+PASS: 330 PHP assertions (price matrix, both sides, dimension rules)
+Runtime integrity and external compatibility: 17 assertions PASS, 0 FAIL
+Runtime missing_woo: 3 assertions PASS, 0 FAIL
+Runtime partial: 3 assertions PASS, 0 FAIL
+SANRO Studio foundation: 37 assertions PASS, 0 FAIL
+missing_lumise: 5 assertions PASS, 0 FAIL
+missing_woo: 5 assertions PASS, 0 FAIL
+unsupported: 5 assertions PASS, 0 FAIL
+vendor_admin: 5 assertions PASS, 0 FAIL
+PASS: 54 server validation/security assertions (synthetic doubles, not Woo runtime)
+PASS: 11 independent share-copy assertions
+PASS: 21 share/owner authorization assertions
+PASS: 15 upgrade/configuration preservation assertions; no network or settings writes
+..........
+----------------------------------------------------------------------
+Ran 10 tests in 0.010s
+
+OK

@@ -27,6 +27,7 @@ function sanro_studio_render_settings() {
         wp_die('Akses ditolak.', '', ['response' => 403]);
     }
     $state = sanro_studio_dependencies();
+    $runtime = sanro_studio_runtime_status();
     $options = sanro_studio_options();
     echo '<div class="wrap"><h1>SANRO Studio</h1>';
     echo '<p>Fondasi editor SANRO Studio. Integrasi harga Kaoscetak dan Drive belum diaktifkan.</p>';
@@ -38,6 +39,21 @@ function sanro_studio_render_settings() {
         'Kompatibilitas fondasi' => $state['supported'] ? 'Versi 2.1.2 dikenali; QA editor masih diperlukan' : 'Profil tidak diterapkan',
         'Mode pelanggan' => 'Tetap memakai alur editor yang sudah ada',
     ];
+    $runtime_labels = [
+        'waiting' => 'Menunggu inisialisasi',
+        'external_loaded' => 'Kompatibilitas: core dari plugin lama yang masih aktif',
+        'external_unsupported' => 'Versi core eksternal belum didukung',
+        'internal_loaded' => 'Core internal dimuat; QA editor lengkap masih diperlukan',
+        'woocommerce_missing' => 'WooCommerce belum aktif',
+        'package_missing' => 'Paket core internal belum disertakan',
+        'package_incomplete' => 'Paket core internal tidak lengkap',
+        'package_changed' => 'Paket core berbeda dari source yang diperiksa',
+        'manifest_invalid' => 'Manifest core tidak valid',
+        'schema_missing' => 'Database core belum tersedia; pemasangan data perlu ditinjau',
+        'symbol_conflict' => 'Komponen editor lain bentrok; core internal tidak dimuat',
+        'bootstrap_incomplete' => 'Inisialisasi core internal belum lengkap',
+    ];
+    $rows['Pemuat core'] = $runtime_labels[$runtime['state']] ?? 'Status belum dikenali';
     foreach ($rows as $label => $value) {
         echo '<tr><th scope="row">' . esc_html($label) . '</th><td>' . esc_html($value) . '</td></tr>';
     }
