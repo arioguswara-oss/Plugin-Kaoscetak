@@ -4,13 +4,9 @@ declare(strict_types=1);
 define('ABSPATH', __DIR__ . '/');
 $GLOBALS['kld_test_options'] = [];
 function get_option($key, $default = false) { return $GLOBALS['kld_test_options'][$key] ?? $default; }
-function get_post_meta($id, $key, $single = false) { return ''; }
+function get_post_meta($id, $key, $single = false) { return $key === '_kld_price_preset' ? ([1 => 'reguler-24s', 2 => 'lengan-panjang-24s', 3 => 'tunik-oversize34'][$id] ?? 'none') : ''; }
 function add_action(...$args) {}
 function add_filter(...$args) {}
-function kld_is_mug($id) { return false; }
-function kld_product_preset_key($id) {
-    return [1 => 'reguler-24s', 2 => 'lengan-panjang-24s', 3 => 'tunik-oversize34'][$id] ?? 'hoodie';
-}
 require dirname(__DIR__) . '/includes/admin.php';
 $assertions = 0;
 function expect_price($product, $size, $front, $back, $expected) {
