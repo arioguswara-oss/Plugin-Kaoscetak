@@ -1,5 +1,8 @@
 # Milestone A — PR #12 source hardening and QA
 
+> Historical checkpoint. The PHP availability conclusion and residual retry item
+> below are superseded by [native execution and retry regression evidence](milestone-a-native-20261118.md).
+
 Checked 2026-11-17, starting 19:32 UTC / 2026-11-18 02:32 WIB.
 Verified upstream branch `fix/kld-p0-cart-preview-20261118`, Draft PR #12,
 HEAD `92f1c45dc4fcab07b4f951943448e9e48084c4c6` before editing. All 50

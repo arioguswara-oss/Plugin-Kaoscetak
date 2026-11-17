@@ -1,0 +1,490 @@
+{
+  "head": "6e952de37d5e7d785799a66f8cf6173d66b793a6",
+  "executed_at": "2026-11-17T20:12:48.170505+00:00",
+  "results": [
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-v"
+      ],
+      "exit_code": 0,
+      "stdout": "PHP 8.4.24 (cli) (built: Jul 31 2026 05:11:11) (NTS)\nCopyright (c) The PHP Group\nBuilt by Debian\nZend Engine v4.4.24, Copyright (c) Zend Technologies\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--version"
+      ],
+      "exit_code": 0,
+      "stdout": "v24.22.1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/assets/index.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/assets/index.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/admin.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/includes/admin.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/api.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/includes/api.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/drive.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/includes/drive.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/index.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/includes/index.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/repeat.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/includes/repeat.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/sharing.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/includes/sharing.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/store.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/includes/store.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/validation.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/includes/validation.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/index.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/index.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/kaoscetak-lite-designer.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/kaoscetak-lite-designer.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/tests/pricing-smoke.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/tests/pricing-smoke.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/drive-fixture.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/drive-fixture.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/fixture.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/fixture.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/router.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/router.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_drive_security.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_drive_security.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_editable_fork.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_editable_fork.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_lock_security.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_lock_security.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_order_snapshot.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_order_snapshot.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_owner_verification.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_owner_verification.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_price_presets.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_price_presets.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_repeat.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_repeat.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_repeat_checkout.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_repeat_checkout.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_rules.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_rules.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_server_validation.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_server_validation.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_share_clone.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_share_clone.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_share_security.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_share_security.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/variable_integration.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/variable_integration.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/wordpress_regression.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/wordpress_regression.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/wordpress_smoke.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/wordpress_smoke.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "plugins/kaoscetak-lite-designer/tests/pricing-smoke.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 780 source pricing assertions\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_drive_security.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 25 Drive privacy/content/recovery assertions (mock HTTP)\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_editable_fork.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 16 editable fork security/restore assertions\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_lock_security.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 10 atomic lock assertions (synthetic interleaving)\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_order_snapshot.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: order snapshot remains unchanged after owner edits design master\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_owner_verification.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 12 email verification / ownership assertions\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_price_presets.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 33 independent pricing preset assertions\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_repeat.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS repeat: 10 assertions, email ownership, paid-order eligibility, rounding, caching\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_repeat_checkout.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 7 isolated cart and checkout email assertions\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_rules.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 330 PHP assertions (price matrix, both sides, dimension rules)\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_server_validation.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 54 server validation/security assertions (synthetic doubles, not Woo runtime)\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_share_clone.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 11 independent share-copy assertions\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_share_security.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 21 share/owner authorization assertions\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "plugins/kaoscetak-lite-designer/assets/editor.js"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "tests/customer-flow.cjs"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "tests/lifecycle.cjs"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "tests/test_editor_unit.cjs"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "tests/test_editor_unit.cjs"
+      ],
+      "exit_code": 0,
+      "stdout": "\u2714 actual editor tariff: regular (9.374435ms)\n\u2714 actual editor tariff: long sleeves (4.04189ms)\n\u2714 actual editor tariff: tunic (2.047735ms)\n\u2714 editor empty, missing size and mug prices (3.674756ms)\n\u2714 editor escapes HTML and serializes layout without upload capabilities (4.066486ms)\n\u2714 editor REST nonce handling and same-origin credentials (4.354382ms)\n\u2139 tests 6\n\u2139 suites 0\n\u2139 pass 6\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 39.222594\n",
+      "stderr": ""
+    }
+  ]
+}

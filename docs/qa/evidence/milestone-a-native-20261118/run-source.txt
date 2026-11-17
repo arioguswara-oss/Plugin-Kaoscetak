@@ -1,0 +1,58 @@
+✔ actual editor tariff: regular (8.823585ms)
+✔ actual editor tariff: long sleeves (4.453185ms)
+✔ actual editor tariff: tunic (1.881128ms)
+✔ editor empty, missing size and mug prices (3.770912ms)
+✔ editor escapes HTML and serializes layout without upload capabilities (5.257975ms)
+✔ editor REST nonce handling and same-origin credentials (4.59001ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 42.469449
+No syntax errors detected in plugins/kaoscetak-lite-designer/includes/repeat.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/includes/api.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/includes/validation.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/includes/index.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/includes/drive.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/includes/sharing.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/includes/store.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/includes/admin.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/index.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/kaoscetak-lite-designer.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/assets/index.php
+No syntax errors detected in plugins/kaoscetak-lite-designer/tests/pricing-smoke.php
+No syntax errors detected in tests/test_server_validation.php
+No syntax errors detected in tests/test_order_snapshot.php
+No syntax errors detected in tests/variable_integration.php
+No syntax errors detected in tests/test_rules.php
+No syntax errors detected in tests/test_owner_verification.php
+No syntax errors detected in tests/test_drive_security.php
+No syntax errors detected in tests/test_repeat.php
+No syntax errors detected in tests/test_price_presets.php
+No syntax errors detected in tests/test_repeat_checkout.php
+No syntax errors detected in tests/test_share_security.php
+No syntax errors detected in tests/wordpress_regression.php
+No syntax errors detected in tests/test_share_clone.php
+No syntax errors detected in tests/drive-fixture.php
+No syntax errors detected in tests/test_lock_security.php
+No syntax errors detected in tests/router.php
+No syntax errors detected in tests/test_editable_fork.php
+No syntax errors detected in tests/fixture.php
+No syntax errors detected in tests/wordpress_smoke.php
+PASS: 780 source pricing assertions
+PASS: 25 Drive privacy/content/recovery assertions (mock HTTP)
+PASS: 72 total Drive assertions including lost responses, stale search and repeated retries
+PASS: 16 editable fork security/restore assertions
+PASS: 10 atomic lock assertions (synthetic interleaving)
+PASS: order snapshot remains unchanged after owner edits design master
+PASS: 12 email verification / ownership assertions
+PASS: 33 independent pricing preset assertions
+PASS repeat: 10 assertions, email ownership, paid-order eligibility, rounding, caching
+PASS: 7 isolated cart and checkout email assertions
+PASS: 330 PHP assertions (price matrix, both sides, dimension rules)
+PASS: 54 server validation/security assertions (synthetic doubles, not Woo runtime)
+PASS: 11 independent share-copy assertions
+PASS: 21 share/owner authorization assertions

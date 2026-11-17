@@ -1,0 +1,45 @@
+{
+  "executed_at": "2026-11-17T20:19:12.177809+00:00",
+  "results": [
+    {
+      "command": [
+        "sh",
+        "-c",
+        "command -v docker"
+      ],
+      "exit_code": 127,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "sh",
+        "-c",
+        "command -v chromium"
+      ],
+      "exit_code": 0,
+      "stdout": "/usr/bin/chromium\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "-c",
+        "import playwright; print(\"Python Playwright available\")"
+      ],
+      "exit_code": 0,
+      "stdout": "Python Playwright available\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "-e",
+        "try{console.log(require.resolve(\"playwright\",{paths:[process.cwd()+\"/tests\"]}))}catch(e){console.error(e.message);process.exit(1)}"
+      ],
+      "exit_code": 0,
+      "stdout": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.js\n",
+      "stderr": ""
+    }
+  ]
+}
