@@ -64,8 +64,8 @@ add_action('woocommerce_after_checkout_validation',function($checkout_data,$erro
    continue;
   }
   $expected=kld_repeat_unit_price($id,$base,$email);
-  if((float)$item['data']->get_price() < $expected-0.01){
-   $errors->add('kld_repeat_email_mismatch','Email checkout berbeda dari email terverifikasi untuk diskon repeat order. Perbarui checkout dan coba lagi.');
+  if(abs((float)$item['data']->get_price()-(float)$expected)>0.01){
+   $errors->add('kld_price_mismatch','Harga desain tidak sesuai dengan perhitungan server atau status diskon repeat order. Perbarui checkout dan coba lagi.');
    return;
   }
  }
