@@ -34,6 +34,16 @@ add_action('woocommerce_check_cart_items',function(){
  foreach(kld_cart_unavailable_colors(WC()->cart) as $name){
   wc_add_notice('Warna '.esc_html($name).' sudah tidak tersedia. Hapus produk custom tersebut dari keranjang lalu pilih warna lain.','error');
  }
+ foreach(WC()->cart->get_cart() as $item){
+  if(empty($item['kld_design_id']))continue;
+  $id=absint($item['kld_design_id']);
+  $sides=get_post_meta($id,'_kld_sides',true);
+  $product=absint(get_post_meta($id,'_kld_product',true));
+  if(!is_array($sides)||!$product||empty($item['kld_size'])||!isset($item['kld_unit_price'])||
+   kld_unit_price($product,$item['kld_size'],$sides['front']['tier']??'none',$sides['back']['tier']??'none')===null){
+   wc_add_notice('Data atau harga desain custom tidak valid. Hapus item tersebut dari keranjang dan tambahkan kembali.','error');
+  }
+ }
 });
 add_action('woocommerce_after_checkout_validation',function($checkout_data,$errors){
  if(!function_exists('WC')||!WC()->cart)return;
