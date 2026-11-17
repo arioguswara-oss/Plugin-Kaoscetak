@@ -1,12 +1,13 @@
 <?php
 if (!defined('ABSPATH')) exit;
+require_once __DIR__.'/validation.php';
 add_action('woocommerce_before_calculate_totals',function($cart){
  if(is_admin()&&!wp_doing_ajax())return;
  foreach($cart->get_cart() as $item){
   if(!empty($item['kld_design_id'])&&isset($item['kld_unit_price'])){
    $id=absint($item['kld_design_id']);
    $sides=get_post_meta($id,'_kld_sides',true);$product=absint(get_post_meta($id,'_kld_product',true));
-   if(!is_array($sides)||!$product)continue;
+   if(!is_array($sides)||!$product||!is_string($item['kld_size']??null)||!is_object($item['data']??null)||!method_exists($item['data'],'set_price'))continue;
    $price=kld_unit_price($product,$item['kld_size'],$sides['front']['tier']??'none',$sides['back']['tier']??'none');
    if($price!==null){
     $customer=WC()->customer;
@@ -54,7 +55,7 @@ add_action('woocommerce_after_checkout_validation',function($checkout_data,$erro
   $id=absint($item['kld_design_id']);
   $sides=get_post_meta($id,'_kld_sides',true);
   $product=absint(get_post_meta($id,'_kld_product',true));
-  if(!is_array($sides)||!$product||empty($item['kld_size'])){
+  if(!is_array($sides)||!$product||!is_string($item['kld_size']??null)||$item['kld_size']===''){
    $errors->add('kld_invalid_design','Data desain tidak lengkap. Hapus produk custom dari keranjang dan tambahkan kembali.');
    continue;
   }
@@ -72,7 +73,7 @@ add_action('woocommerce_after_checkout_validation',function($checkout_data,$erro
 },20,2);
 /** Cart-only preview from the already-saved, size-limited JPEG; never expose Drive masters. */
 function kld_cart_preview_image($item){
- $id=absint($item['kld_design_id']??0);
+ $id=kld_positive_id($item['kld_design_id']??0);
  if(!$id)return '';
  foreach(['front','back'] as $side){
   $encoded=(string)get_post_meta($id,'_kld_preview_'.$side,true);

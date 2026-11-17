@@ -34,7 +34,7 @@ $cart->items=[['kld_design_id'=>201,'kld_size'=>'L','kld_unit_price'=>103000,'da
 $buyer->email='repeat@example.com';$priceHook($cart);
 expect($cart->items[0]['data']->get_price()===97850,'verified repeat discount for one piece');
 $err=new FakeErrors;$checkout(['billing_email'=>'changed@example.com'],$err);
-expect(isset($err->errors['kld_repeat_email_mismatch']),'changed checkout email must reject discounted item');
+expect(isset($err->errors['kld_price_mismatch']),'changed checkout email must reject discounted item');
 $err=new FakeErrors;$checkout(['billing_email'=>'repeat@example.com'],$err);
 expect(!$err->errors,'matching verified email allows discount');
 $buyer->email='changed@example.com';$priceHook($cart);

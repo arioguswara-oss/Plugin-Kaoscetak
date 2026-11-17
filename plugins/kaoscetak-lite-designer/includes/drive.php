@@ -93,10 +93,15 @@ function kld_drive_initiate($name,$mime,$bytes){
  return $location;
 }
 function kld_drive_verify($fileid,$mime,$size,$expectedName,$parent=''){
- if(!preg_match('/^[a-zA-Z0-9_-]{10,200}$/',$fileid))return new WP_Error('file_id','File ID invalid.');
+ if(!is_string($fileid)||!preg_match('/^[a-zA-Z0-9_-]{10,200}$/D',$fileid))return new WP_Error('file_id','File ID invalid.');
+ if(!in_array($mime,['image/png','image/jpeg'],true)||(!is_int($size)&&(!is_string($size)||!preg_match('/^[1-9][0-9]{0,7}$/D',$size)))||$size<1||$size>10485760||!is_string($expectedName)||$expectedName==='')return new WP_Error('verification','Metadata master tidak valid.');
  $data=kld_drive_request('GET','files/'.rawurlencode($fileid).'?fields=id,name,size,mimeType,parents,trashed,permissions(type)');
  if(is_wp_error($data))return $data;
- foreach($data['permissions']??[] as $permission)if(in_array($permission['type']??'',['anyone','domain'],true))return new WP_Error('file_public','File produksi harus privat.');
+ if(!is_array($data)||!isset($data['permissions'])||!is_array($data['permissions']))return new WP_Error('file_permissions','Izin file produksi tidak dapat diverifikasi.');
+ foreach($data['permissions'] as $permission){
+  if(!is_array($permission)||!in_array($permission['type']??'',['user','group','anyone','domain'],true))return new WP_Error('file_permissions','Izin file produksi tidak dapat diverifikasi.');
+  if(in_array($permission['type'],['anyone','domain'],true))return new WP_Error('file_public','File produksi harus privat.');
+ }
  if(!empty($data['trashed'])||($data['mimeType']??'')!==$mime||($data['name']??'')!==$expectedName||(int)($data['size']??-1)!==(int)$size||!in_array($parent?:get_option('kld_master_folder'),$data['parents']??[],true))return new WP_Error('verification','Metadata file di Google Drive tidak cocok dengan sesi upload.');
  $header=kld_drive_image_header($fileid,$mime);if(is_wp_error($header))return $header;
  return array_merge($data,$header);
@@ -108,7 +113,8 @@ function kld_drive_shortcut($targetid,$folder,$name){
 /** Recover an order folder even after a lost POST response. No public permissions are created. */
 function kld_drive_order_folder($order,$parent){
  $key=hash('sha256',home_url('/').'|order|'.$order->get_id());
- $q="trashed = false and mimeType = 'application/vnd.google-apps.folder' and appProperties has { key='kldOrder' and value='".$key."' }";
+ if(!is_string($parent)||!preg_match('/^[A-Za-z0-9_-]{10,200}$/D',$parent))return new WP_Error('folder','Folder induk order tidak valid.');
+ $q="trashed = false and '".$parent."' in parents and mimeType = 'application/vnd.google-apps.folder' and appProperties has { key='kldOrder' and value='".$key."' }";
  $found=kld_drive_request('GET','files?'.http_build_query(['q'=>$q,'fields'=>'files(id)','pageSize'=>1]));
  if(is_wp_error($found))return $found;
  if(!empty($found['files'][0]['id']))return $found['files'][0]['id'];

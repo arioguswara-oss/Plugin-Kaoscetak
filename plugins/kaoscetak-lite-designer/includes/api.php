@@ -2,10 +2,10 @@
 if (!defined('ABSPATH')) exit;
 require_once __DIR__.'/validation.php';
 function kld_api_auth(WP_REST_Request $r){
- $id=absint($r->get_param('design_id'));
+ $id=kld_positive_id($r->get_param('design_id'));
  $token=(string)$r->get_header('X-KLD-Token');
  $hash=(string)get_post_meta($id,'_kld_edit_hash',true);
- if(!$id||get_post_type($id)!=='kld_design'||get_post_meta($id,'_kld_deleted',true)==='yes'||strlen($token)!==64||!$hash||!hash_equals($hash,hash('sha256',$token)))return new WP_Error('no_access','Akses desain tidak valid.',['status'=>403]);
+ if(!$id||get_post_type($id)!=='kld_design'||(function_exists('get_post_status')&&get_post_status($id)!=='private')||get_post_meta($id,'_kld_deleted',true)==='yes'||strlen($token)!==64||!$hash||!hash_equals($hash,hash('sha256',$token)))return new WP_Error('no_access','Akses desain tidak valid.',['status'=>403]);
  return $id;
 }
 function kld_public_rate_limit($type,$limit,$ttl){
@@ -31,7 +31,7 @@ add_action('rest_api_init',function(){
 function kld_api_init(WP_REST_Request $r){
  if(!kld_public_rate_limit('new',12,HOUR_IN_SECONDS))return kld_api_error('rate_limit','Batas pembuatan desain sementara tercapai. Coba lagi nanti.',429);
  if(!function_exists('wc_get_product'))return kld_api_error('wc','WooCommerce tidak aktif.',503);
- $id=absint($r['product_id']);$p=wc_get_product($id);
+ $id=kld_positive_id($r['product_id']);$p=$id?wc_get_product($id):false;
  if(!$p||get_post_meta($id,'_kld_enabled',true)!=='yes')return kld_api_error('bad_product','Produk tidak tersedia untuk custom.');
  if(!kld_drive_connected())return kld_api_error('drive_not_ready','Penyimpanan produksi belum dikonfigurasi.');
  if(get_option('kld_public_enabled','no')!=='yes'&&!current_user_can('manage_woocommerce'))return kld_api_error('not_public','Editor masih dalam mode pengujian.',503);

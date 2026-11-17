@@ -2,7 +2,7 @@
 /** Private guest ownership, optional sharing, buying and independent editable forks. */
 if(!defined('ABSPATH'))exit;
 require_once __DIR__.'/validation.php';
-function kld_design_exists($id){return $id>0&&get_post_type($id)==='kld_design'&&get_post_meta($id,'_kld_deleted',true)!=='yes';}
+function kld_design_exists($id){return kld_positive_id($id)>0&&get_post_type($id)==='kld_design'&&(!function_exists('get_post_status')||get_post_status($id)==='private')&&get_post_meta($id,'_kld_deleted',true)!=='yes';}
 function kld_verify_owner_token($id,$token){
  if(!kld_design_exists($id)||!is_string($token)||!preg_match('/^[a-f0-9]{64}$/D',$token))return false;
  $hash=(string)get_post_meta($id,'_kld_owner_hash',true);

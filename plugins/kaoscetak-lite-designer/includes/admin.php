@@ -156,6 +156,7 @@ function kld_product_safe_margins($product){
  return $d;
 }
 function kld_unit_price($id,$size,$front,$back){
+ if(!is_string($size)||!is_string($front)||!is_string($back))return null;
  if(kld_is_mug($id))return $size==='ONE' && $front==='MUG' && $back==='none'?kld_mug_price($id):null;
  if(!in_array($front,array_merge(['none'],array_keys(kld_tiers())),true)||!in_array($back,array_merge(['none'],array_keys(kld_tiers())),true))return null;
  $matrix=kld_product_prices($id);$tiers=array_keys(kld_tiers());

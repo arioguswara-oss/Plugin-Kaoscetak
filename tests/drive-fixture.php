@@ -10,6 +10,8 @@ add_filter('pre_http_request',function($pre,$args,$url){
  elseif(preg_match('~/files/(fixture-(?:master|orders)-folder)~',$url))$body=['id'=>'fixture-master-folder','mimeType'=>'application/vnd.google-apps.folder','trashed'=>false,'permissions'=>[['type'=>get_option('kld_fixture_public_folder')?'anyone':'user']],'capabilities'=>['canAddChildren'=>true]];
  elseif(preg_match('~/files/(fixture-file-[a-z]+)~',$url,$m)){
   $data=get_option('kld_fixture_files',[]);$body=$data[$m[1]]??[];if(!$body)$status=404;
+  // Model the explicitly requested provider permission field, including omission failures.
+  if($body&&!get_option('kld_fixture_missing_permissions')&&!isset($body['permissions']))$body['permissions']=[['type'=>'user']];
  }elseif(strpos($url,'files?')!==false){
   if(($args['method']??'GET')==='GET'){
    preg_match("/value='([a-f0-9]{64})'/",urldecode($url),$key);$map=get_option('kld_fixture_folders',[]);$body=['files'=>isset($map[$key[1]??''])?[['id'=>$map[$key[1]]]]:[]];
