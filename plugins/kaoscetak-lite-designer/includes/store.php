@@ -54,8 +54,32 @@ add_action('woocommerce_after_checkout_validation',function($checkout_data,$erro
   }
  }
 },20,2);
+/** Cart-only preview from the already-saved, size-limited JPEG; never expose Drive masters. */
+function kld_cart_preview_image($item){
+ $id=absint($item['kld_design_id']??0);
+ if(!$id)return '';
+ foreach(['front','back'] as $side){
+  $encoded=(string)get_post_meta($id,'_kld_preview_'.$side,true);
+  if($encoded===''||strlen($encoded)>82000||!preg_match('/^[A-Za-z0-9+\/=]+$/D',$encoded))continue;
+  $bytes=base64_decode($encoded,true);
+  if(!$bytes||strlen($bytes)>61440||substr($bytes,0,2)!=="\\xFF\\xD8")continue;
+  $info=@getimagesizefromstring($bytes);
+  if(!$info||$info[2]!==IMAGETYPE_JPEG||$info[0]>1200||$info[1]>1200)continue;
+  return '<img src="data:image/jpeg;base64,'.esc_attr($encoded).'" alt="'.esc_attr('Preview desain '.($side==='front'?'depan':'belakang')).'" class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail" loading="lazy" decoding="async" />';
+ }
+ return '';
+}
+add_filter('woocommerce_cart_item_thumbnail',function($thumbnail,$item){
+ $preview=kld_cart_preview_image($item);
+ return $preview!==''?$preview:$thumbnail;
+},10,2);
+add_filter('woocommerce_checkout_cart_item_thumbnail',function($thumbnail,$item){
+ $preview=kld_cart_preview_image($item);
+ return $preview!==''?$preview:$thumbnail;
+},10,2);
 add_filter('woocommerce_get_item_data',function($data,$item){
  if(empty($item['kld_design_id']))return $data;
+ $data[]=['key'=>'Design ID','value'=>'KLD-'.absint($item['kld_design_id'])];
  $s=get_post_meta($item['kld_design_id'],'_kld_sides',true);
  $product=absint(get_post_meta($item['kld_design_id'],'_kld_product',true));
  if(kld_is_mug($product))$data[]=['key'=>'Produk','value'=>'Mug Putih 11 oz | Cetak 18 × 8,5 cm'];
