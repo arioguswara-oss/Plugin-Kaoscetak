@@ -13,6 +13,7 @@ defined('ABSPATH') || exit;
 
 define('SANRO_STUDIO_VERSION', '0.1.1-dev');
 require_once __DIR__ . '/includes/core.php';
+require_once __DIR__ . '/includes/print-area.php';
 require_once __DIR__ . '/includes/runtime.php';
 require_once __DIR__ . '/includes/admin.php';
 
