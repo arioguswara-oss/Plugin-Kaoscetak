@@ -1,0 +1,11 @@
+{
+  "site": "https://kaoscetak.id",
+  "source": "WordPress Connector plugin_list; source=live; read-only",
+  "plugin": {
+    "name": "Kaoscetak Lite Designer",
+    "version": "0.3.2-rc.1",
+    "status": "active",
+    "plugin_file": "kaoscetak-lite-designer/kaoscetak-lite-designer"
+  },
+  "configuration_values_read": false
+}

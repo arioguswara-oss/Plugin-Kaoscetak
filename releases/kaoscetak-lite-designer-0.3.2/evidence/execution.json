@@ -1,0 +1,563 @@
+{
+  "executed_at": "2026-11-17T21:02:28.658306+00:00",
+  "tested_local_commit": "2bcb75a18e4f704ff18ff30049dcd0e0ecf3f742",
+  "source_tree": "85fe5a011c36a2a6207bb584511e5a71e6b809a1",
+  "counts": {
+    "php_lint_files": 31,
+    "php_suites": 14,
+    "js_syntax_files": 4,
+    "node_editor_tests": 21,
+    "upgrade_configuration_assertions": 15,
+    "failed_commands": 0
+  },
+  "archive": {
+    "filename": "kaoscetak-lite-designer-0.3.2.zip",
+    "bytes": 80169,
+    "sha256": "40532af089dd743e2e0ab301f9d8b26be596f30edc60e9839d97d11807987cb6",
+    "files": 20,
+    "deterministic_rebuild": true,
+    "all_files_match_tested_source": true,
+    "extracted_php_and_js_syntax": "PASS"
+  },
+  "verification_limit": "Source/lifecycle doubles PASS. New version not installed or runtime verified on kaoscetak.id. No real credentials/options values accessed.",
+  "results": [
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-v"
+      ],
+      "exit_code": 0,
+      "stdout": "PHP 8.4.24 (cli) (built: Jul 31 2026 05:11:11) (NTS)\nCopyright (c) The PHP Group\nBuilt by Debian\nZend Engine v4.4.24, Copyright (c) Zend Technologies\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--version"
+      ],
+      "exit_code": 0,
+      "stdout": "v24.22.1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/assets/index.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/assets/index.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/admin.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/includes/admin.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/api.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/includes/api.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/drive.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/includes/drive.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/index.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/includes/index.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/repeat.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/includes/repeat.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/sharing.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/includes/sharing.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/store.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/includes/store.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/includes/validation.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/includes/validation.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/index.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/index.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/kaoscetak-lite-designer.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/kaoscetak-lite-designer.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "plugins/kaoscetak-lite-designer/tests/pricing-smoke.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in plugins/kaoscetak-lite-designer/tests/pricing-smoke.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/drive-fixture.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/drive-fixture.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/fixture.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/fixture.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/router.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/router.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_drive_security.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_drive_security.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_editable_fork.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_editable_fork.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_lock_security.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_lock_security.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_order_snapshot.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_order_snapshot.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_owner_verification.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_owner_verification.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_price_presets.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_price_presets.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_repeat.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_repeat.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_repeat_checkout.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_repeat_checkout.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_rules.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_rules.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_server_validation.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_server_validation.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_share_clone.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_share_clone.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_share_security.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_share_security.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/test_upgrade_settings.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/test_upgrade_settings.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/variable_integration.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/variable_integration.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/wordpress_regression.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/wordpress_regression.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "-l",
+        "tests/wordpress_smoke.php"
+      ],
+      "exit_code": 0,
+      "stdout": "No syntax errors detected in tests/wordpress_smoke.php\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "plugins/kaoscetak-lite-designer/tests/pricing-smoke.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 780 source pricing assertions\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_drive_security.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 25 Drive privacy/content/recovery assertions (mock HTTP)\nPASS: 72 total Drive assertions including lost responses, stale search and repeated retries\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_editable_fork.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 19 editable fork security/restore assertions\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_lock_security.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 10 atomic lock assertions (synthetic interleaving)\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_order_snapshot.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: order snapshot remains unchanged after owner edits design master\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_owner_verification.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 12 email verification / ownership assertions\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_price_presets.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 33 independent pricing preset assertions\nPASS: 50 total pricing preset / mockup assertions\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_repeat.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS repeat: 10 assertions, email ownership, paid-order eligibility, rounding, caching\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_repeat_checkout.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 7 isolated cart and checkout email assertions\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_rules.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 330 PHP assertions (price matrix, both sides, dimension rules)\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_server_validation.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 54 server validation/security assertions (synthetic doubles, not Woo runtime)\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_share_clone.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 11 independent share-copy assertions\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_share_security.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 21 share/owner authorization assertions\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "tests/test_upgrade_settings.php"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 15 upgrade/configuration preservation assertions; no network or settings writes\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "plugins/kaoscetak-lite-designer/assets/editor.js"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "tests/customer-flow.cjs"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "tests/lifecycle.cjs"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "tests/test_editor_unit.cjs"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "tests/test_editor_unit.cjs"
+      ],
+      "exit_code": 0,
+      "stdout": "\u2714 actual editor tariff: regular (11.300027ms)\n\u2714 actual editor tariff: long sleeves (3.40196ms)\n\u2714 actual editor tariff: tunic (2.892471ms)\n\u2714 editor empty, missing size and mug prices (4.529981ms)\n\u2714 editor escapes HTML and serializes layout without upload capabilities (3.932518ms)\n\u2714 editor REST nonce handling and same-origin credentials (5.504547ms)\n\u2714 Undo/Redo restores typed text through actual editor event handlers (40.945479ms)\n\u2714 history is bounded metadata and never rewinds master or upload state (3.877386ms)\n\u2714 fresh edit after Undo invalidates redo; new master resets only that side (2.761616ms)\n\u2714 side switching preserves independent histories, category and server layout (3.993642ms)\n\u2714 context alignment, deletion and Undo retain pixels for an image (3.528616ms)\n\u2714 text fields keep native keyboard Undo; canvas keyboard Undo uses editor history (4.295675ms)\n\u2714 Snap centers near objects without altering dimensions or tier; toggle disables it (2.843348ms)\n\u2714 Snap respects category and garment safe bounds across many positions (19.732701ms)\n\u2714 pointer gesture is one history action; pointer cancellation restores it (5.665999ms)\n\u2714 effective DPI uses original pixels at actual cm, never preview pixels (2.723495ms)\n\u2714 P1 UI state and original pixels are excluded from saved layout (3.039954ms)\n\u2714 photo config rejects foreign origins and capability schemes (4.932922ms)\n\u2714 public opt-in disables new history, Snap and contextual UI together (3.306332ms)\n\u2714 selection guides never enter exported order thumbnail (4.208562ms)\n\u2714 calibrated photos load anonymously; cache retains only current colour pair (7.961365ms)\n\u2139 tests 21\n\u2139 suites 0\n\u2139 pass 21\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 343.715505\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "sh",
+        "-n",
+        "tests/setup.sh",
+        "tests/run-source.sh"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "PHP_BIN=/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+        "sh",
+        "tests/run-source.sh"
+      ],
+      "exit_code": 0,
+      "stdout": "\u2714 actual editor tariff: regular (10.99047ms)\n\u2714 actual editor tariff: long sleeves (3.363758ms)\n\u2714 actual editor tariff: tunic (2.660718ms)\n\u2714 editor empty, missing size and mug prices (4.502951ms)\n\u2714 editor escapes HTML and serializes layout without upload capabilities (3.78312ms)\n\u2714 editor REST nonce handling and same-origin credentials (4.953571ms)\n\u2714 Undo/Redo restores typed text through actual editor event handlers (38.616328ms)\n\u2714 history is bounded metadata and never rewinds master or upload state (1.772824ms)\n\u2714 fresh edit after Undo invalidates redo; new master resets only that side (2.006539ms)\n\u2714 side switching preserves independent histories, category and server layout (4.178756ms)\n\u2714 context alignment, deletion and Undo retain pixels for an image (3.736903ms)\n\u2714 text fields keep native keyboard Undo; canvas keyboard Undo uses editor history (3.18256ms)\n\u2714 Snap centers near objects without altering dimensions or tier; toggle disables it (2.901236ms)\n\u2714 Snap respects category and garment safe bounds across many positions (19.675656ms)\n\u2714 pointer gesture is one history action; pointer cancellation restores it (6.739228ms)\n\u2714 effective DPI uses original pixels at actual cm, never preview pixels (2.620133ms)\n\u2714 P1 UI state and original pixels are excluded from saved layout (2.163602ms)\n\u2714 photo config rejects foreign origins and capability schemes (2.976016ms)\n\u2714 public opt-in disables new history, Snap and contextual UI together (1.439082ms)\n\u2714 selection guides never enter exported order thumbnail (1.797029ms)\n\u2714 calibrated photos load anonymously; cache retains only current colour pair (3.473062ms)\n\u2139 tests 21\n\u2139 suites 0\n\u2139 pass 21\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 143.365226\nNo syntax errors detected in plugins/kaoscetak-lite-designer/includes/repeat.php\nNo syntax errors detected in plugins/kaoscetak-lite-designer/includes/api.php\nNo syntax errors detected in plugins/kaoscetak-lite-designer/includes/validation.php\nNo syntax errors detected in plugins/kaoscetak-lite-designer/includes/index.php\nNo syntax errors detected in plugins/kaoscetak-lite-designer/includes/drive.php\nNo syntax errors detected in plugins/kaoscetak-lite-designer/includes/sharing.php\nNo syntax errors detected in plugins/kaoscetak-lite-designer/includes/store.php\nNo syntax errors detected in plugins/kaoscetak-lite-designer/includes/admin.php\nNo syntax errors detected in plugins/kaoscetak-lite-designer/index.php\nNo syntax errors detected in plugins/kaoscetak-lite-designer/kaoscetak-lite-designer.php\nNo syntax errors detected in plugins/kaoscetak-lite-designer/assets/index.php\nNo syntax errors detected in plugins/kaoscetak-lite-designer/tests/pricing-smoke.php\nNo syntax errors detected in tests/test_server_validation.php\nNo syntax errors detected in tests/test_order_snapshot.php\nNo syntax errors detected in tests/variable_integration.php\nNo syntax errors detected in tests/test_rules.php\nNo syntax errors detected in tests/test_owner_verification.php\nNo syntax errors detected in tests/test_drive_security.php\nNo syntax errors detected in tests/test_repeat.php\nNo syntax errors detected in tests/test_upgrade_settings.php\nNo syntax errors detected in tests/test_price_presets.php\nNo syntax errors detected in tests/test_repeat_checkout.php\nNo syntax errors detected in tests/test_share_security.php\nNo syntax errors detected in tests/wordpress_regression.php\nNo syntax errors detected in tests/test_share_clone.php\nNo syntax errors detected in tests/drive-fixture.php\nNo syntax errors detected in tests/test_lock_security.php\nNo syntax errors detected in tests/router.php\nNo syntax errors detected in tests/test_editable_fork.php\nNo syntax errors detected in tests/fixture.php\nNo syntax errors detected in tests/wordpress_smoke.php\nPASS: 780 source pricing assertions\nPASS: 25 Drive privacy/content/recovery assertions (mock HTTP)\nPASS: 72 total Drive assertions including lost responses, stale search and repeated retries\nPASS: 19 editable fork security/restore assertions\nPASS: 10 atomic lock assertions (synthetic interleaving)\nPASS: order snapshot remains unchanged after owner edits design master\nPASS: 12 email verification / ownership assertions\nPASS: 33 independent pricing preset assertions\nPASS: 50 total pricing preset / mockup assertions\nPASS repeat: 10 assertions, email ownership, paid-order eligibility, rounding, caching\nPASS: 7 isolated cart and checkout email assertions\nPASS: 330 PHP assertions (price matrix, both sides, dimension rules)\nPASS: 54 server validation/security assertions (synthetic doubles, not Woo runtime)\nPASS: 11 independent share-copy assertions\nPASS: 21 share/owner authorization assertions\nPASS: 15 upgrade/configuration preservation assertions; no network or settings writes\n",
+      "stderr": ""
+    }
+  ],
+  "published_source_commit": "8faecb48788dcb96dae686160acf8b54b3249519",
+  "tested_and_published_source_trees_identical": true,
+  "previous_live_version": "0.3.2-rc.1"
+}
