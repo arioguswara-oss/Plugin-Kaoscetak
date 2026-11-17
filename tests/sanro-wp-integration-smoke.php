@@ -20,9 +20,11 @@ if (function_exists('sanro_studio_runtime_status')) {
     $check('Core runtime internal and loaded', ($state['mode'] ?? '') === 'internal' && ($state['state'] ?? '') === 'internal_loaded', (string) ($state['state'] ?? 'unknown'));
 }
 $check('Vendor editor instance available', function_exists('LW') && class_exists('LumiseWoo', false));
-$check('Core init hook already fired', did_action('init') > 0);
+$check('Vendor init callback registered', function_exists('has_action') && has_action('init') !== false && did_action('init') > 0);
+$check('SANRO bootstrap hook registered', function_exists('has_action') && has_action('plugins_loaded', 'sanro_studio_boot_runtime') !== false);
 $check('WooCommerce initialized', did_action('woocommerce_init') > 0);
-$check('No automatic schema migration performed by probe', true, 'Read-only probe; cannot establish historical side effects');
+// Do not report an automatic PASS for schema migration: this read-only probe cannot prove its absence.
+echo "NOT CHECKED: historical schema migrations or writes (requires separate audit).\n";
 $failed = 0;
 foreach ($checks as $entry) {
     $label = $entry['pass'] ? 'PASS' : 'FAIL';
