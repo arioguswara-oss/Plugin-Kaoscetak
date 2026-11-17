@@ -12,6 +12,16 @@ Repository untuk berbagai plugin WordPress + WooCommerce milik Kaoscetak.
 
 **Belum FINAL / belum VERIFIED untuk produksi.** Kode dan ZIP pengujian tidak boleh dianggap sudah lulus instalasi WordPress, checkout WooCommerce, atau upload Google Drive nyata. Editor pelanggan umum harus tetap nonaktif sampai lulus pengujian integrasi.
 
+## Panduan pelaksanaan development
+
+- [ROADMAP — urutan P0 → QA → rilis → P1](docs/ROADMAP.md)
+- [WORKFLOW — Rio, Codex Cloud, ChatGPT & ChatGPT Work](docs/WORKFLOW.md)
+- [RELEASE GATES — checklist dan evidence QA](docs/RELEASE-GATES.md)
+- [LUMISE BACKLOG — usulan P1, ditunda](docs/LUMISE-BACKLOG.md)
+- [Issue induk #1](https://github.com/arioguswara-oss/Plugin-Kaoscetak/issues/1) — rekam jejak dan target V1.
+
+Prinsip: status **DECIDED** tidak sama dengan **IMPLEMENTED**; **VERIFIED** membutuhkan bukti uji. Tidak ada perubahan live atau deaktivasi Lumise tanpa izin Rio. Codex Cloud menangani pengembangan sesuai instruksi Owner terbaru, tanpa intervensi Hermes.
+
 ## Struktur
 
 - `plugins/` — direktori dan lisensi tiap plugin.
