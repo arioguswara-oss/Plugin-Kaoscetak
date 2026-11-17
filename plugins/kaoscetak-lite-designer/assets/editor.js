@@ -6,22 +6,80 @@ const T=cfg.tiers, tiers=Object.keys(T), sides={front:makeSide(),back:makeSide()
 if(isMug)sides.front.tier='MUG';
 function makeSide(){return{tier:'none',image:null,text:null,file:null,upload:'idle',uploadError:'',imagePixels:null,alpha:false,restored:false,placement:{dx:0,dy:0}};}
 let current='front',shirtSize=isMug?'ONE':(cfg.sizes.includes('L')?'L':cfg.sizes[0]),color=cfg.colors[0]||'',designId=null,designToken=null,creating=null,busy=false,cartPending=false,dragging=null,uploadCounter=0;
+const histories={front:{past:[],future:[],group:'',at:0},back:{past:[],future:[],group:'',at:0}},selection={front:null,back:null};
+const uxEnabled=cfg.uxEnabled!==false;
+let snapEnabled=uxEnabled,guides=[],exporting=false;
+const mockupCache=new Map();
 const orderQty=Object.fromEntries(cfg.sizes.map(s=>[s,s===shirtSize?1:0]));
 const $=s=>root.querySelector(s),money=n=>'Rp'+Math.round(n).toLocaleString('id-ID');
 function xss(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function visible(){return sides[current]};
+// At most 30 metadata states per side: never copy pixels, files, upload state or capabilities.
+function editState(side=current){const s=sides[side];return JSON.stringify({tier:s.tier,image:s.image?{...s.image}:null,text:s.text?{...s.text}:null,placement:{...s.placement}});}
+function remember(side,before,group=''){
+ if(!uxEnabled)return false;
+ if(before===editState(side))return false;
+ const h=histories[side],now=Date.now();
+ if(!group||h.group!==group||now-h.at>650){h.past.push(before);if(h.past.length>30)h.past.shift();}
+ h.group=group;h.at=now;h.future=[];return true;
+}
+function changeEdit(fn,group=''){if(busy||cartPending||dragging)return;const side=current,before=editState(side);fn();remember(side,before,group);refreshHistory();}
+function resetHistory(side){histories[side]={past:[],future:[],group:'',at:0};refreshHistory();}
+function restoreEdit(side,state){Object.assign(sides[side],JSON.parse(state));guides=[];if(!sides[side][selection[side]])selection[side]=null;}
+function stepHistory(redo=false){
+ if(busy||cartPending||dragging)return false;const h=histories[current],from=redo?h.future:h.past,to=redo?h.past:h.future;
+ if(!from.length)return false;to.push(editState());restoreEdit(current,from.pop());h.group='';h.at=0;refresh();return true;
+}
+function refreshHistory(){const undo=$('.kld-undo'),redo=$('.kld-redo');if(undo)undo.disabled=busy||cartPending||!!dragging||!histories[current].past.length;if(redo)redo.disabled=busy||cartPending||!!dragging||!histories[current].future.length;}
+function selectLayer(key){selection[current]=['image','text'].includes(key)&&visible()[key]?key:null;const input=$('.kld-position-layer');if(input&&selection[current])input.value=key;refreshContext();}
+function refreshContext(){const bar=$('.kld-context');if(!bar)return;const key=selection[current];bar.hidden=!uxEnabled||!key||!visible()[key]||visible().tier==='none';$('.kld-context-name').textContent=key==='image'?'Gambar dipilih':'Teks dipilih';}
+function deleteLayer(){const key=selection[current];if(!key)return;changeEdit(()=>{visible()[key]=null;selection[current]=null;});refresh();}
+function effectiveDpi(s){
+ const p=s.sourcePixels,l=s.image;if(!l||!p||![p.width,p.height,l.w,l.h].every(n=>Number.isFinite(n)&&n>0))return null;
+ return Math.floor(Math.min(p.width*2.54/l.w,p.height*2.54/l.h));
+}
+function refreshDpi(){const el=$('.kld-dpi');if(!el)return;const s=visible(),dpi=effectiveDpi(s);el.hidden=!uxEnabled||!s.image||s.tier==='none';el.dataset.quality=dpi===null?'unknown':dpi>=300?'good':dpi>=150?'medium':'low';el.textContent=dpi===null?'Resolusi file asli belum tersedia; kualitas tidak dinilai dari thumbnail.':dpi+' DPI efektif · '+(dpi>=300?'baik':dpi>=150?'cukup; detail halus bisa berkurang':'rendah; hasil berisiko pecah')+'. Acuan 300 DPI; ini perkiraan dari piksel file, bukan jaminan hasil cetak.';}
+function layerBounds(layer,m){return {minX:Math.max(0,m.safeX0),maxX:Math.min(m.tierW-layer.w,m.safeX1-layer.w),minY:Math.max(0,m.safeY0),maxY:Math.min(m.tierH-layer.h,m.safeY1-layer.h)};}
+function snapLayer(layer,m,other=null,threshold=.5,enabled=snapEnabled){
+ const b=layerBounds(layer,m),result={x:layer.x,y:layer.y,guides:[]};
+ if(b.minX>b.maxX||b.minY>b.maxY)return result;
+ for(const [axis,extent,min,max] of [['x','w',b.minX,b.maxX],['y','h',b.minY,b.maxY]]){
+  result[axis]=Math.max(min,Math.min(max,layer[axis]));if(!enabled)continue;const origin=result[axis];
+  const points=[0,(axis==='x'?m.tierW:m.tierH)/2,axis==='x'?m.tierW:m.tierH];
+  if(other)points.push(other[axis],other[axis]+other[extent]/2,other[axis]+other[extent]);
+  let best=threshold+1;
+  for(const point of points)for(const offset of [0,layer[extent]/2,layer[extent]]){const value=point-offset,d=Math.abs(value-origin);if(value>=min&&value<=max&&d<=threshold&&d<best){best=d;result[axis]=value;result.guides=result.guides.filter(g=>g.axis!==axis);result.guides.push({axis,point});}}
+ }
+ return result;
+}
+function alignLayer(axis){const key=selection[current],l=visible()[key];if(!l)return;changeEdit(()=>{const m=stageMetrics(),b=layerBounds(l,m);if(b.minX>b.maxX||b.minY>b.maxY)return;if(axis==='x')l.x=Math.max(b.minX,Math.min(b.maxX,(m.tierW-l.w)/2));else l.y=Math.max(b.minY,Math.min(b.maxY,(m.tierH-l.h)/2));});refresh();}
+function mockupUrl(side=current){const raw=cfg.mockups?.[color]?.[side];if(typeof raw!=='string')return '';try{const url=new URL(raw,window.location.href);return url.origin===window.location.origin&&['http:','https:'].includes(url.protocol)?url.href:'';}catch{return '';}}
+function loadMockup(side){const url=mockupUrl(side);if(!url)return Promise.resolve(null);if(mockupCache.has(url))return mockupCache.get(url).ready;
+ const img=new Image(),entry={img,loaded:false,ready:null};img.crossOrigin='anonymous';
+ entry.ready=new Promise(resolve=>{img.onload=()=>{entry.loaded=img.naturalWidth===600&&img.naturalHeight===710;resolve(entry.loaded?img:null);if(mockupUrl()===url)draw();};img.onerror=()=>resolve(null);});
+ mockupCache.set(url,entry);while(mockupCache.size>2)mockupCache.delete(mockupCache.keys().next().value);img.src=url;return entry.ready;
+}
+function drawPhotoMockup(ctx){const url=mockupUrl(),entry=mockupCache.get(url),label=$('.kld-mockup-status');
+ if(label)label.textContent=entry?.loaded?'Foto produk '+color+' · posisi dan ukuran tetap simulasi.':'Simulasi ilustrasi · foto produk sisi/warna ini belum tersedia.';
+ if(!entry?.loaded)return false;const m=stageMetrics(),g=garments[shirtSize]||garments.L;
+ if(!g)return false;ctx.save();ctx.translate(300,155);ctx.scale(g[0]*m.scale/294,g[1]*m.scale/438);ctx.drawImage(entry.img,-300,-155,600,710);ctx.restore();return true;
+}
 function api(path,data){return fetch(cfg.rest+path,{method:'POST',headers:{'Content-Type':'application/json','X-KLD-Token':designToken||'',...(cfg.nonce?{'X-WP-Nonce':cfg.nonce}:{})},body:JSON.stringify({...data,design_id:designId}),credentials:'same-origin'}).then(async r=>{let j;try{j=await r.json();}catch(e){j={message:'Respons server tidak dikenal.'};}if(!r.ok)throw new Error(j.message||'Gagal memproses permintaan.');return j;});}
 function showStatus(s,type='info'){const el=$('.kld-status');if(el){el.textContent=s;el.dataset.type=type;}}
 function dims(t){return T[t]||[0,0]};
 function resetLayer(side){const s=sides[side];if(s.tier==='none')return;const [w,h]=dims(s.tier);if(s.image){const factor=Math.min(1,w/s.image.w,h/s.image.h);s.image.w*=factor;s.image.h*=factor;s.image.x=Math.max(0,Math.min(s.image.x,w-s.image.w));s.image.y=Math.max(0,Math.min(s.image.y,h-s.image.h));}if(s.text){s.text.w=Math.min(s.text.w,w);s.text.h=Math.min(s.text.h,h);s.text.x=Math.max(0,Math.min(s.text.x,w-s.text.w));s.text.y=Math.max(0,Math.min(s.text.y,h-s.text.h));}}
-function setTier(side,t){if(isMug)return;const s=sides[side];s.tier=t;if(t==='none'){s.image=null;s.text=null;s.file=null;s.upload='idle';}else{resetLayer(side);if(s.file&&!s.image)addImageLayer(s);}refresh();}
+function setTier(side,t){if(isMug)return;changeEdit(()=>{const s=sides[side];s.tier=t;if(t!=='none')resetLayer(side);});refresh();}
 function pricePerSize(size){if(isMug)return size==='ONE' && sides.front.tier==='MUG'?Number(cfg.matrix.ONE?.MUG||0):0;const m=cfg.matrix[size]||{},f=sides.front.tier,b=sides.back.tier;const selected=[f,b].filter(a=>tiers.includes(a)).sort((a,b)=>tiers.indexOf(a)-tiers.indexOf(b));if(!selected.length)return 0;const large=selected[selected.length-1],base=m[large];if(!base)return 0;return Number(base)+(selected.length===2?Number(cfg.surcharges[selected[0]]||0):0);}
 function template(){
 root.innerHTML=`<div class="kld-overlay" role="dialog" aria-modal="true" aria-label="Kaoscetak Designer">
  <div class="kld-shell"><header class="kld-header"><button type="button" class="kld-back" aria-label="Tutup editor">←</button><strong>Kaoscetak Lite Designer</strong><span class="kld-mark">${cfg.previewOnly?'MODE PREVIEW':isMug?'CUSTOM MUG':'CUSTOM KAOS'}</span></header>
  <div class="kld-content">
   <section class="kld-workspace">${isMug?'<div class="kld-mug-label">Mug Putih 11 oz · Bidang cetak 18 × 8,5 cm</div>':'<div class="kld-tabs"><button type="button" data-side="front" class="active">Depan</button><button type="button" data-side="back">Belakang</button></div>'}
+  <div class="kld-edit-tools" role="group" aria-label="Riwayat sisi aktif dan bantuan posisi" ${uxEnabled?'':'hidden'}><button type="button" class="kld-undo" title="Batalkan perubahan pada sisi aktif" disabled>↶ Undo</button><button type="button" class="kld-redo" title="Ulangi perubahan pada sisi aktif" disabled>↷ Redo</button><label><input class="kld-snap-toggle" type="checkbox" ${snapEnabled?'checked':''}> Snap</label></div>
+  <div class="kld-context" role="group" aria-label="Kontrol objek terpilih" hidden><span class="kld-context-name"></span><button type="button" data-align="x" aria-label="Ratakan objek ke tengah horizontal">Tengah ↔</button><button type="button" data-align="y" aria-label="Ratakan objek ke tengah vertikal">Tengah ↕</button><button type="button" class="kld-delete-layer">Hapus</button></div>
   <div class="kld-preview-wrap"><canvas class="kld-stage" width="600" height="710" aria-label="Preview desain produk"></canvas></div>
+  <div class="kld-dpi" role="status" hidden></div>
+  ${isMug?'':'<div class="kld-mockup-status">Simulasi ilustrasi · foto produk belum tersedia.</div>'}
   <div class="kld-area-info" role="status"></div><div class="kld-hint">${isMug?'Geser gambar atau teks di bidang 18 × 8,5 cm. Ini pratinjau bidang cetak terbentang, bukan simulasi keliling mug 3D.':'Geser gambar atau teks di dalam area cetak. Geser bagian kosong dalam garis putus-putus untuk memindahkan seluruh area cetak di kaos.'}</div>
   </section>
   <section class="kld-controls">
@@ -47,20 +105,26 @@ root.innerHTML=`<div class="kld-overlay" role="dialog" aria-modal="true" aria-la
     <p class="kld-footnote">Preview adalah simulasi. File asli tetap disimpan untuk operator cetak, tanpa diproses di hosting WordPress.</p>
   </section></div></div></div>`;
  $('.kld-back').addEventListener('click',close);
- $('.kld-overlay').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();close();}if(e.key==='Tab'){const items=[...root.querySelectorAll('button,input,select,textarea')].filter(x=>!x.disabled&&x.getClientRects().length);if(!items.length)return;const first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
- root.querySelectorAll('[data-nudge]').forEach(b=>b.addEventListener('click',()=>{const layer=visible()[$('.kld-position-layer').value];if(!layer)return;const delta={left:[-.5,0],right:[.5,0],up:[0,-.5],down:[0,.5]}[b.dataset.nudge],d=dims(visible().tier);layer.x=Math.max(0,Math.min(d[0]-layer.w,layer.x+delta[0]));layer.y=Math.max(0,Math.min(d[1]-layer.h,layer.y+delta[1]));refresh(false);}));
+ $('.kld-overlay').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&!e.altKey&&!e.target.isContentEditable&&!/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)&&['z','y'].includes(e.key.toLowerCase())){e.preventDefault();stepHistory(e.key.toLowerCase()==='y'||e.shiftKey);return;}if(e.key==='Escape'){e.preventDefault();close();}if(e.key==='Tab'){const items=[...root.querySelectorAll('button,input,select,textarea')].filter(x=>!x.disabled&&x.getClientRects().length);if(!items.length)return;const first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
+ $('.kld-undo').addEventListener('click',()=>stepHistory());$('.kld-redo').addEventListener('click',()=>stepHistory(true));
+ $('.kld-snap-toggle').addEventListener('change',e=>{snapEnabled=e.target.checked;guides=[];draw();});
+ root.querySelectorAll('[data-align]').forEach(b=>b.addEventListener('click',()=>alignLayer(b.dataset.align)));
+ $('.kld-delete-layer').addEventListener('click',deleteLayer);
+ $('.kld-position-layer').addEventListener('change',e=>selectLayer(e.target.value));
+ root.querySelectorAll('[data-nudge]').forEach(b=>b.addEventListener('click',()=>{const key=$('.kld-position-layer').value,layer=visible()[key];if(!layer||visible().tier==='none')return;changeEdit(()=>{const delta={left:[-.5,0],right:[.5,0],up:[0,-.5],down:[0,.5]}[b.dataset.nudge],m=stageMetrics();layer.x+=delta[0];layer.y+=delta[1];Object.assign(layer,((r)=>({x:r.x,y:r.y}))(snapLayer(layer,m,null,0,false)));selectLayer(key);});refresh(false);}));
  queueMicrotask(()=>$('.kld-back')?.focus());
- root.querySelectorAll('[data-side]').forEach(btn=>btn.addEventListener('click',()=>{current=btn.dataset.side;refresh();}));
+ root.querySelectorAll('[data-side]').forEach(btn=>btn.addEventListener('click',()=>{if(dragging||busy||cartPending)return;histories[current].group='';current=btn.dataset.side;guides=[];refresh();}));
  $('.kld-tier').addEventListener('change',e=>setTier(current,e.target.value));
  $('.kld-color').addEventListener('change',e=>{color=e.target.value;refresh();});
  root.querySelectorAll('.kld-swatch').forEach(b=>b.addEventListener('click',()=>{color=b.dataset.color;refresh();}));
  $('.kld-size').addEventListener('change',e=>{shirtSize=e.target.value;refresh();});
  $('.kld-fileinput').addEventListener('change',async e=>{if(e.target.files[0])await onFile(e.target.files[0],current);e.target.value='';});
  $('.kld-remove-bg').addEventListener('click',removeSolidBackground);
- $('.kld-remove-image').addEventListener('click',()=>{const s=visible();if(['preparing','upload'].includes(s.upload)||String(s.upload).startsWith('Mengirim')){showStatus('Tunggu upload selesai sebelum menghapus gambar.','warn');return;}s.imagePixels?.bitmap?.close?.();Object.assign(s,{image:null,imagePixels:null,file:null,restored:false,bgPreviewOnly:false,upload:'idle',uploadSession:null});refresh();});
+ $('.kld-remove-image').addEventListener('click',()=>{selectLayer('image');deleteLayer();});
  $('.kld-retry').addEventListener('click',()=>{if(visible().file)uploadOriginal(visible().file,current);});
- $('.kld-image-width').addEventListener('input',e=>{const s=visible(),L=dims(s.tier);if(!s.image)return;const ratio=s.image.aspect;let w=Math.min(L[0],+e.target.value),h=w/ratio;if(h>L[1]){h=L[1];w=h*ratio;}s.image.w=w;s.image.h=h;resetLayer(current);refresh(false);});
+ $('.kld-image-width').addEventListener('input',e=>{changeEdit(()=>{const s=visible(),L=dims(s.tier);if(!s.image||s.tier==='none')return;const ratio=s.image.aspect;let w=Math.min(L[0],+e.target.value),h=w/ratio;if(h>L[1]){h=L[1];w=h*ratio;}s.image.w=w;s.image.h=h;resetLayer(current);selectLayer('image');},'image-width');refresh(false);});
  $('.kld-text').addEventListener('input',e=>{if(visible().tier==='none'){showStatus('Pilih kategori ukuran cetak terlebih dahulu.','warn');return;}updateText();});
+ $('.kld-text').addEventListener('focus',()=>selectLayer('text'));
  $('.kld-font').addEventListener('change',updateText);$('.kld-text-color').addEventListener('input',updateText);
  $('.kld-text-width').addEventListener('input',updateText);
  root.querySelectorAll('[data-qty]').forEach(i=>i.addEventListener('input',refreshTotal));
@@ -70,7 +134,7 @@ root.innerHTML=`<div class="kld-overlay" role="dialog" aria-modal="true" aria-la
  const canvas=$('.kld-stage');canvas.addEventListener('pointerdown',pointerDown);canvas.addEventListener('pointermove',pointerMove);canvas.addEventListener('pointerup',pointerUp);canvas.addEventListener('pointercancel',pointerUp);
  refresh();
 }
-function close(){if(busy||cartPending){showStatus('Tunggu proses penyimpanan selesai.','warn');return;}const el=$('.kld-overlay');if(el)el.remove();document.body.classList.remove('kld-no-scroll');openBtn.focus();}
+function close(){if(busy||cartPending){showStatus('Tunggu proses penyimpanan selesai.','warn');return;}if(dragging){restoreEdit(dragging.side,dragging.before);dragging=null;}guides=[];const el=$('.kld-overlay');if(el)el.remove();document.body.classList.remove('kld-no-scroll');openBtn.focus();}
 async function createDraft(){if(cfg.previewOnly)return;if(designId&&designToken)return {design_id:designId,token:designToken};if(creating)return creating;
  creating=api('init',{product_id:cfg.productId}).then(r=>{designId=r.design_id;designToken=r.token;return r;}).catch(e=>{showStatus(e.message,'error');throw e;}).finally(()=>{creating=null;});return creating;
 }
@@ -95,6 +159,7 @@ async function openForkFromFragment(){
     const img=new Image();img.src=preview;await img.decode();
     s.image={...saved.image,aspect:saved.image.w/saved.image.h};
     s.imagePixels={bitmap:img,w:img.naturalWidth,h:img.naturalHeight,alpha:false};
+    s.sourcePixels=data.source_pixels?.[side]||null;
     const cv=document.createElement('canvas');cv.width=32;cv.height=32;
     const ctx=cv.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0,32,32);
     const bytes=ctx.getImageData(0,0,32,32).data;
@@ -103,6 +168,7 @@ async function openForkFromFragment(){
    }
    if(saved.text)s.text={...saved.text};
    if(saved.needs_bg_removal)s.bgPreviewOnly=true;
+   resetHistory(side);
   }
   if(cfg.colors.includes(data.color))color=data.color;
   refresh();showStatus('Salinan independen berhasil dibuka. Desain asli tidak berubah.','ok');
@@ -166,7 +232,7 @@ async function onFile(file,side){
  const id=++uploadCounter,previousUpload=sides[side].upload;
  sides[side].upload='preparing';
  showStatus('Menyiapkan preview ringan…');
- try{const pixels=await getSmallBitmap(file);const s=sides[side];s.bgPreviewOnly=false;s.imagePixels?.bitmap?.close?.();s.file=file;s.uploadSession=null;s.imagePixels=pixels;s.alpha=pixels.alpha;s.restored=false;s.image=null;addImageLayer(s);s.upload=cfg.previewOnly?'preview':'pending';refresh();
+ try{const pixels=await getSmallBitmap(file);const s=sides[side];s.bgPreviewOnly=false;s.imagePixels?.bitmap?.close?.();s.file=file;s.uploadSession=null;s.imagePixels=pixels;s.sourcePixels={width:pixels.w,height:pixels.h};s.alpha=pixels.alpha;s.restored=false;s.image=null;addImageLayer(s);selection[side]='image';resetHistory(side);s.upload=cfg.previewOnly?'preview':'pending';refresh();
  if(!cfg.previewOnly){showStatus('Gambar siap diatur. File asli sedang dikirim ke Drive.');await uploadOriginal(file,side,id);}
  else showStatus('Mode preview: gambar hanya ada di browser. Belum dikirim ke Google Drive.','warn');
  }catch(e){sides[side].upload=sides[side].file===file?'failed':previousUpload;refreshUpload();showStatus(e.message,'error');}
@@ -194,9 +260,9 @@ async function uploadOriginal(file,side,id){const s=sides[side];if(s.upload==='u
  }catch(e){s.upload='failed';s.uploadError=e.message;refreshUpload();showStatus(e.message,'error');}
 }
 function refreshUpload(){const s=visible();const el=$('.kld-upload-state');if(!el)return;
- el.textContent=s.restored?'✓ File master asli tersedia (salinan)':!s.file?'Belum ada gambar':s.upload==='done'?'✓ File asli tersimpan':s.upload==='failed'?'✕ '+s.uploadError:s.upload==='preview'?'Mode preview: file hanya di browser':s.upload==='pending'?'Menyiapkan upload…':s.upload==='upload'?'Mengirim file asli…':typeof s.upload==='string'?s.upload:'';
- $('.kld-retry').hidden=s.upload!=='failed';$('.kld-remove-bg').disabled=!s.imagePixels||s.alpha;
- $('.kld-image-width').disabled=!s.image;$('.kld-image-width-label').textContent=s.image?s.image.w.toFixed(1)+' cm':'';
+ el.textContent=!s.image?'Belum ada gambar aktif pada sisi ini':s.restored?'✓ File master asli tersedia (salinan)':!s.file?'Belum ada gambar':s.upload==='done'?'✓ File asli tersimpan':s.upload==='failed'?'✕ '+s.uploadError:s.upload==='preview'?'Mode preview: file hanya di browser':s.upload==='pending'?'Menyiapkan upload…':s.upload==='upload'?'Mengirim file asli…':typeof s.upload==='string'?s.upload:'';
+ $('.kld-retry').hidden=s.upload!=='failed';$('.kld-remove-bg').disabled=!s.image||!s.imagePixels||s.alpha||s.tier==='none';$('.kld-remove-image').disabled=!s.image;
+ $('.kld-image-width').disabled=!s.image||s.tier==='none';$('.kld-image-width-label').textContent=s.image?s.image.w.toFixed(1)+' cm':'';
  if(s.image){$('.kld-image-width').max=dims(s.tier)[0];$('.kld-image-width').value=s.image.w;}
 }
 function removeSolidBackground(){
@@ -208,10 +274,11 @@ function removeSolidBackground(){
  function check(i){if(i<0||i>=w*h||seen[i])return;seen[i]=1;let p=i*4;if(Math.abs(px[p]-ref[0])<tol&&Math.abs(px[p+1]-ref[1])<tol&&Math.abs(px[p+2]-ref[2])<tol)queue.push(i);}
  for(let x=0;x<w;x++){check(x);check((h-1)*w+x);}for(let y=0;y<h;y++){check(y*w);check(y*w+w-1);}
  let head=0;while(head<queue.length){const i=queue[head++],p=i*4;px[p+3]=0;const x=i%w,y=(i-x)/w;if(x>0)check(i-1);if(x<w-1)check(i+1);if(y>0)check(i-w);if(y<h-1)check(i+w);}
- ctx.putImageData(data,0,0);s.imagePixels.bitmap=c;s.alpha=true;s.bgPreviewOnly=true;refresh();
+ ctx.putImageData(data,0,0);original.close?.();s.imagePixels.bitmap=c;s.alpha=true;s.bgPreviewOnly=true;resetHistory(current);refresh();
  showStatus('Background dihapus hanya pada preview. File asli di Drive tetap utuh; operator produksi perlu memeriksa penghapusan background sebelum cetak.','warn');
 }
-function updateText(){let s=visible();if(s.tier==='none')return;
+function updateText(){changeEdit(()=>updateTextValue(),'text');}
+function updateTextValue(){let s=visible();if(s.tier==='none')return;
  const val=$('.kld-text').value.slice(0,160).split('\n').slice(0,5).join('\n');$('.kld-text').value=val;if(!val.trim()){s.text=null;refresh(false);return;}
  const [maxW,maxH]=dims(s.tier),lines=val.split('\n').slice(0,5),measure=$('.kld-stage').getContext('2d');
  measure.save();measure.font='100px '+$('.kld-font').value;const textPixels=Math.max(1,...lines.map(line=>measure.measureText(line).width));measure.restore();
@@ -219,11 +286,11 @@ function updateText(){let s=visible();if(s.tier==='none')return;
  if(h>maxH){w*=maxH/h;h=maxH;}
 
  if(!s.text)s.text={x:(maxW-w)/2,y:Math.max(0,maxH-h-1),w,h};
- Object.assign(s.text,{value:val,font:$('.kld-font').value,color:$('.kld-text-color').value,w,h});resetLayer(current);refresh(false);
+ Object.assign(s.text,{value:val,font:$('.kld-font').value,color:$('.kld-text-color').value,w,h});resetLayer(current);selectLayer('text');refresh(false);
 }
 const garments=cfg.garments&&Object.keys(cfg.garments).length?cfg.garments:{S:[43,65],M:[46,69],L:[49,73],XL:[51,73],'2XL':[54,76],'3XL':[60,78],'4XL':[63,80],'5XL':[66,80]};
 function stageMetrics(){
- if(isMug)return {w:600,h:710,px:156,py:325,scale:16,tierW:18,tierH:8.5,minX:0,maxX:0,minY:0,maxY:0};
+ if(isMug)return {w:600,h:710,px:156,py:325,scale:16,tierW:18,tierH:8.5,minX:0,maxX:0,minY:0,maxY:0,safeX0:0,safeX1:18,safeY0:0,safeY1:8.5};
  const w=600,h=710,ti=dims(visible().tier),g=garments[shirtSize]||garments.L,scale=Math.min(6,490/g[1],480/g[0]);
  const margin=cfg.safeMargins||{side:4,top:3.33,bottom:5};
  const safeLeft=300-(g[0]-2*margin.side)*scale/2,safeRight=300+(g[0]-2*margin.side)*scale/2;
@@ -239,7 +306,7 @@ function stageMetrics(){
  const minY=(safeTop-baseY)/scale-minLayerY,maxY=(safeBottom-baseY)/scale-maxLayerY;
  // Preview size never silently moves or rescales a physical design. Server rejects unsafe sizes.
  const allowedX=dx,allowedY=dy;
- return {w,h,px:baseX+allowedX*scale,py:baseY+allowedY*scale,scale,tierW:ti[0],tierH:ti[1],minX,maxX,minY,maxY};
+ return {w,h,px:baseX+allowedX*scale,py:baseY+allowedY*scale,scale,tierW:ti[0],tierH:ti[1],minX,maxX,minY,maxY,safeX0:(safeLeft-baseX)/scale-dx,safeX1:(safeRight-baseX)/scale-dx,safeY0:(safeTop-baseY)/scale-dy,safeY1:(safeBottom-baseY)/scale-dy};
 }
 /** Cloth-lighting fallback; renders on the existing canvas without network requests. */
 function kldClothColor(hex,delta){
@@ -324,6 +391,7 @@ function draw(){const cv=$('.kld-stage');if(!cv)return;const ctx=cv.getContext('
   ctx.beginPath();ctx.moveTo(left,hem-16);ctx.lineTo(right,hem-16);ctx.stroke();
  }
  if(tunik){ctx.strokeStyle=color==='Putih'?'#c2c2c2':'#191f25';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(left,hem-20);ctx.lineTo(right,hem-20);ctx.stroke();}
+ drawPhotoMockup(ctx);
  if(visible().tier==='none'){ctx.fillStyle='#555';ctx.font='20px Arial';ctx.textAlign='center';ctx.fillText('Pilih ukuran cetak pada sisi ini',300,355);return;}
  ctx.strokeStyle='#4993f5';ctx.lineWidth=2;ctx.setLineDash([9,7]);ctx.strokeRect(px,py,tierW*scale,tierH*scale);ctx.setLineDash([]);
  const s=visible();if(s.image&&s.imagePixels){ctx.drawImage(s.imagePixels.bitmap,px+s.image.x*scale,py+s.image.y*scale,s.image.w*scale,s.image.h*scale);}
@@ -331,6 +399,7 @@ function draw(){const cv=$('.kld-stage');if(!cv)return;const ctx=cv.getContext('
  const lines=t.value.split('\n').slice(0,5),lineHeight=t.h*scale/Math.max(1,lines.length);
  lines.forEach((line,i)=>ctx.fillText(line,px+(t.x+t.w/2)*scale,py+(t.y+(i+0.7)*t.h/lines.length)*scale,t.w*scale));}
  ctx.fillStyle='#46586a';ctx.font='13px Arial';ctx.textAlign='center';ctx.fillText((current==='front'?'DEPAN':'BELAKANG')+' • '+s.tier+' • '+tierW+'×'+tierH+' cm',300,686);
+ drawEditingGuides(ctx,stageMetrics());
 }
 /** Lightweight vector preview: 18x8.5cm is shown as an unfolded print panel.
  * Curved production artwork still uses original file and recorded cm coordinates.
@@ -357,18 +426,20 @@ function drawMug(ctx,{px,py,scale,tierW,tierH}){
  }
  c.textAlign='center';c.fillStyle='#4d6275';c.font='13px Arial';
  c.fillText('Area desain terbentang: 18 × 8,5 cm · simulasi',300,625);
+ drawEditingGuides(c,{px,py,scale,tierW,tierH});
 }
+function drawEditingGuides(ctx,m){if(!uxEnabled||exporting||visible().tier==='none')return;const layer=visible()[selection[current]];ctx.save();ctx.strokeStyle='#b733b0';ctx.lineWidth=2;ctx.setLineDash([4,3]);if(layer)ctx.strokeRect(m.px+layer.x*m.scale,m.py+layer.y*m.scale,layer.w*m.scale,layer.h*m.scale);ctx.setLineDash([]);for(const g of guides){ctx.beginPath();if(g.axis==='x'){const x=m.px+g.point*m.scale;ctx.moveTo(x,m.py);ctx.lineTo(x,m.py+m.tierH*m.scale);}else{const y=m.py+g.point*m.scale;ctx.moveTo(m.px,y);ctx.lineTo(m.px+m.tierW*m.scale,y);}ctx.stroke();}ctx.restore();}
 function canvasPoint(e){const cv=$('.kld-stage'),r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*cv.width,y:(e.clientY-r.top)/r.height*cv.height};}
-function pointerDown(e){const s=visible(),p=canvasPoint(e),m=stageMetrics();
+function pointerDown(e){if(busy||cartPending||dragging||visible().tier==='none')return;const s=visible(),p=canvasPoint(e),m=stageMetrics();
  for(const key of ['text','image']){
   const layer=s[key];if(!layer)continue;
   const x=m.px+layer.x*m.scale,y=m.py+layer.y*m.scale;
-  if(p.x>=x&&p.x<=x+layer.w*m.scale&&p.y>=y&&p.y<=y+layer.h*m.scale){dragging={pointer:e.pointerId,key,start:p,original:{x:layer.x,y:layer.y}};e.currentTarget.setPointerCapture(e.pointerId);return;}
+  if(p.x>=x&&p.x<=x+layer.w*m.scale&&p.y>=y&&p.y<=y+layer.h*m.scale){selectLayer(key);dragging={pointer:e.pointerId,key,side:current,before:editState(),start:p,original:{x:layer.x,y:layer.y}};e.currentTarget.setPointerCapture(e.pointerId);refreshHistory();draw();return;}
  }
  if(!isMug&&s.tier!=='none'&&p.x>=m.px&&p.x<=m.px+m.tierW*m.scale&&p.y>=m.py&&p.y<=m.py+m.tierH*m.scale){
-  dragging={pointer:e.pointerId,key:'area',start:p,original:{...s.placement}};
+  selectLayer(null);dragging={pointer:e.pointerId,key:'area',side:current,before:editState(),start:p,original:{...s.placement}};
   e.currentTarget.setPointerCapture(e.pointerId);
- }
+ }else{selectLayer(null);draw();}
 }
 function pointerMove(e){if(!dragging||dragging.pointer!==e.pointerId)return;
  const p=canvasPoint(e),m=stageMetrics(),s=visible();
@@ -378,23 +449,25 @@ function pointerMove(e){if(!dragging||dragging.pointer!==e.pointerId)return;
  }
  const layer=s[dragging.key];if(!layer)return;
  layer.x=Math.max(0,Math.min(m.tierW-layer.w,dragging.original.x+(p.x-dragging.start.x)/m.scale));
- layer.y=Math.max(0,Math.min(m.tierH-layer.h,dragging.original.y+(p.y-dragging.start.y)/m.scale));draw();
+ layer.y=Math.max(0,Math.min(m.tierH-layer.h,dragging.original.y+(p.y-dragging.start.y)/m.scale));
+ const cv=$('.kld-stage'),threshold=Math.min(.8,9/(m.scale*cv.getBoundingClientRect().width/600));
+ const result=snapLayer(layer,m,s[dragging.key==='image'?'text':'image'],threshold);layer.x=result.x;layer.y=result.y;guides=result.guides;draw();
 }
-function pointerUp(){dragging=null;}
-function refresh(updateTextControls=true){const s=visible();root.querySelectorAll('[data-side]').forEach(b=>b.classList.toggle('active',b.dataset.side===current));$('.kld-current-side').textContent=current==='front'?'depan':'belakang';$('.kld-tier').value=s.tier;$('.kld-color').value=color;$('.kld-size').value=shirtSize;
+function pointerUp(e){if(!dragging||e.pointerId!==dragging.pointer)return;const d=dragging;dragging=null;if(e.type==='pointercancel')restoreEdit(d.side,d.before);else remember(d.side,d.before);guides=[];refresh(false);}
+function refresh(updateTextControls=true){if(!$('.kld-overlay'))return;const s=visible();root.querySelectorAll('[data-side]').forEach(b=>b.classList.toggle('active',b.dataset.side===current));$('.kld-current-side').textContent=current==='front'?'depan':'belakang';$('.kld-tier').value=s.tier;$('.kld-color').value=color;$('.kld-size').value=shirtSize;
  root.querySelectorAll('.kld-swatch').forEach(b=>{const selected=b.dataset.color===color;b.classList.toggle('active',selected);b.setAttribute('aria-pressed',selected?'true':'false');});
  if(updateTextControls){$('.kld-text').value=s.text?s.text.value:'';$('.kld-font').value=s.text?s.text.font:'Arial';$('.kld-text-color').value=s.text?s.text.color:'#ffffff';$('.kld-text-width').value=s.text?s.text.w:Math.max(1,dims(s.tier)[0]||10);}
  $('.kld-text-width').max=dims(s.tier)[0]||32;$('.kld-text-width-label').textContent=s.text?s.text.w.toFixed(1)+' cm':'';
  const layers=[s.image,s.text].filter(Boolean);$('.kld-area-info').textContent=layers.length?'Gabungan gambar + teks: '+(Math.max(...layers.map(v=>v.x+v.w))-Math.min(...layers.map(v=>v.x))).toFixed(1)+' × '+(Math.max(...layers.map(v=>v.y+v.h))-Math.min(...layers.map(v=>v.y))).toFixed(1)+' cm':'';
- refreshUpload();refreshTotal();draw();}
+ refreshUpload();refreshTotal();refreshHistory();refreshContext();refreshDpi();if(!isMug){loadMockup('front');loadMockup('back');}draw();}
 function quantities(){const q={};root.querySelectorAll('[data-qty]').forEach(i=>{q[i.dataset.qty]=Math.max(0,Math.min(100,Math.floor(Number(i.value)||0)));orderQty[i.dataset.qty]=q[i.dataset.qty];});return q;}
 function refreshTotal(){let n=0,total=0,q=quantities();for(const size in q){n+=q[size];total+=q[size]*pricePerSize(size);}$('.kld-count').textContent=n+' pcs';$('.kld-total-number').textContent=total?money(total):'Pilih area cetak';}
 function jsonSide(s){const result={tier:s.tier,placement:isMug?{center_offset_cm:0,top_from_collar_cm:0}:{center_offset_cm:Math.round(s.placement.dx*100)/100,top_from_collar_cm:Math.round((10.83+s.placement.dy)*100)/100}};if(s.tier!=='none'&&s.image)result.image=roundLayer(s.image);if(s.tier!=='none'&&s.text)result.text={...roundLayer(s.text),value:s.text.value,font:s.text.font,color:s.text.color};if(s.bgPreviewOnly)result.needs_bg_removal=true;return result;}
 function roundLayer(l){const r={};for(const k of ['x','y','w','h'])r[k]=Math.round(l[k]*100)/100;return r;}
-function renderThumb(side,cb){const old=current;current=side;draw();const src=$('.kld-stage');const c=document.createElement('canvas');c.width=380;c.height=450;const x=c.getContext('2d');x.drawImage(src,0,0,c.width,c.height);
+function renderThumb(side,cb){const old=current;current=side;exporting=true;try{draw();const src=$('.kld-stage');const c=document.createElement('canvas');c.width=380;c.height=450;const x=c.getContext('2d');x.drawImage(src,0,0,c.width,c.height);
  let encoded=c.toDataURL('image/jpeg',0.52);
  if(encoded.length>82000){c.width=290;c.height=345;c.getContext('2d').drawImage(src,0,0,290,345);encoded=c.toDataURL('image/jpeg',.4);}
- current=old;draw();return encoded;
+ return encoded;}finally{current=old;exporting=false;draw();}
 }
 function artworkThumbnail(s){
  if(s.tier==='none'||!s.image||!s.imagePixels)return '';
@@ -409,11 +482,12 @@ function artworkThumbnail(s){
  }
  return '';
 }
-function lockControls(value){root.querySelectorAll('.kld-controls input,.kld-controls select,.kld-controls textarea,.kld-controls button').forEach(el=>el.disabled=value);if(!value)refreshUpload();}
+function lockControls(value){root.querySelectorAll('.kld-controls input,.kld-controls select,.kld-controls textarea,.kld-controls button,.kld-edit-tools button,.kld-context button').forEach(el=>el.disabled=value);if(!value){refreshUpload();refreshHistory();}}
 async function saveDesign(){if(!color){showStatus('Tidak ada warna yang aktif untuk produk ini. Hubungi admin Kaoscetak.','error');return;}if(busy)return false;if(cfg.previewOnly){showStatus('Mode preview admin: hubungkan Google Drive untuk mengaktifkan simpan pesanan.','warn');return false;}
  busy=true;lockControls(true);
  try{await createDraft();if(!['front','back'].some(k=>sides[k].tier!=='none'))throw Error('Pilih minimal satu sisi cetak.');
-  for(const k of ['front','back'])if(sides[k].image&&sides[k].upload!=='done')throw Error('File sisi '+(k==='front'?'depan':'belakang')+' belum selesai tersimpan di Google Drive.');
+  for(const k of ['front','back'])if(sides[k].tier!=='none'&&sides[k].image&&sides[k].upload!=='done')throw Error('File sisi '+(k==='front'?'depan':'belakang')+' belum selesai tersimpan di Google Drive.');
+  if(!isMug)await Promise.race([Promise.all([loadMockup('front'),loadMockup('back')]),new Promise(resolve=>setTimeout(resolve,3000))]);
   showStatus('Menyimpan desain dan preview…');const r=await api('save',{sides:{front:jsonSide(sides.front),back:jsonSide(sides.back)},previews:{front:renderThumb('front'),back:isMug?'':renderThumb('back')},artwork:{front:artworkThumbnail(sides.front),back:isMug?'':artworkThumbnail(sides.back)},color});
   showStatus('Desain KLD-'+designId+' berhasil disimpan. Untuk mengelola desain secara permanen, isi email pada bagian Verifikasi email untuk menyimpan permanen, tekan Kirim verifikasi, lalu buka tautan privat dari email.','ok');return true;
  }catch(e){showStatus(e.message,'error');return false;}finally{busy=false;lockControls(cartPending);}

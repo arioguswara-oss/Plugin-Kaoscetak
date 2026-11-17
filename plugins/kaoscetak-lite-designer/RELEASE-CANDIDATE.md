@@ -1,4 +1,15 @@
-# 0.3.2-rc.1 — DRAFT, isolated QA / owner review only
+# 0.4.0-owner-test.1 — current Owner test candidate
+
+On 18 November 2026 Rio explicitly requested combining the additional roadmap
+features and testing directly on kaoscetak.id instead of staging. See
+OWNER-TEST-0.4.0.md. Source checks and controlled synthetic tests do not certify
+live runtime. The additional public UX option defaults OFF; admin can exercise
+it first. No installation, deployment or merge was performed by this task.
+
+The following 0.3.2 notes are historical and still describe core compatibility
+limits unless superseded above or in the current Owner test instructions.
+
+# 0.3.2-rc.1 — historical DRAFT QA notes
 
 Continues actual v0.3.1 checkpoint 4381a5e. Not a new plugin. No automatic
 activation, option migration, price reset or production deployment. Automatic

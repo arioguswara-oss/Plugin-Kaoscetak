@@ -71,7 +71,7 @@ function kld_api_confirm_upload(WP_REST_Request $r){
  // Keep previous files for reference-safe archives.
  update_post_meta($id,'_kld_file_'.$side,$fileid);
  // Earlier masters may be referenced by paid orders. Never delete them during replacement.
- update_post_meta($id,'_kld_file_details_'.$side,['name'=>$data['name'],'size'=>(int)$data['size'],'mime'=>$data['mimeType'],'folder'=>get_option('kld_master_folder')]);
+ update_post_meta($id,'_kld_file_details_'.$side,['name'=>$data['name'],'size'=>(int)$data['size'],'mime'=>$data['mimeType'],'folder'=>get_option('kld_master_folder'),'width'=>(int)($data['width']??0),'height'=>(int)($data['height']??0)]);
  delete_post_meta($id,'_kld_pending_'.$side);
  return rest_ensure_response(['verified'=>true,'name'=>$data['name']]);
 }
@@ -309,10 +309,14 @@ function kld_api_load(WP_REST_Request $r){
  $product=absint(get_post_meta($id,'_kld_product',true));
  if(!$product||!wc_get_product($product))return kld_api_error('product','Produk tidak tersedia.',404);
  $sides=get_post_meta($id,'_kld_sides',true);if(!is_array($sides))return kld_api_error('empty','Desain belum disimpan.',409);
- $layers=[];
+ $layers=[];$pixels=[];
  foreach(['front','back'] as $side){
   $data=(string)get_post_meta($id,'_kld_artwork_'.$side,true);
   if($data!==''&&strlen($data)<=85000&&preg_match('/^[a-zA-Z0-9+\/=]+$/D',$data))$layers[$side]='data:image/webp;base64,'.$data;
+  $details=get_post_meta($id,'_kld_file_details_'.$side,true);
+  if(!is_array($details))$details=[];
+  $width=(int)($details['width']??0);$height=(int)($details['height']??0);
+  if($width>0&&$height>0&&$width<=16000&&$height<=16000&&$width*$height<=26000000)$pixels[$side]=['width'=>$width,'height'=>$height];
  }
- return rest_ensure_response(['design_id'=>$id,'product_id'=>$product,'sides'=>$sides,'color'=>(string)get_post_meta($id,'_kld_color',true),'layers'=>$layers]);
+ return rest_ensure_response(['design_id'=>$id,'product_id'=>$product,'sides'=>$sides,'color'=>(string)get_post_meta($id,'_kld_color',true),'layers'=>$layers,'source_pixels'=>$pixels]);
 }

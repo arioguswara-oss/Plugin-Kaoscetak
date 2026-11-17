@@ -1,4 +1,10 @@
-# 0.3.2-rc.1 — kandidat DRAFT, bukan produksi
+# 0.4.0-owner-test.1 — kandidat uji langsung Owner
+
+Baca **OWNER-TEST-0.4.0.md** untuk fitur tambahan, pengaktifan admin/pelanggan,
+langkah uji di kaoscetak.id dan rollback. Catatan 0.3.2/versi lama di bawah
+bersifat historis; tidak menyatakan kandidat ini FINAL atau runtime VERIFIED.
+
+# 0.3.2-rc.1 — catatan kandidat sebelumnya
 
 Baca RELEASE-CANDIDATE.md untuk status terkini, batas Drive/Classic Checkout, QA, backup dan rollback. Catatan versi lama di bawah bersifat historis. Jangan aktifkan editor publik berdasarkan tes sintetis.
 

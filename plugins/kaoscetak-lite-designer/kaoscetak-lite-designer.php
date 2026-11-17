@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Kaoscetak Lite Designer
  * Description: Editor sablon mobile-first dengan harga size/area, preview ringan, dan pengaturan Google Drive.
- * Version: 0.3.2-rc.1
+ * Version: 0.4.0-owner-test.1
  * Author: Kaoscetak
  * Requires Plugins: woocommerce
  * Requires PHP: 7.4
@@ -11,7 +11,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  */
 if (!defined('ABSPATH')) exit;
-define('KLD_VERSION','0.3.2-rc.1');
+define('KLD_VERSION','0.4.0-owner-test.1');
 define('KLD_DIR', plugin_dir_path(__FILE__));
 define('KLD_URL', plugin_dir_url(__FILE__));
 require_once KLD_DIR . 'includes/admin.php';
@@ -50,6 +50,8 @@ add_action('wp_enqueue_scripts', function(){
   'matrix'=>$matrix,
   'garments'=>kld_product_garments($product->get_id()),
   'safeMargins'=>kld_product_safe_margins($product->get_id()),
+  'mockups'=>$mug?[]:kld_product_mockups($product->get_id()),
+  'uxEnabled'=>$preview||get_option('kld_ux_enabled','no')==='yes',
   'productType'=>kld_product_preset_key($product->get_id()),
   'surcharges'=>kld_surcharges(),
   'tiers'=>kld_product_tiers($product->get_id()),

@@ -1,6 +1,8 @@
 # Kaoscetak Lite Designer
 
-**Status: IMPLEMENTED, 0.3.2-rc.1 DRAFT QA — belum VERIFIED pada website/Drive asli.** Ini folder plugin pertama dalam repository multi-plugin.
+**Status: 0.4.0-owner-test.1 — kandidat uji Owner, belum runtime VERIFIED.**
+Tambahan roadmap dan pilihan uji langsung Rio: lihat [OWNER-TEST-0.4.0.md](OWNER-TEST-0.4.0.md).
+Ini folder plugin pertama dalam repository multi-plugin.
 
 Sasaran: editor **frontend**, dibuka dari tombol **Custom Desain** pada produk WooCommerce. Mobile-first, ringan, tidak membuat editor seperti Canva/Lumise. Jangan mengganti editor dengan halaman WordPress **Edit Post**.
 

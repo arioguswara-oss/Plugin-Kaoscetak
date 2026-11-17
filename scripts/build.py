@@ -19,5 +19,5 @@ with ZipFile(archive) as z:
  assert z.testzip() is None
  assert all(n.startswith('kaoscetak-lite-designer/') and '..' not in n for n in z.namelist())
 sha=hashlib.sha256(archive.read_bytes()).hexdigest()
-manifest={'file':archive.name,'version':version,'sha256':sha,'bytes':archive.stat().st_size,'files':len(files),'entries':{p.relative_to(source).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in files},'status':'DRAFT — isolated QA only; Drive/Flatsome/live unverified'}
+manifest={'file':archive.name,'version':version,'sha256':sha,'bytes':archive.stat().st_size,'files':len(files),'entries':{p.relative_to(source).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in files},'status':'OWNER-TEST candidate; native/source evidence separate; WordPress/Flatsome/live unverified; not FINAL'}
 (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n');(out/'SHA256SUMS').write_text(f'{sha}  {archive.name}\n');print(json.dumps(manifest))

@@ -1,3 +1,13 @@
+# 0.4.0-owner-test.1 — roadmap tambahan / uji Owner
+
+- Owner meminta tambahan P1 digabung sebelum uji langsung di kaoscetak.id; staging tidak menjadi langkah yang diwajibkan untuk uji Owner ini. Status tetap kandidat uji, bukan FINAL.
+- Undo/Redo 30 metadata states per sisi, pengelompokan input/drag, pemulihan layer dan kategori; tidak menggandakan file, bitmap, atau token dan tidak memundurkan upload Drive.
+- Snap/alignment aman dalam cm, tombol tengah dan toolbar kontekstual ramah sentuh; garis bantu tidak masuk thumbnail order.
+- DPI efektif memakai piksel master asli dan dimensi cetak aktual; resolusi legacy yang tidak diketahui tidak ditebak dari thumbnail.
+- Dukungan mockup foto ringan per produk/warna/sisi dari Media, dengan validasi dimensi, ukuran, MIME dan origin; foto resmi masih perlu disediakan Owner.
+- Kontrol baru tersedia untuk admin; pengaktifan pelanggan terpisah dan bawaan OFF. Harga, tipe checkout dan konfigurasi lama dipertahankan.
+- Baca OWNER-TEST-0.4.0.md untuk langkah uji langsung dan rollback. Native source tests dicatat terpisah dari runtime live yang belum diuji.
+
 # 0.3.2-rc.1 — DRAFT QA candidate
 
 - PR #12 follow-up: reserve non-autoloaded Drive IDs before creating order folders, shortcuts and guide PDFs; retry the same ID after lost responses and validate exact resource metadata before saving completion markers. Native PHP source evidence is in `docs/qa/milestone-a-native-20261118.md`; actual provider/staging gates remain separate.
