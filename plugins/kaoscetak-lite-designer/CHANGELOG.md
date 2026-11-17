@@ -1,5 +1,6 @@
 # 0.3.2-rc.1 — DRAFT QA candidate
 
+- PR #12 follow-up: reserve non-autoloaded Drive IDs before creating order folders, shortcuts and guide PDFs; retry the same ID after lost responses and validate exact resource metadata before saving completion markers. Native PHP source evidence is in `docs/qa/milestone-a-native-20261118.md`; actual provider/staging gates remain separate.
 - Preserve cart locks through email verification; serialize design writes and replay cart additions safely.
 - Revalidate product, stock via WooCommerce, size/quantity/colour, physical bounds and private Drive master at checkout.
 - Stage save validation before metadata writes; record actual combined cm dimensions.

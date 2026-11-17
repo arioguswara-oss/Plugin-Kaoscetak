@@ -5,6 +5,7 @@ add_filter('pre_http_request',function($pre,$args,$url){
  if(!in_array(wp_parse_url($url,PHP_URL_HOST),['www.googleapis.com','oauth2.googleapis.com'],true))return $pre;
  $status=200;$body=[];$headers=[];
  if(strpos($url,'oauth2.googleapis.com')!==false)$body=['access_token'=>'synthetic-access-token','expires_in'=>3600];
+ elseif(strpos($url,'/files/generateIds?')!==false){$n=(int)get_option('kld_fixture_generated_ids')+1;update_option('kld_fixture_generated_ids',$n,false);$body=['ids'=>['fixture-artifact-'.$n]];}
  elseif(strpos($url,'uploadType=resumable')!==false){$headers['location']='https://www.googleapis.com/upload/drive/v3/files?upload_id=fixture-only';}
  elseif(strpos($url,'alt=media')!==false){return ['headers'=>[],'body'=>get_option('kld_fixture_bad_header')?'not an image':base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aAvkAAAAASUVORK5CYII='),'response'=>['code'=>206,'message'=>'fixture'],'cookies'=>[]];}
  elseif(preg_match('~/files/(fixture-(?:master|orders)-folder)~',$url))$body=['id'=>'fixture-master-folder','mimeType'=>'application/vnd.google-apps.folder','trashed'=>false,'permissions'=>[['type'=>get_option('kld_fixture_public_folder')?'anyone':'user']],'capabilities'=>['canAddChildren'=>true]];
@@ -12,12 +13,25 @@ add_filter('pre_http_request',function($pre,$args,$url){
   $data=get_option('kld_fixture_files',[]);$body=$data[$m[1]]??[];if(!$body)$status=404;
   // Model the explicitly requested provider permission field, including omission failures.
   if($body&&!get_option('kld_fixture_missing_permissions')&&!isset($body['permissions']))$body['permissions']=[['type'=>'user']];
+ }elseif(preg_match('~/files/(fixture-(?:artifact-[0-9]+|file-created-[a-f0-9]+))~',$url,$m)){
+  $artifacts=get_option('kld_fixture_artifacts',[]);$hidden=(int)get_option('kld_fixture_hide_artifact_reads');
+  if($hidden){update_option('kld_fixture_hide_artifact_reads',$hidden-1,false);$status=404;}
+  else {$body=$artifacts[$m[1]]??[];if(!$body)$status=404;}
  }elseif(strpos($url,'files?')!==false){
   if(($args['method']??'GET')==='GET'){
-   preg_match("/value='([a-f0-9]{64})'/",urldecode($url),$key);$map=get_option('kld_fixture_folders',[]);$body=['files'=>isset($map[$key[1]??''])?[['id'=>$map[$key[1]]]]:[]];
-  }else{$meta=json_decode($args['body']??'',true);$key=$meta['appProperties']['kldOrder']??'';$body=['id'=>'fixture-file-created-'.substr(hash('sha256',$args['body']??''),0,18),'name'=>$meta['name']??''];
-   update_option('kld_fixture_http_creates',(int)get_option('kld_fixture_http_creates')+1);
-   if($key){$map=get_option('kld_fixture_folders',[]);$map[$key]=$body['id'];update_option('kld_fixture_folders',$map);if(get_option('kld_fixture_drop_folder')){delete_option('kld_fixture_drop_folder');return new WP_Error('lost_response','Synthetic response lost after folder creation');}}
+   parse_str(wp_parse_url($url,PHP_URL_QUERY),$query);$q=$query['q']??'';
+   preg_match("/key='(kldOrder|kldArtifact)' and value='([a-f0-9]{64})'/",$q,$key);preg_match("/'([^']+)' in parents/",$q,$parent);preg_match("/mimeType = '([^']+)'/",$q,$mime);
+   $body=['files'=>[]];foreach(get_option('kld_fixture_artifacts',[]) as $id=>$artifact)if(!get_option('kld_fixture_hide_artifact_lists')&&empty($artifact['trashed'])&&($artifact['appProperties'][$key[1]??'']??'')===($key[2]??'missing')&&in_array($parent[1]??'',$artifact['parents']??[],true)&&($artifact['mimeType']??'')===($mime[1]??''))$body['files'][]=['id'=>$id];
+  }else{
+   if(strpos($url,'uploadType=multipart')!==false){preg_match('/\r\n\r\n(\{[^\r\n]+\})\r\n/',$args['body']??'',$match);$meta=json_decode($match[1]??'',true);}else $meta=json_decode($args['body']??'',true);
+   if(!is_array($meta))return new WP_Error('invalid_fixture_metadata','Malformed synthetic create');
+   $id=$meta['id']??('fixture-file-created-'.substr(hash('sha256',$args['body']??''),0,18));$artifacts=get_option('kld_fixture_artifacts',[]);
+   if(isset($artifacts[$id]))$status=409;
+   else {
+    $meta['id']=$id;$meta['trashed']=false;$artifacts[$id]=$meta;update_option('kld_fixture_artifacts',$artifacts,false);$body=['id'=>$id,'name'=>$meta['name']??''];
+    update_option('kld_fixture_http_creates',(int)get_option('kld_fixture_http_creates')+1);
+    if((!empty($meta['appProperties']['kldOrder'])&&get_option('kld_fixture_drop_folder'))||get_option('kld_fixture_drop_artifact')){delete_option('kld_fixture_drop_folder');delete_option('kld_fixture_drop_artifact');update_option('kld_fixture_hide_artifact_reads',1,false);return new WP_Error('lost_response','Synthetic response lost after resource creation');}
+   }
   }
  }else return new WP_Error('unexpected_fixture_request','Unsupported synthetic Drive request');
  return ['headers'=>$headers,'body'=>wp_json_encode($body),'response'=>['code'=>$status,'message'=>'fixture'],'cookies'=>[]];

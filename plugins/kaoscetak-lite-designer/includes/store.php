@@ -219,7 +219,7 @@ function kld_prepare_production($order){
   $roots=kld_drive_roots();if(is_wp_error($roots))throw new RuntimeException($roots->get_error_message());
   $folder=$order->get_meta('_kld_drive_order_pending');
   if(!$folder){$folder=kld_drive_order_folder($order,$roots['orders']);if(is_wp_error($folder))throw new RuntimeException($folder->get_error_message());$order->update_meta_data('_kld_drive_order_pending',$folder);$order->save();}
-  // Shortcuts are idempotent using a per-file completion marker on the order.
+  // Durable provider IDs protect the interval before each order completion marker is saved.
   foreach($designs as $id=>$sides){
    foreach(['front','back'] as $side){
     if(($sides[$side]['tier']??'none')==='none')continue;
@@ -253,20 +253,21 @@ function kld_prepare_production($order){
 }
 function kld_drive_upload_small($name,$mime,$bytes,$parent,$key=''){
  if(strlen($bytes)>1000000)return new WP_Error('too_large','Panduan produksi melebihi 1 MB.');
+ $meta=['name'=>$name,'mimeType'=>$mime,'parents'=>[$parent]];
  if($key!==''){
-  $existing=kld_drive_find_artifact($parent,$key,'application/pdf');
-  if(is_wp_error($existing))return $existing;
-  if($existing!=='')return ['id'=>$existing];
+  if($mime!=='application/pdf')return new WP_Error('artifact_type','Panduan produksi harus berupa PDF.');
+  $plan=kld_drive_artifact_plan($parent,$key,$mime);if(is_wp_error($plan))return $plan;
+  $meta=array_merge($meta,$plan);$existing=kld_drive_artifact_probe($meta);
+  if($existing!==false)return $existing;
  }
  $token=kld_drive_token();if(is_wp_error($token))return $token;
  $boundary='kld'.bin2hex(random_bytes(8));
- $meta=['name'=>$name,'mimeType'=>$mime,'parents'=>[$parent]];
- if($key!=='')$meta['appProperties']=['kldArtifact'=>$key];
  $metadata=wp_json_encode($meta);
  $body='--'.$boundary."\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n".$metadata."\r\n";
  $body.='--'.$boundary."\r\nContent-Type: ".$mime."\r\n\r\n".$bytes."\r\n--".$boundary."--\r\n";
  $r=wp_remote_post('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',[
   'timeout'=>40,'headers'=>['Authorization'=>'Bearer '.$token,'Content-Type'=>'multipart/related; boundary='.$boundary], 'body'=>$body]);
+ if($key!=='')return kld_drive_artifact_finish($meta,$r);
  if(is_wp_error($r))return $r;
  $data=json_decode(wp_remote_retrieve_body($r),true);
  if(wp_remote_retrieve_response_code($r)<200||wp_remote_retrieve_response_code($r)>=300||empty($data['id']))return new WP_Error('drive_pdf','Upload PDF panduan gagal (HTTP '.wp_remote_retrieve_response_code($r).').');
