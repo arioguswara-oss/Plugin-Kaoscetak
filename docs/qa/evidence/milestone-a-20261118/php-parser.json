@@ -1,0 +1,7 @@
+{
+  "check": "auxiliary PHP parser; not php -l or PHP execution",
+  "parser_commit": "94f6b40fa502e7e8e07d0dc2f8a7f13be65cd98c",
+  "php83_files": 30,
+  "php74_plugin_files": 12,
+  "errors": []
+}
