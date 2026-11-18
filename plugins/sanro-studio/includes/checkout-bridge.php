@@ -136,3 +136,59 @@ function sanro_studio_validate_size_checkout_batch($contract, $order_items) {
     return ['valid' => true, 'total_price' => $expected['total_price'],
         'total_quantity' => $expected['total_quantity'], 'checkout_enabled' => false];
 }
+
+/**
+ * Fail-closed staging checkout gate. Requires fresh owner authorization on
+ * every invocation and checks the entire WC cart against the live quote.
+ * This does not register a hook or create an order.
+ */
+function sanro_studio_stage_authorize_checkout($design_id, $owner_token, $product_id, $cart) {
+    if (!defined('SANRO_STUDIO_ENABLE_STAGING_CART')
+        || SANRO_STUDIO_ENABLE_STAGING_CART !== true
+        || !defined('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT')
+        || SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT !== true
+        || !is_object($cart) || !method_exists($cart, 'get_cart')
+        || !is_int($product_id) || $product_id < 1
+        || !function_exists('sanro_studio_prepare_cart_design_contract')
+        || !function_exists('sanro_studio_validate_size_cart_lines')
+        || !function_exists('get_woocommerce_currency')
+        || get_woocommerce_currency() !== 'IDR') {
+        return ['valid' => false, 'error' => 'checkout_gate_disabled'];
+    }
+    $contract = sanro_studio_prepare_cart_design_contract($design_id, $owner_token, $product_id);
+    if (empty($contract['valid'])) return $contract;
+    $cart_lines = $cart->get_cart();
+    if (!is_array($cart_lines) || !$cart_lines) {
+        return ['valid' => false, 'error' => 'checkout_cart_empty'];
+    }
+    $snapshots = [];
+    foreach ($cart_lines as $line) {
+        if (!is_array($line) || !isset($line['data']) || !is_object($line['data'])
+            || !method_exists($line['data'], 'get_price')) {
+            return ['valid' => false, 'error' => 'checkout_product_invalid'];
+        }
+        $snapshot = $line;
+        unset($snapshot['data']);
+        $snapshots[] = $snapshot;
+    }
+    $verified = sanro_studio_validate_size_cart_lines($contract, $snapshots);
+    if (empty($verified['valid'])) return $verified;
+    $expected = sanro_studio_prepare_size_cart_lines($contract);
+    $prices = [];
+    foreach ($expected['lines'] as $line) {
+        $prices[$line['sanro_studio_size']] = $line['sanro_studio_unit_price'];
+    }
+    foreach ($cart_lines as $line) {
+        $size = $line['sanro_studio_size'];
+        $actual = $line['data']->get_price();
+        if ((!is_string($actual) && !is_int($actual) && !is_float($actual))
+            || !preg_match('/^(?:0|[1-9][0-9]*)(?:\\.[0-9]{1,2})?$/D', (string) $actual)
+            || (float) $actual !== (float) $prices[$size]) {
+            return ['valid' => false, 'error' => 'checkout_price_mismatch'];
+        }
+    }
+    return ['valid' => true, 'design_id' => $contract['design_id'],
+        'total_quantity' => $verified['total_quantity'],
+        'total_price' => $verified['total_price'],
+        'requires_order_item_validation' => true];
+}
