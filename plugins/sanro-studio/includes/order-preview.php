@@ -340,3 +340,36 @@ function sanro_studio_order_production_file_status($order) {
         'drive_url' => null,
     ];
 }
+
+/**
+ * Read-only production manifest for one WooCommerce line item.
+ * Eligibility is order-wide, but design identity and preview references
+ * remain scoped to the requested line. Never exposes Drive credentials,
+ * buyer tokens, filesystem paths, or an unverified Drive URL.
+ */
+function sanro_studio_order_item_production_manifest($order, $item_id) {
+    $eligibility = sanro_studio_order_production_file_status($order);
+    if (empty($eligibility['valid'])) return $eligibility;
+    $inventory = sanro_studio_order_item_preview_inventory($order, $item_id);
+    if (empty($inventory['valid'])) return $inventory;
+    $items = $order->get_items('line_item');
+    $item = $items[$item_id];
+    $design_id = $item->get_meta('_sanro_studio_design_id', true);
+    if (!is_string($design_id)
+        || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id)) {
+        return ['valid' => false, 'error' => 'design_not_bound'];
+    }
+    $has_preview = $inventory['front'] !== null || $inventory['back'] !== null;
+    return [
+        'valid' => true,
+        'eligible' => $eligibility['eligible'],
+        'reason' => $eligibility['reason'],
+        'item_id' => $item_id,
+        'design_id' => $design_id,
+        'preview_front_available' => $inventory['front'] !== null,
+        'preview_back_available' => $inventory['back'] !== null,
+        'ready_for_drive_integration' => $eligibility['eligible'] && $has_preview,
+        'drive_link_available' => false,
+        'drive_url' => null,
+    ];
+}
