@@ -239,6 +239,19 @@ function sanro_studio_attach_item_preview_refs($order, $item_id, $design_id, $ow
             return ['valid' => false, 'error' => $preview['error'] ?? 'preview_not_found'];
         }
     }
+    // Bind the line item to one design, and never silently replace a preview.
+    // Reattaching the same references is idempotent; conflicts fail closed.
+    $bound_design = $item->get_meta('_sanro_studio_design_id', true);
+    if ($bound_design !== '' && $bound_design !== $design_id) {
+        return ['valid' => false, 'error' => 'design_conflict'];
+    }
+    foreach ($refs as $side => $ref) {
+        $existing = $item->get_meta('_sanro_studio_preview_' . $side . '_ref', true);
+        if ($existing !== '' && $existing !== $ref) {
+            return ['valid' => false, 'error' => 'preview_conflict'];
+        }
+    }
+    $item->update_meta_data('_sanro_studio_design_id', $design_id);
     foreach ($refs as $side => $ref) {
         $item->update_meta_data('_sanro_studio_preview_' . $side . '_ref', $ref);
     }
