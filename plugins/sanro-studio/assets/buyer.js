@@ -18,6 +18,9 @@
  function updateEstimate(){
   const output=q('#sanro-price-estimate'),calc=window.SanroStudioEstimate;
   if(!calc||config.pricing_profile!=='cotton_combed_24s'){output.textContent='Estimasi belum tersedia';return;}
+  if(qtyInputs.some(input=>!input.validity.valid)){
+   output.textContent='Estimasi tidak tersedia: periksa jumlah per ukuran';return;
+  }
   const qty=Object.fromEntries(qtyInputs.map(input=>[input.dataset.size,Number(input.value)]));
   const result=calc.estimate(qty,designCategory(sides.front),designCategory(sides.back));
   output.textContent=result&&result.pieces>0?'Estimasi: '+new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(result.total)+' (belum final)':'Estimasi harga: lengkapi desain dan jumlah';
