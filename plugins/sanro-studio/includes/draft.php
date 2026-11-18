@@ -183,7 +183,7 @@ function sanro_studio_cleanup_expired_drafts($limit = 50, $after_id = 0) {
  * Internal-only atomic draft lock for future order integration.
  * Never register as a public REST action. This does not enable checkout.
  */
-function sanro_studio_lock_draft_for_order($id, $token, $order_id) {
+function sanro_studio_lock_draft_for_order($id, $token, $order_id, $item_id = null) {
     $draft = sanro_studio_read_draft($id, $token);
     if (empty($draft['valid'])) return $draft;
     if (($draft['status'] ?? null) !== 'draft') {
@@ -191,6 +191,9 @@ function sanro_studio_lock_draft_for_order($id, $token, $order_id) {
     }
     if (!is_int($order_id) || $order_id < 1) {
         return ['valid' => false, 'error' => 'invalid_order'];
+    }
+    if ($item_id !== null && (!is_int($item_id) || $item_id < 1)) {
+        return ['valid' => false, 'error' => 'invalid_order_item'];
     }
     global $wpdb;
     if (!isset($wpdb) || !is_object($wpdb) || !isset($wpdb->options)
@@ -211,6 +214,7 @@ function sanro_studio_lock_draft_for_order($id, $token, $order_id) {
     $after = $before;
     $after['status'] = 'locked';
     $after['order_id'] = $order_id;
+    if ($item_id !== null) $after['order_item_id'] = $item_id;
     $after['locked_at'] = time();
     $changed = $wpdb->query($wpdb->prepare(
         "UPDATE `{$wpdb->options}` SET option_value = %s WHERE option_name = %s AND BINARY option_value = BINARY %s",
@@ -255,5 +259,5 @@ function sanro_studio_lock_draft_for_order_item($id, $token, $order, $item_id) {
     if ((int) $draft['product_id'] !== (int) $items[$item_id]->get_product_id()) {
         return ['valid' => false, 'error' => 'product_mismatch'];
     }
-    return sanro_studio_lock_draft_for_order($id, $token, $order_id);
+    return sanro_studio_lock_draft_for_order($id, $token, $order_id, $item_id);
 }
