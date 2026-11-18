@@ -35,6 +35,7 @@ function sanro_studio_render_product_picker($page_url) {
         && is_string($preferences['studio_label']) && trim($preferences['studio_label']) !== ''
         ? $preferences['studio_label'] : 'SANRO Studio';
     echo '<header><h1>' . esc_html($label) . '</h1><p>Pilih produk untuk mulai mendesain.</p></header>';
+    echo '<nav class="sanro-workflow" aria-label="Tahapan desain"><span class="sanro-workflow-current" aria-current="step">1. Pilih Produk</span><span class="sanro-workflow-pending">2. Atur Desain</span><span class="sanro-workflow-pending">3. Desain Saya</span></nav>';
     echo '<label for="sanro-product-search">Cari produk</label> ';
     echo '<input id="sanro-product-search" type="search" placeholder="Cari nama produk" autocomplete="off">';
     echo '<div class="sanro-product-grid">';
