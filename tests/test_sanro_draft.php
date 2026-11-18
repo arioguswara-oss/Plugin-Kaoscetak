@@ -53,7 +53,7 @@ $wpdb = new class {
     }
 };
 function sanro_studio_validate_product_design($product_id, $design) {
-    return $design === ['front' => 'valid'] ? ['valid' => true] : ['valid' => false, 'error' => 'invalid_design'];
+    return in_array($design, [['front' => 'valid'], ['front' => 'changed']], true) ? ['valid' => true] : ['valid' => false, 'error' => 'invalid_design'];
 }
 require __DIR__ . '/../plugins/sanro-studio/includes/draft.php';
 $checks = 0;
@@ -91,29 +91,29 @@ check_draft(true, !empty($repeat['unchanged']), 'identical design is a no-op');
 check_draft($first_update_at, $GLOBALS['options'][$key]['updated_at'] ?? null, 'no-op preserves timestamp');
 check_draft(true, sanro_studio_read_draft($created['design_id'], $created['owner_token'])['valid'], 'read after update');
 $GLOBALS['draft_cas_conflict'] = true;
-check_draft('draft_conflict', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'CAS detects concurrent lock before write');
+check_draft('draft_conflict', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'changed'])['error'], 'CAS detects concurrent lock before write');
 $GLOBALS['draft_cas_conflict'] = false;
 $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['status'] = 'draft';
 $GLOBALS['draft_cas_case_conflict'] = true;
-check_draft('draft_conflict', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'CAS rejects case-only concurrent change');
+check_draft('draft_conflict', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'changed'])['error'], 'CAS rejects case-only concurrent change');
 $GLOBALS['draft_cas_case_conflict'] = false;
 $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['status'] = 'draft';
 // Simulate status changing between the first and second get_option reads.
 $GLOBALS['draft_read_count'] = 0;
 $GLOBALS['draft_lock_on_second_read'] = true;
-check_draft('draft_locked', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'interleaved lock rejected');
+check_draft('draft_locked', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'changed'])['error'], 'interleaved lock rejected');
 $GLOBALS['draft_lock_on_second_read'] = false;
 $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['status'] = 'draft';
 // Reject product rebinding between the initial authorization read and final write.
 $GLOBALS['draft_read_count'] = 0;
 $GLOBALS['draft_rebind_on_second_read'] = true;
-check_draft('draft_locked', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'interleaved product rebinding rejected');
+check_draft('draft_locked', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'changed'])['error'], 'interleaved product rebinding rejected');
 $GLOBALS['draft_rebind_on_second_read'] = false;
 $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['product_id'] = 17;
 // Simulate corrupted option metadata after the first authorized read.
 $GLOBALS['draft_read_count'] = 0;
 $GLOBALS['draft_corrupt_hash_on_second_read'] = true;
-check_draft('not_found', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'malformed token hash fails closed');
+check_draft('not_found', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'changed'])['error'], 'malformed token hash fails closed');
 $GLOBALS['draft_corrupt_hash_on_second_read'] = false;
 $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['token_hash'] = hash('sha256', $created['owner_token']);
 $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['status'] = 'locked';
