@@ -36,3 +36,48 @@ function sanro_studio_admin_order_preview_status($order) {
     }
     echo '</div>';
 }
+
+/**
+ * Internal-only order reference attachment. Caller must already possess an
+ * authorized order object; never register this as a guest REST endpoint.
+ * Does not store owner tokens, raw image bytes, or master file locations.
+ */
+function sanro_studio_attach_order_preview_refs($order, $design_id, $owner_token, $refs) {
+    if (!current_user_can('manage_woocommerce')) {
+        return ['valid' => false, 'error' => 'forbidden'];
+    }
+    if (!is_object($order) || !method_exists($order, 'update_meta_data')
+        || !method_exists($order, 'save') || !method_exists($order, 'get_items')
+        || !is_array($refs) || !$refs || count($refs) > 2
+        || !function_exists('sanro_studio_read_draft')) {
+        return ['valid' => false, 'error' => 'invalid_order_preview'];
+    }
+    $draft = sanro_studio_read_draft($design_id, $owner_token);
+    if (empty($draft['valid'])) return $draft;
+    if (($draft['status'] ?? null) !== 'draft') {
+        return ['valid' => false, 'error' => 'draft_locked'];
+    }
+    $product_match = false;
+    foreach ($order->get_items('line_item') as $item) {
+        if (is_object($item) && method_exists($item, 'get_product_id')
+            && (int) $item->get_product_id() === (int) $draft['product_id']) {
+            $product_match = true;
+            break;
+        }
+    }
+    if (!$product_match) return ['valid' => false, 'error' => 'product_mismatch'];
+    foreach ($refs as $side => $ref) {
+        if (!in_array($side, ['front', 'back'], true)
+            || !is_string($ref) || !is_string($design_id)
+            || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id)
+            || !preg_match('/^' . preg_quote(strtolower($design_id), '/') . '-' . $side .
+                '-[a-f0-9]{64}\\.(png|jpg|webp)$/D', $ref)) {
+            return ['valid' => false, 'error' => 'invalid_preview_reference'];
+        }
+    }
+    foreach ($refs as $side => $ref) {
+        $order->update_meta_data('_sanro_studio_preview_' . $side . '_ref', $ref);
+    }
+    $order->save();
+    return ['valid' => true, 'attached_sides' => array_keys($refs)];
+}
