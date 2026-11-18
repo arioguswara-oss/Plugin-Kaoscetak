@@ -55,6 +55,10 @@ $wpdb = new class {
 function sanro_studio_validate_product_design($product_id, $design) {
     return in_array($design, [['front' => 'valid'], ['front' => 'changed']], true) ? ['valid' => true] : ['valid' => false, 'error' => 'invalid_design'];
 }
+// CLI fixture: no image objects or master references are used in these CAS cases.
+function sanro_studio_draft_image_binding_allowed($design, $master_refs, $design_id = null) {
+    return is_array($design) && empty($master_refs) && !isset($design['front']['objects']) && !isset($design['back']['objects']);
+}
 require __DIR__ . '/../plugins/sanro-studio/includes/draft.php';
 $checks = 0;
 function check_draft($expected, $actual, $label) {
