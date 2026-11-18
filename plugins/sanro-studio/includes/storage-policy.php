@@ -74,10 +74,21 @@ function sanro_studio_store_private_preview($design_id, $side, $bytes) {
     // Exclusive creation: no overwrite or symlink traversal of an existing file.
     $handle = @fopen($path, 'x');
     if ($handle === false) return ['valid' => false, 'error' => 'preview_write_failed'];
-    @chmod($path, 0600);
-    $written = fwrite($handle, $bytes);
+    if (!@chmod($path, 0600)) {
+        fclose($handle);
+        @unlink($path);
+        return ['valid' => false, 'error' => 'preview_write_failed'];
+    }
+    $offset = 0;
+    $length = strlen($bytes);
+    while ($offset < $length) {
+        $written = fwrite($handle, substr($bytes, $offset));
+        if (!is_int($written) || $written <= 0) break;
+        $offset += $written;
+    }
+    $flushed = $offset === $length && fflush($handle);
     $closed = fclose($handle);
-    if ($written !== strlen($bytes) || !$closed) {
+    if (!$flushed || !$closed) {
         @unlink($path);
         return ['valid' => false, 'error' => 'preview_write_failed'];
     }
