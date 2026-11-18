@@ -2,8 +2,8 @@
 defined('ABSPATH') || exit;
 
 function sanro_studio_admin_menu() {
-    add_submenu_page('woocommerce', 'SANRO Studio', 'SANRO Studio', 'manage_options',
-        'sanro-studio', 'sanro_studio_render_settings');
+    add_menu_page('SANRO Studio', 'SANRO Studio', 'manage_options',
+        'sanro-studio', 'sanro_studio_render_settings', 'dashicons-art', 56);
 }
 
 function sanro_studio_save_settings() {
@@ -17,10 +17,12 @@ function sanro_studio_save_settings() {
         wp_die('Gunakan formulir pengaturan.', '', ['response' => 405]);
     }
     check_admin_referer('sanro_studio_settings');
-    // One dedicated option; never write Lumise, KLD, OAuth, product or order settings here.
-    update_option('sanro_studio_options', [
-        'admin_preview' => isset($_POST['admin_preview']) && $_POST['admin_preview'] === 'yes' ? 'yes' : 'no',
-    ], false);
+    // Dedicated native setting: only published WordPress pages can be selected.
+    $page_id = isset($_POST['editor_page_id']) ? absint(wp_unslash($_POST['editor_page_id'])) : 0;
+    if ($page_id && (get_post_type($page_id) !== 'page' || get_post_status($page_id) !== 'publish')) {
+        wp_die('Halaman editor harus berupa halaman WordPress yang diterbitkan.', '', ['response' => 400]);
+    }
+    update_option('sanro_studio_editor_page_id', $page_id, false);
     wp_safe_redirect(admin_url('admin.php?page=sanro-studio&saved=1'));
     exit;
 }
@@ -91,6 +93,15 @@ function sanro_studio_render_settings() {
             . '</td></tr>';
     }
     echo '</tbody></table>';
+    echo '<h2>Pengaturan Umum</h2>';
+    echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+    echo '<input type="hidden" name="action" value="sanro_studio_save">';
+    wp_nonce_field('sanro_studio_settings');
+    echo '<p><label for="sanro-editor-page">Halaman Editor</label></p>';
+    wp_dropdown_pages(['name' => 'editor_page_id', 'id' => 'sanro-editor-page', 'selected' => (int) get_option('sanro_studio_editor_page_id', 0), 'show_option_none' => '— Pilih halaman WordPress —', 'option_none_value' => '0', 'post_status' => 'publish']);
+    echo '<p class="description">Pilih halaman WordPress yang akan menjadi editor SANRO Studio. Nama dan slug bebas. Editor buyer tetap memerlukan aktivasi staging.</p>';
+    submit_button('Simpan Halaman Editor');
+    echo '</form>';
     // Legacy editor links are never promoted in the native admin mode.
     if ($legacy_compat) {
         $page_id = (int) get_option('lumise_editor_page', 0);
