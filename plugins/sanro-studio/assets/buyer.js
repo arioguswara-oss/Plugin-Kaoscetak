@@ -441,6 +441,8 @@
        ||object.y+height>area.height+0.000001)
        throw new Error('Gambar '+name+' di luar area aman.');
       if(!design[name])design[name]={category:d.category,objects:[]};
+      design[name].category=d.category;
+      design[name].objects=design[name].objects.filter(item=>item.type!=='image');
       design[name].objects.push(object);
      }
      if(editRevision!==revisionAtStart)throw new Error('Desain berubah sebelum metadata disimpan.');
