@@ -60,4 +60,33 @@ $badBatch = [$line + ['data'=>$batchProduct]];
 $badBatch[0]['sanro_studio_line_subtotal'] = 1;
 check_adapter(sanro_studio_stage_price_cart_batch($contract, $badBatch)['valid'] === false, 'tampered batch rejected');
 check_adapter($batchProduct->price === null, 'batch rejection does not mutate price');
-echo "PASS: 14 staging cart adapter checks\n";
+class SanroTransactionCart {
+    public $lines = [];
+    public $totals = 0;
+    public $failAfter = 0;
+    function get_cart() { return $this->lines; }
+    function add_to_cart($product, $qty, $variation, $attrs, $meta) {
+        if ($this->failAfter > 0 && count($this->lines) >= $this->failAfter) return false;
+        $key = 'line-'.count($this->lines);
+        $this->lines[$key] = array_merge(['product_id'=>$product, 'quantity'=>$qty,
+            'data'=>new SanroPriceProduct()], $meta);
+        return $key;
+    }
+    function remove_cart_item($key) { unset($this->lines[$key]); return true; }
+    function calculate_totals() { $this->totals++; }
+}
+$transaction = new SanroTransactionCart();
+check_adapter(sanro_studio_stage_commit_cart_lines($contract, $transaction)['valid'] === false, 'commit disabled separately');
+check_adapter(count($transaction->lines) === 0, 'disabled commit does not mutate');
+define('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT', true);
+$committed = sanro_studio_stage_commit_cart_lines($contract, $transaction);
+check_adapter($committed['valid'] === true && count($transaction->lines) === 1, 'staging cart line inserted');
+check_adapter($transaction->lines['line-0']['data']->price === '65000', 'inserted cart line priced');
+check_adapter($transaction->totals === 1, 'cart totals recalculated');
+$two = $contract;
+$two['quote']['items'] = ['M'=>['quantity'=>1,'unit_price'=>65000,'subtotal'=>65000],
+    'L'=>['quantity'=>1,'unit_price'=>65000,'subtotal'=>65000]];
+$failed = new SanroTransactionCart(); $failed->failAfter = 1;
+check_adapter(sanro_studio_stage_commit_cart_lines($two, $failed)['valid'] === false, 'partial add failure detected');
+check_adapter(count($failed->lines) === 0, 'partial add rolled back');
+echo "PASS: 21 staging cart adapter checks\n";
