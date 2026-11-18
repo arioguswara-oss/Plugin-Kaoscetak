@@ -12,6 +12,9 @@ function get_option($key, $fallback) {
     if (!empty($GLOBALS['draft_lock_on_second_read']) && ++$GLOBALS['draft_read_count'] === 2) {
         $GLOBALS['options'][$key]['status'] = 'locked';
     }
+    if (!empty($GLOBALS['draft_rebind_on_second_read']) && ++$GLOBALS['draft_read_count'] === 2) {
+        $GLOBALS['options'][$key]['product_id'] = 18;
+    }
     return $GLOBALS['options'][$key] ?? $fallback;
 }
 function update_option($key, $value, $autoload = null) {
@@ -53,6 +56,12 @@ $GLOBALS['draft_lock_on_second_read'] = true;
 check_draft('draft_locked', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'interleaved lock rejected');
 $GLOBALS['draft_lock_on_second_read'] = false;
 $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['status'] = 'draft';
+// Reject product rebinding between the initial authorization read and final write.
+$GLOBALS['draft_read_count'] = 0;
+$GLOBALS['draft_rebind_on_second_read'] = true;
+check_draft('draft_locked', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'interleaved product rebinding rejected');
+$GLOBALS['draft_rebind_on_second_read'] = false;
+$GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['product_id'] = 17;
 $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['status'] = 'locked';
 check_draft('draft_locked', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'locked draft denied');
 check_draft('storage_failed', sanro_studio_create_draft(17, ['front' => 'valid'])['error'], 'collision fails closed');
