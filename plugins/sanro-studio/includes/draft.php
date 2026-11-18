@@ -259,5 +259,25 @@ function sanro_studio_lock_draft_for_order_item($id, $token, $order, $item_id) {
     if ((int) $draft['product_id'] !== (int) $items[$item_id]->get_product_id()) {
         return ['valid' => false, 'error' => 'product_mismatch'];
     }
+    // Requote the authoritative saved design at the transaction boundary.
+    // Never infer price or quantities from client-supplied order metadata.
+    if (!function_exists('sanro_studio_quote_size_quantities')
+        || !is_array($draft['design'] ?? null)
+        || !is_array($draft['design']['quantities'] ?? null)) {
+        return ['valid' => false, 'error' => 'quote_unavailable'];
+    }
+    $design = $draft['design'];
+    $quote = sanro_studio_quote_size_quantities(
+        (int) $draft['product_id'], $design, $design['quantities'],
+        $design['long_sleeve'] ?? false
+    );
+    if (empty($quote['valid'])) return $quote;
+    if (!isset($quote['total_quantity'], $quote['total_price'])
+        || !is_int($quote['total_quantity']) || $quote['total_quantity'] < 1
+        || !is_int($quote['total_price']) || $quote['total_price'] < 0
+        || !method_exists($items[$item_id], 'get_quantity')
+        || (int) $items[$item_id]->get_quantity() !== $quote['total_quantity']) {
+        return ['valid' => false, 'error' => 'order_quantity_mismatch'];
+    }
     return sanro_studio_lock_draft_for_order($id, $token, $order_id, $item_id);
 }
