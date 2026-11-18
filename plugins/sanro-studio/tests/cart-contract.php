@@ -25,3 +25,13 @@ $contract = sanro_studio_prepare_cart_design_contract('draft', 'owner', 12);
 verify($contract['valid'] && $contract['quote']['total_price'] === 150000, 'server quote retained');
 verify($contract['checkout_enabled'] === false && $contract['cart_mutation_enabled'] === false, 'checkout and cart writes remain disabled');
 verify(!isset($contract['owner_token']) && !isset($contract['design']), 'no owner secret or raw design leaked');
+
+$cart = ['product_id' => 12, 'sanro_studio_design_id' => 'draft', 'quantity' => 2];
+verify(sanro_studio_validate_cart_design_identity($contract, $cart)['valid'], 'matching cart identity');
+$wrongProduct = $cart; $wrongProduct['product_id'] = 13;
+verify(sanro_studio_validate_cart_design_identity($contract, $wrongProduct)['error'] === 'cart_identity_mismatch', 'cart product substitution denied');
+$wrongDraft = $cart; $wrongDraft['sanro_studio_design_id'] = 'another-draft';
+verify(sanro_studio_validate_cart_design_identity($contract, $wrongDraft)['error'] === 'cart_identity_mismatch', 'cart design substitution denied');
+$wrongQty = $cart; $wrongQty['quantity'] = 3;
+verify(sanro_studio_validate_cart_design_identity($contract, $wrongQty)['error'] === 'cart_quantity_mismatch', 'cart quantity tampering denied');
+verify(sanro_studio_validate_cart_design_identity($contract, $cart)['checkout_enabled'] === false, 'cart validation does not enable checkout');
