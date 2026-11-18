@@ -7,6 +7,7 @@ $GLOBALS['queried_id'] = 17;
 $GLOBALS['valid'] = true;
 $GLOBALS['enqueued'] = [];
 function absint($v) { return abs((int)$v); }
+function get_option($key, $default=false) { return $default; }
 function is_product() { return $GLOBALS['is_product']; }
 function get_queried_object_id() { return $GLOBALS['queried_id']; }
 function sanro_studio_public_editor_config($id) { return ['valid'=>$GLOBALS['valid'] && $id===17,'product_id'=>$id,'safe_areas'=>['front'=>['width'=>20,'height'=>30]]]; }
