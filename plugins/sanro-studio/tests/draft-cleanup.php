@@ -73,3 +73,12 @@ check(count($wpdb->rows)===3, 'active, locked and raced records retained');
 check(unserialize($wpdb->rows[2]['option_value'])['status']==='locked', 'concurrent lock mutation is preserved');
 $last = sanro_studio_cleanup_expired_drafts(2, $third['next_cursor']);
 check($last['scanned']===0 && $last['next_cursor']===4, 'empty scan preserves cursor');
+
+$wpdb->rows = [row(10, ['status'=>'draft','expires_at'=>time()-3600])];
+$wpdb->options = 'invalid-table;DROP';
+$invalid = sanro_studio_cleanup_expired_drafts();
+check(($invalid['error'] ?? '') === 'storage_unavailable' && count($wpdb->rows)===1, 'invalid table name fails closed');
+$wpdb->options = 'wp_options';
+$wpdb->rows = [row(11, ['status'=>'draft','expires_at'=>time()+3600])];
+$active = sanro_studio_cleanup_expired_drafts(10);
+check($active['deleted']===0 && count($wpdb->rows)===1, 'unexpired record is retained');
