@@ -62,7 +62,8 @@ function verify_rest($condition, $label) {
 }
 $_SERVER['REMOTE_ADDR'] = '192.0.2.20';
 sanro_studio_register_draft_routes();
-verify_rest(count($GLOBALS['routes']) === 2, 'staging route patterns registered');
+verify_rest(isset($GLOBALS['routes']['sanro-studio/v1/drafts']), 'draft creation route registered');
+verify_rest(isset($GLOBALS['routes']['sanro-studio/v1/drafts/(?P<id>[a-fA-F0-9-]{36})']), 'draft read/update route registered');
 verify_rest(sanro_studio_rest_draft_nonce(new SanroTestRequest([], ['X-Sanro-Draft-Nonce' => 'bad'])) instanceof WP_Error, 'invalid nonce rejected');
 verify_rest(sanro_studio_rest_draft_nonce(new SanroTestRequest([], ['X-Sanro-Draft-Nonce' => 'good-nonce'])) === true, 'valid nonce accepted');
 verify_rest(!sanro_studio_draft_payload_allowed(['image' => 'data:image/png;base64,AAAA']), 'embedded image rejected');
