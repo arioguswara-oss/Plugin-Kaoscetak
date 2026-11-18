@@ -78,6 +78,7 @@
   const currentHeight=image.naturalWidth>0&&safe.clientHeight>0?d.imageSize*(safe.clientWidth/safe.clientHeight)*image.naturalHeight/image.naturalWidth:0;
   const nextHeight=currentHeight*ratio;
   d.imageX=Math.max(0,Math.min(100-next,d.imageX+(d.imageSize-next)/2));
+  if(nextHeight>100){q('#sanro-validation').textContent='Ukuran gambar terlalu tinggi untuk area aman.';return;}
   d.imageY=Math.max(0,Math.min(100-nextHeight,d.imageY+(currentHeight-nextHeight)/2));
   d.imageSize=next;render();
  });
