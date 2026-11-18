@@ -343,6 +343,28 @@ function sanro_studio_draft_payload_allowed($design, $allow_image_geometry = fal
     return true;
 }
 
+/** An image-only draft starts without printable objects, never as a quote. */
+function sanro_studio_image_bootstrap_allowed($design) {
+    if (!defined('SANRO_STUDIO_ENABLE_MASTER_UPLOAD')
+        || SANRO_STUDIO_ENABLE_MASTER_UPLOAD !== true
+        || !defined('SANRO_STUDIO_ENABLE_PRIVATE_MASTERS')
+        || SANRO_STUDIO_ENABLE_PRIVATE_MASTERS !== true
+        || !is_array($design)
+        || array_diff(array_keys($design), ['shirt_color', 'quantities', 'long_sleeve'])) {
+        return false;
+    }
+    return isset($design['shirt_color'], $design['quantities'], $design['long_sleeve'])
+        && is_string($design['shirt_color'])
+        && in_array($design['shirt_color'], ['#ffffff','#171717','#b91c1c','#1d4ed8','#166534'], true)
+        && is_bool($design['long_sleeve'])
+        && is_array($design['quantities'])
+        && !array_diff(array_keys($design['quantities']), ['S','M','L','XL','2XL','3XL','4XL','5XL'])
+        && array_reduce($design['quantities'], static function ($valid, $count) {
+            return $valid && is_int($count) && $count >= 0 && $count <= 999;
+        }, true)
+        && array_sum($design['quantities']) <= 5000;
+}
+
 function sanro_studio_rest_create_draft($request) {
     $product_id = $request->get_param('product_id');
     $design = $request->get_param('design');
@@ -352,9 +374,11 @@ function sanro_studio_rest_create_draft($request) {
     }
     // Validate before consuming the guest creation budget. Invalid geometry
     // must not create records or consume a legitimate customer's allowance.
-    $validation = sanro_studio_validate_product_design($product_id, $design);
-    if (empty($validation['valid'])) {
-        return sanro_studio_rest_draft_response($validation);
+    if (!sanro_studio_image_bootstrap_allowed($design)) {
+        $validation = sanro_studio_validate_product_design($product_id, $design);
+        if (empty($validation['valid'])) {
+            return sanro_studio_rest_draft_response($validation);
+        }
     }
     if (!sanro_studio_draft_creation_budget()) {
         return new WP_Error('sanro_rate_limited', 'Draft creation temporarily unavailable.', ['status' => 429]);
