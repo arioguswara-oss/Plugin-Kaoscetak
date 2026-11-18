@@ -49,3 +49,20 @@ function sanro_studio_filter_settings($settings) {
     }
     return $settings;
 }
+
+/**
+ * Native SANRO buyer capability report, independent of the legacy editor.
+ * This is a capability inventory, not a release-readiness assertion.
+ */
+function sanro_studio_native_capabilities() {
+    return [
+        'buyer_editor' => function_exists('sanro_studio_render_buyer_editor'),
+        'product_configuration' => function_exists('sanro_studio_public_editor_config'),
+        'design_validation' => function_exists('sanro_studio_validate_product_design'),
+        'server_quote' => function_exists('sanro_studio_quote_size_quantities'),
+        'private_text_drafts' => function_exists('sanro_studio_create_draft'),
+        'private_master_storage' => false,
+        'checkout' => false,
+        'production_ready' => false,
+    ];
+}
