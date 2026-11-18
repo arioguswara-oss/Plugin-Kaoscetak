@@ -124,3 +124,33 @@ function sanro_studio_update_draft($id, $token, $design) {
     wp_cache_delete($key, 'options');
     return ['valid' => true, 'design_id' => $id];
 }
+
+/**
+ * Delete only expired, still-draft records in small batches.
+ * Never touch locked/order-linked records. WP options are private metadata,
+ * not the Google Drive master file store.
+ */
+function sanro_studio_cleanup_expired_drafts($limit = 50) {
+    global $wpdb;
+    if (!is_object($wpdb) || !isset($wpdb->options)
+        || !preg_match('/^[A-Za-z0-9_]+$/D', $wpdb->options)
+        || !method_exists($wpdb, 'get_col') || !method_exists($wpdb, 'prepare')
+        || !function_exists('delete_option')) return 0;
+    $limit = max(1, min(100, (int) $limit));
+    // A bounded scan avoids loading every draft into memory.
+    $keys = $wpdb->get_col($wpdb->prepare(
+        "SELECT option_name FROM `{$wpdb->options}` WHERE option_name LIKE %s ORDER BY option_id ASC LIMIT %d",
+        $wpdb->esc_like('sanro_studio_draft_') . '%', $limit
+    ));
+    if (!is_array($keys)) return 0;
+    $deleted = 0;
+    foreach ($keys as $key) {
+        if (!is_string($key) || !preg_match('/^sanro_studio_draft_[a-f0-9-]{36}$/iD', $key)) continue;
+        $record = get_option($key, false);
+        if (!is_array($record) || ($record['status'] ?? null) !== 'draft') continue;
+        $expires = $record['expires_at'] ?? null;
+        if (!is_int($expires) || $expires > time()) continue;
+        if (delete_option($key)) $deleted++;
+    }
+    return $deleted;
+}
