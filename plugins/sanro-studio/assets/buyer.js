@@ -75,6 +75,7 @@
  q('#sanro-image-size').addEventListener('input',e=>{
   const d=sides[side],next=Number(e.target.value);
   if(!Number.isFinite(next)||next<Number(e.target.min)||next>100)return;
+  if(!d.url){d.imageSize=next;render();return;}
   // Scale proportionally around the current center, then constrain within the safe area.
   const ratio=next/d.imageSize;
   const currentHeight=image.naturalWidth>0&&safe.clientHeight>0?d.imageSize*(safe.clientWidth/safe.clientHeight)*image.naturalHeight/image.naturalWidth:0;
