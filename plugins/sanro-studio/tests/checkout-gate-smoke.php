@@ -156,6 +156,14 @@ try {
     sanro_studio_stage_checkout_verify_order_batch(new GateOrder([$wrong_design]), []);
 } catch (RuntimeException $exception) { $wrong_rejected = true; }
 gate_check($wrong_rejected, 'mismatched design order metadata rejected');
+$underpriced = new GateOrderItem('1.00');
+$underpriced->update_meta_data('_sanro_studio_size', 'M');
+$underpriced->update_meta_data('_sanro_studio_design_id', $id);
+$underprice_rejected = false;
+try {
+    sanro_studio_stage_checkout_verify_order_batch(new GateOrder([$underpriced]), []);
+} catch (RuntimeException $exception) { $underprice_rejected = true; }
+gate_check($underprice_rejected, 'underpriced order line rejected before save');
 $GLOBALS['sanro_studio_checkout_verified']['bound_sizes'] = [];
 $incomplete_rejected = false;
 try {
@@ -187,4 +195,4 @@ $_POST['sanro_studio_checkout_token'] = 'not-a-token';
 gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'invalid token rejected');
 unset($_POST['sanro_studio_checkout_token'], $_POST['sanro_studio_checkout_nonce']);
 gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'missing checkout credentials rejected');
-echo "PASS: 34 checkout gate checks\n";
+echo "PASS: 35 checkout gate checks\n";
