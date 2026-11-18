@@ -118,11 +118,29 @@
   target.pending=url;probe.src=url;e.target.value='';
  });
  q('#sanro-remove-image').addEventListener('click',()=>{const d=sides[side];if(d.url)URL.revokeObjectURL(d.url);if(d.pending)URL.revokeObjectURL(d.pending);d.url=null;d.pending=null;image.removeAttribute('src');render()});
- function drag(el,prefix){let start=null;el.addEventListener('pointerdown',e=>{if(el.hidden)return;const d=sides[side];start={side,x:e.clientX,y:e.clientY,px:d[prefix+'X'],py:d[prefix+'Y']};el.setPointerCapture(e.pointerId)});
- el.addEventListener('pointermove',e=>{if(!start)return;const d=sides[start.side],rect=safe.getBoundingClientRect();if(!rect.width||!rect.height)return;
-  d[prefix+'X']=Math.max(0,Math.min(100-el.offsetWidth/rect.width*100,start.px+(e.clientX-start.x)/rect.width*100));
-  d[prefix+'Y']=Math.max(0,Math.min(100-el.offsetHeight/rect.height*100,start.py+(e.clientY-start.y)/rect.height*100));render()});
- el.addEventListener('pointerup',()=>start=null);el.addEventListener('pointercancel',()=>start=null)}
+ function drag(el,prefix){
+  let start=null;
+  el.addEventListener('pointerdown',e=>{
+   if(el.hidden||!e.isPrimary)return;
+   const d=sides[side];
+   start={pointerId:e.pointerId,side,x:e.clientX,y:e.clientY,px:d[prefix+'X'],py:d[prefix+'Y']};
+   el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener('pointermove',e=>{
+   if(!start||e.pointerId!==start.pointerId||side!==start.side)return;
+   const d=sides[start.side],rect=safe.getBoundingClientRect();
+   if(!rect.width||!rect.height)return;
+   const maxX=Math.max(0,100-el.offsetWidth/rect.width*100);
+   const maxY=Math.max(0,100-el.offsetHeight/rect.height*100);
+   d[prefix+'X']=Math.max(0,Math.min(maxX,start.px+(e.clientX-start.x)/rect.width*100));
+   d[prefix+'Y']=Math.max(0,Math.min(maxY,start.py+(e.clientY-start.y)/rect.height*100));
+   render();
+  });
+  const finish=e=>{if(start&&e.pointerId===start.pointerId)start=null;};
+  el.addEventListener('pointerup',finish);
+  el.addEventListener('pointercancel',finish);
+  el.addEventListener('lostpointercapture',()=>{start=null;});
+ }
  // Text-only staging draft: no master upload, checkout or public share.
  const saveButton=q('#sanro-save-draft'),saveStatus=q('#sanro-save-status');
  let savedId=null,ownerToken=null,saving=false;
