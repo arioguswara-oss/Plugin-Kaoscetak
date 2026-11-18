@@ -96,7 +96,8 @@
   for(const name of ['front','back']){
    const entry=design[name];if(!entry)continue;
    if(!config.safe_areas[name]||!categories[entry.category]||!Array.isArray(entry.objects)
-    ||entry.objects.length!==1||entry.objects[0].type!=='text'||typeof entry.text!=='string')throw new Error('Format draft tidak didukung.');
+    ||entry.objects.length!==1||entry.objects[0].type!=='text'||typeof entry.text!=='string'
+    ||!Number.isInteger(entry.font_size)||entry.font_size<10||entry.font_size>48)throw new Error('Format draft tidak didukung.');
    const obj=entry.objects[0],area=config.safe_areas[name];
    if(![obj.x,obj.y,obj.width,obj.height].every(Number.isFinite)||obj.width<=0||obj.height<=0
     ||obj.x<0||obj.y<0||obj.x+obj.width>area.width+0.000001
@@ -105,7 +106,7 @@
   for(const name of ['front','back']){
    const entry=design[name];const d=sides[name];
    if(!entry){d.text='';continue}
-   d.text=entry.text;d.category=entry.category;
+   d.text=entry.text;d.category=entry.category;d.fontSize=entry.font_size;
    d.textX=entry.objects[0].x/config.safe_areas[name].width*100;
    d.textY=entry.objects[0].y/config.safe_areas[name].height*100;
   }
@@ -147,7 +148,7 @@
     ||object.width>limit[0]+0.000001||object.height>limit[1]+0.000001){
     throw new Error('Teks di luar area aman atau kategori cetak.');
    }
-   design[name]={category:d.category,objects:[object],text:d.text};
+   design[name]={category:d.category,objects:[object],text:d.text,font_size:d.fontSize};
   }
   if(!Object.keys(design).length)throw new Error('Tambahkan teks terlebih dahulu.');
   return design;
