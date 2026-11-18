@@ -87,6 +87,54 @@
   d[prefix+'X']=Math.max(0,Math.min(100-el.offsetWidth/rect.width*100,start.px+(e.clientX-start.x)/rect.width*100));
   d[prefix+'Y']=Math.max(0,Math.min(100-el.offsetHeight/rect.height*100,start.py+(e.clientY-start.y)/rect.height*100));render()});
  el.addEventListener('pointerup',()=>start=null);el.addEventListener('pointercancel',()=>start=null)}
+ // Text-only staging draft: no master upload, checkout or public share.
+ const saveButton=q('#sanro-save-draft'),saveStatus=q('#sanro-save-status');
+ let savedId=null,ownerToken=null,saving=false;
+ function exportTextDraft(){
+  const design={};
+  for(const name of ['front','back']){
+   const d=sides[name],area=config.safe_areas[name];
+   if(!area)continue;
+   if(d.url||d.pending)throw new Error('Gambar belum dapat disimpan. Hapus gambar terlebih dahulu.');
+   if(!d.text.trim())continue;
+   const current=side;
+   side=name;render();
+   const rect=safe.getBoundingClientRect(),box=text.getBoundingClientRect();
+   side=current;render();
+   if(!rect.width||!rect.height||!box.width||!box.height)throw new Error('Ukuran pratinjau belum siap.');
+   const object={type:'text',x:d.textX*area.width/100,y:d.textY*area.height/100,
+    width:box.width*area.width/rect.width,height:box.height*area.height/rect.height};
+   const limit=categories[d.category];
+   if(!limit||object.x<0||object.y<0||object.x+object.width>area.width+0.000001
+    ||object.y+object.height>area.height+0.000001
+    ||object.width>limit[0]+0.000001||object.height>limit[1]+0.000001){
+    throw new Error('Teks di luar area aman atau kategori cetak.');
+   }
+   design[name]={category:d.category,objects:[object],text:d.text};
+  }
+  if(!Object.keys(design).length)throw new Error('Tambahkan teks terlebih dahulu.');
+  return design;
+ }
+ if(saveButton&&config.draft_api){
+  saveButton.addEventListener('click',async()=>{
+   if(saving)return;
+   let design;
+   try{design=exportTextDraft()}catch(error){saveStatus.textContent=error.message;return}
+   saving=true;saveButton.disabled=true;saveStatus.textContent='Menyimpan metadata teks…';
+   try{
+    const headers={'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce};
+    if(savedId&&ownerToken)headers['X-Sanro-Owner-Token']=ownerToken;
+    const endpoint=savedId?config.draft_api.url+'/'+encodeURIComponent(savedId):config.draft_api.url;
+    const payload=savedId?{design}:{product_id:config.product_id,design};
+    const response=await fetch(endpoint,{method:'POST',headers,body:JSON.stringify(payload),credentials:'same-origin',cache:'no-store'});
+    const result=await response.json();
+    if(!response.ok||!result.valid)throw new Error('Penyimpanan gagal ('+response.status+').');
+    if(!savedId){savedId=result.design_id;ownerToken=result.owner_token}
+    saveStatus.textContent='Draft teks tersimpan. Design ID: '+savedId+'. Simpan token pemilik diperlukan untuk akses berikutnya; fitur buka ulang belum tersedia.';
+   }catch(error){saveStatus.textContent=error.message||'Penyimpanan gagal.'}
+   finally{saving=false;saveButton.disabled=false}
+  });
+ }
  image.addEventListener('load',validate);
  drag(image,'image');drag(text,'text');window.addEventListener('resize',validate);render();
 })();
