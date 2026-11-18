@@ -35,6 +35,10 @@ function wp_json_encode($value) { return json_encode($value); }
 function sanro_studio_public_editor_config($id) {
     return ['valid' => $id === 17];
 }
+function sanro_studio_validate_product_design($id, $design) {
+    return isset($design['front']) && is_array($design['front'])
+        ? ['valid' => true] : ['valid' => false, 'error' => 'invalid_design'];
+}
 function sanro_studio_create_draft($id, $design) {
     return ['valid' => true, 'design_id' => '12345678-1234-4234-8234-123456789abc', 'owner_token' => str_repeat('a', 64)];
 }
@@ -60,6 +64,8 @@ verify_rest(!sanro_studio_draft_payload_allowed(['image' => 'data:image/png;base
 verify_rest(!sanro_studio_draft_payload_allowed(['text' => str_repeat('x', 17000)]), 'oversize rejected');
 verify_rest(sanro_studio_draft_payload_allowed(['front' => ['text' => 'OK']]), 'small metadata accepted');
 verify_rest(sanro_studio_rest_create_draft(new SanroTestRequest(['product_id' => 0, 'design' => []])) instanceof WP_Error, 'invalid product rejected');
+verify_rest(sanro_studio_rest_create_draft(new SanroTestRequest(['product_id' => 17, 'design' => []])) instanceof WP_Error, 'invalid geometry rejected before rate limit');
+verify_rest(count($GLOBALS['transients']) === 0, 'invalid geometry does not consume budget');
 $request = new SanroTestRequest(['product_id' => 17, 'design' => ['front' => ['text' => 'OK']]]);
 for ($i = 0; $i < 20; $i++) {
     verify_rest(sanro_studio_rest_create_draft($request)['valid'] === true, 'creation within budget ' . $i);
