@@ -192,3 +192,43 @@ function sanro_studio_stage_authorize_checkout($design_id, $owner_token, $produc
         'total_price' => $verified['total_price'],
         'requires_order_item_validation' => true];
 }
+
+/**
+ * Prepare metadata for every unsaved order item after verifying the complete
+ * size batch. A duplicate binding or missing metadata API rejects the entire
+ * batch before any item is mutated. Caller still owns persistence/rollback.
+ */
+function sanro_studio_stage_bind_size_order_batch($contract, $order_items) {
+    if (!defined('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT')
+        || SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT !== true) {
+        return ['valid' => false, 'error' => 'order_binding_disabled'];
+    }
+    $verified = sanro_studio_validate_size_checkout_batch($contract, $order_items);
+    if (empty($verified['valid'])) return $verified;
+    $prepared = sanro_studio_prepare_size_cart_lines($contract);
+    $candidates = [];
+    foreach ($prepared['lines'] as $line) {
+        $candidates[$line['sanro_studio_size']] = $line;
+    }
+    foreach ($order_items as $size => $item) {
+        if (!is_object($item) || !method_exists($item, 'get_meta')
+            || !method_exists($item, 'update_meta_data')
+            || !isset($candidates[$size])
+            || !is_string($candidates[$size]['sanro_studio_design_id'])) {
+            return ['valid' => false, 'error' => 'order_metadata_unavailable'];
+        }
+        foreach (['_sanro_studio_design_id', '_sanro_studio_size'] as $key) {
+            $existing = $item->get_meta($key, true);
+            if ($existing !== '' && $existing !== null) {
+                return ['valid' => false, 'error' => 'order_design_already_bound'];
+            }
+        }
+    }
+    foreach ($order_items as $size => $item) {
+        $item->update_meta_data('_sanro_studio_design_id', $candidates[$size]['sanro_studio_design_id']);
+        $item->update_meta_data('_sanro_studio_size', $size);
+    }
+    return ['valid' => true, 'bound_items' => count($order_items),
+        'total_price' => $verified['total_price'],
+        'requires_order_save' => true, 'checkout_enabled' => false];
+}
