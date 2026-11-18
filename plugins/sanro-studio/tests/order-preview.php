@@ -173,3 +173,24 @@ $failedReady = new SanroProductionReadyOrderFixture();
 $failedReady->saveResult = false;
 verify(sanro_studio_mark_order_production_ready($failedReady)['error'] === 'production_ready_save_failed',
     'production-ready persistence failure reported');
+
+$folderItem = new SanroMutablePreviewItem();
+$folderItem->meta['_sanro_studio_design_id'] = $id;
+$folderItem->meta['_sanro_studio_preview_front_ref'] = $ref;
+$folderOrder = new SanroProductionItemOrderFixture([60 => $folderItem], true);
+$folderId = 'driveFolder_0123456789';
+$GLOBALS['admin_enabled'] = false;
+verify(sanro_studio_attach_item_production_folder_id($folderOrder, 60, $folderId)['error'] === 'forbidden',
+    'folder reference attachment denies non-admin');
+$GLOBALS['admin_enabled'] = true;
+verify(sanro_studio_attach_item_production_folder_id($folderOrder, 60, 'https://drive.google.com/folder')['error'] === 'invalid_folder_id',
+    'folder URL rejected in favor of opaque ID');
+verify(sanro_studio_attach_item_production_folder_id($folderOrder, 60, $folderId)['valid'],
+    'eligible paid item accepts opaque folder ID');
+verify(sanro_studio_attach_item_production_folder_id($folderOrder, 60, $folderId)['already_attached'],
+    'same folder ID is idempotent');
+verify(sanro_studio_attach_item_production_folder_id($folderOrder, 60, 'differentFolder_123456')['error'] === 'folder_conflict',
+    'conflicting Drive folder reference rejected');
+$pendingFolderOrder = new SanroProductionItemOrderFixture([60 => $folderItem], false);
+verify(sanro_studio_attach_item_production_folder_id($pendingFolderOrder, 60, $folderId)['error'] === 'production_not_ready',
+    'unpaid and not-ready order rejects folder attachment');
