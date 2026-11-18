@@ -27,6 +27,22 @@ function update_option($key, $value, $autoload = null) {
     $GLOBALS['options'][$key] = $value;
     return true;
 }
+function maybe_serialize($value) { return serialize($value); }
+function wp_cache_delete($key, $group) { return true; }
+$wpdb = new class {
+    public $options = 'wp_options';
+    public function update($table, $data, $where, $formats, $where_formats) {
+        if ($table !== $this->options || !isset($where['option_name'], $where['option_value'])) return false;
+        $key = $where['option_name'];
+        if (!isset($GLOBALS['options'][$key])) return 0;
+        if (!empty($GLOBALS['draft_cas_conflict'])) {
+            $GLOBALS['options'][$key]['status'] = 'locked';
+        }
+        if (serialize($GLOBALS['options'][$key]) !== $where['option_value']) return 0;
+        $GLOBALS['options'][$key] = unserialize($data['option_value'], ['allowed_classes' => false]);
+        return 1;
+    }
+};
 function sanro_studio_validate_product_design($product_id, $design) {
     return $design === ['front' => 'valid'] ? ['valid' => true] : ['valid' => false, 'error' => 'invalid_design'];
 }
@@ -63,6 +79,10 @@ $first_update_at = $GLOBALS['options']['sanro_studio_draft_' . $created['design_
 check_draft(true, sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['valid'], 'immediate repeated save');
 check_draft(true, $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['updated_at'] > $first_update_at, 'monotonic update timestamp');
 check_draft(true, sanro_studio_read_draft($created['design_id'], $created['owner_token'])['valid'], 'read after update');
+$GLOBALS['draft_cas_conflict'] = true;
+check_draft('draft_conflict', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'CAS detects concurrent lock before write');
+$GLOBALS['draft_cas_conflict'] = false;
+$GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['status'] = 'draft';
 // Simulate status changing between the first and second get_option reads.
 $GLOBALS['draft_read_count'] = 0;
 $GLOBALS['draft_lock_on_second_read'] = true;
