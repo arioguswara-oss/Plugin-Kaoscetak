@@ -35,3 +35,8 @@ $locked = sanro_studio_lock_draft_for_order($id, $token, 20);
 verify($locked['valid'] && $GLOBALS['record']['status'] === 'locked' && $GLOBALS['record']['order_id'] === 20, 'atomic lock persists order association');
 verify(sanro_studio_lock_draft_for_order($id, $token, 21)['error'] === 'draft_locked', 'second order cannot claim locked draft');
 verify(!isset($GLOBALS['record']['owner_token']), 'owner secret not persisted');
+
+$GLOBALS['record']['status'] = 'draft';
+$wpdb->affected = 0;
+verify(sanro_studio_lock_draft_for_order($id, $token, 22)['error'] === 'draft_conflict', 'compare-and-swap conflict rejects lock');
+verify($GLOBALS['record']['status'] === 'draft', 'failed compare-and-swap leaves draft unchanged');
