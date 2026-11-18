@@ -110,4 +110,18 @@ sanro_studio_stage_checkout_create_order_line_item(
 gate_check($order_line->get_meta('_sanro_studio_size')==='M', 'verified order item bound');
 gate_check($order_line->get_meta('_sanro_studio_design_id')===$id, 'verified order design bound');
 unset($GLOBALS['sanro_studio_checkout_verified']);
-echo "PASS: 19 checkout gate checks\n";
+function wp_verify_nonce($nonce, $action) {
+    return $nonce === 'validnonce' && $action === 'sanro_studio_checkout_auth';
+}
+$token64 = str_repeat('a', 64);
+$_POST['sanro_studio_checkout_nonce'] = 'validnonce';
+$_POST['sanro_studio_checkout_token'] = $token64;
+gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === $token64, 'nonce-verified checkout token');
+$_POST['sanro_studio_checkout_nonce'] = 'invalidnonce';
+gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'invalid nonce rejected');
+$_POST['sanro_studio_checkout_nonce'] = 'validnonce';
+$_POST['sanro_studio_checkout_token'] = 'not-a-token';
+gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'invalid token rejected');
+unset($_POST['sanro_studio_checkout_token'], $_POST['sanro_studio_checkout_nonce']);
+gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'missing checkout credentials rejected');
+echo "PASS: 23 checkout gate checks\n";
