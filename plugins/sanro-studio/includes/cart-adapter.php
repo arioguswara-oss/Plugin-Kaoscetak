@@ -45,3 +45,42 @@ function sanro_studio_stage_add_cart_lines($contract, $cart) {
     return ['valid' => true, 'lines' => $prepared['lines'],
         'requires_price_hook' => true, 'cart_mutation_enabled' => false];
 }
+
+/**
+ * Apply a server-authorized per-size unit price to a WooCommerce cart product
+ * object. Caller must reauthorize the draft and pass its fresh quote; no
+ * client-provided amount is trusted. No global price hook is registered.
+ */
+function sanro_studio_stage_price_cart_line($contract, $line, $product) {
+    if (!defined('SANRO_STUDIO_ENABLE_STAGING_CART')
+        || SANRO_STUDIO_ENABLE_STAGING_CART !== true
+        || !is_object($product) || !method_exists($product, 'set_price')
+        || !function_exists('get_woocommerce_currency')
+        || get_woocommerce_currency() !== 'IDR') {
+        return ['valid' => false, 'error' => 'staging_pricing_disabled'];
+    }
+    $expected = sanro_studio_prepare_size_cart_lines($contract);
+    if (empty($expected['valid'])) return $expected;
+    if (!is_array($line) || !isset($line['sanro_studio_size'])
+        || !is_string($line['sanro_studio_size'])) {
+        return ['valid' => false, 'error' => 'invalid_cart_line'];
+    }
+    $matched = null;
+    foreach ($expected['lines'] as $candidate) {
+        if ($candidate['sanro_studio_size'] === $line['sanro_studio_size']) {
+            $matched = $candidate;
+            break;
+        }
+    }
+    if ($matched === null) return ['valid' => false, 'error' => 'unknown_cart_size'];
+    foreach (['product_id', 'quantity', 'sanro_studio_design_id',
+        'sanro_studio_size', 'sanro_studio_unit_price',
+        'sanro_studio_line_subtotal', 'sanro_studio_quote_currency'] as $key) {
+        if (!array_key_exists($key, $line) || $line[$key] !== $matched[$key]) {
+            return ['valid' => false, 'error' => 'cart_line_mismatch'];
+        }
+    }
+    $product->set_price((string) $matched['sanro_studio_unit_price']);
+    return ['valid' => true, 'unit_price' => $matched['sanro_studio_unit_price'],
+        'currency' => 'IDR', 'requires_totals_recalculation' => true];
+}
