@@ -97,8 +97,8 @@ function sanro_studio_store_private_master($design_id, $side, $bytes) {
 /**
  * Authenticated draft-owner boundary for future private master uploads.
  * This is deliberately internal: no REST registration or checkout activation.
- * A draft can hold at most one current master per side; repeat uploads are
- * idempotent at the content-addressed storage layer.
+ * Files are content-addressed and uploads are idempotent. Binding one active
+ * master per side and enforcing upload quotas remain separate prerequisites.
  */
 function sanro_studio_store_owned_draft_master($design_id, $owner_token, $side, $bytes) {
     if (!function_exists('sanro_studio_read_draft')) {
@@ -116,4 +116,68 @@ function sanro_studio_store_owned_draft_master($design_id, $owner_token, $side, 
     $checked = sanro_studio_validate_master_bytes($bytes);
     if (empty($checked['valid'])) return $checked;
     return sanro_studio_store_private_master($design_id, $side, $bytes);
+}
+
+/**
+ * Owner-authorized readback of a private master, with full content integrity
+ * verification. No public URLs, REST routes, or download hooks are exposed.
+ */
+function sanro_studio_read_owned_draft_master($design_id, $owner_token, $side, $file_id) {
+    if (!defined('SANRO_STUDIO_ENABLE_PRIVATE_MASTERS')
+        || SANRO_STUDIO_ENABLE_PRIVATE_MASTERS !== true
+        || !defined('SANRO_STUDIO_PRIVATE_MASTER_DIR')
+        || !is_string(SANRO_STUDIO_PRIVATE_MASTER_DIR)) {
+        return ['valid' => false, 'error' => 'master_storage_disabled'];
+    }
+    if (!is_string($design_id) || !is_string($file_id)
+        || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id)
+        || !in_array($side, ['front', 'back'], true)) {
+        return ['valid' => false, 'error' => 'invalid_master_reference'];
+    }
+    $prefix = strtolower($design_id) . '-' . $side . '-';
+    if (strpos($file_id, $prefix) !== 0
+        || !preg_match('/^[a-f0-9]{64}[.](?:png|jpg)$/D', substr($file_id, strlen($prefix)))) {
+        return ['valid' => false, 'error' => 'invalid_master_reference'];
+    }
+    if (!function_exists('sanro_studio_read_draft')) {
+        return ['valid' => false, 'error' => 'draft_store_unavailable'];
+    }
+    $draft = sanro_studio_read_draft($design_id, $owner_token);
+    if (empty($draft['valid'])) return $draft;
+
+    $directory = realpath(SANRO_STUDIO_PRIVATE_MASTER_DIR);
+    $root = defined('ABSPATH') ? realpath(ABSPATH) : false;
+    $webroot = isset($_SERVER['DOCUMENT_ROOT']) && is_string($_SERVER['DOCUMENT_ROOT'])
+        ? realpath($_SERVER['DOCUMENT_ROOT']) : false;
+    if (!$directory || !is_dir($directory) || is_link(SANRO_STUDIO_PRIVATE_MASTER_DIR)
+        || !$root || !$webroot
+        || $directory === $root || strpos($directory, $root . DIRECTORY_SEPARATOR) === 0
+        || $directory === $webroot || strpos($directory, $webroot . DIRECTORY_SEPARATOR) === 0) {
+        return ['valid' => false, 'error' => 'unsafe_master_directory'];
+    }
+    $path = $directory . DIRECTORY_SEPARATOR . $file_id;
+    if (is_link($path) || !is_file($path) || !is_readable($path)) {
+        return ['valid' => false, 'error' => 'master_not_found'];
+    }
+    $size = @filesize($path);
+    if (!is_int($size) || $size < 100 || $size > 10485760) {
+        return ['valid' => false, 'error' => 'master_integrity_failed'];
+    }
+    $bytes = @file_get_contents($path);
+    if (!is_string($bytes) || strlen($bytes) !== $size) {
+        return ['valid' => false, 'error' => 'master_integrity_failed'];
+    }
+    $checked = sanro_studio_validate_master_bytes($bytes);
+    $expected_hash = substr($file_id, strlen($prefix), 64);
+    $expected_ext = $checked['mime'] ?? null;
+    $expected_ext = $expected_ext === 'image/png' ? 'png' : ($expected_ext === 'image/jpeg' ? 'jpg' : null);
+    if (empty($checked['valid'])
+        || !hash_equals($expected_hash, $checked['sha256'])
+        || $expected_ext === null
+        || substr($file_id, -strlen($expected_ext) - 1) !== '.' . $expected_ext) {
+        return ['valid' => false, 'error' => 'master_integrity_failed'];
+    }
+    return ['valid' => true, 'bytes' => $bytes, 'mime' => $checked['mime'],
+        'sha256' => $checked['sha256'], 'width' => $checked['width'],
+        'height' => $checked['height']];
 }
