@@ -73,7 +73,20 @@ function sanro_studio_store_private_preview($design_id, $side, $bytes) {
     $path = $directory . DIRECTORY_SEPARATOR . $filename;
     // Exclusive creation: no overwrite or symlink traversal of an existing file.
     $handle = @fopen($path, 'x');
-    if ($handle === false) return ['valid' => false, 'error' => 'preview_write_failed'];
+    if ($handle === false) {
+        // Repeated uploads of identical content are safe and idempotent.
+        // Never trust an existing file without verifying its full digest.
+        if (is_link($path) || !is_file($path) || !is_readable($path)
+            || filesize($path) !== $checked['bytes']) {
+            return ['valid' => false, 'error' => 'preview_write_failed'];
+        }
+        $existing = @file_get_contents($path);
+        if (!is_string($existing) || !hash_equals($checked['sha256'], hash('sha256', $existing))) {
+            return ['valid' => false, 'error' => 'preview_integrity_failed'];
+        }
+        return ['valid' => true, 'file_id' => $filename, 'sha256' => $checked['sha256'],
+            'mime' => $checked['mime'], 'bytes' => $checked['bytes']];
+    }
     if (!@chmod($path, 0600)) {
         fclose($handle);
         @unlink($path);
