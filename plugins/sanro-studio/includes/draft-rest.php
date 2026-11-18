@@ -336,8 +336,14 @@ function sanro_studio_rest_update_draft($request) {
     if (!sanro_studio_draft_payload_allowed($design)) {
         return new WP_Error('sanro_invalid_design', 'Invalid design.', ['status' => 400]);
     }
+    $expected_hash = $request->get_param('expected_design_hash');
+    // Public draft updates must carry a server-issued revision. Internal
+    // callers retain the optional parameter for compatibility.
+    if (!is_string($expected_hash) || !preg_match('/^[a-f0-9]{64}$/D', $expected_hash)) {
+        return new WP_Error('sanro_revision_required', 'Draft revision required.', ['status' => 409]);
+    }
     return sanro_studio_rest_draft_response(
-        sanro_studio_update_draft($request->get_param('id'), $token, $design, $request->get_param('expected_design_hash'))
+        sanro_studio_update_draft($request->get_param('id'), $token, $design, $expected_hash)
     );
 }
 
