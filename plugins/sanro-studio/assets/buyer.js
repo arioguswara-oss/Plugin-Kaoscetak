@@ -248,6 +248,10 @@
   const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(credentials.id),{
    method:'GET',headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':credentials.token},
    credentials:'same-origin',cache:'no-store'});
+  if(response.status===410){
+   try{sessionStorage.removeItem(draftStorageKey)}catch(_error){}
+   throw new Error('Draft telah kedaluwarsa (7 hari). Simpan desain sebagai draft baru.');
+  }
   if(!response.ok)throw new Error('Draft tidak dapat dibuka ('+response.status+').');
   const result=await response.json();
   if(!result.valid||Number(result.product_id)!==Number(config.product_id))throw new Error('Draft bukan untuk produk ini.');
@@ -304,6 +308,11 @@
      method:'GET',headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken},
      credentials:'same-origin',cache:'no-store'
     });
+    if(response.status===410){
+     savedId=null;ownerToken=null;savedRevision=-1;
+     try{sessionStorage.removeItem(draftStorageKey)}catch(_error){}
+     throw new Error('Draft telah kedaluwarsa. Simpan draft baru sebelum meminta harga.');
+    }
     const result=await response.json();
     if(!response.ok||!result.valid||!result.quote||!Number.isSafeInteger(result.quote.total_price))
      throw new Error('Harga server belum tersedia ('+response.status+').');
