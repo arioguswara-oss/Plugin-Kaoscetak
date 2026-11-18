@@ -4,13 +4,13 @@ $GLOBALS['meta'] = [];
 $GLOBALS['writes'] = [];
 function absint($value) { return abs((int) $value); }
 function get_post_meta($id, $key, $single) { return $GLOBALS['meta'][$id][$key] ?? null; }
-function update_post_meta($id, $key, $value) { $GLOBALS['writes'][] = [$id, $key, $value]; $GLOBALS['meta'][$id][$key] = $value; }
 function current_user_can($capability, $id) { return ($GLOBALS['can_edit'] ?? false) && $capability === 'edit_post'; }
 function wp_unslash($value) { return $value; }
 require __DIR__ . '/../plugins/sanro-studio/includes/print-area.php';
 require __DIR__ . '/../plugins/sanro-studio/includes/product-area.php';
 class SanroProductFixture {
     public function get_id() { return 77; }
+    public function update_meta_data($key, $value) { $GLOBALS['writes'][] = [77, $key, $value]; $GLOBALS['meta'][77][$key] = $value; }
 }
 function expect_sanro($condition, $name) {
     global $checks;
@@ -39,4 +39,6 @@ $_POST['_sanro_studio_front_width'] = '20';
 $_POST['_sanro_studio_front_height'] = '';
 sanro_studio_save_product_areas($product);
 expect_sanro(count($GLOBALS['writes']) === 1, 'partial rectangle not persisted');
+expect_sanro($GLOBALS['writes'][0][1] === '_sanro_studio_safe_areas', 'Woo CRUD metadata key');
+expect_sanro($GLOBALS['writes'][0][2]['front']['width'] === 20.0, 'Woo CRUD metadata value');
 echo "SANRO product areas: {$checks} assertions PASS, 0 FAIL\n";
