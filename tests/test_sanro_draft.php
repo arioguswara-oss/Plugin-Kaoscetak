@@ -31,15 +31,20 @@ function maybe_serialize($value) { return serialize($value); }
 function wp_cache_delete($key, $group) { return true; }
 $wpdb = new class {
     public $options = 'wp_options';
-    public function update($table, $data, $where, $formats, $where_formats) {
-        if ($table !== $this->options || !isset($where['option_name'], $where['option_value'])) return false;
-        $key = $where['option_name'];
+    public function prepare($sql, ...$args) {
+        if (strpos($sql, 'BINARY option_value = BINARY %s') === false) return false;
+        return ['sql' => $sql, 'args' => $args];
+    }
+    public function query($statement) {
+        if (!is_array($statement) || count($statement['args']) !== 3) return false;
+        [$new, $key, $expected] = $statement['args'];
         if (!isset($GLOBALS['options'][$key])) return 0;
         if (!empty($GLOBALS['draft_cas_conflict'])) {
             $GLOBALS['options'][$key]['status'] = 'locked';
         }
-        if (serialize($GLOBALS['options'][$key]) !== $where['option_value']) return 0;
-        $GLOBALS['options'][$key] = unserialize($data['option_value'], ['allowed_classes' => false]);
+        // Simulate byte-exact SQL BINARY compare, not a case-insensitive collation.
+        if (serialize($GLOBALS['options'][$key]) !== $expected) return 0;
+        $GLOBALS['options'][$key] = unserialize($new, ['allowed_classes' => false]);
         return 1;
     }
 };
