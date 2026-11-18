@@ -166,3 +166,31 @@ function sanro_studio_stage_commit_cart_lines($contract, $cart) {
         'total_price' => $priced['total_price'],
         'requires_session_checkout_guard' => true];
 }
+
+/**
+ * Restore and reprice a cart after session reload ONLY when the caller
+ * presents the draft owner token again. Never persist that token in WC.
+ * A missing, expired, modified or revoked draft fails closed.
+ */
+function sanro_studio_stage_reauthorize_cart($design_id, $owner_token, $product_id, $cart) {
+    if (!defined('SANRO_STUDIO_ENABLE_STAGING_CART')
+        || SANRO_STUDIO_ENABLE_STAGING_CART !== true
+        || !is_object($cart) || !method_exists($cart, 'get_cart')
+        || !method_exists($cart, 'calculate_totals')
+        || !is_int($product_id) || $product_id < 1
+        || !function_exists('sanro_studio_prepare_cart_design_contract')) {
+        return ['valid' => false, 'error' => 'cart_reauthorization_disabled'];
+    }
+    $contract = sanro_studio_prepare_cart_design_contract($design_id, $owner_token, $product_id);
+    if (empty($contract['valid'])) return $contract;
+    $actual = $cart->get_cart();
+    if (!is_array($actual) || !$actual) {
+        return ['valid' => false, 'error' => 'cart_empty'];
+    }
+    $priced = sanro_studio_stage_price_cart_batch($contract, array_values($actual));
+    if (empty($priced['valid'])) return $priced;
+    $cart->calculate_totals();
+    return ['valid' => true, 'design_id' => $contract['design_id'],
+        'total_price' => $priced['total_price'],
+        'requires_checkout_reauthorization' => true];
+}
