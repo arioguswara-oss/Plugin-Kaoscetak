@@ -75,3 +75,15 @@ $failedSaveItem = new SanroMutablePreviewItem();
 $failedSaveOrder = new SanroItemPreviewOrderFixture([30 => $failedSaveItem]);
 verify(sanro_studio_attach_item_preview_refs($failedSaveOrder, 30, $id, 'owner', ['front' => $ref])['error'] === 'preview_save_failed', 'failed WooCommerce item save not reported as success');
 unset($GLOBALS['preview_save_result']);
+
+$wrongBinding = new SanroOrderPreviewFixture([
+    '_sanro_studio_design_id' => '123e4567-e89b-42d3-a456-123456789013',
+    '_sanro_studio_preview_front_ref' => $ref,
+]);
+$wrongBindingOrder = new SanroItemPreviewOrderFixture([40 => $wrongBinding]);
+verify(sanro_studio_order_item_preview_inventory($wrongBindingOrder, 40)['error'] === 'preview_design_mismatch', 'cross-design preview rejected during inventory read');
+$invalidBinding = new SanroOrderPreviewFixture([
+    '_sanro_studio_design_id' => '../escape',
+    '_sanro_studio_preview_front_ref' => $ref,
+]);
+verify(sanro_studio_order_item_preview_inventory(new SanroItemPreviewOrderFixture([41 => $invalidBinding]), 41)['error'] === 'invalid_design_binding', 'invalid bound design rejected');
