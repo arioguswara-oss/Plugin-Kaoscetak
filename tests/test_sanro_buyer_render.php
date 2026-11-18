@@ -33,12 +33,13 @@ register_shutdown_function(function () {
         'editor markup'=>strpos($html,'id="sanro-studio-buyer"')!==false,
         'front/back navigation'=>strpos($html,'data-side="front"')!==false && strpos($html,'data-side="back"')!==false,
         'checkout disabled'=>strpos($html,'Simpan dan checkout — belum aktif')!==false,
-        'three assets'=>count($assets)===3,
+        'four assets'=>count($assets)===4,
         'CSS path'=>isset($assets[0]) && strpos($assets[0][1][1],'/sanro-studio/assets/buyer.css')!==false,
-        'JS path'=>isset($assets[1]) && strpos($assets[1][1][1],'/sanro-studio/assets/buyer.js')!==false,
-        'public config'=>isset($assets[2]) && strpos($assets[2][1][1],'"product_id":17')!==false,
-        'no owner token'=>isset($assets[2]) && strpos($assets[2][1][1],'owner_token')===false,
-        'inline script escaped'=>isset($assets[2]) && strpos($assets[2][1][1],'</script>')===false && strpos($assets[2][1][1],'\\u003C')!==false,
+        'estimate JS path'=>isset($assets[1]) && strpos($assets[1][1][1],'/sanro-studio/assets/estimate.js')!==false,
+        'buyer JS path'=>isset($assets[2]) && strpos($assets[2][1][1],'/sanro-studio/assets/buyer.js')!==false,
+        'public config'=>isset($assets[2]) && strpos($assets[3][1][1],'"product_id":17')!==false,
+        'no owner token'=>isset($assets[2]) && strpos($assets[3][1][1],'owner_token')===false,
+        'inline script escaped'=>isset($assets[2]) && strpos($assets[3][1][1],'</script>')===false && strpos($assets[3][1][1],'\\u003C')!==false,
     ];
     ob_end_clean();
     foreach ($assertions as $label=>$ok) {
