@@ -43,7 +43,7 @@
   const d=sides[side];q('#sanro-text-input').value=d.text;q('#sanro-image-size').value=d.imageSize;
   q('#sanro-font-size').value=d.fontSize;q('#sanro-text-color').value=d.textColor;q('#sanro-category').value=d.category;
   image.hidden=!d.url;if(d.url&&image.getAttribute('src')!==d.url)image.setAttribute('src',d.url);if(!d.url)image.removeAttribute('src');
-  image.style.left=d.imageX+'%';image.style.top=d.imageY+'%';image.style.width=d.imageSize+'%';
+  image.style.left=d.imageX+'%';image.style.top=d.imageY+'%';image.style.width=d.imageSize+'%';image.style.height='auto';
   text.hidden=!d.text;text.textContent=d.text;text.style.left=d.textX+'%';text.style.top=d.textY+'%';text.style.fontSize=d.fontSize+'px';text.style.color=d.textColor;
   root.querySelectorAll('[data-side]').forEach(b=>{b.disabled=!config.safe_areas[b.dataset.side];b.setAttribute('aria-pressed',String(b.dataset.side===side))});
   q('#sanro-side-summary').textContent=['front','back'].map(name=>(name==='front'?'Depan':'Belakang')+': '+(sides[name].url||sides[name].text.trim()?'ada desain ('+sides[name].category+')':'kosong')).join(' · ');
@@ -70,7 +70,17 @@
  }
  root.querySelectorAll('[data-side]').forEach(b=>b.addEventListener('click',()=>{if(config.safe_areas[b.dataset.side]){side=b.dataset.side;render()}}));
  q('#sanro-text-input').addEventListener('input',e=>{sides[side].text=e.target.value;render()});
- q('#sanro-image-size').addEventListener('input',e=>{sides[side].imageSize=Number(e.target.value);render()});
+ q('#sanro-image-size').addEventListener('input',e=>{
+  const d=sides[side],next=Number(e.target.value);
+  if(!Number.isFinite(next)||next<10||next>100)return;
+  // Scale proportionally around the current center, then constrain within the safe area.
+  const ratio=next/d.imageSize;
+  const currentHeight=image.naturalWidth>0?d.imageSize*image.naturalHeight/image.naturalWidth:0;
+  const nextHeight=currentHeight*ratio;
+  d.imageX=Math.max(0,Math.min(100-next,d.imageX+(d.imageSize-next)/2));
+  d.imageY=Math.max(0,Math.min(100-nextHeight,d.imageY+(currentHeight-nextHeight)/2));
+  d.imageSize=next;render();
+ });
  q('#sanro-font-size').addEventListener('input',e=>{sides[side].fontSize=Number(e.target.value);render()});
  q('#sanro-text-color').addEventListener('input',e=>{sides[side].textColor=e.target.value;render()});
  q('#sanro-remove-text').addEventListener('click',()=>{sides[side].text='';render()});
@@ -90,7 +100,20 @@
   if(!['image/png','image/jpeg'].includes(file.type)||file.size>10485760){q('#sanro-validation').textContent='File ditolak: PNG/JPEG maksimal 10 MB';e.target.value='';return}
   const target=sides[side],url=URL.createObjectURL(file),probe=new Image();
   if(target.pending)URL.revokeObjectURL(target.pending);
-  probe.onload=()=>{if(target.pending!==url)return;if(target.url)URL.revokeObjectURL(target.url);target.url=url;target.pending=null;render()};
+  probe.onload=()=>{
+   if(target.pending!==url)return;
+   if(target.url)URL.revokeObjectURL(target.url);
+   target.url=url;target.pending=null;
+   // Fit the image into the safe preview without changing its aspect ratio.
+   const safeWidth=safe.clientWidth,safeHeight=safe.clientHeight;
+   if(safeWidth>0&&safeHeight>0&&probe.naturalWidth>0&&probe.naturalHeight>0){
+    const maxWidth=Math.min(100,100*safeHeight*probe.naturalWidth/(safeWidth*probe.naturalHeight));
+    target.imageSize=Math.max(1,Math.min(60,maxWidth));
+    target.imageX=Math.max(0,(100-target.imageSize)/2);
+    target.imageY=Math.max(0,(100-target.imageSize*safeWidth*probe.naturalHeight/(safeHeight*probe.naturalWidth))/2);
+   }
+   render();
+  };
   probe.onerror=()=>{if(target.pending===url){URL.revokeObjectURL(url);target.pending=null;q('#sanro-validation').textContent='Gambar tidak valid'}};
   target.pending=url;probe.src=url;e.target.value='';
  });
