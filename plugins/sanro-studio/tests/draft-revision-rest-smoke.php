@@ -46,5 +46,7 @@ revision_assert(sanro_studio_draft_image_binding_allowed($image, ['front' => $fr
 revision_assert(!sanro_studio_draft_image_binding_allowed($image, ['front' => 'https://example.com/file.png'], '00000000-0000-4000-8000-000000000000'), 'public image URL rejected');
 revision_assert(!sanro_studio_draft_image_binding_allowed($image, ['front' => $frontRef], '00000000-0000-4000-8000-000000000001'), 'cross-draft master rejected');
 revision_assert(!sanro_studio_draft_image_binding_allowed($image, ['front' => $frontRef]), 'missing draft UUID rejected');
-revision_assert(!sanro_studio_draft_payload_allowed($image), 'image draft still gated until restoration integration');
-echo "PASS: 11 draft REST and image-binding checks\n";
+revision_assert(!sanro_studio_draft_payload_allowed($image), 'new draft image creation remains gated');
+revision_assert(sanro_studio_draft_payload_allowed($image, true), 'existing draft accepts image geometry for server binding verification');
+revision_assert(!sanro_studio_draft_payload_allowed(['front' => ['objects' => [['type' => 'image', 'url' => 'data:image/png;base64,AAAA']]]], true), 'embedded image data rejected');
+echo "PASS: 13 draft REST and image-binding checks\n";
