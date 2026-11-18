@@ -84,6 +84,8 @@ function sanro_studio_render_buyer_editor() {
     echo '<p id="sanro-validation" role="status">Belum ada desain.</p>';
     if (!empty($config['draft_api'])) {
         echo '<button type="button" id="sanro-save-draft">Simpan draft teks</button>';
+        echo '<button type="button" id="sanro-server-quote">Cek harga resmi draft tersimpan</button>';
+        echo '<p id="sanro-server-quote-status" role="status" aria-live="polite">Simpan draft teks sebelum meminta harga server.</p>';
         echo '<p id="sanro-save-status" role="status">Penyimpanan gambar dan checkout belum tersedia.</p>';
     }
     echo '<button type="button" disabled>Simpan dan checkout — belum aktif</button></section></div></main>';
