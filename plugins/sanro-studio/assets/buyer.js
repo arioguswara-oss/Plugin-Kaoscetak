@@ -90,6 +90,40 @@
  // Text-only staging draft: no master upload, checkout or public share.
  const saveButton=q('#sanro-save-draft'),saveStatus=q('#sanro-save-status');
  let savedId=null,ownerToken=null,saving=false;
+ const draftStorageKey='sanro-studio-draft:'+String(config.product_id);
+ function restoreDesign(design){
+  if(!design||typeof design!=='object')throw new Error('Metadata draft tidak valid.');
+  for(const name of ['front','back']){
+   const entry=design[name];if(!entry)continue;
+   if(!config.safe_areas[name]||!categories[entry.category]||!Array.isArray(entry.objects)
+    ||entry.objects.length!==1||entry.objects[0].type!=='text'||typeof entry.text!=='string')throw new Error('Format draft tidak didukung.');
+   const obj=entry.objects[0],area=config.safe_areas[name];
+   if(![obj.x,obj.y,obj.width,obj.height].every(Number.isFinite)||obj.width<=0||obj.height<=0
+    ||obj.x<0||obj.y<0||obj.x+obj.width>area.width+0.000001
+    ||obj.y+obj.height>area.height+0.000001)throw new Error('Geometri draft tidak valid.');
+  }
+  for(const name of ['front','back']){
+   const entry=design[name];const d=sides[name];
+   if(!entry){d.text='';continue}
+   d.text=entry.text;d.category=entry.category;
+   d.textX=entry.objects[0].x/config.safe_areas[name].width*100;
+   d.textY=entry.objects[0].y/config.safe_areas[name].height*100;
+  }
+  render();
+ }
+ async function reopenDraft(){
+  const stored=sessionStorage.getItem(draftStorageKey);if(!stored)return;
+  const credentials=JSON.parse(stored);
+  if(!/^[a-f0-9-]{36}$/i.test(credentials.id)||!/^[a-f0-9]{64}$/.test(credentials.token))return;
+  const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(credentials.id),{
+   method:'GET',headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':credentials.token},
+   credentials:'same-origin',cache:'no-store'});
+  if(!response.ok)throw new Error('Draft tidak dapat dibuka ('+response.status+').');
+  const result=await response.json();
+  if(!result.valid||Number(result.product_id)!==Number(config.product_id))throw new Error('Draft bukan untuk produk ini.');
+  restoreDesign(result.design);savedId=credentials.id;ownerToken=credentials.token;
+  saveStatus.textContent='Draft teks berhasil dibuka kembali. Design ID: '+savedId;
+ }
  function exportTextDraft(){
   const design={};
   for(const name of ['front','back']){
@@ -119,6 +153,7 @@
   return design;
  }
  if(saveButton&&config.draft_api){
+  try{reopenDraft().catch(error=>{saveStatus.textContent=error.message})}catch(_error){}
   saveButton.addEventListener('click',async()=>{
    if(saving)return;
    let design;
@@ -133,7 +168,8 @@
     const result=await response.json();
     if(!response.ok||!result.valid)throw new Error('Penyimpanan gagal ('+response.status+').');
     if(!savedId){savedId=result.design_id;ownerToken=result.owner_token}
-    saveStatus.textContent='Draft teks tersimpan. Design ID: '+savedId+'. Simpan token pemilik diperlukan untuk akses berikutnya; fitur buka ulang belum tersedia.';
+    try{sessionStorage.setItem(draftStorageKey,JSON.stringify({id:savedId,token:ownerToken}))}catch(_error){}
+    saveStatus.textContent='Draft teks tersimpan. Design ID: '+savedId+'. Bisa dibuka ulang pada tab ini selama sesi browser masih tersedia.';
    }catch(error){saveStatus.textContent=error.message||'Penyimpanan gagal.'}
    finally{saving=false;saveButton.disabled=false}
   });
