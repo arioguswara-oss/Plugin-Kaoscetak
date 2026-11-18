@@ -4,18 +4,31 @@ Keputusan Owner 18 November 2026: gunakan dua konsep visual yang telah disetujui
 
 Persentase di bawah adalah estimasi pekerjaan berbobot, bukan persentase tes atau bukti kesiapan rilis.
 
-| Tahap | Hasil yang dituju | Bobot | Penyelesaian tahap |
-| --- | --- | ---: | ---: |
-| 1 | Kebutuhan dan tampilan backend/buyer disepakati | 10% | 100% |
-| 2 | Fondasi dan core internal tanpa plugin editor lama aktif | 25% | 40% |
-| 3 | Backend produk, mockup, warna, size, dan area cetak | 10% | 0% |
-| 4 | Frontend buyer sesuai konsep | 15% | 0% |
-| 5 | Integrasi harga Kaoscetak dan validasi server | 10% | 0% |
-| 6 | Simpan/buka desain, kepemilikan, share, pesan ulang | 10% | 0% |
-| 7 | Cart, checkout, preview pesanan, Drive dan panduan produksi | 10% | 0% |
-| 8 | QA, optimasi HP, perpindahan data, screenshot dan paket instalasi | 10% | 0% |
+| Tahap | Hasil yang dituju | Bobot | Penyelesaian tahap | Kontribusi |
+| --- | --- | ---: | ---: | ---: |
+| 1 | Kebutuhan dan tampilan backend/buyer disepakati | 10% | 100% | 10% |
+| 2 | Fondasi dan core internal tanpa plugin editor lama aktif | 25% | 40% | 10% |
+| 3 | Backend produk, mockup, warna, size, dan area cetak | 10% | 35% | 3.5% |
+| 4 | Frontend buyer sesuai konsep | 15% | 30% | 4.5% |
+| 5 | Integrasi harga Kaoscetak dan validasi server | 10% | 45% | 4.5% |
+| 6 | Simpan/buka desain, kepemilikan, share, pesan ulang | 10% | 15% | 1.5% |
+| 7 | Cart, checkout, preview pesanan, Drive dan panduan produksi | 10% | 0% | 0% |
+| 8 | QA, optimasi HP, perpindahan data, screenshot dan paket instalasi | 10% | 10% | 1% |
 
-**Total estimasi: 20%** (`10% × 100% + 25% × 40%`). Sebelumnya sekitar 13%, dengan tahap 2 baru 10%. Source KLD yang sudah tersedia tetap dipakai sebagai baseline tahap integrasi; tidak dibangun ulang tanpa alasan.
+**Total estimasi berbobot: 35%** (jumlah kontribusi tiap tahap). Audit ulang 18 November 2026 berdasarkan file aktual di Draft PR #14. Angka ini merupakan estimasi capaian pengembangan, **bukan** persentase QA atau kesiapan rilis.
+
+### Dasar penilaian
+- Tahap 1: konsep backend dan buyer telah disetujui Owner; screenshot implementasi masih wajib sebelum produksi.
+- Tahap 2: bootstrap core internal, manifest/fingerprint, pemeriksaan konflik dan bootstrap sintetis tersedia. WordPress init, sesi, database dan kanvas nyata belum terbukti.
+- Tahap 3: form admin area aman dan profil harga per produk, validator geometri tersedia; mockup dan katalog konfigurasi lengkap belum.
+- Tahap 4: buyer frontend opt-in, preview depan/belakang, satu gambar dan teks per sisi, warna, kuantitas, drag dan estimasi tersedia; belum ada simpan/checkout atau E2E mobile.
+- Tahap 5: tabel 24s, harga dua sisi, lengan panjang, kuantitas dan quotation server tersedia; harga WooCommerce checkout belum terintegrasi dan profil produk lain belum lengkap.
+- Tahap 6: draft metadata privat dengan token pemilik dan fungsi create/read/update tersedia; belum ada API aman, verifikasi email, share/revoke, repeat order terintegrasi.
+- Tahap 7: SANRO Studio belum terhubung dengan checkout, Drive dan produksi. Implementasi KLD terpisah tidak otomatis dihitung.
+- Tahap 8: ada bukti source lint/unit/bootstrap sintetis; belum ada staging penuh, screenshot hasil implementasi, uji HP atau ZIP rilis.
+
+**Batas bukti:** Dokumen QA terdahulu merekam hasil PASS pada source saat itu; commit terbaru tetap memerlukan regresi ulang. Audit source tidak membuktikan hak distribusi ulang atau rebranding core pihak ketiga. Izin/lisensi harus diverifikasi sebelum distribusi paket.
+
 
 ## Tahap aktif: 2
 
