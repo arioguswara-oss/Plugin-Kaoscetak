@@ -84,3 +84,24 @@ function sanro_studio_store_private_preview($design_id, $side, $bytes) {
     return ['valid' => true, 'file_id' => $filename, 'sha256' => $checked['sha256'],
         'mime' => $checked['mime'], 'bytes' => $checked['bytes']];
 }
+
+/**
+ * Authenticated application boundary for private preview writes.
+ * Never expose the low-level writer directly as a REST callback.
+ * The owner token is only checked against the draft store, never persisted
+ * alongside preview bytes or returned in a preview reference.
+ */
+function sanro_studio_store_owned_draft_preview($design_id, $owner_token, $side, $bytes) {
+    if (!function_exists('sanro_studio_read_draft')) {
+        return ['valid' => false, 'error' => 'draft_store_unavailable'];
+    }
+    $draft = sanro_studio_read_draft($design_id, $owner_token);
+    if (empty($draft['valid'])) return $draft;
+    if (($draft['status'] ?? null) !== 'draft') {
+        return ['valid' => false, 'error' => 'draft_locked'];
+    }
+    if (!in_array($side, ['front', 'back'], true)) {
+        return ['valid' => false, 'error' => 'invalid_preview_target'];
+    }
+    return sanro_studio_store_private_preview($design_id, $side, $bytes);
+}
