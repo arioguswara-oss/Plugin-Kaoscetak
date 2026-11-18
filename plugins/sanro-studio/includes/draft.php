@@ -70,7 +70,7 @@ function sanro_studio_read_draft($id, $token) {
  * Revalidates geometry against current product settings before replacing metadata.
  * Never accepts client-supplied status, product ID or price.
  */
-function sanro_studio_update_draft($id, $token, $design) {
+function sanro_studio_update_draft($id, $token, $design, $expected_design_hash = null) {
     $existing = sanro_studio_read_draft($id, $token);
     if (empty($existing['valid'])) return $existing;
     if ($existing['status'] !== 'draft') {
@@ -106,6 +106,14 @@ function sanro_studio_update_draft($id, $token, $design) {
         || ($before['product_id'] ?? null) !== $existing['product_id']
         || !isset($before['expires_at']) || !is_int($before['expires_at'])
         || $before['expires_at'] <= time()) {
+        return ['valid' => false, 'error' => 'draft_conflict'];
+    }
+    // Compare the client's last observed revision before applying any edits.
+    // Prevent stale tabs from silently replacing another tab's saved design.
+    if ($expected_design_hash !== null
+        && (!is_string($expected_design_hash)
+            || !preg_match('/^[a-f0-9]{64}$/D', $expected_design_hash)
+            || !hash_equals(hash('sha256', maybe_serialize($before['design'])), $expected_design_hash))) {
         return ['valid' => false, 'error' => 'draft_conflict'];
     }
     // A retry of an unchanged save must not revoke verified master bindings.
