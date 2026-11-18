@@ -39,7 +39,13 @@ $multi = sanro_studio_quote_size_quantities(17, ['front' => $front, 'back' => $b
 check_quote(true, $multi['valid'], 'multi-size valid');
 check_quote(5, $multi['total_quantity'], 'multi-size total pieces');
 check_quote(2 * (72000 + 15000) + 3 * (75000 + 15000), $multi['total_price'], 'multi-size trusted total');
-check_quote('invalid_quantities', sanro_studio_quote_size_quantities(17, ['front' => $front], ['M' => 0])['error'], 'zero qty rejected');
+check_quote('invalid_quantities', sanro_studio_quote_size_quantities(17, ['front' => $front], ['M' => 0])['error'], 'all-zero qty rejected');
+$with_zero = sanro_studio_quote_size_quantities(17, ['front' => $front], ['S' => 0, 'M' => 2]);
+check_quote(true, $with_zero['valid'], 'unused size accepted as zero');
+check_quote(2, $with_zero['total_quantity'], 'zero size not counted');
+check_quote(false, isset($with_zero['items']['S']), 'zero size omitted from quote');
+check_quote(999, sanro_studio_quote_size_quantities(17, ['front' => $front], ['M' => 999])['total_quantity'], '999 accepted');
+check_quote('invalid_quantities', sanro_studio_quote_size_quantities(17, ['front' => $front], ['M' => 1000])['error'], '1000 rejected');
 check_quote('invalid_quantities', sanro_studio_quote_size_quantities(17, ['front' => $front], ['M' => '2'])['error'], 'string qty rejected');
 check_quote('invalid_quantities', sanro_studio_quote_size_quantities(17, ['front' => $front], ['M' => 1001])['error'], 'oversized qty rejected');
 check_quote('invalid_quantities', sanro_studio_quote_size_quantities(17, ['front' => $front], ['S' => 1000, 'M' => 1000, 'L' => 1000, 'XL' => 1000, '2XL' => 1000, '3XL' => 1])['error'], 'total quantity cap');
