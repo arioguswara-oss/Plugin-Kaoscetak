@@ -133,7 +133,7 @@
  });
  q('#sanro-image').addEventListener('change',e=>{
   const file=e.target.files[0];if(!file)return;
-  if(!['image/png','image/jpeg'].includes(file.type)||file.size>10485760){q('#sanro-validation').textContent='File ditolak: PNG/JPEG maksimal 10 MB';e.target.value='';return}
+  if(!['image/png','image/jpeg'].includes(file.type)||file.size===0||file.size>10485760){q('#sanro-validation').textContent='File ditolak: PNG/JPEG tidak kosong, maksimal 10 MB';e.target.value='';return}
   const uploadSide=side,target=sides[uploadSide],url=URL.createObjectURL(file),probe=new Image();
   editRevision++;
   if(target.pending)URL.revokeObjectURL(target.pending);
@@ -141,6 +141,14 @@
   target.pending=url;
   probe.onload=()=>{
    if(target.pending!==url)return;
+   // Reject images with excessive decoded dimensions before previewing them.
+   // File size alone does not bound browser memory consumption.
+   const width=probe.naturalWidth,height=probe.naturalHeight;
+   if(!width||!height||width>10000||height>10000||width*height>25000000){
+    URL.revokeObjectURL(url);target.pending=null;
+    if(side===uploadSide)q('#sanro-validation').textContent='Gambar terlalu besar: maksimal 25 megapiksel dan 10.000 px per sisi.';
+    return;
+   }
    if(target.url)URL.revokeObjectURL(target.url);
    target.url=url;target.pending=null;
    // Fit the image into the safe preview without changing its aspect ratio.
