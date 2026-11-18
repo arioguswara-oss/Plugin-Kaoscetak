@@ -22,6 +22,7 @@ require_once __DIR__ . '/includes/pricing.php';
 require_once __DIR__ . '/includes/quote.php';
 require_once __DIR__ . '/includes/draft.php';
 require_once __DIR__ . '/includes/storage-policy.php';
+require_once __DIR__ . '/includes/order-preview.php';
 require_once __DIR__ . '/includes/draft-rest.php';
 require_once __DIR__ . '/includes/runtime.php';
 require_once __DIR__ . '/includes/admin.php';
@@ -49,3 +50,6 @@ add_action('rest_api_init', 'sanro_studio_register_draft_routes');
 // Disabled by default; staging must explicitly define SANRO_STUDIO_ENABLE_BUYER_EDITOR.
 add_action('woocommerce_single_product_summary', 'sanro_studio_product_editor_link', 35);
 add_action('template_redirect', 'sanro_studio_render_buyer_editor', 20);
+
+// Admin-only, read-only order preview status; no public file delivery.
+add_action('woocommerce_admin_order_data_after_order_details', 'sanro_studio_admin_order_preview_status');
