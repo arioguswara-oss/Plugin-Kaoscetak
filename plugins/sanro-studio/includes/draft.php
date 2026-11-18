@@ -126,8 +126,8 @@ function sanro_studio_update_draft($id, $token, $design, $expected_design_hash =
     }
     // Image geometry may only reference masters already bound to this
     // exact owner-authorized draft. This check runs against the CAS snapshot.
-    if (function_exists('sanro_studio_draft_image_binding_allowed')
-        && !sanro_studio_draft_image_binding_allowed(
+    if (!function_exists('sanro_studio_draft_image_binding_allowed')
+        || !sanro_studio_draft_image_binding_allowed(
             $design, is_array($before['master_refs'] ?? null) ? $before['master_refs'] : [], $id
         )) {
         return ['valid' => false, 'error' => 'image_master_unbound'];
