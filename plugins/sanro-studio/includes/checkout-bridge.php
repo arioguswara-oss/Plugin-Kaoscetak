@@ -182,7 +182,7 @@ function sanro_studio_stage_authorize_checkout($design_id, $owner_token, $produc
         $size = $line['sanro_studio_size'];
         $actual = $line['data']->get_price();
         if ((!is_string($actual) && !is_int($actual) && !is_float($actual))
-            || !preg_match('/^(?:0|[1-9][0-9]*)(?:\\.[0-9]{1,2})?$/D', (string) $actual)
+            || !preg_match('/^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,2})?$/D', (string) $actual)
             || (float) $actual !== (float) $prices[$size]) {
             return ['valid' => false, 'error' => 'checkout_price_mismatch'];
         }
