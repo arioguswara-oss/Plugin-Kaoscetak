@@ -78,13 +78,39 @@ catch (_) { console.error('BLOCKED: Playwright unavailable; set NODE_PATH to iso
   assert.match(credentials.id,/^[a-f0-9-]{36}$/i);
   assert.match(credentials.token,/^[a-f0-9]{64}$/);
   console.log('PASS synthetic text draft saved; private reference retained without logging token');
+  // Track only the REST status, never the private draft URL, ID, owner token, or response body.
+  const draftApiBase = await page.evaluate(() => String(window.SANRO_STUDIO_EDITOR_CONFIG.draft_api.url).replace(/\\/$/, ''));
+  const restoreReads = [];
+  const browserErrorTypes = [];
+  page.on('response', response => {
+   if (response.request().method()==='GET' && response.url().startsWith(draftApiBase+'/')) {
+    restoreReads.push(response.status());
+   }
+  });
+  page.on('pageerror', error => { if(browserErrorTypes.length<3)browserErrorTypes.push(error.name||'Error'); });
   await page.reload({waitUntil:'domcontentloaded',timeout:30000});
-  await page.waitForFunction(() => {
-   const value = document.querySelector('#sanro-save-status')?.textContent || '';
-   return /Draft berhasil dibuka kembali|Draft tidak dapat dibuka|Draft telah kedaluwarsa|Format draft tidak didukung|Geometri draft tidak valid/.test(value);
-  },null,{timeout:30000});
-  const restoredStatus = await page.locator('#sanro-save-status').innerText();
-  assert.match(restoredStatus,/Draft berhasil dibuka kembali/, 'Draft restore failed: '+restoredStatus);
+  const referencePresent = await page.evaluate(() => Boolean(sessionStorage.getItem('sanro-studio-draft:24')));
+  assert(referencePresent, 'Draft reference disappeared from sessionStorage after same-tab reload');
+  // The editor can report more error strings than the old whitelist; do not hide
+  // those actionable failures behind a generic 30-second timeout.
+  let restoreStatusChanged = false;
+  try {
+   await page.waitForFunction(() => {
+    const value = document.querySelector('#sanro-save-status')?.textContent?.trim() || '';
+    return Boolean(value && value !== 'Penyimpanan gambar dan checkout belum tersedia.');
+   },null,{timeout:20000});
+   restoreStatusChanged = true;
+  } catch (error) {
+   if (!String(error.message).includes('Timeout')) throw error;
+  }
+  const restoredStatus = (await page.locator('#sanro-save-status').innerText()).trim();
+  const safeStatus = restoredStatus.replace(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/ig,'[draft-id]')
+   .replace(/\\b[a-f0-9]{64}\\b/ig,'[redacted]');
+  const diagnostics = 'restore status='+JSON.stringify(safeStatus)
+   +'; draft GET status='+(restoreReads.length?restoreReads.join(','):'not observed')
+   +'; browser errors='+(browserErrorTypes.length?browserErrorTypes.join(','):'none');
+  assert(restoreStatusChanged, 'No restore result after reload; '+diagnostics);
+  assert.match(restoredStatus,/Draft berhasil dibuka kembali/, 'Draft restore failed; '+diagnostics);
   await page.locator('[data-side="'+chosen+'"]').click();
   assert.equal(await page.locator('#sanro-text-input').inputValue(),marker);
   assert.equal(await page.locator('input[data-size="M"]').inputValue(),'1');
