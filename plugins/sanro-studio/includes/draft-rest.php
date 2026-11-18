@@ -431,6 +431,15 @@ function sanro_studio_rest_quote_draft($request) {
         return new WP_Error('sanro_product_unavailable', 'Product unavailable.', ['status' => 404]);
     }
     $design = $draft['design'];
+    // An empty bootstrap is not printable, and image geometry without the
+    // currently owner-bound master must never receive a price quote.
+    if (!function_exists('sanro_studio_validate_product_design')
+        || empty(sanro_studio_validate_product_design($draft['product_id'], $design)['valid'])
+        || !sanro_studio_draft_image_binding_allowed(
+            $design, $draft['master_refs'] ?? [], $draft['design_id']
+        )) {
+        return new WP_Error('sanro_draft_not_print_ready', 'Draft not print ready.', ['status' => 409]);
+    }
     $quantities = $design['quantities'] ?? null;
     $long_sleeve = $design['long_sleeve'] ?? false;
     $quote = sanro_studio_quote_size_quantities(
