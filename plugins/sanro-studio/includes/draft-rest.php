@@ -305,7 +305,7 @@ function sanro_studio_draft_creation_budget() {
  * private master in the same owner-authorized draft. Never accept a file URL,
  * client-selected file ID, or image bytes in design metadata.
  */
-function sanro_studio_draft_image_binding_allowed($design, $master_refs) {
+function sanro_studio_draft_image_binding_allowed($design, $master_refs, $design_id = null) {
     if (!is_array($design) || !is_array($master_refs)) return false;
     foreach (['front', 'back'] as $side) {
         $entry = $design[$side] ?? null;
@@ -315,9 +315,11 @@ function sanro_studio_draft_image_binding_allowed($design, $master_refs) {
         foreach ($objects as $object) {
             if (!is_array($object) || ($object['type'] ?? null) !== 'image') continue;
             $ref = $master_refs[$side] ?? null;
-            if (!is_string($ref)
+            if (!is_string($design_id)
+                || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id)
+                || !is_string($ref)
                 || !preg_match('/^[a-f0-9-]{36}-(front|back)-[a-f0-9]{64}\\.(png|jpg)$/D', $ref)
-                || strpos($ref, '-' . $side . '-') === false) return false;
+                || strpos($ref, strtolower($design_id) . '-' . $side . '-') !== 0) return false;
         }
     }
     return true;
