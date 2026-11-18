@@ -55,6 +55,7 @@ function sanro_studio_product_area_fields() {
 /** Called by WooCommerce product-admin save hook after its nonce and capability checks. */
 function sanro_studio_save_product_areas($product) {
     if (!is_object($product) || !method_exists($product, 'get_id')
+        || !method_exists($product, 'update_meta_data')
         || !current_user_can('edit_post', $product->get_id())) return;
     $areas = [];
     foreach (['front', 'back'] as $side) {
@@ -72,5 +73,5 @@ function sanro_studio_save_product_areas($product) {
         if (count($values) === 2) $areas[$side] = $values;
     }
     // Empty settings intentionally disable public design acceptance for this product.
-    update_post_meta($product->get_id(), '_sanro_studio_safe_areas', $areas);
+    $product->update_meta_data('_sanro_studio_safe_areas', $areas);
 }
