@@ -30,7 +30,8 @@ function sanro_studio_prepare_cart_design_contract($design_id, $owner_token, $pr
     if (empty($quote['valid'])) return $quote;
     if (!isset($quote['total_quantity'], $quote['total_price'])
         || !is_int($quote['total_quantity']) || $quote['total_quantity'] < 1
-        || !is_int($quote['total_price']) || $quote['total_price'] < 0) {
+        || !is_int($quote['total_price']) || $quote['total_price'] <= 0
+        || ($quote['currency'] ?? null) !== 'IDR') {
         return ['valid' => false, 'error' => 'invalid_quote'];
     }
     // Only opaque identity and server-computed quotation; no owner secret,
