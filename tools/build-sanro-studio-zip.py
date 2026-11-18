@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Build an installable, staging-only SANRO Studio ZIP from a local checkout."""
 from pathlib import Path
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZipFile, ZIP_DEFLATED, ZipInfo
 import argparse
 import hashlib
 import subprocess
 import sys
+import os
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "sanro-studio"
@@ -32,13 +33,20 @@ def main():
             result = subprocess.run(["php", "-l", str(path)], capture_output=True, text=True)
             if result.returncode:
                 sys.exit(f"FAIL: PHP lint {path}: {result.stdout} {result.stderr}")
-    output = ROOT / args.output
-    output.parent.mkdir(parents=True, exist_ok=True)
-    if output.is_relative_to(PLUGIN):
+    output = (ROOT / args.output).resolve()
+    if output.is_relative_to(PLUGIN.resolve()):
         sys.exit("ERROR: output must be outside plugin source")
+    output.parent.mkdir(parents=True, exist_ok=True)
     with ZipFile(output, "w", ZIP_DEFLATED) as archive:
         for path in files:
-            archive.write(path, "sanro-studio/" + path.relative_to(PLUGIN).as_posix())
+            info = ZipInfo("sanro-studio/" + path.relative_to(PLUGIN).as_posix(), date_time=(2026, 1, 1, 0, 0, 0))
+            info.compress_type = ZIP_DEFLATED
+            info.external_attr = (0o100644 << 16)
+            archive.writestr(info, path.read_bytes())
+    with ZipFile(output) as archive:
+        names = archive.namelist()
+        if len(names) != len(files) or len(set(names)) != len(names) or "sanro-studio/sanro-studio.php" not in names or archive.testzip() is not None:
+            sys.exit("ERROR: ZIP integrity validation failed")
     digest = hashlib.sha256(output.read_bytes()).hexdigest()
     print(f"PASS: {len(files)} files; ZIP={output}; SHA256={digest}")
     print("STAGING ONLY: build does not enable checkout or authorize production deployment")
