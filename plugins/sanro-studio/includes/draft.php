@@ -46,3 +46,30 @@ function sanro_studio_read_draft($id, $token) {
         'status' => $record['status'],
     ];
 }
+
+/**
+ * Update a private draft only with its owner token.
+ * Revalidates geometry against current product settings before replacing metadata.
+ * Never accepts client-supplied status, product ID or price.
+ */
+function sanro_studio_update_draft($id, $token, $design) {
+    $existing = sanro_studio_read_draft($id, $token);
+    if (empty($existing['valid'])) return $existing;
+    if ($existing['status'] !== 'draft') {
+        return ['valid' => false, 'error' => 'draft_locked'];
+    }
+    $validation = sanro_studio_validate_product_design($existing['product_id'], $design);
+    if (empty($validation['valid'])) return $validation;
+    $key = 'sanro_studio_draft_' . $id;
+    $record = get_option($key, false);
+    if (!is_array($record) || !isset($record['token_hash'])
+        || !hash_equals($record['token_hash'], hash('sha256', $token))) {
+        return ['valid' => false, 'error' => 'not_found'];
+    }
+    $record['design'] = $design;
+    $record['updated_at'] = time();
+    if (!update_option($key, $record, false)) {
+        return ['valid' => false, 'error' => 'storage_failed'];
+    }
+    return ['valid' => true, 'design_id' => $id];
+}
