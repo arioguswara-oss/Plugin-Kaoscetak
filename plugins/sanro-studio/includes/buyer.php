@@ -69,6 +69,7 @@ function sanro_studio_render_buyer_editor() {
     echo '<p id="sanro-price-estimate" role="status">Estimasi harga: pilih desain dan jumlah. Harga final dihitung saat checkout.</p>';
     echo '<label>Gambar PNG/JPEG maks. 10 MB<input type="file" id="sanro-image" accept="image/png,image/jpeg"></label>';
     echo '<label>Ukuran gambar<input type="range" id="sanro-image-size" min="10" max="100" value="60"></label>';
+    echo '<button type="button" id="sanro-center-image">Posisikan gambar ke tengah</button>';
     echo '<button type="button" id="sanro-remove-image">Hapus gambar</button>';
     echo '<label>Teks<textarea id="sanro-text-input" maxlength="300" rows="3"></textarea></label>';
     echo '<label>Ukuran teks<input type="range" id="sanro-font-size" min="10" max="48" value="22"></label>';
