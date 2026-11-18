@@ -20,3 +20,6 @@ $valid = sanro_studio_order_preview_inventory(new SanroOrderPreviewFixture([
     '_sanro_studio_preview_back_ref' => '../secret',
 ]));
 verify($valid['front'] === $ref && $valid['back'] === null, 'accept valid front, reject traversal');
+
+function current_user_can($cap) { return false; }
+verify(sanro_studio_attach_order_preview_refs(new SanroOrderPreviewFixture([]), $id, 'secret', ['front' => $ref])['error'] === 'forbidden', 'order attachment rejects unauthorized caller');
