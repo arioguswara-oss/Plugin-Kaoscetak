@@ -22,7 +22,6 @@ function sanro_studio_draft_payload_allowed($design) { return is_array($design);
 function sanro_studio_update_draft($id, $token, $design, $expected_hash = null) {
     return ['valid' => true, 'design_id' => $id, 'expected' => $expected_hash];
 }
-function sanro_studio_rest_draft_response($result) { return $result; }
 require_once __DIR__ . '/../includes/draft-rest.php';
 function revision_assert($ok, $label) {
     if (!$ok) { fwrite(STDERR, "FAIL: {$label}\n"); exit(1); }
