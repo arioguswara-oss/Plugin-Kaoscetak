@@ -103,6 +103,20 @@
     ||obj.x<0||obj.y<0||obj.x+obj.width>area.width+0.000001
     ||obj.y+obj.height>area.height+0.000001)throw new Error('Geometri draft tidak valid.');
   }
+  if(design.shirt_color!==undefined){
+   if(!shirtColors.has(design.shirt_color))throw new Error('Warna draft tidak valid.');
+   shirtColor.value=design.shirt_color;q('.sanro-shirt').style.backgroundColor=shirtColor.value;
+  }
+  if(design.quantities!==undefined){
+   if(!design.quantities||typeof design.quantities!=='object'||Array.isArray(design.quantities))
+    throw new Error('Jumlah draft tidak valid.');
+   for(const input of qtyInputs){
+    const count=design.quantities[input.dataset.size]??0;
+    if(!Number.isInteger(count)||count<0||count>999)throw new Error('Jumlah draft tidak valid.');
+   }
+   for(const input of qtyInputs)input.value=design.quantities[input.dataset.size]??0;
+   updateQty();
+  }
   for(const name of ['front','back']){
    const entry=design[name];const d=sides[name];
    if(!entry){d.text='';continue}
@@ -151,6 +165,10 @@
    design[name]={category:d.category,objects:[object],text:d.text,font_size:d.fontSize};
   }
   if(!Object.keys(design).length)throw new Error('Tambahkan teks terlebih dahulu.');
+  const quantities=Object.fromEntries(qtyInputs.map(input=>[input.dataset.size,Number(input.value)]));
+  if(Object.values(quantities).some(v=>!Number.isInteger(v)||v<0||v>999)
+   ||Object.values(quantities).reduce((a,b)=>a+b,0)>5000)throw new Error('Jumlah per ukuran tidak valid.');
+  design.shirt_color=shirtColor.value;design.quantities=quantities;
   return design;
  }
  if(saveButton&&config.draft_api){
