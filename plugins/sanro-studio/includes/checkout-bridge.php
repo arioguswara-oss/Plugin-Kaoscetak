@@ -63,7 +63,7 @@ function sanro_studio_validate_size_order_item($candidate, $order_item) {
     }
     $subtotal = $order_item->get_subtotal();
     if ((!is_string($subtotal) && !is_int($subtotal) && !is_float($subtotal))
-        || !preg_match('/^(?:0|[1-9][0-9]*)(?:\\.[0-9]{1,2})?$/D', (string) $subtotal)) {
+        || !preg_match('/^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,2})?$/D', (string) $subtotal)) {
         return ['valid' => false, 'error' => 'size_order_amount_invalid'];
     }
     $parts = explode('.', (string) $subtotal, 2);
