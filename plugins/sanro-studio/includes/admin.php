@@ -27,7 +27,8 @@ function sanro_studio_render_settings() {
         wp_die('Akses ditolak.', '', ['response' => 403]);
     }
     $state = sanro_studio_dependencies();
-    $runtime = sanro_studio_runtime_status();
+    $legacy_compat = defined('SANRO_STUDIO_ENABLE_LEGACY_COMPAT') && SANRO_STUDIO_ENABLE_LEGACY_COMPAT === true;
+    $runtime = $legacy_compat ? sanro_studio_runtime_status() : ['state' => 'native_default', 'mode' => 'native'];
     $options = sanro_studio_options();
     $native = sanro_studio_native_capabilities();
     echo '<div class="wrap"><h1>SANRO Studio</h1>';
@@ -41,6 +42,7 @@ function sanro_studio_render_settings() {
         'Mode pelanggan' => 'Tetap memakai alur editor yang sudah ada',
     ];
     $runtime_labels = [
+        'native_default' => 'SANRO native aktif sebagai fondasi; bootstrap editor lama tidak dijalankan',
         'waiting' => 'Menunggu inisialisasi',
         'external_loaded' => 'Kompatibilitas: core dari plugin lama yang masih aktif',
         'external_unsupported' => 'Versi core eksternal belum didukung',
@@ -77,10 +79,13 @@ function sanro_studio_render_settings() {
             . '</td></tr>';
     }
     echo '</tbody></table>';
-    $page_id = (int) get_option('lumise_editor_page', 0);
-    $editor_url = $page_id > 0 ? get_permalink($page_id) : false;
-    if ($editor_url) {
-        echo '<p><a class="button" href="' . esc_url($editor_url) . '">Buka halaman editor yang sudah diatur</a></p>';
+    // Legacy editor links are never promoted in the native admin mode.
+    if ($legacy_compat) {
+        $page_id = (int) get_option('lumise_editor_page', 0);
+        $editor_url = $page_id > 0 ? get_permalink($page_id) : false;
+        if ($editor_url) {
+            echo '<p><a class="button" href="' . esc_url($editor_url) . '">Buka halaman editor kompatibilitas</a></p>';
+        }
     }
     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
     echo '<input type="hidden" name="action" value="sanro_studio_save">';
