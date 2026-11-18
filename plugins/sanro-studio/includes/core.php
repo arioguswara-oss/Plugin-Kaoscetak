@@ -16,6 +16,7 @@ function sanro_studio_native_capabilities() {
         'cart_contract' => function_exists('sanro_studio_prepare_cart_design_contract'),
         'order_item_manifest' => function_exists('sanro_studio_order_item_production_manifest'),
         'legacy_runtime_loaded' => function_exists('sanro_studio_boot_runtime'),
+        'woocommerce_loaded' => class_exists('WooCommerce', false),
         'private_master_storage' => false,
         'checkout' => false,
         'production_ready' => false,
@@ -38,6 +39,8 @@ function sanro_studio_native_core_status() {
     return [
         'valid' => true,
         'native_components_present' => !$missing,
+        'woocommerce_loaded' => $capabilities['woocommerce_loaded'],
+        'runtime_dependencies_satisfied' => !$missing && $capabilities['woocommerce_loaded'],
         'missing_components' => $missing,
         'legacy_compat_enabled' => defined('SANRO_STUDIO_ENABLE_LEGACY_COMPAT')
             && SANRO_STUDIO_ENABLE_LEGACY_COMPAT === true,
