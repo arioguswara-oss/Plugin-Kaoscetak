@@ -18,12 +18,6 @@ function sanro_studio_quote_product_design($product_id, $design, $size, $long_sl
         return ['valid' => false, 'error' => 'product_unavailable'];
     }
     // Fail closed: other products have independent admin price schedules.
-    if (!function_exists('wc_get_product')) return ['valid' => false, 'error' => 'product_unavailable'];
-    $product = wc_get_product($product_id);
-    if (!$product || !method_exists($product, 'get_status') || $product->get_status() !== 'publish'
-        || !method_exists($product, 'is_purchasable') || !$product->is_purchasable()) {
-        return ['valid' => false, 'error' => 'product_unavailable'];
-    }
     if (get_post_meta($product_id, '_sanro_studio_pricing_profile', true) !== 'cotton_combed_24s') {
         return ['valid' => false, 'error' => 'pricing_profile_unconfigured'];
     }
@@ -64,6 +58,12 @@ function sanro_studio_quote_size_quantities($product_id, $design, $quantities, $
     // contains multiple sizes. Never accept a browser-provided unit price.
     $product_id = absint($product_id);
     if (!$product_id) return ['valid' => false, 'error' => 'invalid_product'];
+    if (!function_exists('wc_get_product')) return ['valid' => false, 'error' => 'product_unavailable'];
+    $product = wc_get_product($product_id);
+    if (!$product || !method_exists($product, 'get_status') || $product->get_status() !== 'publish'
+        || !method_exists($product, 'is_purchasable') || !$product->is_purchasable()) {
+        return ['valid' => false, 'error' => 'product_unavailable'];
+    }
     if (get_post_meta($product_id, '_sanro_studio_pricing_profile', true) !== 'cotton_combed_24s') {
         return ['valid' => false, 'error' => 'pricing_profile_unconfigured'];
     }
