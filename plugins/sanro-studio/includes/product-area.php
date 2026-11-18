@@ -47,12 +47,6 @@ function sanro_studio_validate_product_design($product_id, $design) {
             }
             if (!$has_text || trim($value) === '') return ['valid' => false, 'error' => 'invalid_text'];
             unset($geometry[$side]['text']);
-        } else {
-            foreach (($geometry[$side]['objects'] ?? []) as $object) {
-                if (is_array($object) && ($object['type'] ?? null) === 'text') {
-                    return ['valid' => false, 'error' => 'missing_text'];
-                }
-            }
         }
     }
     return sanro_studio_validate_print_design($geometry, $areas);
