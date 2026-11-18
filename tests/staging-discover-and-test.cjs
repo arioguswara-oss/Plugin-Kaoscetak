@@ -38,10 +38,12 @@ function approved(url) {
   try {
    const response = await page.goto(url,{waitUntil:'domcontentloaded',timeout:20000});
    console.log('SCAN '+(response ? response.status() : 'unknown')+' '+url);
-   const direct = await page.locator('a[href*="sanro_studio_editor=1"][href*="product_id="]').first().getAttribute('href').catch(()=>null);
+   const link = page.locator('a[href*="sanro_studio_editor=1"][href*="product_id="]').first();
+   const direct = await link.count() ? await link.getAttribute('href') : null;
    if (direct) return approved(direct);
    if (await page.locator('#sanro-studio-buyer #sanro-text-input').count()) return page.url();
-   const card = await page.locator('a.sanro-product-card').first().getAttribute('href').catch(()=>null);
+   const cardLink = page.locator('a.sanro-product-card').first();
+   const card = await cardLink.count() ? await cardLink.getAttribute('href') : null;
    return card ? approved(card) : null;
   } catch (error) {
    console.log('SKIP '+url+' ('+error.message.split('\n')[0]+')');
