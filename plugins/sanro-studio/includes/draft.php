@@ -66,6 +66,11 @@ function sanro_studio_update_draft($id, $token, $design) {
         || !hash_equals($record['token_hash'], hash('sha256', $token))) {
         return ['valid' => false, 'error' => 'not_found'];
     }
+    // Recheck current status: it may have changed after the first authorized read.
+    if (($record['status'] ?? null) !== 'draft'
+        || (int) ($record['product_id'] ?? 0) !== (int) $existing['product_id']) {
+        return ['valid' => false, 'error' => 'draft_locked'];
+    }
     $record['design'] = $design;
     // WordPress update_option() returns false when the stored value is unchanged.
     // Keep timestamps monotonic so a legitimate rapid repeat save is not reported as failure.
