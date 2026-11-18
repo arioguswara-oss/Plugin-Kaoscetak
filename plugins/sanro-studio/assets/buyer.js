@@ -435,7 +435,15 @@
      if(editRevision!==revisionAtStart)
       throw new Error('Desain berubah selama persiapan upload.');
      const localTextDesign=exportTextDraft(true);
-     if(JSON.stringify(localTextDesign)!==JSON.stringify(currentDraft.design))
+     // A reopened draft can contain saved image geometry. Compare only the
+     // text/order metadata; keep existing private image geometry intact.
+     const serverTextDesign=JSON.parse(JSON.stringify(currentDraft.design));
+     for(const name of ['front','back']){
+      if(!serverTextDesign[name])continue;
+      serverTextDesign[name].objects=serverTextDesign[name].objects.filter(item=>item.type!=='image');
+      if(!serverTextDesign[name].objects.length)delete serverTextDesign[name];
+     }
+     if(JSON.stringify(localTextDesign)!==JSON.stringify(serverTextDesign))
       throw new Error('Metadata teks, jumlah, atau warna berubah. Simpan draft teks sebelum upload master.');
      const designHash=currentDraft.design_hash;
      const completed=[];
