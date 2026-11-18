@@ -250,8 +250,12 @@ function sanro_studio_stage_checkout_process() {
     if (!is_array($items)) return;
     $studio = [];
     foreach ($items as $line) {
-        if (is_array($line) && array_key_exists('sanro_studio_design_id', $line)) {
-            $studio[] = $line;
+        if (!is_array($line)) continue;
+        foreach ($line as $key => $value) {
+            if (is_string($key) && strpos($key, 'sanro_studio_') === 0) {
+                $studio[] = $line;
+                break;
+            }
         }
     }
     if (!$studio) return;
