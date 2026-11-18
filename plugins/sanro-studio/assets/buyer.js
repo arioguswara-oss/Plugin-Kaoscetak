@@ -307,8 +307,17 @@
     const result=await response.json();
     if(!response.ok||!result.valid||!result.quote||!Number.isSafeInteger(result.quote.total_price))
      throw new Error('Harga server belum tersedia ('+response.status+').');
-    const formatted=new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(result.quote.total_price);
-    quoteStatus.textContent='Harga server draft tersimpan: '+formatted+' untuk '+result.quote.total_quantity+' pcs. '
+    const money=value=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(value);
+    const rows=result.quote.items;
+    if(!rows||typeof rows!=='object'||Array.isArray(rows))throw new Error('Rincian harga server tidak valid.');
+    const details=Object.entries(rows).map(([size,item])=>{
+     if(!/^(S|M|L|XL|[2-5]XL)$/.test(size)||!item
+      ||!Number.isSafeInteger(item.quantity)||!Number.isSafeInteger(item.unit_price)
+      ||!Number.isSafeInteger(item.subtotal))throw new Error('Rincian harga server tidak valid.');
+     return size+': '+item.quantity+' × '+money(item.unit_price)+' = '+money(item.subtotal);
+    });
+    quoteStatus.textContent='Harga server draft tersimpan: '+money(result.quote.total_price)
+     +' untuk '+result.quote.total_quantity+' pcs. '+details.join(' · ')+'. '
      +(editRevision!==revisionAtRequest?'Desain lokal berubah selama pemeriksaan; simpan ulang untuk harga terbaru. ':'')
      +'Belum dapat checkout.';
    }catch(error){quoteStatus.textContent=error.message||'Gagal memeriksa harga server.'}
