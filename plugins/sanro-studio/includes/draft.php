@@ -59,6 +59,8 @@ function sanro_studio_read_draft($id, $token) {
         'design' => $record['design'],
         'status' => $record['status'],
         'expires_at' => $record['expires_at'],
+        'master_refs' => is_array($record['master_refs'] ?? null)
+            ? array_intersect_key($record['master_refs'], array_flip(['front', 'back'])) : [],
     ];
 }
 
