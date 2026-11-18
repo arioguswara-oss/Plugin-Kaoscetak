@@ -34,3 +34,25 @@ if (($result['error'] ?? null) !== 'order_amount_unavailable') {
     exit(1);
 }
 echo "PASS: invalid_quote_currency\n";
+
+final class SanroStudioTestMetaItem {
+    private $meta;
+    public function __construct($meta) { $this->meta = $meta; }
+    public function get_meta($key, $single = false) { return $this->meta[$key] ?? null; }
+}
+$design_id = '11111111-1111-4111-8111-111111111111';
+$identity_cases = [
+    'bound_design' => [['_sanro_studio_design_id' => $design_id], true],
+    'different_design' => [['_sanro_studio_design_id' => '22222222-2222-4222-8222-222222222222'], false],
+    'missing_design' => [[], false],
+    'array_design' => [['_sanro_studio_design_id' => [$design_id]], false],
+];
+foreach ($identity_cases as $name => [$meta, $expected]) {
+    $result = sanro_studio_validate_order_item_design_identity(new SanroStudioTestMetaItem($meta), $design_id);
+    if (($result['valid'] ?? false) !== $expected
+        || (!$expected && ($result['error'] ?? null) !== 'order_design_mismatch')) {
+        fwrite(STDERR, "FAIL: $name\n");
+        exit(1);
+    }
+    echo "PASS: $name\n";
+}
