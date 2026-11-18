@@ -62,8 +62,17 @@ function sanro_studio_draft_creation_budget() {
 function sanro_studio_draft_payload_allowed($design) {
     if (!is_array($design) || !function_exists('wp_json_encode')) return false;
     $json = wp_json_encode($design);
-    return is_string($json) && strlen($json) <= 16384
-        && !preg_match('/data:image\\/|base64,/i', $json);
+    if (!is_string($json) || strlen($json) > 16384
+        || preg_match('/data:image\\/|base64,/i', $json)) return false;
+    // Until the private Drive master pipeline exists, accept text-only
+    // drafts. Image geometry alone must never imply a saved master.
+    foreach (['front', 'back'] as $side) {
+        if (!isset($design[$side]) || !is_array($design[$side])) continue;
+        foreach (($design[$side]['objects'] ?? []) as $object) {
+            if (is_array($object) && ($object['type'] ?? null) === 'image') return false;
+        }
+    }
+    return true;
 }
 
 function sanro_studio_rest_create_draft($request) {
