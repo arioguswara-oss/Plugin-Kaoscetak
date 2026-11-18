@@ -107,7 +107,18 @@ function sanro_studio_render_buyer_editor() {
     // This view is selected only after product identity and visibility checks.
     get_header();
     echo '<main id="sanro-studio-buyer" class="sanro-buyer" aria-label="SANRO Studio">';
-    echo '<header><h1>SANRO Studio</h1><p>Editor kaos — pratinjau saja, belum dapat checkout</p></header>';
+    echo '<header><h1>SANRO Studio</h1><p>Editor kaos — pratinjau saja, belum dapat checkout</p>';
+    // Keep the standalone catalog reachable without losing the selected editor page.
+    if ($on_selected_page) {
+        echo '<p><a class="sanro-back-to-products" href="' . esc_url(get_permalink($editor_page_id)) . '">← Kembali pilih produk</a></p>';
+    } elseif ($on_product) {
+        $catalog_page_id = (int) get_option('sanro_studio_editor_page_id', 0);
+        if ($catalog_page_id > 0 && get_post_type($catalog_page_id) === 'page'
+            && get_post_status($catalog_page_id) === 'publish') {
+            echo '<p><a class="sanro-back-to-products" href="' . esc_url(get_permalink($catalog_page_id)) . '">← Kembali pilih produk</a></p>';
+        }
+    }
+    echo '</header>';
     echo '<div class="sanro-layout"><section class="sanro-preview" aria-label="Pratinjau desain">';
     echo '<nav aria-label="Sisi kaos"><button type="button" data-side="front" aria-pressed="true">Depan</button> <button type="button" data-side="back" aria-pressed="false">Belakang</button></nav>';
     echo '<div class="sanro-shirt"><div class="sanro-safe"><img alt="Gambar desain" hidden><div class="sanro-text" hidden></div></div></div>';
