@@ -317,3 +317,26 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
     }
     echo '</div>';
 }
+
+/**
+ * Read-only production-file eligibility. No Google Drive API calls or folder
+ * creation here. The Drive URL remains unavailable until an authorized
+ * integration stores a verified private reference separately.
+ */
+function sanro_studio_order_production_file_status($order) {
+    if (!is_object($order) || !method_exists($order, 'is_paid')
+        || !method_exists($order, 'get_meta')) {
+        return ['valid' => false, 'error' => 'invalid_order'];
+    }
+    $ready = $order->get_meta('_sanro_studio_production_ready', true);
+    // Never trust arbitrary truthy strings or buyer-supplied status.
+    $production_ready = $ready === 'yes';
+    $paid = $order->is_paid() === true;
+    return [
+        'valid' => true,
+        'eligible' => $paid || $production_ready,
+        'reason' => $paid ? 'payment_confirmed' : ($production_ready ? 'production_ready' : 'awaiting_payment_or_production'),
+        'drive_link_available' => false,
+        'drive_url' => null,
+    ];
+}
