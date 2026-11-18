@@ -214,7 +214,7 @@
  }
  // Text-only staging draft: no master upload, checkout or public share.
  const saveButton=q('#sanro-save-draft'),saveStatus=q('#sanro-save-status');
- let savedId=null,ownerToken=null,saving=false,editRevision=0,savedRevision=-1;
+ let savedId=null,ownerToken=null,saving=false,editRevision=0,savedRevision=-1,lastKnownDesignHash=null;
  const draftStorageKey='sanro-studio-draft:'+String(config.product_id);
  function restoreDesign(design){
   if(!design||typeof design!=='object')throw new Error('Metadata draft tidak valid.');
@@ -281,6 +281,7 @@
    return;
   }
   restoreDesign(result.design);savedId=credentials.id;ownerToken=credentials.token;savedRevision=editRevision;
+  lastKnownDesignHash=typeof result.design_hash==='string'?result.design_hash:null;
   saveStatus.textContent='Draft teks berhasil dibuka kembali. Design ID: '+savedId;
  }
  function exportTextDraft(){
@@ -518,11 +519,21 @@
     const headers={'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce};
     if(savedId&&ownerToken)headers['X-Sanro-Owner-Token']=ownerToken;
     const endpoint=savedId?config.draft_api.url+'/'+encodeURIComponent(savedId):config.draft_api.url;
-    const payload=savedId?{design}:{product_id:Number(config.product_id),design};
+    const payload=savedId?{design,expected_design_hash:lastKnownDesignHash}:{product_id:Number(config.product_id),design};
     const response=await fetch(endpoint,{method:'POST',headers,body:JSON.stringify(payload),credentials:'same-origin',cache:'no-store'});
     const result=await response.json();
     if(!response.ok||!result.valid)throw new Error('Penyimpanan gagal ('+response.status+').');
     if(!savedId){savedId=result.design_id;ownerToken=result.owner_token}
+    const verify=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId),{
+     method:'GET',credentials:'same-origin',cache:'no-store',
+     headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken}
+    });
+    if(!verify.ok)throw new Error('Draft tersimpan tetapi verifikasi revisi gagal. Muat ulang sebelum mengedit.');
+    const verified=await verify.json();
+    if(!verified.valid||typeof verified.design_hash!=='string'
+     ||!/^[a-f0-9]{64}$/.test(verified.design_hash))
+     throw new Error('Fingerprint revisi draft tidak tersedia.');
+    lastKnownDesignHash=verified.design_hash;
     if(editRevision===revisionAtSave)savedRevision=editRevision;
     try{sessionStorage.setItem(draftStorageKey,JSON.stringify({id:savedId,token:ownerToken}))}catch(_error){}
     saveStatus.textContent=editRevision===revisionAtSave
