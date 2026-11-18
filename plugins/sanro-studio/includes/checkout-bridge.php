@@ -286,9 +286,14 @@ function sanro_studio_stage_checkout_process() {
     }
     // Authorization is request-scoped: never put the owner token in cart,
     // order metadata, or a WooCommerce session.
+    $contract = sanro_studio_prepare_cart_design_contract($id, $token, $product_id);
+    if (empty($contract['valid'])) {
+        wc_add_notice('SANRO Studio: design authorization expired.', 'error');
+        return;
+    }
     $GLOBALS['sanro_studio_checkout_verified'] = [
         'design_id' => $id, 'product_id' => $product_id,
-        'contract' => sanro_studio_prepare_cart_design_contract($id, $token, $product_id),
+        'contract' => $contract, 'bound_sizes' => [],
     ];
 }
 
@@ -315,6 +320,12 @@ function sanro_studio_stage_checkout_create_order_line_item($item, $cart_item_ke
         throw new RuntimeException('SANRO Studio: checkout authorization missing.');
     }
     $contract = $verified['contract'];
+    $size = $values['sanro_studio_size'] ?? null;
+    if (!is_string($size) || !isset($verified['bound_sizes'])
+        || !is_array($verified['bound_sizes'])
+        || isset($verified['bound_sizes'][$size])) {
+        throw new RuntimeException('SANRO Studio: duplicate or invalid order size.');
+    }
     $candidates = sanro_studio_prepare_size_cart_lines($contract);
     if (empty($candidates['valid'])) {
         throw new RuntimeException('SANRO Studio: invalid size quote.');
@@ -343,6 +354,7 @@ function sanro_studio_stage_checkout_create_order_line_item($item, $cart_item_ke
     if (empty($bound['valid'])) {
         throw new RuntimeException('SANRO Studio: order item validation failed.');
     }
+    $GLOBALS['sanro_studio_checkout_verified']['bound_sizes'][$size] = true;
 }
 
 /**
