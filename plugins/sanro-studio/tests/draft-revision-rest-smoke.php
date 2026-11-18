@@ -40,9 +40,11 @@ revision_assert($badDesign instanceof WP_Error && $badDesign->code === 'sanro_in
 $image = ['front' => ['objects' => [['type' => 'image', 'x' => 1, 'y' => 1, 'width' => 2, 'height' => 2]]]];
 $frontRef = '00000000-0000-4000-8000-000000000000-front-' . str_repeat('a', 64) . '.png';
 $backRef = '00000000-0000-4000-8000-000000000000-back-' . str_repeat('a', 64) . '.png';
-revision_assert(!sanro_studio_draft_image_binding_allowed($image, []), 'image without private master rejected');
-revision_assert(!sanro_studio_draft_image_binding_allowed($image, ['back' => $backRef]), 'opposite side master rejected');
-revision_assert(sanro_studio_draft_image_binding_allowed($image, ['front' => $frontRef]), 'same-side private master accepted');
-revision_assert(!sanro_studio_draft_image_binding_allowed($image, ['front' => 'https://example.com/file.png']), 'public image URL rejected');
+revision_assert(!sanro_studio_draft_image_binding_allowed($image, [], '00000000-0000-4000-8000-000000000000'), 'image without private master rejected');
+revision_assert(!sanro_studio_draft_image_binding_allowed($image, ['back' => $backRef], '00000000-0000-4000-8000-000000000000'), 'opposite side master rejected');
+revision_assert(sanro_studio_draft_image_binding_allowed($image, ['front' => $frontRef], '00000000-0000-4000-8000-000000000000'), 'same-side private master accepted');
+revision_assert(!sanro_studio_draft_image_binding_allowed($image, ['front' => 'https://example.com/file.png'], '00000000-0000-4000-8000-000000000000'), 'public image URL rejected');
+revision_assert(!sanro_studio_draft_image_binding_allowed($image, ['front' => $frontRef], '00000000-0000-4000-8000-000000000001'), 'cross-draft master rejected');
+revision_assert(!sanro_studio_draft_image_binding_allowed($image, ['front' => $frontRef]), 'missing draft UUID rejected');
 revision_assert(!sanro_studio_draft_payload_allowed($image), 'image draft still gated until restoration integration');
-echo "PASS: 9 draft REST and image-binding checks\n";
+echo "PASS: 11 draft REST and image-binding checks\n";
