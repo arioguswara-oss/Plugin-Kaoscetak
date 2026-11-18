@@ -175,7 +175,10 @@ function sanro_studio_read_owned_draft_preview($design_id, $owner_token, $side, 
     }
     $bytes = file_get_contents($path);
     $checked = sanro_studio_validate_preview_bytes($bytes);
-    if (empty($checked['valid']) || strpos($file_id, '-' . $checked['sha256'] . '.') === false) {
+    $extensions = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp'];
+    $expected = strtolower($design_id) . '-' . $side . '-' . ($checked['sha256'] ?? '') .
+        '.' . ($extensions[$checked['mime'] ?? ''] ?? '');
+    if (empty($checked['valid']) || !hash_equals($expected, $file_id)) {
         return ['valid' => false, 'error' => 'preview_integrity_failed'];
     }
     return ['valid' => true, 'bytes' => $bytes, 'mime' => $checked['mime']];
