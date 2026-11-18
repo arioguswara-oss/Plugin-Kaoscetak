@@ -33,7 +33,8 @@
     total+=value;
    }
   }
-  q('#sanro-qty-total').textContent=qtyInputs.some(input=>!input.validity.valid)?'Periksa jumlah tiap ukuran':'Total: '+total+' pcs';
+  const invalid=qtyInputs.some(input=>!input.validity.valid);
+  q('#sanro-qty-total').textContent=invalid?'Periksa jumlah tiap ukuran':total>5000?'Maksimal 5.000 pcs per pesanan':'Total: '+total+' pcs';
   updateEstimate();
  }
  qtyInputs.forEach(input=>input.addEventListener('input',updateQty));
