@@ -12,6 +12,7 @@ assert_native(!function_exists('sanro_studio_boot_runtime')
 $status = sanro_studio_native_core_status();
 assert_native($status['valid'] && $status['native_components_present'],
     'native function inventory detects provided fixtures');
+assert_native(!$status['ready_for_staging'], 'buyer staging gate closed by default');
 assert_native(!$status['woocommerce_loaded'] && !$status['runtime_dependencies_satisfied'],
     'missing WooCommerce keeps runtime readiness false despite native symbols');
 assert_native(!$status['checkout_enabled'] && !$status['production_ready']
