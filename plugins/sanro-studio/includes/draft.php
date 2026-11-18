@@ -109,6 +109,12 @@ function sanro_studio_update_draft($id, $token, $design) {
     }
     $record = $before;
     $record['design'] = $design;
+    // Master references belong to the previous design revision. A text/size/
+    // color update cannot silently reuse artwork that was verified for an
+    // earlier draft state. Files remain private; only their binding is revoked.
+    if (!empty($record['master_refs'])) {
+        $record['master_refs'] = [];
+    }
     $record['updated_at'] = max(time(), (int) ($before['updated_at'] ?? $before['created_at'] ?? 0) + 1);
     // Compare serialized bytes exactly. wpdb->update() uses the column's
     // collation, which can be case-insensitive and is unsafe for CAS.
