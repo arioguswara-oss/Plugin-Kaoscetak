@@ -120,6 +120,16 @@ try {
 }
 gate_check($duplicate_rejected, 'duplicate size binding rejected');
 gate_check(count($GLOBALS['sanro_studio_checkout_verified']['bound_sizes'])===1, 'bound size tracked once');
+sanro_studio_stage_checkout_verify_order_batch(null, []);
+gate_check(count($GLOBALS['sanro_studio_checkout_verified']['bound_sizes'])===1, 'complete batch accepted');
+$GLOBALS['sanro_studio_checkout_verified']['bound_sizes'] = [];
+$incomplete_rejected = false;
+try {
+    sanro_studio_stage_checkout_verify_order_batch(null, []);
+} catch (RuntimeException $exception) {
+    $incomplete_rejected = true;
+}
+gate_check($incomplete_rejected, 'incomplete batch rejected before save');
 unset($GLOBALS['sanro_studio_checkout_verified']);
 function wp_verify_nonce($nonce, $action) {
     return $nonce === 'validnonce' && $action === 'sanro_studio_checkout_auth';
@@ -135,4 +145,4 @@ $_POST['sanro_studio_checkout_token'] = 'not-a-token';
 gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'invalid token rejected');
 unset($_POST['sanro_studio_checkout_token'], $_POST['sanro_studio_checkout_nonce']);
 gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'missing checkout credentials rejected');
-echo "PASS: 25 checkout gate checks\n";
+echo "PASS: 27 checkout gate checks\n";
