@@ -49,6 +49,7 @@ function sanro_studio_rest_draft_response($result) {
     $error = isset($result['error']) && is_string($result['error']) ? $result['error'] : 'invalid_draft';
     $status = in_array($error, ['invalid_product', 'invalid_design'], true) ? 400 : 409;
     if (in_array($error, ['invalid_credentials', 'not_found'], true)) $status = 404;
+    if ($error === 'draft_expired') $status = 410;
     return new WP_Error('sanro_' . $error, 'Draft operation rejected.', ['status' => $status]);
 }
 
