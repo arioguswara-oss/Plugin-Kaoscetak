@@ -86,6 +86,51 @@ function sanro_studio_prepare_cart_line_snapshot($contract) {
 }
 
 /**
+ * Build per-size WooCommerce line candidates using the server quote.
+ * WooCommerce prices are per unit: never apply a multi-size order total as
+ * the unit price. This helper remains read-only; no cart hook is registered.
+ */
+function sanro_studio_prepare_size_cart_lines($contract) {
+    $snapshot = sanro_studio_prepare_cart_line_snapshot($contract);
+    if (empty($snapshot['valid'])) return $snapshot;
+    $items = $contract['quote']['items'] ?? null;
+    if (!is_array($items) || !$items || count($items) > 8) {
+        return ['valid' => false, 'error' => 'invalid_size_breakdown'];
+    }
+    $lines = [];
+    $sum_quantity = 0;
+    $sum_price = 0;
+    foreach ($items as $size => $item) {
+        if (!is_string($size) || !in_array($size, ['S','M','L','XL','2XL','3XL','4XL','5XL'], true)
+            || !is_array($item)
+            || !isset($item['quantity'], $item['unit_price'], $item['subtotal'])
+            || !is_int($item['quantity']) || $item['quantity'] < 1 || $item['quantity'] > 999
+            || !is_int($item['unit_price']) || $item['unit_price'] < 1
+            || !is_int($item['subtotal'])
+            || $item['subtotal'] !== $item['quantity'] * $item['unit_price']) {
+            return ['valid' => false, 'error' => 'invalid_size_breakdown'];
+        }
+        $sum_quantity += $item['quantity'];
+        $sum_price += $item['subtotal'];
+        $lines[] = [
+            'product_id' => $snapshot['product_id'],
+            'quantity' => $item['quantity'],
+            'sanro_studio_design_id' => $snapshot['sanro_studio_design_id'],
+            'sanro_studio_size' => $size,
+            'sanro_studio_unit_price' => $item['unit_price'],
+            'sanro_studio_line_subtotal' => $item['subtotal'],
+            'sanro_studio_quote_currency' => 'IDR',
+        ];
+    }
+    if ($sum_quantity !== $snapshot['quantity']
+        || $sum_price !== $snapshot['sanro_studio_quote_total']) {
+        return ['valid' => false, 'error' => 'size_totals_mismatch'];
+    }
+    return ['valid' => true, 'lines' => $lines, 'total_quantity' => $sum_quantity,
+        'total_price' => $sum_price, 'cart_mutation_enabled' => false];
+}
+
+/**
  * Verify a cart item's public design identity against a freshly authorized
  * draft contract. This does not add products or change WooCommerce prices.
  * Caller must hold the owner token transiently; never put it in cart metadata.
