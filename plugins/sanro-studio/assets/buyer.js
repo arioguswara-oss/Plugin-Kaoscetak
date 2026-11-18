@@ -238,18 +238,27 @@
   if(hash!==data.sha256)throw new Error('Checksum master '+name+' tidak cocok.');
   return URL.createObjectURL(new Blob([bytes],{type:data.mime}));
  }
- function restoreDesign(design){
+ function restoreDesign(design,masterUrls={}){
   if(!design||typeof design!=='object')throw new Error('Metadata draft tidak valid.');
   for(const name of ['front','back']){
    const entry=design[name];if(!entry)continue;
    if(!config.safe_areas[name]||!categories[entry.category]||!Array.isArray(entry.objects)
-    ||entry.objects.length!==1||entry.objects[0].type!=='text'||typeof entry.text!=='string'
-    ||!Number.isInteger(entry.font_size)||entry.font_size<10||entry.font_size>48
-    ||typeof entry.text_color!=='string'||!/^#[0-9a-f]{6}$/i.test(entry.text_color))throw new Error('Format draft tidak didukung.');
-   const obj=entry.objects[0],area=config.safe_areas[name];
-   if(![obj.x,obj.y,obj.width,obj.height].every(Number.isFinite)||obj.width<=0||obj.height<=0
-    ||obj.x<0||obj.y<0||obj.x+obj.width>area.width+0.000001
-    ||obj.y+obj.height>area.height+0.000001)throw new Error('Geometri draft tidak valid.');
+    ||entry.objects.length<1||entry.objects.length>2
+    ||entry.objects.some(obj=>!['image','text'].includes(obj.type))
+    ||new Set(entry.objects.map(obj=>obj.type)).size!==entry.objects.length)
+    throw new Error('Format draft tidak didukung.');
+   const hasText=entry.objects.some(obj=>obj.type==='text');
+   const hasImage=entry.objects.some(obj=>obj.type==='image');
+   if(hasImage&&!masterUrls[name])throw new Error('Master privat '+name+' belum tersedia.');
+   if(hasText&&(typeof entry.text!=='string'||!Number.isInteger(entry.font_size)
+    ||entry.font_size<10||entry.font_size>48||typeof entry.text_color!=='string'
+    ||!/^#[0-9a-f]{6}$/i.test(entry.text_color)))throw new Error('Format teks draft tidak valid.');
+   const area=config.safe_areas[name];
+   for(const obj of entry.objects){
+    if(![obj.x,obj.y,obj.width,obj.height].every(Number.isFinite)||obj.width<=0||obj.height<=0
+     ||obj.x<0||obj.y<0||obj.x+obj.width>area.width+0.000001
+     ||obj.y+obj.height>area.height+0.000001)throw new Error('Geometri draft tidak valid.');
+   }
   }
   if(design.long_sleeve!==undefined){
    if(typeof design.long_sleeve!=='boolean')throw new Error('Model lengan draft tidak valid.');
@@ -272,9 +281,21 @@
   for(const name of ['front','back']){
    const entry=design[name];const d=sides[name];
    if(!entry){d.text='';continue}
-   d.text=entry.text;d.category=entry.category;d.fontSize=entry.font_size;d.textColor=entry.text_color;
-   d.textX=entry.objects[0].x/config.safe_areas[name].width*100;
-   d.textY=entry.objects[0].y/config.safe_areas[name].height*100;
+   const textObject=entry.objects.find(obj=>obj.type==='text');
+   const imageObject=entry.objects.find(obj=>obj.type==='image');
+   d.text=textObject?entry.text:'';d.category=entry.category;
+   if(textObject){
+    d.fontSize=entry.font_size;d.textColor=entry.text_color;
+    d.textX=textObject.x/config.safe_areas[name].width*100;
+    d.textY=textObject.y/config.safe_areas[name].height*100;
+   }
+   if(imageObject){
+    if(d.url)URL.revokeObjectURL(d.url);
+    d.url=masterUrls[name];d.file=null;d.pending=null;
+    d.imageX=imageObject.x/config.safe_areas[name].width*100;
+    d.imageY=imageObject.y/config.safe_areas[name].height*100;
+    d.imageSize=imageObject.width/config.safe_areas[name].width*100;
+   }
   }
   render();
  }
