@@ -22,6 +22,7 @@ class SanroDraftLockDB {
     }
 }
 $wpdb = new SanroDraftLockDB();
+$GLOBALS['can_manage'] = true;
 require dirname(__DIR__) . '/includes/draft.php';
 function verify($ok, $label) {
     if (!$ok) { fwrite(STDERR, "FAIL: $label\n"); exit(1); }
@@ -31,6 +32,9 @@ $id = '123e4567-e89b-42d3-a456-123456789012';
 $token = str_repeat('a', 64);
 verify(sanro_studio_lock_draft_for_order($id, str_repeat('b', 64), 20)['error'] === 'not_found', 'wrong owner denied');
 verify(sanro_studio_lock_draft_for_order($id, $token, 0)['error'] === 'invalid_order', 'invalid order rejected');
+$GLOBALS['can_manage'] = false;
+verify(sanro_studio_lock_draft_for_order($id, $token, 20)['error'] === 'forbidden', 'direct draft lock requires admin');
+$GLOBALS['can_manage'] = true;
 $locked = sanro_studio_lock_draft_for_order($id, $token, 20);
 verify($locked['valid'] && $GLOBALS['record']['status'] === 'locked' && $GLOBALS['record']['order_id'] === 20, 'atomic lock persists order association');
 verify(sanro_studio_lock_draft_for_order($id, $token, 21)['error'] === 'draft_locked', 'second order cannot claim locked draft');
