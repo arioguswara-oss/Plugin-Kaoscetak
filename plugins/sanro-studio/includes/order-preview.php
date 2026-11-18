@@ -31,7 +31,7 @@ function sanro_studio_admin_order_preview_status($order) {
     foreach (['front' => 'Depan', 'back' => 'Belakang'] as $side => $label) {
         $state = $inventory[$side] === null
             ? 'Belum tersedia'
-            : 'Referensi privat tercatat; tampilan gambar menunggu endpoint terotorisasi';
+            : 'Referensi privat tercatat; gunakan tautan admin untuk melihat preview';
         echo '<p>' . esc_html($label . ': ' . $state) . '</p>';
         if ($inventory[$side] !== null && method_exists($order, 'get_id')) {
             $order_id = absint($order->get_id());
@@ -146,12 +146,10 @@ function sanro_studio_admin_order_preview_bytes($order, $side) {
     }
     $bytes = @file_get_contents($path);
     $checked = sanro_studio_validate_preview_bytes($bytes);
-    if (empty($checked['valid'])
-        || !preg_match('/-' . $checked['sha256'] . '\\.(png|jpg|webp)$/D', $ref)
-        || !hash_equals(
-            ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp'][$checked['mime']],
-            substr($ref, strrpos($ref, '.') + 1)
-        )) {
+    $extensions = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp'];
+    $expected = substr($ref, 0, 36) . '-' . $side . '-' . ($checked['sha256'] ?? '') .
+        '.' . ($extensions[$checked['mime'] ?? ''] ?? '');
+    if (empty($checked['valid']) || !hash_equals($expected, $ref)) {
         return ['valid' => false, 'error' => 'preview_integrity_failed'];
     }
     return ['valid' => true, 'bytes' => $bytes, 'mime' => $checked['mime']];
