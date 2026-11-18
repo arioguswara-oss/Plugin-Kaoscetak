@@ -116,3 +116,53 @@ function sanro_studio_stage_price_cart_batch($contract, $cart_lines) {
     return ['valid' => true, 'total_quantity' => $verified['total_quantity'],
         'total_price' => $verified['total_price'], 'requires_totals_recalculation' => true];
 }
+
+/**
+ * Opt-in staging transaction: add a complete, empty-cart design batch, apply
+ * verified per-size prices and recalculate totals. No endpoint/hook is exposed.
+ * A separate checkout/session gate is still required before buyer use.
+ */
+function sanro_studio_stage_commit_cart_lines($contract, $cart) {
+    if (!defined('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT')
+        || SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT !== true
+        || !is_object($cart) || !method_exists($cart, 'calculate_totals')) {
+        return ['valid' => false, 'error' => 'cart_commit_disabled'];
+    }
+    $preflight = sanro_studio_stage_add_cart_lines($contract, $cart);
+    if (empty($preflight['valid'])) return $preflight;
+    $keys = [];
+    foreach ($preflight['lines'] as $line) {
+        // Explicit unique per-size identity prevents WooCommerce merging sizes.
+        $meta = [
+            'sanro_studio_design_id' => $line['sanro_studio_design_id'],
+            'sanro_studio_size' => $line['sanro_studio_size'],
+            'sanro_studio_unit_price' => $line['sanro_studio_unit_price'],
+            'sanro_studio_line_subtotal' => $line['sanro_studio_line_subtotal'],
+            'sanro_studio_quote_currency' => 'IDR',
+        ];
+        $key = $cart->add_to_cart($line['product_id'], $line['quantity'], 0, [], $meta);
+        if (!is_string($key) || $key === '' || in_array($key, $keys, true)) {
+            foreach ($keys as $added) $cart->remove_cart_item($added);
+            return ['valid' => false, 'error' => 'cart_add_failed'];
+        }
+        $keys[] = $key;
+    }
+    $actual = $cart->get_cart();
+    $selected = [];
+    foreach ($keys as $key) {
+        if (!isset($actual[$key]) || !is_array($actual[$key])) {
+            foreach ($keys as $added) $cart->remove_cart_item($added);
+            return ['valid' => false, 'error' => 'cart_line_missing'];
+        }
+        $selected[] = $actual[$key];
+    }
+    $priced = sanro_studio_stage_price_cart_batch($contract, $selected);
+    if (empty($priced['valid'])) {
+        foreach ($keys as $added) $cart->remove_cart_item($added);
+        return $priced;
+    }
+    $cart->calculate_totals();
+    return ['valid' => true, 'cart_keys' => $keys,
+        'total_price' => $priced['total_price'],
+        'requires_session_checkout_guard' => true];
+}
