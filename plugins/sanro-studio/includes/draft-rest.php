@@ -24,6 +24,11 @@ function sanro_studio_register_draft_routes() {
         'callback' => 'sanro_studio_rest_read_draft',
         'permission_callback' => 'sanro_studio_rest_draft_nonce',
     ]);
+    register_rest_route('sanro-studio/v1', '/drafts/(?P<id>[a-fA-F0-9-]{36})/quote', [
+        'methods' => 'GET',
+        'callback' => 'sanro_studio_rest_quote_draft',
+        'permission_callback' => 'sanro_studio_rest_draft_nonce',
+    ]);
     register_rest_route('sanro-studio/v1', '/drafts/(?P<id>[a-fA-F0-9-]{36})', [
         'methods' => 'POST',
         'callback' => 'sanro_studio_rest_update_draft',
@@ -116,4 +121,36 @@ function sanro_studio_rest_read_draft($request) {
     return sanro_studio_rest_draft_response(sanro_studio_read_draft(
         $request->get_param('id'), $request->get_header('X-Sanro-Owner-Token')
     ));
+}
+
+/**
+ * Read-only, owner-authorized price quote for a saved text-only draft.
+ * Rechecks the product and geometry on each request; never trusts a client
+ * price, quantity, product ID, sleeve variant, or checkout instruction.
+ */
+function sanro_studio_rest_quote_draft($request) {
+    if (function_exists('nocache_headers')) nocache_headers();
+    $draft = sanro_studio_read_draft(
+        $request->get_param('id'), $request->get_header('X-Sanro-Owner-Token')
+    );
+    if (empty($draft['valid'])) return sanro_studio_rest_draft_response($draft);
+    if ($draft['status'] !== 'draft') {
+        return new WP_Error('sanro_draft_locked', 'Draft is not editable.', ['status' => 409]);
+    }
+    if (empty(sanro_studio_public_editor_config($draft['product_id'])['valid'])) {
+        return new WP_Error('sanro_product_unavailable', 'Product unavailable.', ['status' => 404]);
+    }
+    $design = $draft['design'];
+    $quantities = $design['quantities'] ?? null;
+    $long_sleeve = $design['long_sleeve'] ?? false;
+    $quote = sanro_studio_quote_size_quantities(
+        $draft['product_id'], $design, $quantities, $long_sleeve
+    );
+    if (empty($quote['valid'])) return sanro_studio_rest_draft_response($quote);
+    return rest_ensure_response([
+        'valid' => true,
+        'design_id' => $draft['design_id'],
+        'quote' => $quote,
+        'checkout_enabled' => false,
+    ]);
 }
