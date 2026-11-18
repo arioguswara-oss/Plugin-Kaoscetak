@@ -375,7 +375,11 @@ function sanro_studio_stage_checkout_credential_field() {
             if (is_string($key) && strpos($key, 'sanro_studio_') === 0) {
                 echo '<div class="sanro-studio-staging-authorization">';
                 echo '<label for="sanro_studio_checkout_token">SANRO Studio draft owner token (staging only)</label>';
-                echo '<input type="password" id="sanro_studio_checkout_token" name="sanro_studio_checkout_token" autocomplete="off" maxlength="64" required>';
+                $design_id = isset($line['sanro_studio_design_id']) && is_string($line['sanro_studio_design_id'])
+                    ? $line['sanro_studio_design_id'] : '';
+                $product_id = isset($line['product_id']) ? (int) $line['product_id'] : 0;
+                echo '<input type="hidden" id="sanro_studio_checkout_token" name="sanro_studio_checkout_token" value="" data-design-id="' . esc_attr($design_id) . '" data-product-id="' . esc_attr((string) $product_id) . '">';
+                echo '<p class="sanro-studio-checkout-help">Otorisasi desain dipulihkan otomatis dari sesi editor pada browser ini. Jika sesi hilang, buka kembali editor dan simpan desain.</p>';
                 wp_nonce_field('sanro_studio_checkout_auth', 'sanro_studio_checkout_nonce');
                 echo '</div>';
                 return;
@@ -470,4 +474,18 @@ function sanro_studio_stage_checkout_verify_order_batch($order, $data) {
         }
         $seen[$size] = true;
     }
+}
+
+/**
+ * Classic checkout only. Read the browser's tab-scoped draft credential into
+ * the checkout form on submit; it is never stored in WooCommerce sessions.
+ */
+function sanro_studio_stage_enqueue_checkout_authorization() {
+    if (!defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
+        || SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK !== true
+        || !function_exists('is_checkout') || !is_checkout()
+        || (function_exists('is_order_received_page') && is_order_received_page())) return;
+    wp_enqueue_script('sanro-studio-checkout-auth',
+        plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/checkout-auth.js',
+        ['jquery', 'wc-checkout'], SANRO_STUDIO_VERSION, true);
 }
