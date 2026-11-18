@@ -70,3 +70,28 @@ function sanro_studio_native_capabilities() {
         'production_ready' => false,
     ];
 }
+
+/**
+ * Native readiness is deliberately conservative: presence of PHP functions
+ * does not prove that buyer workflows or production integrations are tested.
+ */
+function sanro_studio_native_core_status() {
+    $capabilities = sanro_studio_native_capabilities();
+    $required = ['buyer_editor', 'product_configuration', 'design_validation',
+        'server_quote', 'private_text_drafts', 'private_preview_storage',
+        'cart_contract', 'order_item_manifest'];
+    $missing = [];
+    foreach ($required as $name) {
+        if (empty($capabilities[$name])) $missing[] = $name;
+    }
+    return [
+        'valid' => true,
+        'native_components_present' => !$missing,
+        'missing_components' => $missing,
+        'legacy_compat_enabled' => defined('SANRO_STUDIO_ENABLE_LEGACY_COMPAT')
+            && SANRO_STUDIO_ENABLE_LEGACY_COMPAT === true,
+        'checkout_enabled' => false,
+        'production_ready' => false,
+        'verified_end_to_end' => false,
+    ];
+}
