@@ -78,6 +78,7 @@ function sanro_studio_render_buyer_editor() {
     echo '<button type="button" id="sanro-center-text">Posisikan teks ke tengah</button>';
     echo '<button type="button" id="sanro-remove-text">Hapus teks sisi ini</button>';
     echo '<label>Kategori cetak<select id="sanro-category"><option>A5</option><option>A4</option><option>A3</option><option>A3+</option></select></label>';
+    echo '<button type="button" id="sanro-reset-side">Kosongkan desain sisi ini</button>';
     echo '<p id="sanro-validation" role="status">Belum ada desain.</p>';
     if (!empty($config['draft_api'])) {
         echo '<button type="button" id="sanro-save-draft">Simpan draft teks</button>';
