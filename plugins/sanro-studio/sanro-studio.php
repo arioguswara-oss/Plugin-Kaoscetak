@@ -15,6 +15,7 @@ define('SANRO_STUDIO_VERSION', '0.1.1-dev');
 require_once __DIR__ . '/includes/core.php';
 require_once __DIR__ . '/includes/print-area.php';
 require_once __DIR__ . '/includes/product-area.php';
+require_once __DIR__ . '/includes/product-pricing.php';
 require_once __DIR__ . '/includes/pricing.php';
 require_once __DIR__ . '/includes/quote.php';
 require_once __DIR__ . '/includes/runtime.php';
@@ -28,3 +29,6 @@ add_action('admin_post_sanro_studio_save', 'sanro_studio_save_settings');
 
 add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_area_fields');
 add_action('woocommerce_admin_process_product_object', 'sanro_studio_save_product_areas');
+
+add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_pricing_fields');
+add_action('woocommerce_admin_process_product_object', 'sanro_studio_save_product_pricing');
