@@ -122,6 +122,77 @@ function sanro_studio_rest_upload_preview($request) {
     ]);
 }
 
+/**
+ * Master upload remains staging-only and opt-in. Nonce is CSRF protection;
+ * the separate draft owner token authorizes access to a specific draft.
+ */
+function sanro_studio_register_master_upload_route() {
+    if (!defined('SANRO_STUDIO_ENABLE_MASTER_UPLOAD')
+        || SANRO_STUDIO_ENABLE_MASTER_UPLOAD !== true
+        || !defined('SANRO_STUDIO_ENABLE_PRIVATE_MASTERS')
+        || SANRO_STUDIO_ENABLE_PRIVATE_MASTERS !== true
+        || !sanro_studio_draft_rest_enabled()) return;
+    register_rest_route('sanro-studio/v1',
+        '/drafts/(?P<id>[a-fA-F0-9-]{36})/masters/(?P<side>front|back)', [
+            'methods' => 'POST',
+            'callback' => 'sanro_studio_rest_upload_master',
+            'permission_callback' => 'sanro_studio_rest_draft_nonce',
+        ]);
+}
+
+function sanro_studio_rest_upload_master($request) {
+    if (!defined('SANRO_STUDIO_ENABLE_MASTER_UPLOAD')
+        || SANRO_STUDIO_ENABLE_MASTER_UPLOAD !== true
+        || !defined('SANRO_STUDIO_ENABLE_PRIVATE_MASTERS')
+        || SANRO_STUDIO_ENABLE_PRIVATE_MASTERS !== true) {
+        return new WP_Error('sanro_master_disabled', 'Master upload unavailable.', ['status' => 403]);
+    }
+    $id = $request->get_param('id');
+    $side = $request->get_param('side');
+    $token = $request->get_header('X-Sanro-Owner-Token');
+    $draft = sanro_studio_read_draft($id, $token);
+    if (empty($draft['valid'])) return sanro_studio_rest_draft_response($draft);
+    if (($draft['status'] ?? null) !== 'draft') {
+        return new WP_Error('sanro_draft_locked', 'Draft is not editable.', ['status' => 409]);
+    }
+    $encoded = $request->get_param('image_base64');
+    if (!is_string($encoded) || strlen($encoded) < 128
+        || strlen($encoded) > 13981016
+        || !preg_match('/^[A-Za-z0-9+\\/]+={0,2}$/D', $encoded)) {
+        return new WP_Error('sanro_invalid_master', 'Invalid master image.', ['status' => 400]);
+    }
+    $bytes = base64_decode($encoded, true);
+    if (!is_string($bytes) || strlen($bytes) > 10485760) {
+        return new WP_Error('sanro_invalid_master', 'Invalid master image.', ['status' => 400]);
+    }
+    $checked = sanro_studio_validate_master_bytes($bytes);
+    if (empty($checked['valid'])) {
+        return new WP_Error('sanro_invalid_master', 'Invalid master image.', ['status' => 400]);
+    }
+    // Best-effort abuse throttle. This is not an atomic quota; a stronger
+    // per-draft atomic quota is required before public buyer enablement.
+    $budget_key = 'sanro_master_budget_' . hash('sha256', strtolower($id));
+    $count = get_transient($budget_key);
+    if ($count !== false && (!is_int($count) || $count >= 10)) {
+        return new WP_Error('sanro_master_rate_limited', 'Upload limit reached.', ['status' => 429]);
+    }
+    if (!set_transient($budget_key, $count === false ? 1 : $count + 1, HOUR_IN_SECONDS)) {
+        return new WP_Error('sanro_master_rate_limited', 'Upload unavailable.', ['status' => 503]);
+    }
+    $stored = sanro_studio_store_owned_draft_master($id, $token, $side, $bytes);
+    if (empty($stored['valid'])) return sanro_studio_rest_draft_response($stored);
+    $bound = sanro_studio_bind_owned_draft_master($id, $token, $side, $stored['file_id']);
+    if (empty($bound['valid'])) return sanro_studio_rest_draft_response($bound);
+    if (function_exists('nocache_headers')) nocache_headers();
+    $response = rest_ensure_response([
+        'valid' => true, 'design_id' => $id, 'side' => $side,
+        'file_id' => $stored['file_id'], 'mime' => $stored['mime'],
+        'bytes' => $stored['bytes'], 'sha256' => $stored['sha256'],
+    ]);
+    $response->header('Cache-Control', 'private, no-store, max-age=0');
+    return $response;
+}
+
 function sanro_studio_rest_draft_nonce($request) {
     $nonce = $request->get_header('X-Sanro-Draft-Nonce');
     return is_string($nonce) && wp_verify_nonce($nonce, 'sanro_studio_draft')
