@@ -25,9 +25,12 @@ require_once __DIR__ . '/includes/draft-rest.php';
 require_once __DIR__ . '/includes/runtime.php';
 require_once __DIR__ . '/includes/admin.php';
 
-// Register before Lumise initializes its core at init priority 4, regardless of plugin load order.
-add_filter('lumise_settings', 'sanro_studio_filter_settings', 100);
-add_action('plugins_loaded', 'sanro_studio_boot_runtime', 20);
+// Native SANRO Studio is the default. The legacy compatibility bootstrap is
+// explicitly opt-in for isolated development only; it never runs by default.
+if (defined('SANRO_STUDIO_ENABLE_LEGACY_COMPAT') && SANRO_STUDIO_ENABLE_LEGACY_COMPAT === true) {
+    add_filter('lumise_settings', 'sanro_studio_filter_settings', 100);
+    add_action('plugins_loaded', 'sanro_studio_boot_runtime', 20);
+}
 add_action('admin_menu', 'sanro_studio_admin_menu');
 add_action('admin_post_sanro_studio_save', 'sanro_studio_save_settings');
 
