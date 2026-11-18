@@ -14,6 +14,14 @@
  });
  q('.sanro-shirt').style.backgroundColor=shirtColor.value;
  const qtyInputs=Array.from(root.querySelectorAll('[data-size]'));
+ function designCategory(d){return d.url||d.text.trim()?d.category:null;}
+ function updateEstimate(){
+  const output=q('#sanro-price-estimate'),calc=window.SanroStudioEstimate;
+  if(!calc||config.pricing_profile!=='cotton_combed_24s'){output.textContent='Estimasi belum tersedia';return;}
+  const qty=Object.fromEntries(qtyInputs.map(input=>[input.dataset.size,Number(input.value)]));
+  const result=calc.estimate(qty,designCategory(sides.front),designCategory(sides.back));
+  output.textContent=result&&result.pieces>0?'Estimasi: '+new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(result.total)+' (belum final)':'Estimasi harga: lengkapi desain dan jumlah';
+ }
  function updateQty(){
   let total=0;
   for(const input of qtyInputs){
@@ -26,6 +34,7 @@
    }
   }
   q('#sanro-qty-total').textContent=qtyInputs.some(input=>!input.validity.valid)?'Periksa jumlah tiap ukuran':'Total: '+total+' pcs';
+  updateEstimate();
  }
  qtyInputs.forEach(input=>input.addEventListener('input',updateQty));
  updateQty();
@@ -36,7 +45,7 @@
   image.style.left=d.imageX+'%';image.style.top=d.imageY+'%';image.style.width=d.imageSize+'%';
   text.hidden=!d.text;text.textContent=d.text;text.style.left=d.textX+'%';text.style.top=d.textY+'%';text.style.fontSize=d.fontSize+'px';
   root.querySelectorAll('[data-side]').forEach(b=>{b.disabled=!config.safe_areas[b.dataset.side];b.setAttribute('aria-pressed',String(b.dataset.side===side))});
-  requestAnimationFrame(validate);
+  updateEstimate();requestAnimationFrame(validate);
  }
  function validate(){
   const area=config.safe_areas[side],d=sides[side],rect=safe.getBoundingClientRect(),objects=[];
