@@ -377,6 +377,38 @@
   design.long_sleeve=q('#sanro-sleeve').value==='long';
   return design;
  }
+ async function exportBoundDraft(){
+  const design=exportTextDraft(true,true);
+  for(const name of ['front','back']){
+   const d=sides[name],area=config.safe_areas[name];
+   if(!area||!d.url)continue;
+   if(d.pending||d.file&&!boundMasterRefs[name])
+    throw new Error('Upload master privat '+name+' sebelum menyimpan.');
+   if(!boundMasterRefs[name])
+    throw new Error('Master privat '+name+' belum terikat.');
+   const dimensions=await new Promise((resolve,reject)=>{
+    const probe=new Image();
+    probe.onload=()=>resolve([probe.naturalWidth,probe.naturalHeight]);
+    probe.onerror=()=>reject(new Error('Gambar '+name+' tidak dapat dibaca.'));
+    probe.src=d.url;
+   });
+   const rect=safe.getBoundingClientRect();
+   if(!rect.width||!rect.height||!dimensions[0]||!dimensions[1])
+    throw new Error('Area gambar belum siap.');
+   const width=d.imageSize*area.width/100;
+   const height=width*rect.width/rect.height*dimensions[1]/dimensions[0]*area.height/area.width;
+   const imageGeometry={type:'image',x:d.imageX*area.width/100,
+    y:d.imageY*area.height/100,width,height};
+   if(imageGeometry.x<0||imageGeometry.y<0
+    ||imageGeometry.x+width>area.width+0.000001
+    ||imageGeometry.y+height>area.height+0.000001)
+    throw new Error('Gambar '+name+' di luar area aman.');
+   if(!design[name])design[name]={category:d.category,objects:[]};
+   design[name].objects.push(imageGeometry);
+  }
+  if(!design.front&&!design.back)throw new Error('Tambahkan desain terlebih dahulu.');
+  return design;
+ }
  // Lightweight, text-only snapshot. Never persist source artwork in a preview.
  async function makeTextPreview(name){
   const d=sides[name],area=config.safe_areas[name];
