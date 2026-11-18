@@ -232,3 +232,50 @@ function sanro_studio_stage_bind_size_order_batch($contract, $order_items) {
         'total_price' => $verified['total_price'],
         'requires_order_save' => true, 'checkout_enabled' => false];
 }
+
+/**
+ * Optional WooCommerce checkout validation hook for staging only.
+ * A transient credential resolver must be supplied by a trusted integration.
+ * Never read an owner token from cart item metadata or persist it in WC.
+ * Unrelated ordinary carts remain untouched.
+ */
+function sanro_studio_stage_checkout_process() {
+    if (!defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
+        || SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK !== true
+        || !function_exists('WC') || !function_exists('wc_add_notice')) return;
+    $wc = WC();
+    if (!is_object($wc) || !isset($wc->cart) || !is_object($wc->cart)
+        || !method_exists($wc->cart, 'get_cart')) return;
+    $items = $wc->cart->get_cart();
+    if (!is_array($items)) return;
+    $studio = [];
+    foreach ($items as $line) {
+        if (is_array($line) && array_key_exists('sanro_studio_design_id', $line)) {
+            $studio[] = $line;
+        }
+    }
+    if (!$studio) return;
+    if (count($studio) !== count($items)) {
+        wc_add_notice('SANRO Studio: mixed carts are not supported in staging.', 'error');
+        return;
+    }
+    $first = $studio[0];
+    $id = $first['sanro_studio_design_id'] ?? null;
+    $product_id = $first['product_id'] ?? null;
+    if (!is_string($id) || !is_int($product_id) || $product_id < 1
+        || !function_exists('apply_filters')) {
+        wc_add_notice('SANRO Studio: checkout authorization unavailable.', 'error');
+        return;
+    }
+    // No default credential: without a trusted, request-scoped resolver,
+    // checkout must fail closed instead of trusting stale cart data.
+    $token = apply_filters('sanro_studio_staging_checkout_owner_token', null, $id, $product_id);
+    if (!is_string($token) || !preg_match('/^[a-f0-9]{64}$/D', $token)) {
+        wc_add_notice('SANRO Studio: reauthorize your design before checkout.', 'error');
+        return;
+    }
+    $result = sanro_studio_stage_authorize_checkout($id, $token, $product_id, $wc->cart);
+    if (empty($result['valid'])) {
+        wc_add_notice('SANRO Studio: design or pricing validation failed.', 'error');
+    }
+}
