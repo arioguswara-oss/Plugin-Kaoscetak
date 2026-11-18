@@ -363,6 +363,18 @@
     const revisionAtStart=editRevision;
     masterButton.disabled=true;masterStatus.textContent='Mengunggah master privat…';
     try{
+     const draftResponse=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId),{
+      method:'GET',credentials:'same-origin',cache:'no-store',
+      headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken}
+     });
+     if(!draftResponse.ok)throw new Error('Draft tidak dapat diverifikasi ('+draftResponse.status+').');
+     const currentDraft=await draftResponse.json();
+     if(!currentDraft.valid||currentDraft.status!=='draft'
+      ||typeof currentDraft.design_hash!=='string'
+      ||!/^[a-f0-9]{64}$/.test(currentDraft.design_hash))
+      throw new Error('Revisi draft tidak valid.');
+     if(editRevision!==revisionAtStart)throw new Error('Desain berubah selama pemeriksaan draft.');
+     const designHash=currentDraft.design_hash;
      const completed=[];
      for(const name of selected){
       const file=sides[name].file;
@@ -380,7 +392,7 @@
        method:'POST',credentials:'same-origin',cache:'no-store',
        headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,
         'X-Sanro-Owner-Token':ownerToken},
-       body:JSON.stringify({image_base64:encoded})
+       body:JSON.stringify({image_base64:encoded,design_hash:designHash})
       });
       const result=await response.json();
       if(!response.ok||!result.valid||typeof result.file_id!=='string'
