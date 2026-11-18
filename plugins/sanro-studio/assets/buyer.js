@@ -351,8 +351,12 @@
       });
       if(response.status===410)throw new Error('Draft kedaluwarsa. Simpan draft baru.');
       const result=await response.json();
-      if(!response.ok||!result.valid)throw new Error('Upload '+name+' gagal ('+response.status+').');
+      if(!response.ok||!result.valid||typeof result.file_id!=='string'
+       ||!result.file_id.startsWith(savedId.toLowerCase()+'-'+name+'-'))
+       throw new Error('Upload '+name+' gagal ('+response.status+').');
       completed.push(name);
+      if(editRevision!==revisionAtStart)
+       throw new Error('Desain berubah selama upload. Simpan draft dan unggah preview terbaru.');
      }
      uploadStatus.textContent=completed.length
       ?'Preview privat tersimpan: '+completed.join(', ')+'. Belum terhubung ke checkout.'
