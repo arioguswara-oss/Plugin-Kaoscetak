@@ -14,6 +14,16 @@ function sanro_studio_draft_rest_enabled() {
 
 function sanro_studio_register_draft_routes() {
     if (!sanro_studio_draft_rest_enabled()) return;
+    if (defined('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT')
+        && SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT === true
+        && defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
+        && SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK === true) {
+        register_rest_route('sanro-studio/v1', '/drafts/(?P<id>[a-fA-F0-9-]{36})/cart', [
+            'methods' => 'POST',
+            'callback' => 'sanro_studio_rest_stage_draft_cart',
+            'permission_callback' => 'sanro_studio_rest_draft_nonce',
+        ]);
+    }
     register_rest_route('sanro-studio/v1', '/drafts', [
         'methods' => 'POST',
         'callback' => 'sanro_studio_rest_create_draft',
@@ -451,5 +461,47 @@ function sanro_studio_rest_quote_draft($request) {
         'design_id' => $draft['design_id'],
         'quote' => $quote,
         'checkout_enabled' => false,
+    ]);
+}
+
+/**
+ * Staging-only buyer-to-cart boundary. The owner token is supplied in an
+ * authenticated draft request header, never stored in WC cart metadata.
+ */
+function sanro_studio_rest_stage_draft_cart($request) {
+    if (!sanro_studio_draft_rest_enabled()
+        || !defined('SANRO_STUDIO_ENABLE_STAGING_CART')
+        || SANRO_STUDIO_ENABLE_STAGING_CART !== true
+        || !defined('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT')
+        || SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT !== true
+        || !defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
+        || SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK !== true
+        || !function_exists('WC')) {
+        return new WP_Error('sanro_cart_disabled', 'Staging cart disabled.', ['status'=>403]);
+    }
+    $id = $request->get_param('id');
+    $token = $request->get_header('X-Sanro-Owner-Token');
+    $draft = sanro_studio_read_draft($id, $token);
+    if (empty($draft['valid']) || ($draft['status'] ?? null) !== 'draft') {
+        return new WP_Error('sanro_cart_unauthorized', 'Draft authorization failed.', ['status'=>403]);
+    }
+    $product_id = $draft['product_id'];
+    $contract = sanro_studio_prepare_cart_design_contract($id, $token, $product_id);
+    if (empty($contract['valid'])) {
+        return new WP_Error('sanro_cart_contract', 'Draft not ready for cart.', ['status'=>409]);
+    }
+    $wc = WC();
+    if (!is_object($wc) || !isset($wc->cart) || !is_object($wc->cart)) {
+        return new WP_Error('sanro_cart_unavailable', 'Cart unavailable.', ['status'=>503]);
+    }
+    $result = sanro_studio_stage_commit_cart_lines($contract, $wc->cart);
+    if (empty($result['valid'])) {
+        return new WP_Error('sanro_cart_failed', 'Could not add verified design to cart.', ['status'=>409]);
+    }
+    if (function_exists('nocache_headers')) nocache_headers();
+    return rest_ensure_response([
+        'valid'=>true, 'design_id'=>$id, 'total_price'=>$result['total_price'],
+        'cart_url'=>function_exists('wc_get_cart_url') ? wc_get_cart_url() : '',
+        'requires_checkout_reauthorization'=>true,
     ]);
 }
