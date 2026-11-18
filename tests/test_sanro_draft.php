@@ -9,6 +9,11 @@ function add_option($key, $value, $deprecated, $autoload) {
     return true;
 }
 function get_option($key, $fallback) { return $GLOBALS['options'][$key] ?? $fallback; }
+function update_option($key, $value, $autoload = null) {
+    if (!isset($GLOBALS['options'][$key])) return false;
+    $GLOBALS['options'][$key] = $value;
+    return true;
+}
 function sanro_studio_validate_product_design($product_id, $design) {
     return $design === ['front' => 'valid'] ? ['valid' => true] : ['valid' => false, 'error' => 'invalid_design'];
 }
@@ -28,5 +33,11 @@ check_draft(false, isset($GLOBALS['options']['sanro_studio_draft_' . $created['d
 check_draft(true, sanro_studio_read_draft($created['design_id'], $created['owner_token'])['valid'], 'authorized read');
 check_draft('not_found', sanro_studio_read_draft($created['design_id'], str_repeat('a', 64))['error'], 'wrong owner token');
 check_draft('invalid_credentials', sanro_studio_read_draft('../wp-config.php', $created['owner_token'])['error'], 'path rejected');
+check_draft('not_found', sanro_studio_update_draft($created['design_id'], str_repeat('a', 64), ['front' => 'valid'])['error'], 'unauthorized update');
+check_draft('invalid_design', sanro_studio_update_draft($created['design_id'], $created['owner_token'], [])['error'], 'invalid replacement rejected');
+check_draft(true, sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['valid'], 'authorized update');
+check_draft(true, sanro_studio_read_draft($created['design_id'], $created['owner_token'])['valid'], 'read after update');
+$GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['status'] = 'locked';
+check_draft('draft_locked', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'locked draft denied');
 check_draft('storage_failed', sanro_studio_create_draft(17, ['front' => 'valid'])['error'], 'collision fails closed');
 echo "SANRO draft ID: {$checks} assertions PASS, 0 FAIL\n";
