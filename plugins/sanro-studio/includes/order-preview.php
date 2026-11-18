@@ -255,11 +255,13 @@ function sanro_studio_attach_item_preview_refs($order, $item_id, $design_id, $ow
             return ['valid' => false, 'error' => $preview['error'] ?? 'preview_not_found'];
         }
     }
-    // Bind the line item to one design, and never silently replace a preview.
-    // Reattaching the same references is idempotent; conflicts fail closed.
-    // Reject a second design before touching metadata; require a complete
-    // pair of references when an item is first bound to its design.
+    // Bind the line item to one design. Identical reattachments are allowed;
+    // conflicting references and cross-design attachments fail closed.
     $bound_design = $item->get_meta('_sanro_studio_design_id', true);
+    if ($bound_design !== '' && (!is_string($bound_design)
+        || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $bound_design))) {
+        return ['valid' => false, 'error' => 'invalid_design_binding'];
+    }
     if ($bound_design !== '' && $bound_design !== $design_id) {
         return ['valid' => false, 'error' => 'design_conflict'];
     }
