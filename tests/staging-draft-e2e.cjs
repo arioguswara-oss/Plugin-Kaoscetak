@@ -18,6 +18,7 @@ if (url.protocol !== 'https:' ||
 // Optional reuse avoids new creation requests while inspecting restore failures.
 // Never save this owner-bound staging secret in the repository or a public directory.
 const reuseEnabled = process.env.SANRO_STAGING_DRAFT_REUSE === '1';
+const bootstrapEnabled = process.env.SANRO_STAGING_DRAFT_BOOTSTRAP === '1';
 const stateDir = path.join(process.env.HOME || '', 'sanro-browser-qa');
 const stateFile = path.join(stateDir, 'staging-draft-private-state.json');
 function ensurePrivateDir() {
@@ -92,6 +93,11 @@ catch (_) { console.error('BLOCKED: Playwright unavailable; set NODE_PATH to iso
   console.log('PASS staging draft API and Save control exposed');
   if (process.env.SANRO_STAGING_DRAFT_WRITE !== '1') {
    console.log('READ-ONLY: set SANRO_STAGING_DRAFT_WRITE=1 to test one synthetic draft save and reload.');
+   return;
+  }
+  if (reuseEnabled && !priorState && !bootstrapEnabled) {
+   console.error('BLOCKED: no saved private QA draft reference exists. Reuse mode will not create another draft. After the hourly budget resets, explicitly use SANRO_STAGING_DRAFT_BOOTSTRAP=1 for a single new synthetic draft.');
+   process.exitCode=2;
    return;
   }
   let chosen,marker;
