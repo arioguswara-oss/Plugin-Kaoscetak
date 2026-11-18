@@ -133,6 +133,16 @@
   probe.onerror=()=>{if(target.pending===url){URL.revokeObjectURL(url);target.pending=null;q('#sanro-validation').textContent='Gambar tidak valid'}};
   target.pending=url;probe.src=url;e.target.value='';
  });
+ q('#sanro-center-image').addEventListener('click',()=>{
+  const d=sides[side];
+  if(!d.url||!image.complete||!image.naturalWidth||!image.naturalHeight)return;
+  const rect=safe.getBoundingClientRect(),box=image.getBoundingClientRect();
+  if(!rect.width||!rect.height||!box.width||!box.height)return;
+  // Center using the rendered dimensions, including tall-image aspect ratio.
+  d.imageX=Math.max(0,(rect.width-box.width)/rect.width*50);
+  d.imageY=Math.max(0,(rect.height-box.height)/rect.height*50);
+  editRevision++;render();
+ });
  q('#sanro-remove-image').addEventListener('click',()=>{editRevision++;const d=sides[side];if(d.url)URL.revokeObjectURL(d.url);if(d.pending)URL.revokeObjectURL(d.pending);d.url=null;d.pending=null;image.removeAttribute('src');render()});
  function drag(el,prefix){
   let start=null;
