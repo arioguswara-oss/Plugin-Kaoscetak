@@ -215,7 +215,7 @@
  }
  // Text-only staging draft: no master upload, checkout or public share.
  const saveButton=q('#sanro-save-draft'),saveStatus=q('#sanro-save-status');
- let savedId=null,ownerToken=null,saving=false,editRevision=0,savedRevision=-1,lastKnownDesignHash=null;
+ let savedId=null,ownerToken=null,saving=false,uploadingMaster=false,editRevision=0,savedRevision=-1,lastKnownDesignHash=null;
  const boundMasterRefs={};
  const draftStorageKey='sanro-studio-draft:'+String(config.product_id);
  async function readDraftMaster(id,token,name,fileId){
@@ -446,6 +446,7 @@
   const masterButton=q('#sanro-upload-master'),masterStatus=q('#sanro-master-upload-status');
   if(masterButton&&config.master_upload_enabled){
    masterButton.addEventListener('click',async()=>{
+    if(saving||uploadingMaster){masterStatus.textContent='Tunggu operasi draft sebelumnya selesai.';return;}
     if(!savedId||!ownerToken){
      masterStatus.textContent='Simpan draft awal terlebih dahulu, kemudian upload gambar.';return;
     }
@@ -455,7 +456,7 @@
      masterStatus.textContent='Tunggu gambar selesai dimuat.';return;
     }
     const revisionAtStart=editRevision;
-    masterButton.disabled=true;masterStatus.textContent='Mengunggah master privat…';
+    uploadingMaster=true;masterButton.disabled=true;masterStatus.textContent='Mengunggah master privat…';
     try{
      const draftResponse=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId),{
       method:'GET',credentials:'same-origin',cache:'no-store',
@@ -573,7 +574,7 @@
      if(editRevision===revisionAtStart)savedRevision=editRevision;
      masterStatus.textContent='Master dan posisi gambar terverifikasi untuk '+completed.join(', ')+'. Draft dapat dibuka kembali.';
     }catch(error){masterStatus.textContent=error.message||'Upload master gagal.';}
-    finally{masterButton.disabled=false;}
+    finally{uploadingMaster=false;masterButton.disabled=false;}
    });
   }
   const quoteButton=q('#sanro-server-quote'),quoteStatus=q('#sanro-server-quote-status');
@@ -661,7 +662,7 @@
   });
   try{reopenDraft().catch(error=>{saveStatus.textContent=error.message})}catch(_error){}
   saveButton.addEventListener('click',async()=>{
-   if(saving)return;
+   if(saving||uploadingMaster){saveStatus.textContent='Tunggu penyimpanan atau upload master selesai.';return;}
    let design;
    try{
     const hasLocalImage=['front','back'].some(name=>sides[name].url||sides[name].pending);
