@@ -14,7 +14,7 @@ function sanro_studio_order_preview_inventory($order) {
         $ref = $order->get_meta('_sanro_studio_preview_' . $side . '_ref', true);
         if (is_string($ref) && preg_match(
             '/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}-' .
-            $side . '-[a-f0-9]{64}\\.(png|jpg|webp)$/iD', $ref
+            $side . '-[a-f0-9]{64}\.(png|jpg|webp)$/iD', $ref
         )) {
             $result[$side] = $ref;
         }
@@ -84,7 +84,7 @@ function sanro_studio_attach_order_preview_refs($order, $design_id, $owner_token
             || !is_string($ref) || !is_string($design_id)
             || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id)
             || !preg_match('/^' . preg_quote(strtolower($design_id), '/') . '-' . $side .
-                '-[a-f0-9]{64}\\.(png|jpg|webp)$/D', $ref)) {
+                '-[a-f0-9]{64}\.(png|jpg|webp)$/D', $ref)) {
             return ['valid' => false, 'error' => 'invalid_preview_reference'];
         }
     }
@@ -247,7 +247,7 @@ function sanro_studio_attach_item_preview_refs($order, $item_id, $design_id, $ow
             || !is_string($design_id) || !is_string($ref)
             || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id)
             || !preg_match('/^' . preg_quote(strtolower($design_id), '/') . '-' . $side .
-                '-[a-f0-9]{64}\\.(png|jpg|webp)$/D', $ref)) {
+                '-[a-f0-9]{64}\.(png|jpg|webp)$/D', $ref)) {
             return ['valid' => false, 'error' => 'invalid_preview_reference'];
         }
         $preview = sanro_studio_read_owned_draft_preview($design_id, $owner_token, $side, $ref);
