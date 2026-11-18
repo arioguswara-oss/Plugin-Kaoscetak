@@ -13,8 +13,15 @@ function sanro_studio_draft_ttl_seconds() {
 function sanro_studio_create_draft($product_id, $design) {
     $product_id = absint($product_id);
     if (!$product_id) return ['valid' => false, 'error' => 'invalid_product'];
-    $result = sanro_studio_validate_product_design($product_id, $design);
-    if (empty($result['valid'])) return $result;
+    // A strictly empty, short-lived draft can reserve an owner token for an
+    // image-only design. It cannot be quoted or checked out until an image
+    // master is bound and valid geometry is saved.
+    $empty_bootstrap = function_exists('sanro_studio_image_bootstrap_allowed')
+        && sanro_studio_image_bootstrap_allowed($design);
+    if (!$empty_bootstrap) {
+        $result = sanro_studio_validate_product_design($product_id, $design);
+        if (empty($result['valid'])) return $result;
+    }
     $token = bin2hex(random_bytes(32));
     $id = wp_generate_uuid4();
     $record = [
