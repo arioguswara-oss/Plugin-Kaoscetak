@@ -42,12 +42,31 @@ function sanro_studio_rest_draft_response($result) {
     return new WP_Error('sanro_' . $error, 'Draft operation rejected.', ['status' => $status]);
 }
 
+/**
+ * Guest nonce is CSRF friction, not authentication. Bound unauthenticated
+ * creation to a small hourly budget without persisting a raw IP address.
+ */
+function sanro_studio_draft_creation_budget() {
+    if (!function_exists('get_transient') || !function_exists('set_transient')
+        || !function_exists('wp_salt')) return false;
+    $ip = isset($_SERVER['REMOTE_ADDR']) && is_string($_SERVER['REMOTE_ADDR'])
+        ? $_SERVER['REMOTE_ADDR'] : '';
+    if (!filter_var($ip, FILTER_VALIDATE_IP)) return false;
+    $key = 'sanro_draft_limit_' . substr(hash_hmac('sha256', $ip, wp_salt('auth')), 0, 32);
+    $count = get_transient($key);
+    if ($count !== false && (!is_int($count) || $count >= 20)) return false;
+    return set_transient($key, $count === false ? 1 : $count + 1, HOUR_IN_SECONDS);
+}
+
 function sanro_studio_rest_create_draft($request) {
     $product_id = $request->get_param('product_id');
     $design = $request->get_param('design');
     if (!is_int($product_id) || !is_array($design)
         || empty(sanro_studio_public_editor_config($product_id)['valid'])) {
         return new WP_Error('sanro_invalid_draft', 'Invalid product or design.', ['status' => 400]);
+    }
+    if (!sanro_studio_draft_creation_budget()) {
+        return new WP_Error('sanro_rate_limited', 'Draft creation temporarily unavailable.', ['status' => 429]);
     }
     return sanro_studio_rest_draft_response(sanro_studio_create_draft($product_id, $design));
 }
