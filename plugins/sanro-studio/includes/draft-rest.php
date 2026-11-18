@@ -307,6 +307,8 @@ function sanro_studio_draft_creation_budget() {
  */
 function sanro_studio_draft_image_binding_allowed($design, $master_refs, $design_id = null) {
     if (!is_array($design) || !is_array($master_refs)) return false;
+    // Bindings must be unambiguous and limited to the two supported sides.
+    if (array_diff(array_keys($master_refs), ['front', 'back'])) return false;
     foreach (['front', 'back'] as $side) {
         $entry = $design[$side] ?? null;
         if (!is_array($entry)) continue;
