@@ -13,7 +13,8 @@ if (!function_exists('sanro_studio_boot_runtime')
     exit(1);
 }
 $status = sanro_studio_native_core_status();
-if (!$status['legacy_compat_enabled'] && !$status['verified_end_to_end']
+if (!$status['legacy_compat_enabled'] && $status['legacy_runtime_loaded']
+    && !$status['runtime_dependencies_satisfied'] && !$status['verified_end_to_end']
     && !$status['checkout_enabled']) {
     echo "PASS: legacy module isolated and native release gates closed\n";
 } else {
