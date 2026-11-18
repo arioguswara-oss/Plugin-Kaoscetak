@@ -197,7 +197,21 @@ function sanro_studio_order_item_preview_inventory($order, $item_id) {
         || !is_object($items[$item_id]) || !method_exists($items[$item_id], 'get_meta')) {
         return ['valid' => false, 'error' => 'invalid_order_item'];
     }
-    return sanro_studio_order_preview_inventory($items[$item_id]);
+    $item = $items[$item_id];
+    $inventory = sanro_studio_order_preview_inventory($item);
+    $design_id = $item->get_meta('_sanro_studio_design_id', true);
+    // A bound line item must never serve preview references for another design.
+    if ($design_id !== '' && (!is_string($design_id)
+        || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id))) {
+        return ['valid' => false, 'error' => 'invalid_design_binding'];
+    }
+    foreach (['front', 'back'] as $side) {
+        if ($design_id !== '' && !empty($inventory[$side])
+            && strpos($inventory[$side], strtolower($design_id) . '-' . $side . '-') !== 0) {
+            return ['valid' => false, 'error' => 'preview_design_mismatch'];
+        }
+    }
+    return $inventory;
 }
 
 /**
