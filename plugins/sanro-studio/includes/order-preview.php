@@ -75,6 +75,17 @@ function sanro_studio_attach_order_preview_refs($order, $design_id, $owner_token
             return ['valid' => false, 'error' => 'invalid_preview_reference'];
         }
     }
+    // Confirm each private file is readable and checksum-valid before linking.
+    // This is intentionally fail-closed when private storage is not configured.
+    if (!function_exists('sanro_studio_read_owned_draft_preview')) {
+        return ['valid' => false, 'error' => 'preview_store_unavailable'];
+    }
+    foreach ($refs as $side => $ref) {
+        $preview = sanro_studio_read_owned_draft_preview($design_id, $owner_token, $side, $ref);
+        if (empty($preview['valid'])) {
+            return ['valid' => false, 'error' => $preview['error'] ?? 'preview_not_found'];
+        }
+    }
     foreach ($refs as $side => $ref) {
         $order->update_meta_data('_sanro_studio_preview_' . $side . '_ref', $ref);
     }
