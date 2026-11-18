@@ -57,6 +57,7 @@ function sanro_studio_render_buyer_editor() {
     echo '<div class="sanro-layout"><section class="sanro-preview" aria-label="Pratinjau desain">';
     echo '<nav aria-label="Sisi kaos"><button type="button" data-side="front" aria-pressed="true">Depan</button> <button type="button" data-side="back" aria-pressed="false">Belakang</button></nav>';
     echo '<div class="sanro-shirt"><div class="sanro-safe"><img alt="Gambar desain" hidden><div class="sanro-text" hidden></div></div></div>';
+    echo '<p id="sanro-side-summary" role="status">Depan: kosong · Belakang: kosong</p>';
     echo '<p class="sanro-hint">Geser gambar atau teks. Ukuran cetak dihitung dalam cm.</p></section>';
     echo '<section class="sanro-controls"><h2>Atur desain</h2>';
     echo '<label>Warna kaos<select id="sanro-shirt-color"><option value="#ffffff">Putih</option><option value="#171717">Hitam</option><option value="#b91c1c">Merah</option><option value="#1d4ed8">Biru</option><option value="#166534">Hijau</option></select></label>';
@@ -72,6 +73,8 @@ function sanro_studio_render_buyer_editor() {
     echo '<label>Teks<textarea id="sanro-text-input" maxlength="300" rows="3"></textarea></label>';
     echo '<label>Ukuran teks<input type="range" id="sanro-font-size" min="10" max="48" value="22"></label>';
     echo '<label>Warna teks<input type="color" id="sanro-text-color" value="#171717"></label>';
+    echo '<button type="button" id="sanro-center-text">Posisikan teks ke tengah</button>';
+    echo '<button type="button" id="sanro-remove-text">Hapus teks sisi ini</button>';
     echo '<label>Kategori cetak<select id="sanro-category"><option>A5</option><option>A4</option><option>A3</option><option>A3+</option></select></label>';
     echo '<p id="sanro-validation" role="status">Belum ada desain.</p>';
     if (!empty($config['draft_api'])) {
