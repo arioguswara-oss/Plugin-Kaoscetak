@@ -89,13 +89,25 @@ $two['quote']['items'] = ['M'=>['quantity'=>1,'unit_price'=>65000,'subtotal'=>65
 $failed = new SanroTransactionCart(); $failed->failAfter = 1;
 check_adapter(sanro_studio_stage_commit_cart_lines($two, $failed)['valid'] === false, 'partial add failure detected');
 check_adapter(count($failed->lines) === 0, 'partial add rolled back');
-function sanro_studio_prepare_cart_design_contract($id, $token, $product) {
+function sanro_studio_read_draft($id, $token) {
     global $contract;
-    if ($token !== 'valid-owner-token' || $id !== $contract['design_id']
-        || $product !== $contract['product_id']) {
+    if ($token !== 'valid-owner-token' || $id !== $contract['design_id']) {
         return ['valid'=>false, 'error'=>'not_authorized'];
     }
-    return $contract;
+    return ['valid'=>true, 'status'=>'draft', 'design_id'=>$id,
+        'product_id'=>$contract['product_id'],
+        'design'=>['quantities'=>['M'=>2], 'long_sleeve'=>false],
+        'master_refs'=>[]];
+}
+function sanro_studio_validate_product_design($product, $design) {
+    return ['valid'=>true];
+}
+function sanro_studio_draft_image_binding_allowed($design, $refs, $id) {
+    return true;
+}
+function sanro_studio_quote_size_quantities($product, $design, $quantities, $longSleeve) {
+    global $contract;
+    return $contract['quote'];
 }
 $restored = new SanroTransactionCart();
 $restored->add_to_cart(42, 2, 0, [], [
