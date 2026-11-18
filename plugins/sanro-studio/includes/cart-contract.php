@@ -57,6 +57,35 @@ function sanro_studio_prepare_cart_design_contract($design_id, $owner_token, $pr
 }
 
 /**
+ * Construct a sanitized WooCommerce cart-line snapshot. This helper does not
+ * insert a product, store credentials, or enable checkout hooks.
+ * Only server-authorized draft identity and server-computed totals survive.
+ */
+function sanro_studio_prepare_cart_line_snapshot($contract) {
+    if (!is_array($contract) || ($contract['valid'] ?? null) !== true
+        || !isset($contract['design_id'], $contract['product_id'], $contract['quote'])
+        || !is_string($contract['design_id'])
+        || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $contract['design_id'])
+        || !is_int($contract['product_id']) || $contract['product_id'] < 1
+        || !is_array($contract['quote']) || ($contract['quote']['valid'] ?? null) !== true
+        || ($contract['quote']['currency'] ?? null) !== 'IDR'
+        || !isset($contract['quote']['total_quantity'], $contract['quote']['total_price'])
+        || !is_int($contract['quote']['total_quantity']) || $contract['quote']['total_quantity'] < 1
+        || !is_int($contract['quote']['total_price']) || $contract['quote']['total_price'] < 1) {
+        return ['valid' => false, 'error' => 'invalid_cart_contract'];
+    }
+    return [
+        'valid' => true,
+        'product_id' => $contract['product_id'],
+        'quantity' => $contract['quote']['total_quantity'],
+        'sanro_studio_design_id' => $contract['design_id'],
+        'sanro_studio_quote_total' => $contract['quote']['total_price'],
+        'sanro_studio_quote_currency' => 'IDR',
+        'cart_mutation_enabled' => false,
+    ];
+}
+
+/**
  * Verify a cart item's public design identity against a freshly authorized
  * draft contract. This does not add products or change WooCommerce prices.
  * Caller must hold the owner token transiently; never put it in cart metadata.
