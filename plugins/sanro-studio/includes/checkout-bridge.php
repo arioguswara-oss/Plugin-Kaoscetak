@@ -408,6 +408,9 @@ function sanro_studio_stage_checkout_verify_order_batch($order, $data) {
         || SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK !== true) return;
     $verified = $GLOBALS['sanro_studio_checkout_verified'] ?? null;
     if (!is_array($verified) || empty($verified['contract']['valid'])) return;
+    if (!is_object($order) || !method_exists($order, 'get_items')) {
+        throw new RuntimeException('SANRO Studio: order inspection unavailable.');
+    }
     $expected = sanro_studio_prepare_size_cart_lines($verified['contract']);
     if (empty($expected['valid']) || !isset($verified['bound_sizes'])
         || !is_array($verified['bound_sizes'])) {
@@ -418,5 +421,22 @@ function sanro_studio_stage_checkout_verify_order_batch($order, $data) {
     if (count($sizes) !== count($verified['bound_sizes'])
         || array_diff_key($sizes, $verified['bound_sizes'])) {
         throw new RuntimeException('SANRO Studio: incomplete order size batch.');
+    }
+    $items = $order->get_items('line_item');
+    if (!is_array($items) || count($items) !== count($sizes)) {
+        throw new RuntimeException('SANRO Studio: unexpected order line count.');
+    }
+    $seen = [];
+    foreach ($items as $item) {
+        if (!is_object($item) || !method_exists($item, 'get_meta')) {
+            throw new RuntimeException('SANRO Studio: invalid order item.');
+        }
+        $size = $item->get_meta('_sanro_studio_size', true);
+        $design = $item->get_meta('_sanro_studio_design_id', true);
+        if (!is_string($size) || !isset($sizes[$size]) || isset($seen[$size])
+            || $design !== $verified['contract']['design_id']) {
+            throw new RuntimeException('SANRO Studio: order metadata mismatch.');
+        }
+        $seen[$size] = true;
     }
 }
