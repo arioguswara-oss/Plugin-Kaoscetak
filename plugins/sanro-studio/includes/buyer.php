@@ -167,7 +167,19 @@ function sanro_studio_render_buyer_editor() {
         echo '<p id="sanro-server-quote-status" role="status" aria-live="polite">Simpan draft teks sebelum meminta harga server.</p>';
         echo '<p id="sanro-save-status" role="status">Penyimpanan gambar dan checkout belum tersedia.</p>';
     }
-    echo '<button type="button" disabled>Simpan dan checkout — belum aktif</button></section></div></main>';
+    if (!empty($config['draft_api'])
+        && defined('SANRO_STUDIO_ENABLE_STAGING_CART')
+        && SANRO_STUDIO_ENABLE_STAGING_CART === true
+        && defined('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT')
+        && SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT === true
+        && defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
+        && SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK === true) {
+        echo '<button type="button" id="sanro-add-to-cart">Tambahkan desain tersimpan ke keranjang (staging)</button>';
+        echo '<p id="sanro-cart-status" role="status">Simpan desain terlebih dahulu. Checkout memerlukan otorisasi ulang.</p>';
+    } else {
+        echo '<button type="button" disabled>Simpan dan checkout — belum aktif</button>';
+    }
+    echo '</section></div></main>';
     get_footer();
     exit;
 }
