@@ -16,6 +16,8 @@ function get_option($key, $fallback) {
 }
 function update_option($key, $value, $autoload = null) {
     if (!isset($GLOBALS['options'][$key])) return false;
+    // Match WordPress behavior: an unchanged option is not reported as updated.
+    if ($GLOBALS['options'][$key] === $value) return false;
     $GLOBALS['options'][$key] = $value;
     return true;
 }
