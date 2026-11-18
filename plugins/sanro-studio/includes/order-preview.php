@@ -111,14 +111,16 @@ function sanro_studio_attach_order_preview_refs($order, $design_id, $owner_token
  * No owner token is needed after a reference has been attached to the order.
  * No public URL or filesystem path is returned.
  */
-function sanro_studio_admin_order_preview_bytes($order, $side) {
+function sanro_studio_admin_order_preview_bytes($order, $side, $item_id = null) {
     if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) {
         return ['valid' => false, 'error' => 'forbidden'];
     }
     if (!in_array($side, ['front', 'back'], true)) {
         return ['valid' => false, 'error' => 'invalid_side'];
     }
-    $inventory = sanro_studio_order_preview_inventory($order);
+    $inventory = $item_id === null
+        ? sanro_studio_order_preview_inventory($order)
+        : sanro_studio_order_item_preview_inventory($order, $item_id);
     if (empty($inventory['valid']) || empty($inventory[$side])) {
         return ['valid' => false, 'error' => 'preview_not_found'];
     }
@@ -165,8 +167,10 @@ function sanro_studio_admin_deliver_order_preview() {
         || !wp_verify_nonce($nonce, 'sanro_order_preview_' . $order_id . '_' . $side)) {
         wp_die('Forbidden', '', ['response' => 403]);
     }
+    $item_id = isset($_GET['item_id']) ? absint($_GET['item_id']) : null;
+    if ($item_id !== null && $item_id < 1) wp_die('Forbidden', '', ['response' => 403]);
     $order = function_exists('wc_get_order') ? wc_get_order($order_id) : false;
-    $result = sanro_studio_admin_order_preview_bytes($order, $side);
+    $result = sanro_studio_admin_order_preview_bytes($order, $side, $item_id);
     if (empty($result['valid'])) wp_die('Preview unavailable', '', ['response' => 404]);
     if (function_exists('nocache_headers')) nocache_headers();
     header('Content-Type: ' . $result['mime']);
