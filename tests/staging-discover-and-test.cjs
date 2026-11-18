@@ -59,11 +59,22 @@ function approved(url) {
     if (response.ok()) {
      const products = await response.json();
      if (Array.isArray(products)) {
-      for (const product of products.slice(0,24)) {
-       if (typeof product.permalink === 'string') {
-        found = await scan(product.permalink);
+      for (const product of products.slice(0,12)) {
+       if (typeof product.permalink !== 'string' || !approved(product.permalink)) continue;
+       found = await scan(product.permalink);
+       if (found) break;
+       // A theme may omit the product-page entry button even when the
+       // SANRO native editor can render through its documented query args.
+       // The id is read from the public WooCommerce Store API, never guessed.
+       if (Number.isSafeInteger(product.id) && product.id > 0) {
+        const editor = new URL(product.permalink);
+        editor.searchParams.set('sanro_studio_editor','1');
+        editor.searchParams.set('product_id',String(product.id));
+        console.log('PROBE editor product_id='+product.id+' ('+String(product.name || '').slice(0,60)+')');
+        found = await scan(editor.href);
         if (found) break;
-       }
+        console.log('NOT READY product_id='+product.id+': editor view absent despite explicit URL.');
+       } else console.log('INFO product missing usable Store API id.');
       }
      }
     } else console.log('INFO WooCommerce Store API HTTP '+response.status());
@@ -86,7 +97,9 @@ function approved(url) {
   }
  } finally { await browser.close(); }
  if (!found) {
-  console.error('BLOCKED: buyer editor URL not discovered. Check staging page publication, configured product, or staging access.');
+  console.error('BLOCKED: no verified buyer editor rendered on staging.');
+  console.error('NEXT: inspect SANRO Studio enable flag, WooCommerce product print-area/pricing readiness, and deployed plugin version.');
+  console.error('Read-only scan cannot distinguish these server-side settings without staging admin access.');
   process.exitCode=2;
   return;
  }
