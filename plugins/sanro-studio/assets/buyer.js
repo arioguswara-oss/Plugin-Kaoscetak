@@ -667,6 +667,30 @@
    finally{quoteButton.disabled=false}
   });
   try{reopenDraft().catch(error=>{saveStatus.textContent=error.message})}catch(_error){}
+  const cartButton=q('#sanro-add-to-cart'),cartStatus=q('#sanro-cart-status');
+  if(cartButton&&cartStatus){
+   cartButton.addEventListener('click',async()=>{
+    if(saving||uploadingMaster||!savedId||!ownerToken||editRevision!==savedRevision){
+     cartStatus.textContent='Simpan seluruh perubahan desain sebelum menambah ke keranjang.';return;
+    }
+    cartButton.disabled=true;
+    cartStatus.textContent='Memvalidasi draft dan harga server…';
+    try{
+     const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/cart',{
+      method:'POST',credentials:'same-origin',cache:'no-store',
+      headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken}
+     });
+     const result=await response.json();
+     if(!response.ok||!result.valid)throw new Error('Keranjang belum siap ('+response.status+').');
+     cartStatus.textContent='Desain masuk keranjang. Lanjutkan melalui halaman keranjang untuk otorisasi checkout.';
+     if(typeof result.cart_url==='string'&&/^https?:\/\//.test(result.cart_url)
+        &&new URL(result.cart_url,location.href).origin===location.origin){
+      location.assign(result.cart_url);
+     }
+    }catch(error){cartStatus.textContent=error.message||'Gagal menambah ke keranjang.'}
+    finally{cartButton.disabled=false}
+   });
+  }
   saveButton.addEventListener('click',async()=>{
    if(saving||uploadingMaster){saveStatus.textContent='Tunggu penyimpanan atau upload master selesai.';return;}
    let design;
