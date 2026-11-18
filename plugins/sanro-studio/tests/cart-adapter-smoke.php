@@ -89,4 +89,23 @@ $two['quote']['items'] = ['M'=>['quantity'=>1,'unit_price'=>65000,'subtotal'=>65
 $failed = new SanroTransactionCart(); $failed->failAfter = 1;
 check_adapter(sanro_studio_stage_commit_cart_lines($two, $failed)['valid'] === false, 'partial add failure detected');
 check_adapter(count($failed->lines) === 0, 'partial add rolled back');
-echo "PASS: 21 staging cart adapter checks\n";
+function sanro_studio_prepare_cart_design_contract($id, $token, $product) {
+    global $contract;
+    if ($token !== 'valid-owner-token' || $id !== $contract['design_id']
+        || $product !== $contract['product_id']) {
+        return ['valid'=>false, 'error'=>'not_authorized'];
+    }
+    return $contract;
+}
+$restored = new SanroTransactionCart();
+$restored->add_to_cart(42, 2, 0, [], [
+    'sanro_studio_design_id'=>$contract['design_id'], 'sanro_studio_size'=>'M',
+    'sanro_studio_unit_price'=>65000, 'sanro_studio_line_subtotal'=>130000,
+    'sanro_studio_quote_currency'=>'IDR']);
+check_adapter(sanro_studio_stage_reauthorize_cart($contract['design_id'], 'bad', 42, $restored)['valid'] === false, 'wrong owner rejected');
+check_adapter($restored->totals === 0, 'wrong owner never recalculates totals');
+check_adapter(sanro_studio_stage_reauthorize_cart($contract['design_id'], 'valid-owner-token', 42, $restored)['valid'] === true, 'valid owner restores cart');
+check_adapter($restored->totals === 1, 'restored cart recalculates totals');
+$restored->lines['line-0']['sanro_studio_unit_price'] = 1;
+check_adapter(sanro_studio_stage_reauthorize_cart($contract['design_id'], 'valid-owner-token', 42, $restored)['valid'] === false, 'tampered restored cart rejected');
+echo "PASS: 26 staging cart adapter checks\n";
