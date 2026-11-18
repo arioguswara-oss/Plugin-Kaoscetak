@@ -120,12 +120,31 @@ try {
 }
 gate_check($duplicate_rejected, 'duplicate size binding rejected');
 gate_check(count($GLOBALS['sanro_studio_checkout_verified']['bound_sizes'])===1, 'bound size tracked once');
-sanro_studio_stage_checkout_verify_order_batch(null, []);
+class GateOrder {
+    public $items;
+    function __construct($items) { $this->items=$items; }
+    function get_items($type='line_item') { return $this->items; }
+}
+$validOrder = new GateOrder([$order_line]);
+sanro_studio_stage_checkout_verify_order_batch($validOrder, []);
 gate_check(count($GLOBALS['sanro_studio_checkout_verified']['bound_sizes'])===1, 'complete batch accepted');
+$extra_rejected = false;
+try {
+    sanro_studio_stage_checkout_verify_order_batch(new GateOrder([$order_line, new GateOrderItem('130000.00')]), []);
+} catch (RuntimeException $exception) { $extra_rejected = true; }
+gate_check($extra_rejected, 'extra order item rejected');
+$wrong_design = new GateOrderItem('130000.00');
+$wrong_design->update_meta_data('_sanro_studio_size', 'M');
+$wrong_design->update_meta_data('_sanro_studio_design_id', 'other');
+$wrong_rejected = false;
+try {
+    sanro_studio_stage_checkout_verify_order_batch(new GateOrder([$wrong_design]), []);
+} catch (RuntimeException $exception) { $wrong_rejected = true; }
+gate_check($wrong_rejected, 'mismatched design order metadata rejected');
 $GLOBALS['sanro_studio_checkout_verified']['bound_sizes'] = [];
 $incomplete_rejected = false;
 try {
-    sanro_studio_stage_checkout_verify_order_batch(null, []);
+    sanro_studio_stage_checkout_verify_order_batch($validOrder, []);
 } catch (RuntimeException $exception) {
     $incomplete_rejected = true;
 }
@@ -145,4 +164,4 @@ $_POST['sanro_studio_checkout_token'] = 'not-a-token';
 gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'invalid token rejected');
 unset($_POST['sanro_studio_checkout_token'], $_POST['sanro_studio_checkout_nonce']);
 gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'missing checkout credentials rejected');
-echo "PASS: 27 checkout gate checks\n";
+echo "PASS: 29 checkout gate checks\n";
