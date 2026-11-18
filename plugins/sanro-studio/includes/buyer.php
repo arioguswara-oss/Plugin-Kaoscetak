@@ -71,6 +71,10 @@ function sanro_studio_render_buyer_editor() {
     echo '<label>Ukuran teks<input type="range" id="sanro-font-size" min="10" max="48" value="22"></label>';
     echo '<label>Kategori cetak<select id="sanro-category"><option>A5</option><option>A4</option><option>A3</option><option>A3+</option></select></label>';
     echo '<p id="sanro-validation" role="status">Belum ada desain.</p>';
+    if (!empty($config['draft_api'])) {
+        echo '<button type="button" id="sanro-save-draft">Simpan draft teks</button>';
+        echo '<p id="sanro-save-status" role="status">Penyimpanan gambar dan checkout belum tersedia.</p>';
+    }
     echo '<button type="button" disabled>Simpan dan checkout — belum aktif</button></section></div></main>';
     get_footer();
     exit;
