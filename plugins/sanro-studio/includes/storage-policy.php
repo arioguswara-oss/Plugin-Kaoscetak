@@ -116,3 +116,46 @@ function sanro_studio_store_owned_draft_preview($design_id, $owner_token, $side,
     }
     return sanro_studio_store_private_preview($design_id, $side, $bytes);
 }
+
+/**
+ * Resolve an opaque private preview reference only after draft ownership is
+ * established. Never return a filesystem path or public URL to the caller.
+ * The reference is an immutable filename from the content-addressed writer.
+ */
+function sanro_studio_read_owned_draft_preview($design_id, $owner_token, $side, $file_id) {
+    if (!function_exists('sanro_studio_read_draft')) {
+        return ['valid' => false, 'error' => 'draft_store_unavailable'];
+    }
+    $draft = sanro_studio_read_draft($design_id, $owner_token);
+    if (empty($draft['valid'])) return $draft;
+    if (!in_array($side, ['front', 'back'], true)
+        || !is_string($file_id) || !is_string($design_id)
+        || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id)
+        || !preg_match('/^[a-f0-9]{64}\\.(png|jpg|webp)$/D', substr($file_id, strlen($design_id) + strlen($side) + 2))
+        || strpos($file_id, strtolower($design_id) . '-' . $side . '-') !== 0) {
+        return ['valid' => false, 'error' => 'invalid_preview_reference'];
+    }
+    if (!defined('SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS')
+        || SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS !== true
+        || !defined('SANRO_STUDIO_PRIVATE_PREVIEW_DIR')
+        || !is_string(SANRO_STUDIO_PRIVATE_PREVIEW_DIR)) {
+        return ['valid' => false, 'error' => 'preview_storage_disabled'];
+    }
+    $directory = realpath(SANRO_STUDIO_PRIVATE_PREVIEW_DIR);
+    $root = defined('ABSPATH') ? realpath(ABSPATH) : false;
+    if (!$directory || !is_dir($directory) || is_link(SANRO_STUDIO_PRIVATE_PREVIEW_DIR)
+        || ($root && ($directory === $root || strpos($directory, $root . DIRECTORY_SEPARATOR) === 0))) {
+        return ['valid' => false, 'error' => 'unsafe_preview_directory'];
+    }
+    $path = $directory . DIRECTORY_SEPARATOR . $file_id;
+    if (is_link($path) || !is_file($path) || !is_readable($path)
+        || filesize($path) > 51200) {
+        return ['valid' => false, 'error' => 'preview_not_found'];
+    }
+    $bytes = file_get_contents($path);
+    $checked = sanro_studio_validate_preview_bytes($bytes);
+    if (empty($checked['valid']) || strpos($file_id, '-' . $checked['sha256'] . '.') === false) {
+        return ['valid' => false, 'error' => 'preview_integrity_failed'];
+    }
+    return ['valid' => true, 'bytes' => $bytes, 'mime' => $checked['mime']];
+}
