@@ -419,8 +419,53 @@
        throw new Error('Desain berubah selama upload. Periksa ulang draft.');
       completed.push(name);
      }
-     masterStatus.textContent='Master privat tersimpan untuk '+completed.join(', ')
-      +'. Checkout belum tersedia; gambar belum dapat dipulihkan otomatis.';
+     if(editRevision!==revisionAtStart)throw new Error('Desain berubah selama upload. Simpan ulang.');
+     // Commit only geometry, never image bytes or a client-provided master ID.
+     // The server verifies every image side against its owner-bound private master.
+     const design=JSON.parse(JSON.stringify(currentDraft.design));
+     for(const name of completed){
+      const d=sides[name],area=config.safe_areas[name];
+      const dimensions=await new Promise((resolve,reject)=>{
+       const probe=new Image();
+       probe.onload=()=>resolve([probe.naturalWidth,probe.naturalHeight]);
+       probe.onerror=()=>reject(new Error('Dimensi gambar '+name+' tidak tersedia.'));
+       probe.src=d.url;
+      });
+      const rect=safe.getBoundingClientRect();
+      if(!rect.width||!rect.height||!dimensions[0]||!dimensions[1])
+       throw new Error('Area cetak belum siap.');
+      const width=d.imageSize*area.width/100;
+      const height=width*rect.width/rect.height*dimensions[1]/dimensions[0]*area.height/area.width;
+      const object={type:'image',x:d.imageX*area.width/100,y:d.imageY*area.height/100,width,height};
+      if(object.x<0||object.y<0||object.x+width>area.width+0.000001
+       ||object.y+height>area.height+0.000001)
+       throw new Error('Gambar '+name+' di luar area aman.');
+      if(!design[name])design[name]={category:d.category,objects:[]};
+      design[name].objects.push(object);
+     }
+     if(editRevision!==revisionAtStart)throw new Error('Desain berubah sebelum metadata disimpan.');
+     const commit=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId),{
+      method:'POST',credentials:'same-origin',cache:'no-store',
+      headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,
+       'X-Sanro-Owner-Token':ownerToken},
+      body:JSON.stringify({design,expected_design_hash:designHash})
+     });
+     const committed=await commit.json();
+     if(!commit.ok||!committed.valid)
+      throw new Error('Master terunggah, tetapi metadata gambar belum tersimpan ('+commit.status+').');
+     const fresh=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId),{
+      method:'GET',credentials:'same-origin',cache:'no-store',
+      headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken}
+     });
+     if(!fresh.ok)throw new Error('Metadata tersimpan, tetapi verifikasi revisi gagal.');
+     const updated=await fresh.json();
+     if(!updated.valid||typeof updated.design_hash!=='string'
+      ||!updated.master_refs||completed.some(name=>!updated.master_refs[name]))
+      throw new Error('Metadata gambar tidak terikat ke master privat.');
+     lastKnownDesignHash=updated.design_hash;
+     if(editRevision===revisionAtStart)savedRevision=editRevision;
+     masterStatus.textContent='Master dan posisi gambar tersimpan untuk '+completed.join(', ')
+      +'. Pemulihan gambar setelah membuka ulang masih dalam pengembangan.';
     }catch(error){masterStatus.textContent=error.message||'Upload master gagal.';}
     finally{masterButton.disabled=false;}
    });
