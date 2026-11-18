@@ -27,6 +27,15 @@ if (!function_exists('imagecreatetruecolor')) {
     verify(!empty($first['valid']), 'first private preview write');
     $again = sanro_studio_store_private_preview($id, 'front', $bytes);
     verify(!empty($again['valid']) && $again['file_id'] === $first['file_id'], 'idempotent repeated upload');
+    function sanro_studio_read_draft($design_id, $owner_token) {
+        return $owner_token === 'valid-token'
+            ? ['valid' => true, 'status' => 'draft']
+            : ['valid' => false, 'error' => 'not_found'];
+    }
+    $owned = sanro_studio_read_owned_draft_preview($id, 'valid-token', 'front', $first['file_id']);
+    verify(!empty($owned['valid']) && hash_equals($bytes, $owned['bytes']), 'authorized preview read verifies content');
+    $denied = sanro_studio_read_owned_draft_preview($id, 'wrong-token', 'front', $first['file_id']);
+    verify(empty($denied['valid']), 'unauthorized preview read denied');
     $path = $private . '/' . $first['file_id'];
     file_put_contents($path, str_repeat('z', strlen($bytes)));
     $tampered = sanro_studio_store_private_preview($id, 'front', $bytes);
