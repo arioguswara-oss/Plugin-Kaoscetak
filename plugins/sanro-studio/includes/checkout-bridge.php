@@ -74,3 +74,35 @@ function sanro_studio_validate_size_order_item($candidate, $order_item) {
     return ['valid' => true, 'size' => $candidate['sanro_studio_size'],
         'design_id' => $candidate['sanro_studio_design_id'] ?? null];
 }
+
+/**
+ * Bind a verified size-line design to an unsaved WooCommerce order item.
+ * Staging boundary only; the caller is responsible for atomic checkout flow.
+ * Never store owner tokens, artwork bytes, private file paths or price claims.
+ */
+function sanro_studio_prepare_size_checkout_order_item($candidate, $order_item) {
+    $verified = sanro_studio_validate_size_order_item($candidate, $order_item);
+    if (empty($verified['valid'])) return $verified;
+    if (!is_string($verified['design_id'])
+        || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $verified['design_id'])
+        || !method_exists($order_item, 'get_meta')
+        || !method_exists($order_item, 'update_meta_data')
+        || !isset($candidate['sanro_studio_unit_price'])
+        || !is_int($candidate['sanro_studio_unit_price'])
+        || $candidate['sanro_studio_unit_price'] < 1
+        || $candidate['sanro_studio_line_subtotal'] !== $candidate['quantity'] * $candidate['sanro_studio_unit_price']
+        || ($candidate['sanro_studio_quote_currency'] ?? null) !== 'IDR') {
+        return ['valid' => false, 'error' => 'invalid_size_checkout_contract'];
+    }
+    foreach (['_sanro_studio_design_id', '_sanro_studio_size'] as $key) {
+        $existing = $order_item->get_meta($key, true);
+        if ($existing !== '' && $existing !== null) {
+            return ['valid' => false, 'error' => 'size_order_already_bound'];
+        }
+    }
+    $order_item->update_meta_data('_sanro_studio_design_id', $verified['design_id']);
+    $order_item->update_meta_data('_sanro_studio_size', $verified['size']);
+    return ['valid' => true, 'design_id' => $verified['design_id'],
+        'size' => $verified['size'], 'requires_item_save' => true,
+        'checkout_enabled' => false];
+}
