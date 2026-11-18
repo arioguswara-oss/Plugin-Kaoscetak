@@ -126,32 +126,54 @@ function sanro_studio_update_draft($id, $token, $design) {
 }
 
 /**
- * Delete only expired, still-draft records in small batches.
- * Never touch locked/order-linked records. WP options are private metadata,
- * not the Google Drive master file store.
+ * Bounded, cursor-based cleanup. The caller advances next_cursor on every
+ * invocation, including when no records were deleted. No cron is registered.
+ * Deletion uses binary compare-and-swap to avoid racing with a draft update.
  */
-function sanro_studio_cleanup_expired_drafts($limit = 50) {
+function sanro_studio_cleanup_expired_drafts($limit = 50, $after_id = 0) {
     global $wpdb;
+    $empty = ['scanned' => 0, 'deleted' => 0, 'next_cursor' => 0, 'has_more' => false];
     if (!is_object($wpdb) || !isset($wpdb->options)
         || !preg_match('/^[A-Za-z0-9_]+$/D', $wpdb->options)
-        || !method_exists($wpdb, 'get_col') || !method_exists($wpdb, 'prepare')
-        || !method_exists($wpdb, 'esc_like')
-        || !function_exists('delete_option')) return 0;
+        || !method_exists($wpdb, 'get_results') || !method_exists($wpdb, 'prepare')
+        || !method_exists($wpdb, 'esc_like') || !method_exists($wpdb, 'query')
+        || !function_exists('maybe_serialize') || !function_exists('wp_cache_delete')) {
+        return $empty + ['error' => 'storage_unavailable'];
+    }
     $limit = max(1, min(100, (int) $limit));
-    // A bounded scan avoids loading every draft into memory.
-    $keys = $wpdb->get_col($wpdb->prepare(
-        "SELECT option_name FROM `{$wpdb->options}` WHERE option_name LIKE %s ORDER BY option_id ASC LIMIT %d",
-        $wpdb->esc_like('sanro_studio_draft_') . '%', $limit
-    ));
-    if (!is_array($keys)) return 0;
+    $after_id = max(0, (int) $after_id);
+    $rows = $wpdb->get_results($wpdb->prepare(
+        "SELECT option_id, option_name, option_value FROM `{$wpdb->options}`
+         WHERE option_id > %d AND option_name LIKE %s
+         ORDER BY option_id ASC LIMIT %d",
+        $after_id, $wpdb->esc_like('sanro_studio_draft_') . '%', $limit + 1
+    ), ARRAY_A);
+    if (!is_array($rows)) return $empty + ['error' => 'storage_failed'];
+    $has_more = count($rows) > $limit;
+    $batch = array_slice($rows, 0, $limit);
     $deleted = 0;
-    foreach ($keys as $key) {
-        if (!is_string($key) || !preg_match('/^sanro_studio_draft_[a-f0-9-]{36}$/iD', $key)) continue;
-        $record = get_option($key, false);
+    $cursor = $after_id;
+    foreach ($batch as $row) {
+        if (!isset($row['option_id'], $row['option_name'], $row['option_value'])) continue;
+        $cursor = max($cursor, (int) $row['option_id']);
+        $key = $row['option_name'];
+        if (!is_string($key) || !preg_match('/^sanro_studio_draft_[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $key)) continue;
+        $record = maybe_unserialize($row['option_value']);
         if (!is_array($record) || ($record['status'] ?? null) !== 'draft') continue;
         $expires = $record['expires_at'] ?? null;
         if (!is_int($expires) || $expires > time()) continue;
-        if (delete_option($key)) $deleted++;
+        $affected = $wpdb->query($wpdb->prepare(
+            "DELETE FROM `{$wpdb->options}` WHERE option_id = %d
+             AND option_name = %s AND BINARY option_value = BINARY %s",
+            (int) $row['option_id'], $key, $row['option_value']
+        ));
+        if ($affected === 1) {
+            $deleted++;
+            wp_cache_delete($key, 'options');
+            wp_cache_delete('alloptions', 'options');
+            wp_cache_delete('notoptions', 'options');
+        }
     }
-    return $deleted;
+    return ['scanned' => count($batch), 'deleted' => $deleted,
+        'next_cursor' => $cursor, 'has_more' => $has_more];
 }
