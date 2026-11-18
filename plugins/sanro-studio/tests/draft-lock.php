@@ -70,6 +70,18 @@ $GLOBALS['can_manage'] = true;
 verify(sanro_studio_lock_draft_for_order_item($id, $token, $order, 9)['error'] === 'invalid_order_item', 'unknown order item denied');
 verify(sanro_studio_lock_draft_for_order_item($id, $token, $order, 8)['error'] === 'product_mismatch', 'mismatched item product denied');
 verify(sanro_studio_lock_draft_for_order_item($id, $token, $order, 10)['error'] === 'order_quantity_mismatch', 'mismatched order quantity denied');
+class SanroMalformedProductItem extends SanroLockItem {
+    public function get_product_id() { return '12'; }
+}
+class SanroMalformedQuantityItem extends SanroLockItem {
+    public function get_quantity() { return '2'; }
+}
+$malformed = new SanroLockOrder([
+    11 => new SanroMalformedProductItem(12),
+    12 => new SanroMalformedQuantityItem(12),
+]);
+verify(sanro_studio_lock_draft_for_order_item($id, $token, $malformed, 11)['error'] === 'product_mismatch', 'string product ID rejected');
+verify(sanro_studio_lock_draft_for_order_item($id, $token, $malformed, 12)['error'] === 'order_quantity_mismatch', 'string quantity rejected');
 $wpdb->affected = 1;
 $claimed = sanro_studio_lock_draft_for_order_item($id, $token, $order, 7);
 verify(!empty($claimed['valid']) && $GLOBALS['record']['order_id'] === 30 && $GLOBALS['record']['order_item_id'] === 7, 'matching order item locks draft');
