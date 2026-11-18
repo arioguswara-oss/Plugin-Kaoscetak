@@ -91,4 +91,23 @@ $GLOBALS['gate_wc']->cart = new GateCart('65000');
 unset($GLOBALS['gate_wc']->cart->lines[0]['sanro_studio_design_id']);
 sanro_studio_stage_checkout_process();
 gate_check(count($GLOBALS['gate_notices'])===1, 'partial SANRO metadata cannot bypass checkout gate');
-echo "PASS: 16 checkout gate checks\n";
+$GLOBALS['gate_wc']->cart = new GateCart('65000');
+$failed_closed = false;
+try {
+    sanro_studio_stage_checkout_create_order_line_item(
+        new GateOrderItem('130000.00'), 'key',
+        $GLOBALS['gate_wc']->cart->lines[0], null
+    );
+} catch (RuntimeException $exception) {
+    $failed_closed = true;
+}
+gate_check($failed_closed, 'order metadata cannot bind without request authorization');
+$GLOBALS['sanro_studio_checkout_verified'] = ['contract'=>$contract];
+$order_line = new GateOrderItem('130000.00');
+sanro_studio_stage_checkout_create_order_line_item(
+    $order_line, 'key', $GLOBALS['gate_wc']->cart->lines[0], null
+);
+gate_check($order_line->get_meta('_sanro_studio_size')==='M', 'verified order item bound');
+gate_check($order_line->get_meta('_sanro_studio_design_id')===$id, 'verified order design bound');
+unset($GLOBALS['sanro_studio_checkout_verified']);
+echo "PASS: 19 checkout gate checks\n";
