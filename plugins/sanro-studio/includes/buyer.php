@@ -30,7 +30,11 @@ function sanro_studio_render_product_picker($page_url) {
     // Use the shared buyer stylesheet for responsive layout; enqueue before get_header().
     $ids = wc_get_products(['status' => 'publish', 'limit' => 48, 'return' => 'ids', 'orderby' => 'title', 'order' => 'ASC']);
     echo '<main id="sanro-studio-buyer" class="sanro-buyer sanro-product-picker" aria-label="SANRO Studio">';
-    echo '<header><h1>SANRO Studio</h1><p>Pilih produk untuk mulai mendesain.</p></header>';
+    $preferences = get_option('sanro_studio_native_preferences', []);
+    $label = is_array($preferences) && isset($preferences['studio_label'])
+        && is_string($preferences['studio_label']) && trim($preferences['studio_label']) !== ''
+        ? $preferences['studio_label'] : 'SANRO Studio';
+    echo '<header><h1>' . esc_html($label) . '</h1><p>Pilih produk untuk mulai mendesain.</p></header>';
     echo '<label for="sanro-product-search">Cari produk</label> ';
     echo '<input id="sanro-product-search" type="search" placeholder="Cari nama produk" autocomplete="off">';
     echo '<div class="sanro-product-grid">';
