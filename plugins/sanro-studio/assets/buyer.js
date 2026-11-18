@@ -46,6 +46,7 @@
   image.style.left=d.imageX+'%';image.style.top=d.imageY+'%';image.style.width=d.imageSize+'%';
   text.hidden=!d.text;text.textContent=d.text;text.style.left=d.textX+'%';text.style.top=d.textY+'%';text.style.fontSize=d.fontSize+'px';text.style.color=d.textColor;
   root.querySelectorAll('[data-side]').forEach(b=>{b.disabled=!config.safe_areas[b.dataset.side];b.setAttribute('aria-pressed',String(b.dataset.side===side))});
+  q('#sanro-side-summary').textContent=['front','back'].map(name=>(name==='front'?'Depan':'Belakang')+': '+(sides[name].url||sides[name].text.trim()?'ada desain ('+sides[name].category+')':'kosong')).join(' · ');
   updateEstimate();requestAnimationFrame(validate);
  }
  function validate(){
@@ -72,6 +73,17 @@
  q('#sanro-image-size').addEventListener('input',e=>{sides[side].imageSize=Number(e.target.value);render()});
  q('#sanro-font-size').addEventListener('input',e=>{sides[side].fontSize=Number(e.target.value);render()});
  q('#sanro-text-color').addEventListener('input',e=>{sides[side].textColor=e.target.value;render()});
+ q('#sanro-remove-text').addEventListener('click',()=>{sides[side].text='';render()});
+ q('#sanro-center-text').addEventListener('click',()=>{
+  const d=sides[side];if(!d.text.trim())return;
+  const previous={content:text.textContent,font:text.style.fontSize,hidden:text.hidden};
+  text.hidden=false;text.textContent=d.text;text.style.fontSize=d.fontSize+'px';
+  const rect=safe.getBoundingClientRect(),box=text.getBoundingClientRect();
+  text.textContent=previous.content;text.style.fontSize=previous.font;text.hidden=previous.hidden;
+  if(!rect.width||!rect.height||!box.width||!box.height)return;
+  d.textX=Math.max(0,(rect.width-box.width)/rect.width*50);
+  d.textY=Math.max(0,(rect.height-box.height)/rect.height*50);render();
+ });
  q('#sanro-category').addEventListener('change',e=>{sides[side].category=e.target.value;render()});
  q('#sanro-image').addEventListener('change',e=>{
   const file=e.target.files[0];if(!file)return;
