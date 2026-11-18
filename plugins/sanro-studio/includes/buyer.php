@@ -33,7 +33,8 @@ function sanro_studio_render_buyer_editor() {
     // Render as a dedicated view: no WooCommerce add-to-cart form is included.
     $asset = plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/';
     wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], SANRO_STUDIO_VERSION);
-    wp_enqueue_script('sanro-studio-buyer', $asset . 'buyer.js', [], SANRO_STUDIO_VERSION, true);
+    wp_enqueue_script('sanro-studio-estimate', $asset . 'estimate.js', [], SANRO_STUDIO_VERSION, true);
+    wp_enqueue_script('sanro-studio-buyer', $asset . 'buyer.js', ['sanro-studio-estimate'], SANRO_STUDIO_VERSION, true);
     wp_add_inline_script('sanro-studio-buyer', 'window.SANRO_STUDIO_EDITOR_CONFIG=' . wp_json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';', 'before');
 
     // WordPress may have a canonical redirect for product query arguments.
@@ -52,6 +53,7 @@ function sanro_studio_render_buyer_editor() {
         echo '<label>' . esc_html($size) . '<input type="number" data-size="' . esc_attr($size) . '" min="0" max="999" step="1" value="0" inputmode="numeric"></label>';
     }
     echo '</fieldset><p id="sanro-qty-total" role="status">Total: 0 pcs</p>';
+    echo '<p id="sanro-price-estimate" role="status">Estimasi harga: pilih desain dan jumlah. Harga final dihitung saat checkout.</p>';
     echo '<label>Gambar PNG/JPEG maks. 10 MB<input type="file" id="sanro-image" accept="image/png,image/jpeg"></label>';
     echo '<label>Ukuran gambar<input type="range" id="sanro-image-size" min="10" max="100" value="60"></label>';
     echo '<button type="button" id="sanro-remove-image">Hapus gambar</button>';
