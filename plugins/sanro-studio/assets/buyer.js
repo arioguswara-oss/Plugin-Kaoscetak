@@ -193,7 +193,7 @@
  }
  // Text-only staging draft: no master upload, checkout or public share.
  const saveButton=q('#sanro-save-draft'),saveStatus=q('#sanro-save-status');
- let savedId=null,ownerToken=null,saving=false,editRevision=0;
+ let savedId=null,ownerToken=null,saving=false,editRevision=0,savedRevision=-1;
  const draftStorageKey='sanro-studio-draft:'+String(config.product_id);
  function restoreDesign(design){
   if(!design||typeof design!=='object')throw new Error('Metadata draft tidak valid.');
@@ -255,7 +255,7 @@
    saveStatus.textContent='Draft lama tidak diterapkan karena desain sudah diubah. Muat ulang halaman untuk membuka draft.';
    return;
   }
-  restoreDesign(result.design);savedId=credentials.id;ownerToken=credentials.token;
+  restoreDesign(result.design);savedId=credentials.id;ownerToken=credentials.token;savedRevision=editRevision;
   saveStatus.textContent='Draft teks berhasil dibuka kembali. Design ID: '+savedId;
  }
  function exportTextDraft(){
@@ -295,6 +295,7 @@
   const quoteButton=q('#sanro-server-quote'),quoteStatus=q('#sanro-server-quote-status');
   quoteButton.addEventListener('click',async()=>{
    if(!savedId||!ownerToken){quoteStatus.textContent='Simpan draft teks terlebih dahulu.';return}
+   if(editRevision!==savedRevision){quoteStatus.textContent='Ada perubahan belum tersimpan. Simpan draft terlebih dahulu untuk harga terbaru.';return}
    quoteButton.disabled=true;
    const revisionAtRequest=editRevision;
    quoteStatus.textContent='Memeriksa harga server…';
@@ -329,6 +330,7 @@
     const result=await response.json();
     if(!response.ok||!result.valid)throw new Error('Penyimpanan gagal ('+response.status+').');
     if(!savedId){savedId=result.design_id;ownerToken=result.owner_token}
+    if(editRevision===revisionAtSave)savedRevision=editRevision;
     try{sessionStorage.setItem(draftStorageKey,JSON.stringify({id:savedId,token:ownerToken}))}catch(_error){}
     saveStatus.textContent=editRevision===revisionAtSave
      ?'Draft teks tersimpan. Design ID: '+savedId+'. Bisa dibuka ulang pada tab ini selama sesi browser masih tersedia.'
