@@ -68,6 +68,7 @@ function sanro_studio_validate_cart_design_identity($contract, $cart_item) {
         || !is_int($contract['quote']['total_price']) || $contract['quote']['total_price'] <= 0
         || !isset($contract['quote']['total_quantity'])
         || !is_int($contract['quote']['total_quantity'])
+        || $contract['quote']['total_quantity'] < 1
         || !isset($cart_item['quantity']) || !is_int($cart_item['quantity'])
         || $cart_item['quantity'] !== $contract['quote']['total_quantity']) {
         return ['valid' => false, 'error' => 'cart_quantity_mismatch'];
