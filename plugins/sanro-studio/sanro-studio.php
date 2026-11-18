@@ -73,4 +73,6 @@ add_action('woocommerce_after_order_itemmeta', 'sanro_studio_admin_item_preview_
 if (defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
     && SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK === true) {
     add_action('woocommerce_checkout_process', 'sanro_studio_stage_checkout_process', 5);
+    add_action('woocommerce_checkout_create_order_line_item',
+        'sanro_studio_stage_checkout_create_order_line_item', 10, 4);
 }
