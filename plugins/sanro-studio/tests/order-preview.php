@@ -32,8 +32,14 @@ class SanroItemPreviewOrderFixture {
     public function __construct($items) { $this->items = $items; }
     public function get_items($type) { return $type === 'line_item' ? $this->items : []; }
 }
-$item1 = new SanroOrderPreviewFixture(['_sanro_studio_preview_front_ref' => $ref]);
-$item2 = new SanroOrderPreviewFixture(['_sanro_studio_preview_back_ref' => str_replace('-front-', '-back-', $ref)]);
+$item1 = new SanroOrderPreviewFixture([
+    '_sanro_studio_design_id' => $id,
+    '_sanro_studio_preview_front_ref' => $ref,
+]);
+$item2 = new SanroOrderPreviewFixture([
+    '_sanro_studio_design_id' => $id,
+    '_sanro_studio_preview_back_ref' => str_replace('-front-', '-back-', $ref),
+]);
 $multi = new SanroItemPreviewOrderFixture([10 => $item1, 11 => $item2]);
 $one = sanro_studio_order_item_preview_inventory($multi, 10);
 $two = sanro_studio_order_item_preview_inventory($multi, 11);
