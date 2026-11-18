@@ -281,5 +281,12 @@ function sanro_studio_stage_checkout_process() {
     $result = sanro_studio_stage_authorize_checkout($id, $token, $product_id, $wc->cart);
     if (empty($result['valid'])) {
         wc_add_notice('SANRO Studio: design or pricing validation failed.', 'error');
+        return;
     }
+    // Authorization is request-scoped: never put the owner token in cart,
+    // order metadata, or a WooCommerce session.
+    $GLOBALS['sanro_studio_checkout_verified'] = [
+        'design_id' => $id, 'product_id' => $product_id,
+        'contract' => sanro_studio_prepare_cart_design_contract($id, $token, $product_id),
+    ];
 }
