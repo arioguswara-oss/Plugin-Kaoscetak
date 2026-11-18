@@ -200,8 +200,11 @@
   try{stored=sessionStorage.getItem(draftStorageKey)}catch(_error){return}
   if(!stored)return;
   const revisionAtRequest=editRevision;
-  const credentials=JSON.parse(stored);
-  if(!/^[a-f0-9-]{36}$/i.test(credentials.id)||!/^[a-f0-9]{64}$/.test(credentials.token))return;
+  let credentials;
+  try{credentials=JSON.parse(stored)}catch(_error){return}
+  if(!credentials||typeof credentials!=='object')return;
+  if(typeof credentials.id!=='string'||typeof credentials.token!=='string'
+   ||!/^[a-f0-9-]{36}$/i.test(credentials.id)||!/^[a-f0-9]{64}$/.test(credentials.token))return;
   const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(credentials.id),{
    method:'GET',headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':credentials.token},
    credentials:'same-origin',cache:'no-store'});
@@ -253,6 +256,7 @@
    if(saving)return;
    let design;
    try{design=exportTextDraft()}catch(error){saveStatus.textContent=error.message;return}
+   const revisionAtSave=editRevision;
    saving=true;saveButton.disabled=true;saveStatus.textContent='Menyimpan metadata teks…';
    try{
     const headers={'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce};
@@ -264,7 +268,9 @@
     if(!response.ok||!result.valid)throw new Error('Penyimpanan gagal ('+response.status+').');
     if(!savedId){savedId=result.design_id;ownerToken=result.owner_token}
     try{sessionStorage.setItem(draftStorageKey,JSON.stringify({id:savedId,token:ownerToken}))}catch(_error){}
-    saveStatus.textContent='Draft teks tersimpan. Design ID: '+savedId+'. Bisa dibuka ulang pada tab ini selama sesi browser masih tersedia.';
+    saveStatus.textContent=editRevision===revisionAtSave
+     ?'Draft teks tersimpan. Design ID: '+savedId+'. Bisa dibuka ulang pada tab ini selama sesi browser masih tersedia.'
+     :'Versi sebelumnya tersimpan. Ada perubahan baru yang belum tersimpan; klik Simpan lagi.';
    }catch(error){saveStatus.textContent=error.message||'Penyimpanan gagal.'}
    finally{saving=false;saveButton.disabled=false}
   });
