@@ -30,12 +30,12 @@ function sanro_studio_render_buyer_editor() {
     $config = sanro_studio_public_editor_config($product_id);
     if (empty($config['valid'])) return;
 
-    $asset = plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/';
+    // Render as a dedicated view: no WooCommerce add-to-cart form is included.\n    $asset = plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/';
     wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], SANRO_STUDIO_VERSION);
     wp_enqueue_script('sanro-studio-buyer', $asset . 'buyer.js', [], SANRO_STUDIO_VERSION, true);
     wp_add_inline_script('sanro-studio-buyer', 'window.SANRO_STUDIO_EDITOR_CONFIG=' . wp_json_encode($config) . ';', 'before');
 
-    get_header();
+    // WordPress may have a canonical redirect for product query arguments.\n    // This view is selected only after product identity and visibility checks.\n    get_header();
     echo '<main id="sanro-studio-buyer" class="sanro-buyer" aria-label="SANRO Studio">';
     echo '<header><h1>SANRO Studio</h1><p>Editor kaos — pratinjau saja, belum dapat checkout</p></header>';
     echo '<div class="sanro-layout"><section class="sanro-preview" aria-label="Pratinjau desain">';
