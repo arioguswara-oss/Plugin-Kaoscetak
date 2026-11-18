@@ -36,10 +36,10 @@ function sanro_studio_render_settings() {
     echo '<table class="widefat striped"><tbody>';
     $rows = [
         'WooCommerce' => $state['woocommerce'] ? 'Terdeteksi' : 'Belum aktif',
-        'Core editor' => $state['lumise'] ? 'Terdeteksi' : 'Belum aktif',
-        'Versi core' => $state['lumise_version'] !== '' ? $state['lumise_version'] : 'Tidak tersedia',
-        'Kompatibilitas fondasi' => $state['supported'] ? 'Versi 2.1.2 dikenali; QA editor masih diperlukan' : 'Profil tidak diterapkan',
-        'Mode pelanggan' => 'Tetap memakai alur editor yang sudah ada',
+        'Mode core' => $legacy_compat ? 'Kompatibilitas lama (opt-in)' : 'SANRO Studio native',
+        'Editor buyer' => sanro_studio_frontend_enabled() ? 'Aktif melalui konfigurasi server' : 'Nonaktif (default)',
+        'Draft API' => sanro_studio_draft_rest_enabled() ? 'Aktif melalui konfigurasi server' : 'Nonaktif (default)',
+        'Checkout' => 'Belum tersedia',
     ];
     $runtime_labels = [
         'native_default' => 'SANRO native aktif sebagai fondasi; bootstrap editor lama tidak dijalankan',
@@ -57,6 +57,10 @@ function sanro_studio_render_settings() {
         'bootstrap_incomplete' => 'Inisialisasi core internal belum lengkap',
     ];
     $rows['Pemuat core'] = $runtime_labels[$runtime['state']] ?? 'Status belum dikenali';
+    if ($legacy_compat) {
+        $rows['Core kompatibilitas'] = $state['lumise'] ? 'Terdeteksi' : 'Belum aktif';
+        $rows['Versi kompatibilitas'] = $state['lumise_version'] !== '' ? $state['lumise_version'] : 'Tidak tersedia';
+    }
     foreach ($rows as $label => $value) {
         echo '<tr><th scope="row">' . esc_html($label) . '</th><td>' . esc_html($value) . '</td></tr>';
     }
@@ -87,6 +91,7 @@ function sanro_studio_render_settings() {
             echo '<p><a class="button" href="' . esc_url($editor_url) . '">Buka halaman editor kompatibilitas</a></p>';
         }
     }
+    if ($legacy_compat) {
     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
     echo '<input type="hidden" name="action" value="sanro_studio_save">';
     wp_nonce_field('sanro_studio_settings');
@@ -95,5 +100,9 @@ function sanro_studio_render_settings() {
     echo '> Pratinjau profil editor sederhana untuk administrator</label></p>';
     echo '<p>Profil menyederhanakan menu dan toolbar pada sesi administrator. Ini belum membatasi jumlah objek atau memindahkan master ke Drive.</p>';
     submit_button('Simpan pengaturan SANRO Studio');
-    echo '</form></div>';
+    echo '</form>';
+    } else {
+        echo '<p>Mode native tidak memerlukan pengaturan editor kompatibilitas. Buyer dan draft API hanya diaktifkan melalui konfigurasi server staging.</p>';
+    }
+    echo '</div>';
 }
