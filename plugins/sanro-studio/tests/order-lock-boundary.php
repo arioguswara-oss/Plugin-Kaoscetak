@@ -1,6 +1,8 @@
 <?php
 /** Fail-closed order lock boundary: wrong/missing design cannot mutate a draft. */
 define('ABSPATH', __DIR__);
+// WordPress serialization shim for isolated CLI fixture; production uses core WordPress.
+function maybe_serialize($data) { return is_array($data) || is_object($data) ? serialize($data) : $data; }
 function current_user_can($cap) { global $sanro_test_admin; return $sanro_test_admin && $cap === 'manage_woocommerce'; }
 function get_option($key, $default=false) {
     global $sanro_test_draft_id, $sanro_test_token;
