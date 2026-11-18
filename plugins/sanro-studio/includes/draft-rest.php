@@ -20,6 +20,11 @@ function sanro_studio_register_draft_routes() {
         'permission_callback' => 'sanro_studio_rest_draft_nonce',
     ]);
     register_rest_route('sanro-studio/v1', '/drafts/(?P<id>[a-fA-F0-9-]{36})', [
+        'methods' => 'GET',
+        'callback' => 'sanro_studio_rest_read_draft',
+        'permission_callback' => 'sanro_studio_rest_draft_nonce',
+    ]);
+    register_rest_route('sanro-studio/v1', '/drafts/(?P<id>[a-fA-F0-9-]{36})', [
         'methods' => 'POST',
         'callback' => 'sanro_studio_rest_update_draft',
         'permission_callback' => 'sanro_studio_rest_draft_nonce',
@@ -103,4 +108,12 @@ function sanro_studio_rest_update_draft($request) {
     return sanro_studio_rest_draft_response(
         sanro_studio_update_draft($request->get_param('id'), $token, $design)
     );
+}
+
+/** Read requires BOTH the owner secret and the staging nonce; never cache. */
+function sanro_studio_rest_read_draft($request) {
+    if (function_exists('nocache_headers')) nocache_headers();
+    return sanro_studio_rest_draft_response(sanro_studio_read_draft(
+        $request->get_param('id'), $request->get_header('X-Sanro-Owner-Token')
+    ));
 }
