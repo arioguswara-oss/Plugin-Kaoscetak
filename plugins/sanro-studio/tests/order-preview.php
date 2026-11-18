@@ -106,3 +106,32 @@ $ready = sanro_studio_order_production_file_status(new SanroProductionEligibilit
 verify($ready['eligible'] && $ready['reason'] === 'production_ready', 'production-ready order eligible');
 $forged = sanro_studio_order_production_file_status(new SanroProductionEligibilityFixture(false, 'true'));
 verify(!$forged['eligible'], 'arbitrary truthy production status rejected');
+
+class SanroProductionItemOrderFixture {
+    private $items;
+    private $paid;
+    public function __construct($items, $paid) { $this->items = $items; $this->paid = $paid; }
+    public function get_items($type) { return $type === 'line_item' ? $this->items : []; }
+    public function is_paid() { return $this->paid; }
+    public function get_meta($key, $single = true) { return ''; }
+}
+$boundPreview = new SanroOrderPreviewFixture([
+    '_sanro_studio_design_id' => $id,
+    '_sanro_studio_preview_front_ref' => $ref,
+]);
+$unboundPreview = new SanroOrderPreviewFixture([
+    '_sanro_studio_preview_front_ref' => $ref,
+]);
+$paidOrder = new SanroProductionItemOrderFixture([50 => $boundPreview, 51 => $unboundPreview], true);
+$manifest = sanro_studio_order_item_production_manifest($paidOrder, 50);
+verify($manifest['valid'] && $manifest['eligible'] && $manifest['ready_for_drive_integration']
+    && $manifest['drive_url'] === null && $manifest['design_id'] === $id,
+    'paid bound item yields private production manifest without Drive URL');
+verify(sanro_studio_order_item_production_manifest($paidOrder, 51)['error'] === 'design_not_bound',
+    'unbound item cannot produce manifest');
+$pendingOrder = new SanroProductionItemOrderFixture([50 => $boundPreview], false);
+$pendingManifest = sanro_studio_order_item_production_manifest($pendingOrder, 50);
+verify($pendingManifest['valid'] && !$pendingManifest['eligible']
+    && !$pendingManifest['ready_for_drive_integration'], 'pending item not Drive-ready');
+verify(sanro_studio_order_item_production_manifest($paidOrder, 99)['error'] === 'invalid_order_item',
+    'unknown item cannot produce manifest');
