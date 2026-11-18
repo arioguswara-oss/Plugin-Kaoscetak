@@ -120,6 +120,7 @@ function sanro_studio_render_settings() {
     if ($legacy_compat) {
     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
     echo '<input type="hidden" name="action" value="sanro_studio_save">';
+    echo '<input type="hidden" name="settings_type" value="legacy_preview">';
     wp_nonce_field('sanro_studio_settings');
     echo '<p><label><input type="checkbox" name="admin_preview" value="yes" ';
     checked($options['admin_preview']);
