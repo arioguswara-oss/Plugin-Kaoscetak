@@ -26,14 +26,23 @@ class MockDraftDb {
         return array_slice($rows, 0, (int) $m[2]);
     }
     public function query($sql) {
-        if (!str_contains($sql, 'BINARY option_value = BINARY')) throw new Exception('Missing CAS');
+        if (!strpos($sql, 'BINARY option_value = BINARY') !== false) throw new Exception('Missing CAS');
         if (!preg_match('/option_id = (\d+)/', $sql, $m)) throw new Exception('Missing row id');
-        if ($this->race) { $this->race = false; return 0; }
+        if ($this->race) {
+            $this->race = false;
+            foreach ($this->rows as &$row) {
+                if ($row['option_id'] === (int) $m[1]) {
+                    $row['option_value'] = serialize(['status'=>'locked','expires_at'=>time()-3600]);
+                    break;
+                }
+            }
+            unset($row);
+        }
         foreach ($this->rows as $i => $r) {
             if ($r['option_id'] === (int) $m[1]) {
                 // SQL's BINARY equality is represented by exact serialized-byte match.
                 $needle = "'".str_replace("'", "''", $r['option_value'])."'";
-                if (!str_contains($sql, 'BINARY '.$needle)) return 0;
+                if (!strpos($sql, 'BINARY '.$needle) !== false) return 0;
                 unset($this->rows[$i]);
                 return 1;
             }
@@ -61,5 +70,6 @@ check($second['deleted']===0 && $second['next_cursor']===3 && $second['has_more'
 $third = sanro_studio_cleanup_expired_drafts(2, $second['next_cursor']);
 check($third['deleted']===1 && !$third['has_more'], 'expired draft deleted');
 check(count($wpdb->rows)===3, 'active, locked and raced records retained');
+check(unserialize($wpdb->rows[2]['option_value'])['status']==='locked', 'concurrent lock mutation is preserved');
 $last = sanro_studio_cleanup_expired_drafts(2, $third['next_cursor']);
 check($last['scanned']===0 && $last['next_cursor']===4, 'empty scan preserves cursor');
