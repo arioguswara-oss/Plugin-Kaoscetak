@@ -33,6 +33,19 @@ function sanro_studio_admin_order_preview_status($order) {
             ? 'Belum tersedia'
             : 'Referensi privat tercatat; tampilan gambar menunggu endpoint terotorisasi';
         echo '<p>' . esc_html($label . ': ' . $state) . '</p>';
+        if ($inventory[$side] !== null && method_exists($order, 'get_id')) {
+            $order_id = absint($order->get_id());
+            if ($order_id && function_exists('wp_nonce_url') && function_exists('admin_url')) {
+                $url = add_query_arg([
+                    'action' => 'sanro_studio_order_preview',
+                    'order_id' => $order_id,
+                    'side' => $side,
+                ], admin_url('admin-post.php'));
+                $url = wp_nonce_url($url, 'sanro_order_preview_' . $order_id . '_' . $side);
+                echo '<a target="_blank" rel="noopener noreferrer" href="' . esc_url($url) . '">' .
+                    esc_html('Lihat preview ' . $label) . '</a>';
+            }
+        }
     }
     echo '</div>';
 }
