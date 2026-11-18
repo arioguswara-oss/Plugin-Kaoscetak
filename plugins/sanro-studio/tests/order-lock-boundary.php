@@ -3,7 +3,7 @@
 define('ABSPATH', __DIR__);
 function current_user_can($cap) { return $cap === 'manage_woocommerce'; }
 function sanro_studio_read_draft($id, $token) {
-    return ['valid'=>true, 'status'=>'draft', 'product_id'=>42,
+    return ['valid'=>true, 'status'=>'draft', 'design_id'=>$id, 'product_id'=>42,
         'design'=>['quantities'=>['M'=>2]]];
 }
 function sanro_studio_quote_size_quantities($product, $design, $quantities, $sleeve) {
@@ -37,3 +37,10 @@ foreach ([
     }
     echo "PASS: $name\n";
 }
+
+$result=sanro_studio_bind_order_item_design_identity($id, 'test-secret',
+    new SanroStudioLockOrder(new SanroStudioLockItem([])), 7);
+if (($result['error'] ?? null)!=='invalid_order_item') {
+    fwrite(STDERR, "FAIL: missing_metadata_mutator\n"); exit(1);
+}
+echo "PASS: missing_metadata_mutator\n";
