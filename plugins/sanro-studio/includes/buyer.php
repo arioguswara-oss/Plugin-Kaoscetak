@@ -21,15 +21,56 @@ function sanro_studio_product_editor_link() {
     echo '<p class="sanro-studio-entry"><a class="button alt" href="' . esc_url($url) . '">Custom Desain (SANRO Studio)</a></p>';
 }
 
+/**
+ * Standalone entrypoint: only published, purchasable products with valid
+ * SANRO Studio print areas and pricing profiles appear in the picker.
+ * Read-only, bounded listing; no checkout or private product data.
+ */
+function sanro_studio_render_product_picker($page_url) {
+    $ids = wc_get_products(['status' => 'publish', 'limit' => 48, 'return' => 'ids', 'orderby' => 'title', 'order' => 'ASC']);
+    echo '<main id="sanro-studio-buyer" class="sanro-buyer sanro-product-picker" aria-label="SANRO Studio">';
+    echo '<header><h1>SANRO Studio</h1><p>Pilih produk untuk mulai mendesain.</p></header>';
+    echo '<label for="sanro-product-search">Cari produk</label> ';
+    echo '<input id="sanro-product-search" type="search" placeholder="Cari nama produk" autocomplete="off">';
+    echo '<div class="sanro-product-grid">';
+    $shown = 0;
+    foreach ($ids as $id) {
+        if (empty(sanro_studio_public_editor_config($id)['valid'])) continue;
+        $product = wc_get_product($id);
+        if (!$product) continue;
+        $name = $product->get_name();
+        $url = add_query_arg(['sanro_studio_editor' => '1', 'product_id' => (int) $id], $page_url);
+        echo '<a class="sanro-product-card" href="' . esc_url($url) . '" data-name="' . esc_attr(strtolower($name)) . '">';
+        echo $product->get_image('woocommerce_thumbnail', ['loading' => 'lazy']);
+        echo '<strong>' . esc_html($name) . '</strong>';
+        echo '<span>' . wp_kses_post(wc_price(wc_get_price_to_display($product))) . '</span></a>';
+        $shown++;
+    }
+    echo '</div>';
+    if (!$shown) echo '<p>Belum ada produk yang siap didesain. Administrator perlu mengatur area cetak dan profil harga produk.</p>';
+    echo '<p id="sanro-product-empty" hidden>Tidak ada produk yang cocok.</p>';
+    echo '</main>';
+    echo '<style>.sanro-product-picker{max-width:1100px;margin:2rem auto;padding:1rem}.sanro-product-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-top:1rem}.sanro-product-card{display:flex;flex-direction:column;gap:.5rem;padding:1rem;border:1px solid #ddd;border-radius:10px;text-decoration:none}.sanro-product-card img{width:100%;height:auto;object-fit:contain}.sanro-product-picker input[type=search]{max-width:100%;width:320px}</style>';
+    echo '<script>document.addEventListener("DOMContentLoaded",function(){var input=document.getElementById("sanro-product-search"),cards=[].slice.call(document.querySelectorAll(".sanro-product-card")),empty=document.getElementById("sanro-product-empty");if(!input)return;input.addEventListener("input",function(){var q=input.value.toLocaleLowerCase().trim(),count=0;cards.forEach(function(card){var match=card.dataset.name.includes(q);card.hidden=!match;if(match)count++});if(empty)empty.hidden=count>0||cards.length===0})});</script>';
+}
+
 /** Dedicated buyer editor view, not wp-admin or Edit Post. */
 function sanro_studio_render_buyer_editor() {
-    if (!sanro_studio_frontend_enabled() || !isset($_GET['sanro_studio_editor'])
-        || !is_string($_GET['sanro_studio_editor']) || $_GET['sanro_studio_editor'] !== '1') return;
+    if (!sanro_studio_frontend_enabled()) return;
     $editor_page_id = (int) get_option('sanro_studio_editor_page_id', 0);
     $on_selected_page = $editor_page_id > 0 && get_post_type($editor_page_id) === 'page'
         && get_post_status($editor_page_id) === 'publish' && function_exists('is_page') && is_page($editor_page_id);
     $on_product = function_exists('is_product') && is_product();
     if (!$on_selected_page && !$on_product) return;
+    // The configured page is an entrypoint even without query parameters.
+    // Never hijack unrelated pages or product URLs.
+    if ($on_selected_page && !isset($_GET['product_id']) && !isset($_GET['sanro_studio_editor'])) {
+        get_header();
+        sanro_studio_render_product_picker(get_permalink($editor_page_id));
+        get_footer();
+        exit;
+    }
+    if (!isset($_GET['sanro_studio_editor']) || !is_string($_GET['sanro_studio_editor']) || $_GET['sanro_studio_editor'] !== '1') return;
     if (!isset($_GET['product_id']) || !is_scalar($_GET['product_id'])) return;
     $product_id = absint($_GET['product_id']);
     if (!$product_id || (string) $product_id !== (string) $_GET['product_id']) return;
