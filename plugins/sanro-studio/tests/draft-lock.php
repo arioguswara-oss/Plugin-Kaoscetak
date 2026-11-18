@@ -40,3 +40,26 @@ $GLOBALS['record']['status'] = 'draft';
 $wpdb->affected = 0;
 verify(sanro_studio_lock_draft_for_order($id, $token, 22)['error'] === 'draft_conflict', 'compare-and-swap conflict rejects lock');
 verify($GLOBALS['record']['status'] === 'draft', 'failed compare-and-swap leaves draft unchanged');
+
+$GLOBALS['can_manage'] = false;
+function current_user_can($cap) { return $cap === 'manage_woocommerce' && $GLOBALS['can_manage']; }
+class SanroLockItem {
+    private $product;
+    public function __construct($product) { $this->product = $product; }
+    public function get_product_id() { return $this->product; }
+}
+class SanroLockOrder {
+    private $items;
+    public function __construct($items) { $this->items = $items; }
+    public function get_id() { return 30; }
+    public function get_items($type) { return $type === 'line_item' ? $this->items : []; }
+}
+$order = new SanroLockOrder([7 => new SanroLockItem(12), 8 => new SanroLockItem(13)]);
+verify(sanro_studio_lock_draft_for_order_item($id, $token, $order, 7)['error'] === 'forbidden', 'order lock requires admin');
+$GLOBALS['can_manage'] = true;
+verify(sanro_studio_lock_draft_for_order_item($id, $token, $order, 9)['error'] === 'invalid_order_item', 'unknown order item denied');
+verify(sanro_studio_lock_draft_for_order_item($id, $token, $order, 8)['error'] === 'product_mismatch', 'mismatched item product denied');
+$wpdb->affected = 1;
+$claimed = sanro_studio_lock_draft_for_order_item($id, $token, $order, 7);
+verify(!empty($claimed['valid']) && $GLOBALS['record']['order_id'] === 30, 'matching order item locks draft');
+verify(sanro_studio_lock_draft_for_order_item($id, $token, $order, 7)['error'] === 'draft_locked', 'repeat order lock denied');
