@@ -46,6 +46,17 @@ function sanro_studio_quote_size_quantities($product_id, $design, $quantities, $
         return ['valid' => false, 'error' => 'invalid_quantities'];
     }
     $allowed = sanro_studio_24s_price_table();
+    // Validate the design and product price profile once, even when a quote
+    // contains multiple sizes. Never accept a browser-provided unit price.
+    $product_id = absint($product_id);
+    if (!$product_id) return ['valid' => false, 'error' => 'invalid_product'];
+    if (get_post_meta($product_id, '_sanro_studio_pricing_profile', true) !== 'cotton_combed_24s') {
+        return ['valid' => false, 'error' => 'pricing_profile_unconfigured'];
+    }
+    $validated = sanro_studio_validate_product_design($product_id, $design);
+    if (empty($validated['valid'])) return $validated;
+    $front = !empty($validated['sides']['front']) && empty($validated['sides']['front']['empty']) ? $design['front']['category'] : null;
+    $back = !empty($validated['sides']['back']) && empty($validated['sides']['back']['empty']) ? $design['back']['category'] : null;
     $rows = [];
     $total_quantity = 0;
     $total_price = 0;
@@ -59,7 +70,7 @@ function sanro_studio_quote_size_quantities($product_id, $design, $quantities, $
         if ($total_quantity > 5000) {
             return ['valid' => false, 'error' => 'invalid_quantities'];
         }
-        $quote = sanro_studio_quote_product_design($product_id, $design, $size, $long_sleeve);
+        $quote = sanro_studio_24s_unit_price($size, $front, $back, $long_sleeve);
         if (empty($quote['valid'])) return $quote;
         $subtotal = $quote['unit_price'] * $quantity;
         $total_price += $subtotal;
