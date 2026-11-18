@@ -108,6 +108,14 @@ function sanro_studio_update_draft($id, $token, $design) {
         || $before['expires_at'] <= time()) {
         return ['valid' => false, 'error' => 'draft_conflict'];
     }
+    // A retry of an unchanged save must not revoke verified master bindings.
+    // The caller may legitimately retry after a network timeout.
+    if (hash_equals(
+        hash('sha256', maybe_serialize($before['design'])),
+        hash('sha256', maybe_serialize($design))
+    )) {
+        return ['valid' => true, 'design_id' => $id, 'unchanged' => true];
+    }
     $record = $before;
     $record['design'] = $design;
     // Master references belong to the previous design revision. A text/size/
