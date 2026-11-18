@@ -63,7 +63,7 @@ function sanro_studio_draft_payload_allowed($design) {
     if (!is_array($design) || !function_exists('wp_json_encode')) return false;
     $json = wp_json_encode($design);
     if (!is_string($json) || strlen($json) > 16384
-        || preg_match('/data:image\\/|base64,/i', $json)) return false;
+        || preg_match('~data:image/|base64,~i', $json)) return false;
     // Until the private Drive master pipeline exists, accept text-only
     // drafts. Image geometry alone must never imply a saved master.
     foreach (['front', 'back'] as $side) {
