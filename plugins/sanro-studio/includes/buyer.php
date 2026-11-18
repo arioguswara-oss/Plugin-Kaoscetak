@@ -34,7 +34,7 @@ function sanro_studio_render_buyer_editor() {
     $asset = plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/';
     wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], SANRO_STUDIO_VERSION);
     wp_enqueue_script('sanro-studio-buyer', $asset . 'buyer.js', [], SANRO_STUDIO_VERSION, true);
-    wp_add_inline_script('sanro-studio-buyer', 'window.SANRO_STUDIO_EDITOR_CONFIG=' . wp_json_encode($config) . ';', 'before');
+    wp_add_inline_script('sanro-studio-buyer', 'window.SANRO_STUDIO_EDITOR_CONFIG=' . wp_json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';', 'before');
 
     // WordPress may have a canonical redirect for product query arguments.
     // This view is selected only after product identity and visibility checks.
