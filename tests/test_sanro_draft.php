@@ -1,5 +1,7 @@
 <?php
 define('ABSPATH', __DIR__ . '/');
+// WordPress bootstrap constants required by the isolated draft fixture.
+define('DAY_IN_SECONDS', 86400);
 $GLOBALS['options'] = [];
 function absint($v) { return abs((int) $v); }
 function wp_generate_uuid4() { return '12345678-1234-4234-8234-123456789abc'; }
@@ -66,6 +68,7 @@ function check_draft($expected, $actual, $label) {
     if ($expected !== $actual) throw new RuntimeException('FAIL ' . $label);
     $checks++;
 }
+check_draft(604800, sanro_studio_draft_ttl_seconds(), 'seven-day draft TTL');
 check_draft('invalid_product', sanro_studio_create_draft(0, ['front' => 'valid'])['error'], 'invalid product');
 check_draft('invalid_design', sanro_studio_create_draft(17, [])['error'], 'invalid geometry');
 $created = sanro_studio_create_draft(17, ['front' => 'valid']);
