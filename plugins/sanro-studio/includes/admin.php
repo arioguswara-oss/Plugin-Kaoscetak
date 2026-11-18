@@ -22,6 +22,22 @@ function sanro_studio_save_settings() {
             wp_die('Halaman editor harus berupa halaman WordPress yang diterbitkan.', '', ['response' => 400]);
         }
         update_option('sanro_studio_editor_page_id', $page_id, false);
+    } elseif ($settings_type === 'native_preferences') {
+        $label = isset($_POST['studio_label']) && is_string($_POST['studio_label'])
+            ? sanitize_text_field(wp_unslash($_POST['studio_label'])) : '';
+        $label = trim($label);
+        if ($label === '' || strlen($label) > 80) {
+            wp_die('Nama studio wajib diisi dan maksimal 80 byte.', '', ['response' => 400]);
+        }
+        $default_side = isset($_POST['default_side']) && is_string($_POST['default_side'])
+            ? sanitize_key(wp_unslash($_POST['default_side'])) : '';
+        if (!in_array($default_side, ['front', 'back'], true)) {
+            wp_die('Sisi awal tidak valid.', '', ['response' => 400]);
+        }
+        update_option('sanro_studio_native_preferences', [
+            'studio_label' => $label,
+            'default_side' => $default_side,
+        ], false);
     } elseif ($settings_type === 'legacy_preview' && defined('SANRO_STUDIO_ENABLE_LEGACY_COMPAT') && SANRO_STUDIO_ENABLE_LEGACY_COMPAT === true) {
         update_option('sanro_studio_options', [
             'admin_preview' => isset($_POST['admin_preview']) && $_POST['admin_preview'] === 'yes' ? 'yes' : 'no',
@@ -108,6 +124,26 @@ function sanro_studio_render_settings() {
     wp_dropdown_pages(['name' => 'editor_page_id', 'id' => 'sanro-editor-page', 'selected' => (int) get_option('sanro_studio_editor_page_id', 0), 'show_option_none' => '— Pilih halaman WordPress —', 'option_none_value' => '0', 'post_status' => 'publish']);
     echo '<p class="description">Pilih halaman WordPress yang akan menjadi editor SANRO Studio. Nama dan slug bebas. Editor buyer tetap memerlukan aktivasi staging.</p>';
     submit_button('Simpan Halaman Editor');
+    echo '</form>';
+    $preferences = get_option('sanro_studio_native_preferences', []);
+    if (!is_array($preferences)) $preferences = [];
+    $studio_label = isset($preferences['studio_label']) && is_string($preferences['studio_label'])
+        ? $preferences['studio_label'] : 'SANRO Studio';
+    $default_side = ($preferences['default_side'] ?? 'front') === 'back' ? 'back' : 'front';
+    echo '<h2>Preferensi Studio Native</h2>';
+    echo '<p class="description">Preferensi tersimpan untuk integrasi editor berikutnya. Tidak mengaktifkan checkout atau mengubah produk.</p>';
+    echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+    echo '<input type="hidden" name="action" value="sanro_studio_save">';
+    echo '<input type="hidden" name="settings_type" value="native_preferences">';
+    wp_nonce_field('sanro_studio_settings');
+    echo '<p><label for="sanro-studio-label">Nama Studio</label></p>';
+    echo '<input id="sanro-studio-label" name="studio_label" type="text" maxlength="80" required class="regular-text" value="' . esc_attr($studio_label) . '">';
+    echo '<p><label for="sanro-default-side">Sisi desain awal</label></p>';
+    echo '<select id="sanro-default-side" name="default_side">';
+    echo '<option value="front"' . selected($default_side, 'front', false) . '>Depan</option>';
+    echo '<option value="back"' . selected($default_side, 'back', false) . '>Belakang</option>';
+    echo '</select>';
+    submit_button('Simpan Preferensi Native');
     echo '</form>';
     // Legacy editor links are never promoted in the native admin mode.
     if ($legacy_compat) {
