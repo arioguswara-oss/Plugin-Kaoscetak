@@ -323,9 +323,24 @@
    saveStatus.textContent='Draft lama tidak diterapkan karena desain sudah diubah. Muat ulang halaman untuk membuka draft.';
    return;
   }
-  restoreDesign(result.design);savedId=credentials.id;ownerToken=credentials.token;savedRevision=editRevision;
+  const masterUrls={};
+  try{
+   for(const name of ['front','back']){
+    const entry=result.design&&result.design[name];
+    if(!entry||!Array.isArray(entry.objects)
+     ||!entry.objects.some(object=>object.type==='image'))continue;
+    const ref=result.master_refs&&result.master_refs[name];
+    masterUrls[name]=await readDraftMaster(credentials.id,credentials.token,name,ref);
+   }
+   if(editRevision!==revisionAtRequest)throw new Error('Desain berubah selama pemulihan draft.');
+   restoreDesign(result.design,masterUrls);
+  }catch(error){
+   Object.values(masterUrls).forEach(url=>URL.revokeObjectURL(url));
+   throw error;
+  }
+  savedId=credentials.id;ownerToken=credentials.token;savedRevision=editRevision;
   lastKnownDesignHash=typeof result.design_hash==='string'?result.design_hash:null;
-  saveStatus.textContent='Draft teks berhasil dibuka kembali. Design ID: '+savedId;
+  saveStatus.textContent='Draft berhasil dibuka kembali. Design ID: '+savedId;
  }
  function exportTextDraft(ignoreImages=false){
   const design={};
