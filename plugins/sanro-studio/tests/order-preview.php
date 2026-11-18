@@ -26,3 +26,18 @@ verify(sanro_studio_attach_order_preview_refs(new SanroOrderPreviewFixture([]), 
 
 verify(sanro_studio_admin_order_preview_bytes(new SanroOrderPreviewFixture([]), 'front')['error'] === 'forbidden', 'private order preview rejects non-admin');
 verify(sanro_studio_admin_order_preview_bytes(null, '../front')['error'] === 'forbidden', 'authorization precedes side inspection');
+
+class SanroItemPreviewOrderFixture {
+    private $items;
+    public function __construct($items) { $this->items = $items; }
+    public function get_items($type) { return $type === 'line_item' ? $this->items : []; }
+}
+$item1 = new SanroOrderPreviewFixture(['_sanro_studio_preview_front_ref' => $ref]);
+$item2 = new SanroOrderPreviewFixture(['_sanro_studio_preview_back_ref' => str_replace('-front-', '-back-', $ref)]);
+$multi = new SanroItemPreviewOrderFixture([10 => $item1, 11 => $item2]);
+$one = sanro_studio_order_item_preview_inventory($multi, 10);
+$two = sanro_studio_order_item_preview_inventory($multi, 11);
+verify($one['valid'] && $one['front'] === $ref && $one['back'] === null, 'item 10 isolated');
+verify($two['valid'] && $two['front'] === null && $two['back'] !== null, 'item 11 isolated');
+verify(!sanro_studio_order_item_preview_inventory($multi, 12)['valid'], 'unknown item rejected');
+verify(!sanro_studio_order_item_preview_inventory($multi, 0)['valid'], 'invalid item ID rejected');
