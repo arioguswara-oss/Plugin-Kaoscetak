@@ -7,6 +7,9 @@ function sanro_studio_admin_menu() {
 }
 
 function sanro_studio_save_settings() {
+    if (!defined('SANRO_STUDIO_ENABLE_LEGACY_COMPAT') || SANRO_STUDIO_ENABLE_LEGACY_COMPAT !== true) {
+        wp_die('Pengaturan kompatibilitas tidak aktif.', '', ['response' => 403]);
+    }
     if (!current_user_can('manage_options')) {
         wp_die('Akses ditolak.', '', ['response' => 403]);
     }
