@@ -178,3 +178,47 @@ function sanro_studio_cleanup_expired_drafts($limit = 50, $after_id = 0) {
     return ['scanned' => count($batch), 'deleted' => $deleted,
         'next_cursor' => $cursor, 'has_more' => $has_more];
 }
+
+/**
+ * Internal-only atomic draft lock for future order integration.
+ * Never register as a public REST action. This does not enable checkout.
+ */
+function sanro_studio_lock_draft_for_order($id, $token, $order_id) {
+    $draft = sanro_studio_read_draft($id, $token);
+    if (empty($draft['valid'])) return $draft;
+    if (($draft['status'] ?? null) !== 'draft') {
+        return ['valid' => false, 'error' => 'draft_locked'];
+    }
+    if (!is_int($order_id) || $order_id < 1) {
+        return ['valid' => false, 'error' => 'invalid_order'];
+    }
+    global $wpdb;
+    if (!isset($wpdb) || !is_object($wpdb) || !isset($wpdb->options)
+        || !preg_match('/^[A-Za-z0-9_]+$/D', $wpdb->options)
+        || !method_exists($wpdb, 'prepare') || !method_exists($wpdb, 'query')
+        || !function_exists('maybe_serialize') || !function_exists('wp_cache_delete')) {
+        return ['valid' => false, 'error' => 'storage_unavailable'];
+    }
+    $key = 'sanro_studio_draft_' . $id;
+    $before = get_option($key, false);
+    if (!is_array($before) || ($before['status'] ?? null) !== 'draft'
+        || !isset($before['token_hash'], $before['expires_at'])
+        || !is_string($before['token_hash']) || !is_int($before['expires_at'])
+        || $before['expires_at'] <= time()
+        || !hash_equals($before['token_hash'], hash('sha256', $token))) {
+        return ['valid' => false, 'error' => 'draft_conflict'];
+    }
+    $after = $before;
+    $after['status'] = 'locked';
+    $after['order_id'] = $order_id;
+    $after['locked_at'] = time();
+    $changed = $wpdb->query($wpdb->prepare(
+        "UPDATE `{$wpdb->options}` SET option_value = %s WHERE option_name = %s AND BINARY option_value = BINARY %s",
+        maybe_serialize($after), $key, maybe_serialize($before)
+    ));
+    if ($changed !== 1) {
+        return ['valid' => false, 'error' => $changed === false ? 'storage_failed' : 'draft_conflict'];
+    }
+    wp_cache_delete($key, 'options');
+    return ['valid' => true, 'design_id' => $id, 'order_id' => $order_id, 'status' => 'locked'];
+}
