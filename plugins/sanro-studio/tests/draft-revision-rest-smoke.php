@@ -18,7 +18,8 @@ class RevisionRequest {
     public function get_param($key) { return $this->params[$key] ?? null; }
     public function get_header($key) { return 'owner-secret'; }
 }
-function sanro_studio_draft_payload_allowed($design) { return is_array($design); }
+function wp_json_encode($value) { return json_encode($value); }
+function rest_ensure_response($value) { return $value; }
 function sanro_studio_update_draft($id, $token, $design, $expected_hash = null) {
     return ['valid' => true, 'design_id' => $id, 'expected' => $expected_hash];
 }
