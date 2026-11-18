@@ -342,7 +342,7 @@
   lastKnownDesignHash=typeof result.design_hash==='string'?result.design_hash:null;
   saveStatus.textContent='Draft berhasil dibuka kembali. Design ID: '+savedId;
  }
- function exportTextDraft(ignoreImages=false){
+ function exportTextDraft(ignoreImages=false,allowEmpty=false){
   const design={};
   for(const name of ['front','back']){
    const d=sides[name],area=config.safe_areas[name];
@@ -367,7 +367,7 @@
    }
    design[name]={category:d.category,objects:[object],text:d.text,font_size:d.fontSize,text_color:d.textColor};
   }
-  if(!Object.keys(design).length)throw new Error('Tambahkan teks terlebih dahulu.');
+  if(!Object.keys(design).length&&!allowEmpty)throw new Error('Tambahkan teks terlebih dahulu.');
   const quantities=Object.fromEntries(qtyInputs.map(input=>[input.dataset.size,Number(input.value)]));
   if(Object.values(quantities).some(v=>!Number.isInteger(v)||v<0||v>999)
    ||Object.values(quantities).reduce((a,b)=>a+b,0)>5000)throw new Error('Jumlah per ukuran tidak valid.');
@@ -434,7 +434,7 @@
       throw new Error('Revisi draft tidak valid.');
      if(editRevision!==revisionAtStart)
       throw new Error('Desain berubah selama persiapan upload.');
-     const localTextDesign=exportTextDraft(true);
+     const localTextDesign=exportTextDraft(true,true);
      // A reopened draft can contain saved image geometry. Compare only the
      // text/order metadata; keep existing private image geometry intact.
      const serverTextDesign=JSON.parse(JSON.stringify(currentDraft.design));
