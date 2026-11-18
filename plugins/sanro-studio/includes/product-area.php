@@ -73,6 +73,13 @@ function sanro_studio_validate_product_design($product_id, $design) {
                 }
                 unset($geometry[$side]['font_size']);
             }
+            if (array_key_exists('text_color', $geometry[$side])) {
+                $color = $geometry[$side]['text_color'];
+                if (!is_string($color) || !preg_match('/^#[0-9a-fA-F]{6}$/D', $color)) {
+                    return ['valid' => false, 'error' => 'invalid_text_color'];
+                }
+                unset($geometry[$side]['text_color']);
+            }
             unset($geometry[$side]['text']);
         }
     }
