@@ -124,13 +124,27 @@ function sanro_studio_update_draft($id, $token, $design, $expected_design_hash =
     )) {
         return ['valid' => true, 'design_id' => $id, 'unchanged' => true];
     }
+    // Image geometry may only reference masters already bound to this
+    // exact owner-authorized draft. This check runs against the CAS snapshot.
+    if (function_exists('sanro_studio_draft_image_binding_allowed')
+        && !sanro_studio_draft_image_binding_allowed(
+            $design, is_array($before['master_refs'] ?? null) ? $before['master_refs'] : [], $id
+        )) {
+        return ['valid' => false, 'error' => 'image_master_unbound'];
+    }
     $record = $before;
     $record['design'] = $design;
-    // Master references belong to the previous design revision. A text/size/
-    // color update cannot silently reuse artwork that was verified for an
-    // earlier draft state. Files remain private; only their binding is revoked.
-    if (!empty($record['master_refs'])) {
-        $record['master_refs'] = [];
+    // Retain a master only when the new design actually contains an image
+    // on that side. A removed image must not leave an active master binding.
+    $record['master_refs'] = [];
+    foreach (['front', 'back'] as $side) {
+        foreach (($design[$side]['objects'] ?? []) as $object) {
+            if (is_array($object) && ($object['type'] ?? null) === 'image'
+                && isset($before['master_refs'][$side])) {
+                $record['master_refs'][$side] = $before['master_refs'][$side];
+                break;
+            }
+        }
     }
     $record['updated_at'] = max(time(), (int) ($before['updated_at'] ?? $before['created_at'] ?? 0) + 1);
     // Compare serialized bytes exactly. wpdb->update() uses the column's
