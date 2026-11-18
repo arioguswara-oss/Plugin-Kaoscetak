@@ -312,7 +312,7 @@
   ctx.fillStyle=d.textColor;
   ctx.font=fontPx+'px sans-serif';
   ctx.textBaseline='top';
-  const lines=d.text.split('\\n');
+  const lines=d.text.split('\n');
   lines.forEach((line,i)=>ctx.fillText(line,x,y+i*fontPx*1.2,Math.max(0,640-x)));
   for(const quality of [0.75,0.55,0.35,0.2]){
    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
