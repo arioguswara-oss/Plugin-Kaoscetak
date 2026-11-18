@@ -58,10 +58,18 @@ function sanro_studio_draft_creation_budget() {
     return set_transient($key, $count === false ? 1 : $count + 1, HOUR_IN_SECONDS);
 }
 
+/** Only compact geometry/text metadata; reject embedded images or oversized JSON. */
+function sanro_studio_draft_payload_allowed($design) {
+    if (!is_array($design) || !function_exists('wp_json_encode')) return false;
+    $json = wp_json_encode($design);
+    return is_string($json) && strlen($json) <= 16384
+        && !preg_match('/data:image\\/|base64,/i', $json);
+}
+
 function sanro_studio_rest_create_draft($request) {
     $product_id = $request->get_param('product_id');
     $design = $request->get_param('design');
-    if (!is_int($product_id) || !is_array($design)
+    if (!is_int($product_id) || !sanro_studio_draft_payload_allowed($design)
         || empty(sanro_studio_public_editor_config($product_id)['valid'])) {
         return new WP_Error('sanro_invalid_draft', 'Invalid product or design.', ['status' => 400]);
     }
@@ -74,7 +82,7 @@ function sanro_studio_rest_create_draft($request) {
 function sanro_studio_rest_update_draft($request) {
     $token = $request->get_header('X-Sanro-Owner-Token');
     $design = $request->get_param('design');
-    if (!is_array($design)) {
+    if (!sanro_studio_draft_payload_allowed($design)) {
         return new WP_Error('sanro_invalid_design', 'Invalid design.', ['status' => 400]);
     }
     return sanro_studio_rest_draft_response(
