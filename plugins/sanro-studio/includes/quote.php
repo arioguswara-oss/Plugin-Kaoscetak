@@ -53,6 +53,18 @@ function sanro_studio_quote_size_quantities($product_id, $design, $quantities, $
         || !is_bool($long_sleeve)) {
         return ['valid' => false, 'error' => 'invalid_quantities'];
     }
+    // Prevent a caller from quoting quantities different from the saved design.
+    // Compare normalized maps so key order is irrelevant, but types remain strict.
+    if (!isset($design['quantities']) || !is_array($design['quantities'])) {
+        return ['valid' => false, 'error' => 'design_quantities_mismatch'];
+    }
+    $saved_quantities = $design['quantities'];
+    ksort($saved_quantities);
+    $requested_quantities = $quantities;
+    ksort($requested_quantities);
+    if ($saved_quantities !== $requested_quantities) {
+        return ['valid' => false, 'error' => 'design_quantities_mismatch'];
+    }
     $allowed = sanro_studio_24s_price_table();
     // Validate the design and product price profile once, even when a quote
     // contains multiple sizes. Never accept a browser-provided unit price.
