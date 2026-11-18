@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 cd "$(dirname "$0")/.."
-tests=(test_sanro_buyer_gate test_sanro_draft test_sanro_draft_rest test_sanro_quote test_sanro_product_pricing test_sanro_print_area test_sanro_checkout_bridge test_sanro_order_preview)
+tests=(test_sanro_buyer_gate test_sanro_draft test_sanro_draft_rest test_sanro_quote test_sanro_product_pricing test_sanro_print_area test_sanro_checkout_bridge test_sanro_order_preview test_sanro_order_item_preview)
 pass=0; fail=0
 for name in "${tests[@]}"; do
   file="tests/${name}.php"
