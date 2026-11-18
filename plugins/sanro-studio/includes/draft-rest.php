@@ -197,6 +197,12 @@ function sanro_studio_rest_upload_master($request) {
     if (($draft['status'] ?? null) !== 'draft') {
         return new WP_Error('sanro_draft_locked', 'Draft is not editable.', ['status' => 409]);
     }
+    // Required before decoding or reserving upload quota. Never rely on
+    // an undefined revision variable (PHP notices must not bypass CAS).
+    $expected_hash = $request->get_param('design_hash');
+    if (!is_string($expected_hash) || !preg_match('/^[a-f0-9]{64}$/D', $expected_hash)) {
+        return new WP_Error('sanro_revision_required', 'Draft revision required.', ['status' => 409]);
+    }
     $encoded = $request->get_param('image_base64');
     if (!is_string($encoded) || strlen($encoded) < 128
         || strlen($encoded) > 13981016
