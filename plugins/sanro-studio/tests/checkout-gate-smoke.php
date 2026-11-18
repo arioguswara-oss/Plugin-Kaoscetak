@@ -49,4 +49,24 @@ gate_check(sanro_studio_stage_authorize_checkout($id,'owner',42,$cart)['valid']=
 $cart->lines[0]['quantity']=2;
 $cart->lines[0]['sanro_studio_design_id']='other';
 gate_check(sanro_studio_stage_authorize_checkout($id,'owner',42,$cart)['valid']===false, 'design tampering');
-echo "PASS: 6 checkout gate checks\n";
+class GateOrderItem {
+    public $meta = [];
+    public $subtotal;
+    function __construct($subtotal) { $this->subtotal=$subtotal; }
+    function get_product_id() { return 42; }
+    function get_quantity() { return 2; }
+    function get_subtotal() { return $this->subtotal; }
+    function get_meta($key, $single=true) { return $this->meta[$key] ?? ''; }
+    function update_meta_data($key, $value) { $this->meta[$key]=$value; }
+}
+$contract = sanro_studio_prepare_cart_design_contract($id, 'owner', 42);
+$item = new GateOrderItem('130000.00');
+$items = ['M'=>$item];
+gate_check(sanro_studio_stage_bind_size_order_batch($contract, $items)['valid']===true, 'order metadata batch bound');
+gate_check($item->get_meta('_sanro_studio_design_id')===$id, 'design id metadata');
+gate_check($item->get_meta('_sanro_studio_size')==='M', 'size metadata');
+gate_check(sanro_studio_stage_bind_size_order_batch($contract, $items)['valid']===false, 'duplicate binding refused');
+$bad = new GateOrderItem('1.00');
+gate_check(sanro_studio_stage_bind_size_order_batch($contract, ['M'=>$bad])['valid']===false, 'wrong order subtotal refused');
+gate_check($bad->meta===[], 'invalid order never mutated');
+echo "PASS: 12 checkout gate checks\n";
