@@ -35,4 +35,20 @@ check_adapter(sanro_studio_stage_add_cart_lines($contract, $cart)['valid'] === f
 $cart->contents = [];
 $bad = $contract; $bad['quote']['items']['M']['unit_price'] = 1;
 check_adapter(sanro_studio_stage_add_cart_lines($bad, $cart)['valid'] === false, 'bad quote rejected');
-echo "PASS: 5 staging cart adapter checks\n";
+class SanroPriceProduct {
+    public $price = null;
+    function set_price($price) { $this->price = $price; }
+}
+$priceProduct = new SanroPriceProduct();
+$line = $ready['lines'][0];
+$applied = sanro_studio_stage_price_cart_line($contract, $line, $priceProduct);
+check_adapter($applied['valid'] === true && $priceProduct->price === '65000', 'server unit price applied');
+$priceProduct = new SanroPriceProduct();
+$wrong = $line; $wrong['sanro_studio_unit_price'] = 1;
+check_adapter(sanro_studio_stage_price_cart_line($contract, $wrong, $priceProduct)['valid'] === false, 'tampered price refused');
+check_adapter($priceProduct->price === null, 'tampered line never mutates price');
+$wrong = $line; $wrong['sanro_studio_design_id'] = 'another-design';
+check_adapter(sanro_studio_stage_price_cart_line($contract, $wrong, $priceProduct)['valid'] === false, 'cross-design price refused');
+$wrong = $line; $wrong['quantity'] = 999;
+check_adapter(sanro_studio_stage_price_cart_line($contract, $wrong, $priceProduct)['valid'] === false, 'quantity mismatch refused');
+echo "PASS: 10 staging cart adapter checks\n";
