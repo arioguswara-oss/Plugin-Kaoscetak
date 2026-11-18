@@ -79,6 +79,8 @@ $transaction = new SanroTransactionCart();
 check_adapter(sanro_studio_stage_commit_cart_lines($contract, $transaction)['valid'] === false, 'commit disabled separately');
 check_adapter(count($transaction->lines) === 0, 'disabled commit does not mutate');
 define('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT', true);
+// Checkout must remain fail-closed whenever cart mutation is enabled.
+define('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK', true);
 $committed = sanro_studio_stage_commit_cart_lines($contract, $transaction);
 check_adapter($committed['valid'] === true && count($transaction->lines) === 1, 'staging cart line inserted');
 check_adapter($transaction->lines['line-0']['data']->price === '65000', 'inserted cart line priced');
