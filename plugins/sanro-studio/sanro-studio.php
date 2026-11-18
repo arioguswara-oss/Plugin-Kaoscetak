@@ -68,3 +68,9 @@ add_action('admin_post_sanro_studio_order_preview', 'sanro_studio_admin_deliver_
 
 // Per-line-item admin previews; no buyer-facing file URL.
 add_action('woocommerce_after_order_itemmeta', 'sanro_studio_admin_item_preview_status', 10, 3);
+
+ // Staging checkout validation is inert unless explicitly enabled.
+if (defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
+    && SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK === true) {
+    add_action('woocommerce_checkout_process', 'sanro_studio_stage_checkout_process', 5);
+}
