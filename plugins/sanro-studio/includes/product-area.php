@@ -148,3 +148,51 @@ function sanro_studio_editor_area_config($product_id) {
         'categories' => sanro_studio_print_categories(),
     ];
 }
+
+/**
+ * Admin-facing product readiness diagnostic. Reports configuration gaps without
+ * exposing private metadata to buyers or changing any product settings.
+ */
+function sanro_studio_product_readiness($product_id) {
+    $product_id = absint($product_id);
+    if (!$product_id || !function_exists('wc_get_product')) {
+        return ['ready' => false, 'issues' => ['product_unavailable']];
+    }
+    $product = wc_get_product($product_id);
+    if (!is_object($product) || !method_exists($product, 'get_status')
+        || !method_exists($product, 'is_purchasable')) {
+        return ['ready' => false, 'issues' => ['product_unavailable']];
+    }
+    $issues = [];
+    if ($product->get_status() !== 'publish') $issues[] = 'product_not_published';
+    if (!$product->is_purchasable()) $issues[] = 'product_not_purchasable';
+    if (!sanro_studio_product_safe_areas($product_id)) $issues[] = 'safe_area_missing';
+    if (get_post_meta($product_id, '_sanro_studio_pricing_profile', true) !== 'cotton_combed_24s') {
+        $issues[] = 'pricing_profile_missing';
+    }
+    return ['ready' => !$issues, 'issues' => $issues];
+}
+
+/** Read-only diagnostic shown only in WooCommerce's product editor. */
+function sanro_studio_product_readiness_notice() {
+    if (!function_exists('get_the_ID') || !function_exists('current_user_can')) return;
+    $id = absint(get_the_ID());
+    if (!$id || !current_user_can('edit_post', $id)) return;
+    $status = sanro_studio_product_readiness($id);
+    $labels = [
+        'product_unavailable' => 'Produk tidak tersedia',
+        'product_not_published' => 'Produk belum dipublikasikan',
+        'product_not_purchasable' => 'Produk belum dapat dibeli',
+        'safe_area_missing' => 'Area cetak depan/belakang belum dikonfigurasi',
+        'pricing_profile_missing' => 'Profil harga Cotton Combed 24s belum dipilih',
+    ];
+    echo '<div class="options_group"><p><strong>SANRO Studio — Kesiapan Produk</strong></p>';
+    if ($status['ready']) {
+        echo '<p>Konfigurasi produk siap untuk editor (belum termasuk QA checkout).</p>';
+    } else {
+        foreach ($status['issues'] as $issue) {
+            echo '<p>' . esc_html($labels[$issue] ?? 'Konfigurasi belum lengkap') . '</p>';
+        }
+    }
+    echo '</div>';
+}
