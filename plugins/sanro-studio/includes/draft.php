@@ -263,7 +263,8 @@ function sanro_studio_lock_draft_for_order_item($id, $token, $order, $item_id) {
     if (($draft['status'] ?? null) !== 'draft') {
         return ['valid' => false, 'error' => 'draft_locked'];
     }
-    if ((int) $draft['product_id'] !== (int) $items[$item_id]->get_product_id()) {
+    $item_product_id = $items[$item_id]->get_product_id();
+    if (!is_int($item_product_id) || $draft['product_id'] !== $item_product_id) {
         return ['valid' => false, 'error' => 'product_mismatch'];
     }
     // Requote the authoritative saved design at the transaction boundary.
@@ -283,7 +284,8 @@ function sanro_studio_lock_draft_for_order_item($id, $token, $order, $item_id) {
         || !is_int($quote['total_quantity']) || $quote['total_quantity'] < 1
         || !is_int($quote['total_price']) || $quote['total_price'] <= 0
         || !method_exists($items[$item_id], 'get_quantity')
-        || (int) $items[$item_id]->get_quantity() !== $quote['total_quantity']) {
+        || !is_int($items[$item_id]->get_quantity())
+        || $items[$item_id]->get_quantity() !== $quote['total_quantity']) {
         return ['valid' => false, 'error' => 'order_quantity_mismatch'];
     }
     // WooCommerce subtotal is pre-discount and pre-tax. Compare it to the
