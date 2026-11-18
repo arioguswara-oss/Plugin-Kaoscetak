@@ -300,6 +300,29 @@ function sanro_studio_draft_creation_budget() {
 }
 
 /** Only compact geometry/text metadata; reject embedded images or oversized JSON. */
+/**
+ * A saved image geometry is trustworthy only when its side is bound to a
+ * private master in the same owner-authorized draft. Never accept a file URL,
+ * client-selected file ID, or image bytes in design metadata.
+ */
+function sanro_studio_draft_image_binding_allowed($design, $master_refs) {
+    if (!is_array($design) || !is_array($master_refs)) return false;
+    foreach (['front', 'back'] as $side) {
+        $entry = $design[$side] ?? null;
+        if (!is_array($entry)) continue;
+        $objects = $entry['objects'] ?? [];
+        if (!is_array($objects)) return false;
+        foreach ($objects as $object) {
+            if (!is_array($object) || ($object['type'] ?? null) !== 'image') continue;
+            $ref = $master_refs[$side] ?? null;
+            if (!is_string($ref)
+                || !preg_match('/^[a-f0-9-]{36}-(front|back)-[a-f0-9]{64}\\.(png|jpg)$/D', $ref)
+                || strpos($ref, '-' . $side . '-') === false) return false;
+        }
+    }
+    return true;
+}
+
 function sanro_studio_draft_payload_allowed($design) {
     if (!is_array($design) || !function_exists('wp_json_encode')) return false;
     $json = wp_json_encode($design);
