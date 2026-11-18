@@ -14,6 +14,7 @@ function sanro_studio_native_capabilities() {
         'private_text_drafts' => function_exists('sanro_studio_create_draft'),
         'private_preview_storage' => function_exists('sanro_studio_store_owned_draft_preview'),
         'cart_contract' => function_exists('sanro_studio_prepare_cart_design_contract'),
+        'checkout_order_item_bridge' => function_exists('sanro_studio_prepare_checkout_order_item'),
         'order_item_manifest' => function_exists('sanro_studio_order_item_production_manifest'),
         'legacy_runtime_loaded' => function_exists('sanro_studio_boot_runtime'),
         'woocommerce_loaded' => class_exists('WooCommerce', false),
@@ -31,7 +32,7 @@ function sanro_studio_native_core_status() {
     $capabilities = sanro_studio_native_capabilities();
     $required = ['buyer_editor', 'product_configuration', 'design_validation',
         'server_quote', 'private_text_drafts', 'private_preview_storage',
-        'cart_contract', 'order_item_manifest'];
+        'cart_contract', 'checkout_order_item_bridge', 'order_item_manifest'];
     $missing = [];
     foreach ($required as $name) {
         if (empty($capabilities[$name])) $missing[] = $name;
