@@ -17,6 +17,7 @@ require_once __DIR__ . '/includes/print-area.php';
 require_once __DIR__ . '/includes/product-area.php';
 require_once __DIR__ . '/includes/product-pricing.php';
 require_once __DIR__ . '/includes/editor-config.php';
+require_once __DIR__ . '/includes/buyer.php';
 require_once __DIR__ . '/includes/pricing.php';
 require_once __DIR__ . '/includes/quote.php';
 require_once __DIR__ . '/includes/draft.php';
@@ -37,3 +38,7 @@ add_action('woocommerce_admin_process_product_object', 'sanro_studio_save_produc
 
 // Public read-only configuration only. No draft, upload or checkout endpoints.
 add_action('rest_api_init', 'sanro_studio_register_editor_config_route');
+
+// Disabled by default; staging must explicitly define SANRO_STUDIO_ENABLE_BUYER_EDITOR.
+add_action('woocommerce_single_product_summary', 'sanro_studio_product_editor_link', 35);
+add_action('template_redirect', 'sanro_studio_render_buyer_editor', 20);
