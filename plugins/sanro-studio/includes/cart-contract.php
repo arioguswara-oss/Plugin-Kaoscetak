@@ -72,3 +72,24 @@ function sanro_studio_validate_cart_design_identity($contract, $cart_item) {
         'product_id' => $contract['product_id'], 'quantity' => $cart_item['quantity'],
         'checkout_enabled' => false];
 }
+
+/**
+ * Read-only checkout totals boundary. Values must come from a fresh,
+ * owner-authorized server quote; this function never changes cart prices.
+ */
+function sanro_studio_validate_checkout_totals($contract, $cart_item, $currency, $total_price) {
+    $identity = sanro_studio_validate_cart_design_identity($contract, $cart_item);
+    if (empty($identity['valid'])) return $identity;
+    $quote = $contract['quote'];
+    if (!isset($quote['currency'], $quote['total_price'])
+        || $quote['currency'] !== 'IDR' || $currency !== 'IDR'
+        || !is_int($quote['total_price']) || $quote['total_price'] <= 0
+        || !is_int($total_price) || $total_price <= 0
+        || $quote['total_price'] !== $total_price) {
+        return ['valid' => false, 'error' => 'checkout_total_mismatch'];
+    }
+    return ['valid' => true, 'design_id' => $identity['design_id'],
+        'product_id' => $identity['product_id'], 'quantity' => $identity['quantity'],
+        'total_price' => $total_price, 'currency' => 'IDR',
+        'checkout_enabled' => false];
+}
