@@ -71,6 +71,7 @@ function sanro_studio_render_buyer_editor() {
     echo '<button type="button" id="sanro-remove-image">Hapus gambar</button>';
     echo '<label>Teks<textarea id="sanro-text-input" maxlength="300" rows="3"></textarea></label>';
     echo '<label>Ukuran teks<input type="range" id="sanro-font-size" min="10" max="48" value="22"></label>';
+    echo '<label>Warna teks<input type="color" id="sanro-text-color" value="#171717"></label>';
     echo '<label>Kategori cetak<select id="sanro-category"><option>A5</option><option>A4</option><option>A3</option><option>A3+</option></select></label>';
     echo '<p id="sanro-validation" role="status">Belum ada desain.</p>';
     if (!empty($config['draft_api'])) {
