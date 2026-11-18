@@ -9,6 +9,7 @@ function sanro_studio_quote_size_quantities() {}
 function sanro_studio_create_draft() {}
 function sanro_studio_store_owned_draft_preview() {}
 function sanro_studio_prepare_cart_design_contract() {}
+function sanro_studio_prepare_checkout_order_item() {}
 // Intentionally omit order item manifest to test fail-closed readiness.
 require dirname(__DIR__) . '/includes/core.php';
 $status = sanro_studio_native_core_status();
