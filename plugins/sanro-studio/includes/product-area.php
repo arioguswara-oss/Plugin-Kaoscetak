@@ -46,6 +46,13 @@ function sanro_studio_validate_product_design($product_id, $design) {
                 if (is_array($object) && ($object['type'] ?? null) === 'text') $has_text = true;
             }
             if (!$has_text || trim($value) === '') return ['valid' => false, 'error' => 'invalid_text'];
+            if (array_key_exists('font_size', $geometry[$side])) {
+                $font = $geometry[$side]['font_size'];
+                if (!is_int($font) || $font < 10 || $font > 48) {
+                    return ['valid' => false, 'error' => 'invalid_font_size'];
+                }
+                unset($geometry[$side]['font_size']);
+            }
             unset($geometry[$side]['text']);
         }
     }
