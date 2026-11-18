@@ -406,6 +406,13 @@ function sanro_studio_attach_item_production_folder_id($order, $item_id, $folder
     if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) {
         return ['valid' => false, 'error' => 'forbidden'];
     }
+    // An opaque ID is not proof of a Drive folder. Keep the persistence
+    // helper disabled until the integration verifies folder ownership,
+    // parent location and permissions through Google Drive API.
+    if (!defined('SANRO_STUDIO_ENABLE_VERIFIED_DRIVE_ATTACHMENT')
+        || SANRO_STUDIO_ENABLE_VERIFIED_DRIVE_ATTACHMENT !== true) {
+        return ['valid' => false, 'error' => 'drive_verification_required'];
+    }
     if (!is_string($folder_id) || !preg_match('/^[A-Za-z0-9_-]{10,128}$/D', $folder_id)) {
         return ['valid' => false, 'error' => 'invalid_folder_id'];
     }
