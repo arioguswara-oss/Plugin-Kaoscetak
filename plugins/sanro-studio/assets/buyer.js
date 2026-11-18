@@ -660,7 +660,8 @@
   saveButton.addEventListener('click',async()=>{
    if(saving)return;
    let design;
-   try{design=exportTextDraft()}catch(error){saveStatus.textContent=error.message;return}
+   try{design=savedId?await exportBoundDraft():exportTextDraft()}
+   catch(error){saveStatus.textContent=error.message;return}
    const revisionAtSave=editRevision;
    saving=true;saveButton.disabled=true;saveStatus.textContent='Menyimpan metadata teks…';
    try{
@@ -681,6 +682,10 @@
     if(!verified.valid||typeof verified.design_hash!=='string'
      ||!/^[a-f0-9]{64}$/.test(verified.design_hash))
      throw new Error('Fingerprint revisi draft tidak tersedia.');
+    for(const name of ['front','back']){
+     if(verified.master_refs&&verified.master_refs[name])boundMasterRefs[name]=verified.master_refs[name];
+     else delete boundMasterRefs[name];
+    }
     lastKnownDesignHash=verified.design_hash;
     if(editRevision===revisionAtSave)savedRevision=editRevision;
     try{sessionStorage.setItem(draftStorageKey,JSON.stringify({id:savedId,token:ownerToken}))}catch(_error){}
