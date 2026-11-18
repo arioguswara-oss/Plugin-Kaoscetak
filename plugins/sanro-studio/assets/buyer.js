@@ -215,6 +215,7 @@
  // Text-only staging draft: no master upload, checkout or public share.
  const saveButton=q('#sanro-save-draft'),saveStatus=q('#sanro-save-status');
  let savedId=null,ownerToken=null,saving=false,editRevision=0,savedRevision=-1,lastKnownDesignHash=null;
+ const boundMasterRefs={};
  const draftStorageKey='sanro-studio-draft:'+String(config.product_id);
  async function readDraftMaster(id,token,name,fileId){
   if(!config.master_upload_enabled||typeof fileId!=='string'
@@ -338,6 +339,7 @@
    Object.values(masterUrls).forEach(url=>URL.revokeObjectURL(url));
    throw error;
   }
+  Object.assign(boundMasterRefs,result.master_refs||{});
   savedId=credentials.id;ownerToken=credentials.token;savedRevision=editRevision;
   lastKnownDesignHash=typeof result.design_hash==='string'?result.design_hash:null;
   saveStatus.textContent='Draft berhasil dibuka kembali. Design ID: '+savedId;
@@ -530,6 +532,7 @@
      if(!updated.valid||typeof updated.design_hash!=='string'
       ||!updated.master_refs||completed.some(name=>!updated.master_refs[name]))
       throw new Error('Metadata gambar tidak terikat ke master privat.');
+     Object.assign(boundMasterRefs,updated.master_refs);
      lastKnownDesignHash=updated.design_hash;
      if(editRevision===revisionAtStart)savedRevision=editRevision;
      masterStatus.textContent='Master dan posisi gambar tersimpan untuk '+completed.join(', ')
