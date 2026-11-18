@@ -169,20 +169,42 @@ function sanro_studio_rest_upload_master($request) {
     if (empty($checked['valid'])) {
         return new WP_Error('sanro_invalid_master', 'Invalid master image.', ['status' => 400]);
     }
-    // Best-effort abuse throttle. This is not an atomic quota; a stronger
-    // per-draft atomic quota is required before public buyer enablement.
-    $budget_key = 'sanro_master_budget_' . hash('sha256', strtolower($id));
-    $count = get_transient($budget_key);
-    if ($count !== false && (!is_int($count) || $count >= 10)) {
-        return new WP_Error('sanro_master_rate_limited', 'Upload limit reached.', ['status' => 429]);
+    // Serialize quota reservation and file binding across concurrent requests.
+    // MySQL advisory locks are connection-scoped, so release in finally.
+    global $wpdb;
+    if (!isset($wpdb) || !is_object($wpdb) || !method_exists($wpdb, 'get_var')
+        || !method_exists($wpdb, 'prepare') || !function_exists('get_transient')
+        || !function_exists('set_transient')) {
+        return new WP_Error('sanro_master_unavailable', 'Upload unavailable.', ['status' => 503]);
     }
-    if (!set_transient($budget_key, $count === false ? 1 : $count + 1, HOUR_IN_SECONDS)) {
-        return new WP_Error('sanro_master_rate_limited', 'Upload unavailable.', ['status' => 503]);
+    $lock_name = 'sanro_master_' . substr(hash('sha256', strtolower($id)), 0, 40);
+    $acquired = $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 2)', $lock_name));
+    if ((string) $acquired !== '1') {
+        return new WP_Error('sanro_master_busy', 'Upload busy. Retry later.', ['status' => 503]);
     }
-    $stored = sanro_studio_store_owned_draft_master($id, $token, $side, $bytes);
-    if (empty($stored['valid'])) return sanro_studio_rest_draft_response($stored);
-    $bound = sanro_studio_bind_owned_draft_master($id, $token, $side, $stored['file_id']);
-    if (empty($bound['valid'])) return sanro_studio_rest_draft_response($bound);
+    try {
+        // Recheck owner and lock status inside the serialized critical section.
+        $current = sanro_studio_read_draft($id, $token);
+        if (empty($current['valid'])) return sanro_studio_rest_draft_response($current);
+        if (($current['status'] ?? null) !== 'draft') {
+            return new WP_Error('sanro_draft_locked', 'Draft is not editable.', ['status' => 409]);
+        }
+        $budget_key = 'sanro_master_budget_' . hash('sha256', strtolower($id));
+        $count = get_transient($budget_key);
+        if ($count !== false && (!is_int($count) || $count >= 10)) {
+            return new WP_Error('sanro_master_rate_limited', 'Upload limit reached.', ['status' => 429]);
+        }
+        // Reserve before writing, fail closed if quota storage fails.
+        if (!set_transient($budget_key, $count === false ? 1 : $count + 1, HOUR_IN_SECONDS)) {
+            return new WP_Error('sanro_master_unavailable', 'Upload unavailable.', ['status' => 503]);
+        }
+        $stored = sanro_studio_store_owned_draft_master($id, $token, $side, $bytes);
+        if (empty($stored['valid'])) return sanro_studio_rest_draft_response($stored);
+        $bound = sanro_studio_bind_owned_draft_master($id, $token, $side, $stored['file_id']);
+        if (empty($bound['valid'])) return sanro_studio_rest_draft_response($bound);
+    } finally {
+        $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock_name));
+    }
     if (function_exists('nocache_headers')) nocache_headers();
     $response = rest_ensure_response([
         'valid' => true, 'design_id' => $id, 'side' => $side,
