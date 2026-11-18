@@ -47,10 +47,21 @@ catch (_) { console.error('BLOCKED: Playwright unavailable; set NODE_PATH to iso
   const first = page.locator('[data-side]:not([disabled])').first();
   assert(await first.count(),'No configured print side');
   const chosen = await first.getAttribute('data-side');
-  const marker = 'SANRO QA ' + Date.now().toString(36);
+  // Keep the fixture safely inside the configured print geometry.
+  // The previous long label at default 22px exceeded the A5 category on mobile.
+  const marker = 'QA' + Date.now().toString(36).slice(-4);
   await first.click();
+  await page.locator('#sanro-category').selectOption('A3+');
+  await page.locator('#sanro-font-size').fill('10');
   await page.locator('#sanro-text-input').fill(marker);
   await page.locator('#sanro-center-text').click();
+  await page.waitForFunction(() => {
+   const message = document.querySelector('#sanro-validation')?.textContent || '';
+   return /Pratinjau sesuai batas|Di luar batas cetak/.test(message);
+  },null,{timeout:10000});
+  const geometry = await page.locator('#sanro-validation').innerText();
+  assert.match(geometry,/Pratinjau sesuai batas/, 'Synthetic text geometry invalid: '+geometry);
+  console.log('PASS text geometry within admin print bounds');
   const qty = page.locator('input[data-size="M"]');
   await qty.fill('1');
   const status = page.locator('#sanro-save-status');
