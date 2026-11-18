@@ -63,9 +63,13 @@ function sanro_studio_store_private_preview($design_id, $side, $bytes) {
     if (empty($checked['valid'])) return $checked;
     $directory = realpath(SANRO_STUDIO_PRIVATE_PREVIEW_DIR);
     $root = defined('ABSPATH') ? realpath(ABSPATH) : false;
+    $webroot = isset($_SERVER['DOCUMENT_ROOT']) && is_string($_SERVER['DOCUMENT_ROOT'])
+        ? realpath($_SERVER['DOCUMENT_ROOT']) : false;
     if (!$directory || !is_dir($directory) || !is_writable($directory)
         || is_link(SANRO_STUDIO_PRIVATE_PREVIEW_DIR)
-        || ($root && ($directory === $root || strpos($directory, $root . DIRECTORY_SEPARATOR) === 0))) {
+        || !$root || !$webroot
+        || $directory === $webroot || strpos($directory, $webroot . DIRECTORY_SEPARATOR) === 0
+        || $directory === $root || strpos($directory, $root . DIRECTORY_SEPARATOR) === 0) {
         return ['valid' => false, 'error' => 'unsafe_preview_directory'];
     }
     $extension = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp'][$checked['mime']];
@@ -156,8 +160,12 @@ function sanro_studio_read_owned_draft_preview($design_id, $owner_token, $side, 
     }
     $directory = realpath(SANRO_STUDIO_PRIVATE_PREVIEW_DIR);
     $root = defined('ABSPATH') ? realpath(ABSPATH) : false;
+    $webroot = isset($_SERVER['DOCUMENT_ROOT']) && is_string($_SERVER['DOCUMENT_ROOT'])
+        ? realpath($_SERVER['DOCUMENT_ROOT']) : false;
     if (!$directory || !is_dir($directory) || is_link(SANRO_STUDIO_PRIVATE_PREVIEW_DIR)
-        || ($root && ($directory === $root || strpos($directory, $root . DIRECTORY_SEPARATOR) === 0))) {
+        || !$root || !$webroot
+        || $directory === $webroot || strpos($directory, $webroot . DIRECTORY_SEPARATOR) === 0
+        || $directory === $root || strpos($directory, $root . DIRECTORY_SEPARATOR) === 0) {
         return ['valid' => false, 'error' => 'unsafe_preview_directory'];
     }
     $path = $directory . DIRECTORY_SEPARATOR . $file_id;
