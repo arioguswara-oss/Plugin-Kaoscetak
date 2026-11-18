@@ -73,6 +73,12 @@ function sanro_studio_rest_create_draft($request) {
         || empty(sanro_studio_public_editor_config($product_id)['valid'])) {
         return new WP_Error('sanro_invalid_draft', 'Invalid product or design.', ['status' => 400]);
     }
+    // Validate before consuming the guest creation budget. Invalid geometry
+    // must not create records or consume a legitimate customer's allowance.
+    $validation = sanro_studio_validate_product_design($product_id, $design);
+    if (empty($validation['valid'])) {
+        return sanro_studio_rest_draft_response($validation);
+    }
     if (!sanro_studio_draft_creation_budget()) {
         return new WP_Error('sanro_rate_limited', 'Draft creation temporarily unavailable.', ['status' => 429]);
     }
