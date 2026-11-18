@@ -213,6 +213,9 @@ function sanro_studio_rest_upload_master($request) {
     if (empty($checked['valid'])) {
         return new WP_Error('sanro_invalid_master', 'Invalid master image.', ['status' => 400]);
     }
+    if (!hash_equals($draft['design_hash'] ?? '', $expected_hash)) {
+        return new WP_Error('sanro_draft_conflict', 'Draft changed. Reload before upload.', ['status' => 409]);
+    }
     // Serialize quota reservation and file binding across concurrent requests.
     // MySQL advisory locks are connection-scoped, so release in finally.
     global $wpdb;
