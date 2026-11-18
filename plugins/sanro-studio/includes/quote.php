@@ -58,6 +58,11 @@ function sanro_studio_quote_size_quantities($product_id, $design, $quantities, $
     if (!isset($design['quantities']) || !is_array($design['quantities'])) {
         return ['valid' => false, 'error' => 'design_quantities_mismatch'];
     }
+    // The sleeve variant is also part of the authorized design.
+    if (!isset($design['long_sleeve']) || !is_bool($design['long_sleeve'])
+        || $design['long_sleeve'] !== $long_sleeve) {
+        return ['valid' => false, 'error' => 'design_variant_mismatch'];
+    }
     $saved_quantities = $design['quantities'];
     ksort($saved_quantities);
     $requested_quantities = $quantities;
