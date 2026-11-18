@@ -12,3 +12,7 @@ verify(sanro_studio_production_folder_eligible(false, true), 'production-ready a
 verify(!sanro_studio_validate_preview_bytes('not an image')['valid'], 'reject fake image');
 verify(!sanro_studio_validate_preview_bytes(str_repeat('x', 51201))['valid'], 'reject oversized preview');
 verify(!sanro_studio_validate_preview_bytes([])['valid'], 'reject non-string bytes');
+
+$fakeId = '123e4567-e89b-42d3-a456-123456789012';
+verify(sanro_studio_store_private_preview($fakeId, 'front', 'bytes')['error'] === 'preview_storage_disabled', 'private storage disabled by default');
+verify(sanro_studio_store_private_preview($fakeId, '../back', 'bytes')['error'] === 'preview_storage_disabled', 'disabled gate precedes any target processing');
