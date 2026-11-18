@@ -447,7 +447,7 @@
   if(masterButton&&config.master_upload_enabled){
    masterButton.addEventListener('click',async()=>{
     if(!savedId||!ownerToken){
-     masterStatus.textContent='Simpan draft teks terlebih dahulu, kemudian pilih gambar.';return;
+     masterStatus.textContent='Simpan draft awal terlebih dahulu, kemudian upload gambar.';return;
     }
     const selected=['front','back'].filter(name=>sides[name].file&&sides[name].url&&!sides[name].pending);
     if(!selected.length){masterStatus.textContent='Pilih gambar PNG/JPEG untuk depan atau belakang.';return;}
@@ -566,10 +566,12 @@
       ||!updated.master_refs||completed.some(name=>!updated.master_refs[name]))
       throw new Error('Metadata gambar tidak terikat ke master privat.');
      Object.assign(boundMasterRefs,updated.master_refs);
+     // A successful server readback turns the local file into a bound master.
+     // Do not accidentally upload the same source again on the next click.
+     for(const name of completed)sides[name].file=null;
      lastKnownDesignHash=updated.design_hash;
      if(editRevision===revisionAtStart)savedRevision=editRevision;
-     masterStatus.textContent='Master dan posisi gambar tersimpan untuk '+completed.join(', ')
-      +'. Pemulihan gambar setelah membuka ulang masih dalam pengembangan.';
+     masterStatus.textContent='Master dan posisi gambar terverifikasi untuk '+completed.join(', ')+'. Draft dapat dibuka kembali.';
     }catch(error){masterStatus.textContent=error.message||'Upload master gagal.';}
     finally{masterButton.disabled=false;}
    });
