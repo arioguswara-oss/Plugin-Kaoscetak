@@ -75,3 +75,18 @@ function sanro_studio_save_product_areas($product) {
     // Empty settings intentionally disable public design acceptance for this product.
     $product->update_meta_data('_sanro_studio_safe_areas', $areas);
 }
+
+/**
+ * Read-only editor configuration. Admin metadata is the sole source of cm bounds.
+ * Do not expose private product metadata or accept dimensions from the browser.
+ */
+function sanro_studio_editor_area_config($product_id) {
+    $areas = sanro_studio_product_safe_areas($product_id);
+    if (!$areas) return ['valid' => false, 'error' => 'product_area_unconfigured'];
+    return [
+        'valid' => true,
+        'unit' => 'cm',
+        'safe_areas' => $areas,
+        'categories' => sanro_studio_print_categories(),
+    ];
+}
