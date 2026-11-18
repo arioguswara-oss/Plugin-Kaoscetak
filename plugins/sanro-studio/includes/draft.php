@@ -80,8 +80,35 @@ function sanro_studio_update_draft($id, $token, $design) {
     // WordPress update_option() returns false when the stored value is unchanged.
     // Keep timestamps monotonic so a legitimate rapid repeat save is not reported as failure.
     $record['updated_at'] = max(time(), (int) ($record['updated_at'] ?? $record['created_at'] ?? 0) + 1);
-    if (!update_option($key, $record, false)) {
-        return ['valid' => false, 'error' => 'storage_failed'];
+    // Compare-and-swap against the serialized option value. update_option() is not
+    // atomic with respect to a concurrent lock or another editor save.
+    global $wpdb;
+    if (!isset($wpdb) || !is_object($wpdb) || !isset($wpdb->options)
+        || !method_exists($wpdb, 'update') || !function_exists('maybe_serialize')
+        || !function_exists('wp_cache_delete')) {
+        return ['valid' => false, 'error' => 'storage_unavailable'];
     }
+    $before = get_option($key, false);
+    if (!is_array($before) || !isset($before['token_hash'])
+        || !is_string($before['token_hash'])
+        || !hash_equals($before['token_hash'], hash('sha256', $token))
+        || ($before['status'] ?? null) !== 'draft'
+        || ($before['product_id'] ?? null) !== $existing['product_id']) {
+        return ['valid' => false, 'error' => 'draft_conflict'];
+    }
+    $record = $before;
+    $record['design'] = $design;
+    $record['updated_at'] = max(time(), (int) ($before['updated_at'] ?? $before['created_at'] ?? 0) + 1);
+    $changed = $wpdb->update(
+        $wpdb->options,
+        ['option_value' => maybe_serialize($record)],
+        ['option_name' => $key, 'option_value' => maybe_serialize($before)],
+        ['%s'],
+        ['%s', '%s']
+    );
+    if ($changed !== 1) {
+        return ['valid' => false, 'error' => $changed === false ? 'storage_failed' : 'draft_conflict'];
+    }
+    wp_cache_delete($key, 'options');
     return ['valid' => true, 'design_id' => $id];
 }
