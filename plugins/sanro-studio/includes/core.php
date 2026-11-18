@@ -44,6 +44,7 @@ function sanro_studio_native_core_status() {
         'missing_components' => $missing,
         'legacy_compat_enabled' => defined('SANRO_STUDIO_ENABLE_LEGACY_COMPAT')
             && SANRO_STUDIO_ENABLE_LEGACY_COMPAT === true,
+        'legacy_runtime_loaded' => $capabilities['legacy_runtime_loaded'],
         'checkout_enabled' => false,
         'production_ready' => false,
         'verified_end_to_end' => false,
