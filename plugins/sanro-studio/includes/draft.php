@@ -222,3 +222,38 @@ function sanro_studio_lock_draft_for_order($id, $token, $order_id) {
     wp_cache_delete($key, 'options');
     return ['valid' => true, 'design_id' => $id, 'order_id' => $order_id, 'status' => 'locked'];
 }
+
+/**
+ * Admin-only order-aware lock boundary. Checks an actual WooCommerce order and
+ * one exact line item before delegating to the atomic draft lock.
+ * No public route, checkout hook or token persistence.
+ */
+function sanro_studio_lock_draft_for_order_item($id, $token, $order, $item_id) {
+    if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) {
+        return ['valid' => false, 'error' => 'forbidden'];
+    }
+    if (!is_object($order) || !method_exists($order, 'get_id')
+        || !method_exists($order, 'get_items')
+        || !is_int($item_id) || $item_id < 1) {
+        return ['valid' => false, 'error' => 'invalid_order_item'];
+    }
+    $order_id = $order->get_id();
+    if (!is_int($order_id) || $order_id < 1) {
+        return ['valid' => false, 'error' => 'invalid_order'];
+    }
+    $items = $order->get_items('line_item');
+    if (!is_array($items) || !isset($items[$item_id])
+        || !is_object($items[$item_id])
+        || !method_exists($items[$item_id], 'get_product_id')) {
+        return ['valid' => false, 'error' => 'invalid_order_item'];
+    }
+    $draft = sanro_studio_read_draft($id, $token);
+    if (empty($draft['valid'])) return $draft;
+    if (($draft['status'] ?? null) !== 'draft') {
+        return ['valid' => false, 'error' => 'draft_locked'];
+    }
+    if ((int) $draft['product_id'] !== (int) $items[$item_id]->get_product_id()) {
+        return ['valid' => false, 'error' => 'product_mismatch'];
+    }
+    return sanro_studio_lock_draft_for_order($id, $token, $order_id);
+}
