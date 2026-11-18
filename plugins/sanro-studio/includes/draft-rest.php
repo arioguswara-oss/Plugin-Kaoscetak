@@ -126,12 +126,50 @@ function sanro_studio_rest_upload_preview($request) {
  * Master upload remains staging-only and opt-in. Nonce is CSRF protection;
  * the separate draft owner token authorizes access to a specific draft.
  */
+/** Owner-only private master readback for staging verification; never cache. */
+function sanro_studio_rest_read_master($request) {
+    if (!defined('SANRO_STUDIO_ENABLE_MASTER_UPLOAD')
+        || SANRO_STUDIO_ENABLE_MASTER_UPLOAD !== true
+        || !defined('SANRO_STUDIO_ENABLE_PRIVATE_MASTERS')
+        || SANRO_STUDIO_ENABLE_PRIVATE_MASTERS !== true) {
+        return new WP_Error('sanro_master_disabled', 'Master readback unavailable.', ['status' => 403]);
+    }
+    $id = $request->get_param('id');
+    $side = $request->get_param('side');
+    $file_id = $request->get_param('file_id');
+    $token = $request->get_header('X-Sanro-Owner-Token');
+    $draft = sanro_studio_read_draft($id, $token);
+    if (empty($draft['valid'])) return sanro_studio_rest_draft_response($draft);
+    // Only expose the currently bound reference, not arbitrary historical files.
+    if (!isset($draft['master_refs'][$side])
+        || !is_string($draft['master_refs'][$side])
+        || !hash_equals($draft['master_refs'][$side], $file_id)) {
+        return new WP_Error('sanro_master_not_bound', 'Master unavailable.', ['status' => 404]);
+    }
+    $read = sanro_studio_read_owned_draft_master($id, $token, $side, $file_id);
+    if (empty($read['valid'])) return sanro_studio_rest_draft_response($read);
+    if (function_exists('nocache_headers')) nocache_headers();
+    $response = rest_ensure_response([
+        'valid' => true, 'file_id' => $file_id, 'side' => $side,
+        'mime' => $read['mime'], 'sha256' => $read['sha256'],
+        'image_base64' => base64_encode($read['bytes']),
+    ]);
+    $response->header('Cache-Control', 'private, no-store, max-age=0');
+    return $response;
+}
+
 function sanro_studio_register_master_upload_route() {
     if (!defined('SANRO_STUDIO_ENABLE_MASTER_UPLOAD')
         || SANRO_STUDIO_ENABLE_MASTER_UPLOAD !== true
         || !defined('SANRO_STUDIO_ENABLE_PRIVATE_MASTERS')
         || SANRO_STUDIO_ENABLE_PRIVATE_MASTERS !== true
         || !sanro_studio_draft_rest_enabled()) return;
+    register_rest_route('sanro-studio/v1',
+        '/drafts/(?P<id>[a-fA-F0-9-]{36})/masters/(?P<side>front|back)/(?P<file_id>[a-zA-Z0-9._-]+)', [
+            'methods' => 'GET',
+            'callback' => 'sanro_studio_rest_read_master',
+            'permission_callback' => 'sanro_studio_rest_draft_nonce',
+        ]);
     register_rest_route('sanro-studio/v1',
         '/drafts/(?P<id>[a-fA-F0-9-]{36})/masters/(?P<side>front|back)', [
             'methods' => 'POST',
