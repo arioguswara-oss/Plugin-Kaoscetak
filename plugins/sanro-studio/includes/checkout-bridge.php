@@ -449,6 +449,10 @@ function sanro_studio_stage_checkout_verify_order_batch($order, $data) {
     if (!is_array($items) || count($items) !== count($sizes)) {
         throw new RuntimeException('SANRO Studio: unexpected order line count.');
     }
+    $candidates = [];
+    foreach ($expected['lines'] as $line) {
+        $candidates[$line['sanro_studio_size']] = $line;
+    }
     $seen = [];
     foreach ($items as $item) {
         if (!is_object($item) || !method_exists($item, 'get_meta')) {
@@ -459,6 +463,10 @@ function sanro_studio_stage_checkout_verify_order_batch($order, $data) {
         if (!is_string($size) || !isset($sizes[$size]) || isset($seen[$size])
             || $design !== $verified['contract']['design_id']) {
             throw new RuntimeException('SANRO Studio: order metadata mismatch.');
+        }
+        $amount = sanro_studio_validate_size_order_item($candidates[$size], $item);
+        if (empty($amount['valid'])) {
+            throw new RuntimeException('SANRO Studio: order price or quantity mismatch.');
         }
         $seen[$size] = true;
     }
