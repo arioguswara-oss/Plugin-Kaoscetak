@@ -84,9 +84,11 @@ check_draft('invalid_credentials', sanro_studio_read_draft('12345678123442348234
 check_draft('not_found', sanro_studio_update_draft($created['design_id'], str_repeat('a', 64), ['front' => 'valid'])['error'], 'unauthorized update');
 check_draft('invalid_design', sanro_studio_update_draft($created['design_id'], $created['owner_token'], [])['error'], 'invalid replacement rejected');
 check_draft(true, sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['valid'], 'authorized update');
-$first_update_at = $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['updated_at'];
-check_draft(true, sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['valid'], 'immediate repeated save');
-check_draft(true, $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['updated_at'] > $first_update_at, 'monotonic update timestamp');
+$first_update_at = $GLOBALS['options'][$key]['updated_at'] ?? null;
+$repeat = sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid']);
+check_draft(true, $repeat['valid'], 'immediate repeated save');
+check_draft(true, !empty($repeat['unchanged']), 'identical design is a no-op');
+check_draft($first_update_at, $GLOBALS['options'][$key]['updated_at'] ?? null, 'no-op preserves timestamp');
 check_draft(true, sanro_studio_read_draft($created['design_id'], $created['owner_token'])['valid'], 'read after update');
 $GLOBALS['draft_cas_conflict'] = true;
 check_draft('draft_conflict', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'CAS detects concurrent lock before write');
