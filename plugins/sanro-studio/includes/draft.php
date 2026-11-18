@@ -267,6 +267,9 @@ function sanro_studio_lock_draft_for_order_item($id, $token, $order, $item_id) {
     if (!is_int($item_product_id) || $draft['product_id'] !== $item_product_id) {
         return ['valid' => false, 'error' => 'product_mismatch'];
     }
+    // Bind the exact order line to the authorized draft, not merely its product.
+    $identity = sanro_studio_validate_order_item_design_identity($items[$item_id], $id);
+    if (empty($identity['valid'])) return $identity;
     // Requote the authoritative saved design at the transaction boundary.
     // Never infer price or quantities from client-supplied order metadata.
     if (!function_exists('sanro_studio_quote_size_quantities')
@@ -320,4 +323,20 @@ function sanro_studio_validate_order_item_quote_amount($item, $quote) {
         return ['valid' => false, 'error' => 'order_amount_mismatch'];
     }
     return ['valid' => true, 'subtotal' => $quote['total_price'], 'currency' => 'IDR'];
+}
+
+/**
+ * Fail closed when a WooCommerce line item is not explicitly bound to the
+ * authorized draft. Never trust an order line merely because its product matches.
+ */
+function sanro_studio_validate_order_item_design_identity($item, $design_id) {
+    if (!is_object($item) || !method_exists($item, 'get_meta')
+        || !is_string($design_id) || $design_id === '') {
+        return ['valid' => false, 'error' => 'order_design_mismatch'];
+    }
+    $bound_id = $item->get_meta('_sanro_studio_design_id', true);
+    if (!is_string($bound_id) || !hash_equals($design_id, $bound_id)) {
+        return ['valid' => false, 'error' => 'order_design_mismatch'];
+    }
+    return ['valid' => true, 'design_id' => $design_id];
 }
