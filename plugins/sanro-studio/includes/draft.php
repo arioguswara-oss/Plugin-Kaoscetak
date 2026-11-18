@@ -135,6 +135,7 @@ function sanro_studio_cleanup_expired_drafts($limit = 50) {
     if (!is_object($wpdb) || !isset($wpdb->options)
         || !preg_match('/^[A-Za-z0-9_]+$/D', $wpdb->options)
         || !method_exists($wpdb, 'get_col') || !method_exists($wpdb, 'prepare')
+        || !method_exists($wpdb, 'esc_like')
         || !function_exists('delete_option')) return 0;
     $limit = max(1, min(100, (int) $limit));
     // A bounded scan avoids loading every draft into memory.
