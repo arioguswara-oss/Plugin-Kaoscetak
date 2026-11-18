@@ -37,4 +37,12 @@ $valid = sanro_studio_rest_update_draft(new RevisionRequest($base + ['expected_d
 revision_assert(($valid['expected'] ?? null) === $hash, 'valid revision passed to update');
 $badDesign = sanro_studio_rest_update_draft(new RevisionRequest(['id' => 'draft', 'design' => 'invalid', 'expected_design_hash' => $hash]));
 revision_assert($badDesign instanceof WP_Error && $badDesign->code === 'sanro_invalid_design', 'invalid design rejected');
-echo "PASS: 4 draft REST revision checks\n";
+$image = ['front' => ['objects' => [['type' => 'image', 'x' => 1, 'y' => 1, 'width' => 2, 'height' => 2]]]];
+$frontRef = '00000000-0000-4000-8000-000000000000-front-' . str_repeat('a', 64) . '.png';
+$backRef = '00000000-0000-4000-8000-000000000000-back-' . str_repeat('a', 64) . '.png';
+revision_assert(!sanro_studio_draft_image_binding_allowed($image, []), 'image without private master rejected');
+revision_assert(!sanro_studio_draft_image_binding_allowed($image, ['back' => $backRef]), 'opposite side master rejected');
+revision_assert(sanro_studio_draft_image_binding_allowed($image, ['front' => $frontRef]), 'same-side private master accepted');
+revision_assert(!sanro_studio_draft_image_binding_allowed($image, ['front' => 'https://example.com/file.png']), 'public image URL rejected');
+revision_assert(!sanro_studio_draft_payload_allowed($image), 'image draft still gated until restoration integration');
+echo "PASS: 9 draft REST and image-binding checks\n";
