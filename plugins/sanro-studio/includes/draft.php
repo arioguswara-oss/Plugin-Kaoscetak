@@ -76,10 +76,6 @@ function sanro_studio_update_draft($id, $token, $design) {
         || (int) ($record['product_id'] ?? 0) !== (int) $existing['product_id']) {
         return ['valid' => false, 'error' => 'draft_locked'];
     }
-    $record['design'] = $design;
-    // WordPress update_option() returns false when the stored value is unchanged.
-    // Keep timestamps monotonic so a legitimate rapid repeat save is not reported as failure.
-    $record['updated_at'] = max(time(), (int) ($record['updated_at'] ?? $record['created_at'] ?? 0) + 1);
     // Compare-and-swap against the serialized option value. update_option() is not
     // atomic with respect to a concurrent lock or another editor save.
     global $wpdb;
