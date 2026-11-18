@@ -279,5 +279,36 @@ function sanro_studio_lock_draft_for_order_item($id, $token, $order, $item_id) {
         || (int) $items[$item_id]->get_quantity() !== $quote['total_quantity']) {
         return ['valid' => false, 'error' => 'order_quantity_mismatch'];
     }
+    // WooCommerce subtotal is pre-discount and pre-tax. Compare it to the
+    // authoritative quote; never compare the discounted line total or taxes.
+    $amount = sanro_studio_validate_order_item_quote_amount($items[$item_id], $quote);
+    if (empty($amount['valid'])) return $amount;
     return sanro_studio_lock_draft_for_order($id, $token, $order_id, $item_id);
+}
+
+/**
+ * Strict IDR line subtotal reconciliation before locking a design.
+ * Discounts alter line total; tax is recorded separately by WooCommerce.
+ * This function never mutates the order or approves checkout.
+ */
+function sanro_studio_validate_order_item_quote_amount($item, $quote) {
+    if (!is_object($item) || !method_exists($item, 'get_subtotal')
+        || !is_array($quote) || empty($quote['valid'])
+        || ($quote['currency'] ?? null) !== 'IDR'
+        || !isset($quote['total_price']) || !is_int($quote['total_price'])
+        || $quote['total_price'] <= 0) {
+        return ['valid' => false, 'error' => 'order_amount_unavailable'];
+    }
+    $subtotal = $item->get_subtotal();
+    if ((!is_string($subtotal) && !is_int($subtotal) && !is_float($subtotal))
+        || !preg_match('/^(?:0|[1-9][0-9]*)(?:\\.[0-9]{1,2})?$/D', (string) $subtotal)) {
+        return ['valid' => false, 'error' => 'order_amount_unavailable'];
+    }
+    // No floats: preserve exact WooCommerce decimal precision for IDR.
+    $parts = explode('.', (string) $subtotal, 2);
+    $fraction = str_pad($parts[1] ?? '', 2, '0');
+    if ($parts[0] !== (string) $quote['total_price'] || $fraction !== '00') {
+        return ['valid' => false, 'error' => 'order_amount_mismatch'];
+    }
+    return ['valid' => true, 'subtotal' => $quote['total_price'], 'currency' => 'IDR'];
 }
