@@ -295,6 +295,35 @@
   design.long_sleeve=q('#sanro-sleeve').value==='long';
   return design;
  }
+ // Lightweight, text-only snapshot. Never persist source artwork in a preview.
+ async function makeTextPreview(name){
+  const d=sides[name],area=config.safe_areas[name];
+  if(!area||d.url||d.pending||!d.text.trim())return null;
+  const canvas=document.createElement('canvas');
+  canvas.width=640;canvas.height=640;
+  const ctx=canvas.getContext('2d');
+  if(!ctx)throw new Error('Canvas tidak tersedia.');
+  ctx.fillStyle=shirtColor.value;ctx.fillRect(0,0,640,640);
+  const scale=640/Math.max(safe.clientWidth,1);
+  ctx.fillStyle=d.textColor;
+  ctx.font=Math.max(10,Math.round(d.fontSize*scale))+'px sans-serif';
+  ctx.textBaseline='top';
+  const lines=d.text.split('\\n');
+  const x=d.textX*6.4,y=d.textY*6.4;
+  lines.forEach((line,i)=>ctx.fillText(line,x,y+i*d.fontSize*scale*1.2,640-x));
+  for(const quality of [0.75,0.55,0.35,0.2]){
+   const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
+   if(blob&&blob.size>=100&&blob.size<=51200){
+    return await new Promise((resolve,reject)=>{
+     const reader=new FileReader();
+     reader.onload=()=>resolve(String(reader.result).split(',')[1]);
+     reader.onerror=()=>reject(new Error('Preview gagal dibaca.'));
+     reader.readAsDataURL(blob);
+    });
+   }
+  }
+  throw new Error('Preview melebihi 50 KB.');
+ }
  if(saveButton&&config.draft_api){
   const quoteButton=q('#sanro-server-quote'),quoteStatus=q('#sanro-server-quote-status');
   quoteButton.addEventListener('click',async()=>{
