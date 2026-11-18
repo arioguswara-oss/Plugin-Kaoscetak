@@ -96,10 +96,6 @@ function sanro_studio_rest_upload_preview($request) {
     if (!sanro_studio_preview_upload_enabled()) {
         return new WP_Error('sanro_preview_disabled', 'Preview uploads unavailable.', ['status' => 403]);
     }
-    $expected_hash = $request->get_param('design_hash');
-    if (!is_string($expected_hash) || !preg_match('/^[a-f0-9]{64}$/D', $expected_hash)) {
-        return new WP_Error('sanro_revision_required', 'Draft revision required.', ['status' => 409]);
-    }
     $encoded = $request->get_param('image_base64');
     if (!is_string($encoded) || strlen($encoded) > 70000
         || !preg_match('/^[A-Za-z0-9+\\/]+={0,2}$/D', $encoded)) {
