@@ -112,6 +112,15 @@ function sanro_studio_validate_cart_design_identity($contract, $cart_item) {
         || $cart_item['quantity'] !== $contract['quote']['total_quantity']) {
         return ['valid' => false, 'error' => 'cart_quantity_mismatch'];
     }
+    // When the cart carries a quoted snapshot, reject any modified price
+    // or currency. Never silently trust a client-written quote field.
+    if (array_key_exists('sanro_studio_quote_total', $cart_item)
+        || array_key_exists('sanro_studio_quote_currency', $cart_item)) {
+        if (($cart_item['sanro_studio_quote_total'] ?? null) !== $contract['quote']['total_price']
+            || ($cart_item['sanro_studio_quote_currency'] ?? null) !== 'IDR') {
+            return ['valid' => false, 'error' => 'cart_quote_mismatch'];
+        }
+    }
     return ['valid' => true, 'design_id' => $contract['design_id'],
         'product_id' => $contract['product_id'], 'quantity' => $cart_item['quantity'],
         'checkout_enabled' => false];
