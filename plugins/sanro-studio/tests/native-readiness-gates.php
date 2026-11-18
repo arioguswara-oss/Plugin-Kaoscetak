@@ -26,6 +26,7 @@ foreach ([
     'sanro_studio_create_draft',
     'sanro_studio_store_owned_draft_preview',
     'sanro_studio_prepare_cart_design_contract',
+    'sanro_studio_prepare_checkout_order_item',
     'sanro_studio_order_item_production_manifest',
 ] as $name) {
     // Define only the capability names expected by the readiness inventory.
