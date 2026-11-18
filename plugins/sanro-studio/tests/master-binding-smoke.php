@@ -56,12 +56,16 @@ try {
     bind_check(($conflict['error'] ?? '') === 'draft_conflict', 'concurrent update rejected');
     bind_check(!isset($record['master_refs']), 'conflict did not mutate draft');
     $wpdb->mode = 'success';
-    $bound = sanro_studio_bind_owned_draft_master($id, $token, 'front', $file);
+    $hash = hash('sha256', serialize($record['design']));
+    $stale = sanro_studio_bind_owned_draft_master($id, $token, 'front', $file, str_repeat('0', 64));
+    bind_check(($stale['error'] ?? '') === 'draft_conflict', 'stale design fingerprint rejected');
+    bind_check(!isset($record['master_refs']), 'stale fingerprint did not mutate draft');
+    $bound = sanro_studio_bind_owned_draft_master($id, $token, 'front', $file, $hash);
     bind_check(!empty($bound['valid']) && ($record['master_refs']['front'] ?? '') === $file, 'atomic binding persisted');
     $record['status'] = 'locked';
     $locked = sanro_studio_bind_owned_draft_master($id, $token, 'front', $file);
     bind_check(($locked['error'] ?? '') === 'draft_conflict', 'locked draft rejected');
-    echo "PASS: 6 private-master binding regression checks\n";
+    echo "PASS: 8 private-master binding regression checks\n";
 } finally {
     foreach (glob($dir . '/*') ?: [] as $p) if (is_file($p) && !is_link($p)) unlink($p);
     rmdir($dir);
