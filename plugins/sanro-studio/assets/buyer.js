@@ -109,6 +109,18 @@
   d.textY=Math.max(0,(rect.height-box.height)/rect.height*50);render();
  });
  q('#sanro-category').addEventListener('change',e=>{editRevision++;sides[side].category=e.target.value;render()});
+ q('#sanro-copy-text').addEventListener('click',()=>{
+  const other=side==='front'?'back':'front',source=sides[side],target=sides[other],status=q('#sanro-copy-status');
+  if(!config.safe_areas[other]){status.textContent='Sisi tujuan belum dikonfigurasi.';return}
+  if(!source.text.trim()){status.textContent='Tambahkan teks sebelum menyalin.';return}
+  if(target.text.trim()&&!window.confirm('Ganti teks pada sisi '+(other==='front'?'depan':'belakang')+'?'))return;
+  // Preserve relative placement and text style, but do not copy temporary images.
+  target.text=source.text;target.fontSize=source.fontSize;target.textColor=source.textColor;
+  target.textX=source.textX;target.textY=source.textY;
+  target.category=source.category;
+  editRevision++;render();
+  status.textContent='Teks disalin ke sisi '+(other==='front'?'depan':'belakang')+'. Periksa batas cetaknya.';
+ });
  q('#sanro-reset-side').addEventListener('click',()=>{
   const d=sides[side];
   if(!d.url&&!d.pending&&!d.text.trim())return;
