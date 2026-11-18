@@ -67,3 +67,39 @@ function sanro_studio_validate_print_side($objects, $category, $safe_area) {
     }
     return ['valid' => true, 'empty' => false, 'span_cm' => $span];
 }
+
+/**
+ * Validate a two-sided design as a single server-side contract.
+ * Each side explicitly supplies objects, category and an admin-controlled safe area.
+ * Reject unknown keys, malformed payloads and designs with no printable content.
+ * Does not compute price or persist customer data.
+ */
+function sanro_studio_validate_print_design($design, $safe_areas) {
+    if (!is_array($design) || !is_array($safe_areas)
+        || array_diff(array_keys($design), ['front', 'back'])
+        || array_diff(array_keys($safe_areas), ['front', 'back'])) {
+        return ['valid' => false, 'error' => 'invalid_design'];
+    }
+    $results = [];
+    $nonempty = 0;
+    foreach (['front', 'back'] as $side) {
+        if (!array_key_exists($side, $design)) continue;
+        $entry = $design[$side];
+        if (!is_array($entry) || !array_key_exists('objects', $entry)
+            || !array_key_exists('category', $entry)
+            || array_diff(array_keys($entry), ['objects', 'category'])
+            || !array_key_exists($side, $safe_areas)) {
+            return ['valid' => false, 'error' => 'invalid_design', 'side' => $side];
+        }
+        $result = sanro_studio_validate_print_side(
+            $entry['objects'], $entry['category'], $safe_areas[$side]
+        );
+        if (!$result['valid']) {
+            return ['valid' => false, 'error' => $result['error'], 'side' => $side];
+        }
+        $results[$side] = $result;
+        if (!$result['empty']) $nonempty++;
+    }
+    if (!$nonempty) return ['valid' => false, 'error' => 'empty_design'];
+    return ['valid' => true, 'sides' => $results];
+}
