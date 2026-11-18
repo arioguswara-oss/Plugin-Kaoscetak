@@ -98,6 +98,12 @@ function sanro_studio_render_buyer_editor() {
             'nonce' => wp_create_nonce('sanro_studio_draft'),
         ];
     }
+    if (!empty($config['draft_api']) && defined('SANRO_STUDIO_ENABLE_MASTER_UPLOAD')
+        && SANRO_STUDIO_ENABLE_MASTER_UPLOAD === true
+        && defined('SANRO_STUDIO_ENABLE_PRIVATE_MASTERS')
+        && SANRO_STUDIO_ENABLE_PRIVATE_MASTERS === true) {
+        $config['master_upload_enabled'] = true;
+    }
     if (function_exists('sanro_studio_preview_upload_enabled') && sanro_studio_preview_upload_enabled()) {
         $config['preview_upload_enabled'] = true;
     }
@@ -149,6 +155,10 @@ function sanro_studio_render_buyer_editor() {
     echo '<p id="sanro-validation" role="status">Belum ada desain.</p>';
     if (!empty($config['draft_api'])) {
         echo '<button type="button" id="sanro-save-draft">Simpan draft teks</button>';
+        if (!empty($config['master_upload_enabled'])) {
+            echo '<button type="button" id="sanro-upload-master">Unggah gambar asli ke draft (staging)</button>';
+            echo '<p id="sanro-master-upload-status" role="status" aria-live="polite">Simpan draft teks sebelum mengunggah gambar.</p>';
+        }
         if (!empty($config['preview_upload_enabled'])) {
             echo '<button type="button" id="sanro-upload-previews">Simpan preview depan/belakang (staging)</button>';
             echo '<p id="sanro-preview-upload-status" role="status" aria-live="polite"></p>';
