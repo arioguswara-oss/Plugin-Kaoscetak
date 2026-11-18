@@ -52,12 +52,12 @@ catch (_) { console.error('BLOCKED: Playwright unavailable; set NODE_PATH to iso
   const marker = 'QA' + Date.now().toString(36).slice(-4);
   await first.click();
   await page.locator('#sanro-category').selectOption('A3+');
-  await page.locator('#sanro-font-size').fill('10');
+  await page.locator('#sanro-font-size').evaluate(input => { input.value='10'; input.dispatchEvent(new Event('input',{bubbles:true})); });
   await page.locator('#sanro-text-input').fill(marker);
   await page.locator('#sanro-center-text').click();
   await page.waitForFunction(() => {
    const message = document.querySelector('#sanro-validation')?.textContent || '';
-   return /Pratinjau sesuai batas|Di luar batas cetak/.test(message);
+   return /Pratinjau sesuai batas/.test(message);
   },null,{timeout:10000});
   const geometry = await page.locator('#sanro-validation').innerText();
   assert.match(geometry,/Pratinjau sesuai batas/, 'Synthetic text geometry invalid: '+geometry);
