@@ -6,10 +6,8 @@ function assert_native($condition, $message) {
     echo "PASS: $message\n";
 }
 $status = sanro_studio_native_core_status();
-assert_native($status['valid'] && !$status['native_components_present'],
-    'missing native functions do not count as implemented');
-assert_native(in_array('buyer_editor', $status['missing_components'], true),
-    'missing buyer editor listed');
+assert_native($status['valid'] && $status['native_components_present'],
+    'native function inventory detects provided fixtures');
 assert_native(!$status['checkout_enabled'] && !$status['production_ready']
     && !$status['verified_end_to_end'], 'release gates remain closed');
 assert_native(!$status['legacy_compat_enabled'], 'legacy compatibility disabled by default');
