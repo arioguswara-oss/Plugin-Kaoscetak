@@ -72,3 +72,32 @@ foreach ($bind_cases as $name=>[$meta,$expected,$error,$writes]) {
     }
     echo "PASS: $name\n";
 }
+
+final class SanroStudioWrongProductItem {
+    public $writes=0;
+    public function get_product_id() { return 43; }
+    public function get_quantity() { return 2; }
+    public function get_subtotal() { return '90000.00'; }
+    public function get_meta($key,$single=false) { return ''; }
+    public function update_meta_data($key,$value) { ++$this->writes; }
+}
+$wrong=new SanroStudioWrongProductItem();
+$result=sanro_studio_bind_order_item_design_identity($id,'test-secret',new SanroStudioLockOrder($wrong),7);
+if (($result['error'] ?? null)!=='product_mismatch' || $wrong->writes!==0) {
+    fwrite(STDERR,"FAIL: binder_wrong_product\n"); exit(1);
+}
+echo "PASS: binder_wrong_product\n";
+final class SanroStudioWrongQuantityItem {
+    public $writes=0;
+    public function get_product_id() { return 42; }
+    public function get_quantity() { return 3; }
+    public function get_subtotal() { return '90000.00'; }
+    public function get_meta($key,$single=false) { return ''; }
+    public function update_meta_data($key,$value) { ++$this->writes; }
+}
+$wrong=new SanroStudioWrongQuantityItem();
+$result=sanro_studio_bind_order_item_design_identity($id,'test-secret',new SanroStudioLockOrder($wrong),7);
+if (($result['error'] ?? null)!=='order_quantity_mismatch' || $wrong->writes!==0) {
+    fwrite(STDERR,"FAIL: binder_wrong_quantity\n"); exit(1);
+}
+echo "PASS: binder_wrong_quantity\n";
