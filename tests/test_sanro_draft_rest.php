@@ -42,6 +42,11 @@ function sanro_studio_validate_product_design($id, $design) {
 function sanro_studio_create_draft($id, $design) {
     return ['valid' => true, 'design_id' => '12345678-1234-4234-8234-123456789abc', 'owner_token' => str_repeat('a', 64)];
 }
+function sanro_studio_read_draft($id, $token) {
+    return $token === str_repeat('a', 64)
+        ? ['valid' => true, 'design_id' => $id, 'product_id' => 17, 'design' => ['front' => ['text' => 'OK']]]
+        : ['valid' => false, 'error' => 'not_found'];
+}
 function sanro_studio_update_draft($id, $token, $design) {
     return $token === str_repeat('a', 64)
         ? ['valid' => true, 'design_id' => $id]
@@ -57,7 +62,7 @@ function verify_rest($condition, $label) {
 }
 $_SERVER['REMOTE_ADDR'] = '192.0.2.20';
 sanro_studio_register_draft_routes();
-verify_rest(count($GLOBALS['routes']) === 2, 'staging routes registered');
+verify_rest(count($GLOBALS['routes']) === 2, 'staging route patterns registered');
 verify_rest(sanro_studio_rest_draft_nonce(new SanroTestRequest([], ['X-Sanro-Draft-Nonce' => 'bad'])) instanceof WP_Error, 'invalid nonce rejected');
 verify_rest(sanro_studio_rest_draft_nonce(new SanroTestRequest([], ['X-Sanro-Draft-Nonce' => 'good-nonce'])) === true, 'valid nonce accepted');
 verify_rest(!sanro_studio_draft_payload_allowed(['image' => 'data:image/png;base64,AAAA']), 'embedded image rejected');
@@ -76,4 +81,8 @@ $bad = sanro_studio_rest_update_draft(new SanroTestRequest(['id' => 'draft', 'de
 verify_rest($bad instanceof WP_Error && $bad->data['status'] === 404, 'owner token required');
 $good = sanro_studio_rest_update_draft(new SanroTestRequest(['id' => 'draft', 'design' => ['front' => ['text' => 'OK']]], ['X-Sanro-Owner-Token' => str_repeat('a', 64)]));
 verify_rest($good['valid'] === true, 'owner update accepted');
+$readBad = sanro_studio_rest_read_draft(new SanroTestRequest(['id' => 'draft'], ['X-Sanro-Owner-Token' => 'bad']));
+verify_rest($readBad instanceof WP_Error && $readBad->data['status'] === 404, 'private read rejects wrong owner');
+$readGood = sanro_studio_rest_read_draft(new SanroTestRequest(['id' => 'draft'], ['X-Sanro-Owner-Token' => str_repeat('a', 64)]));
+verify_rest($readGood['valid'] === true && $readGood['product_id'] === 17, 'private read returns authorized product');
 echo "SANRO draft REST: {$checks} assertions PASS, 0 FAIL\n";
