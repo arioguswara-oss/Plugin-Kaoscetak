@@ -245,3 +245,32 @@ function sanro_studio_attach_item_preview_refs($order, $item_id, $design_id, $ow
     $item->save();
     return ['valid' => true, 'item_id' => $item_id, 'attached_sides' => array_keys($refs)];
 }
+
+/** Render independent preview links for each WooCommerce line item. */
+function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
+    if (!current_user_can('manage_woocommerce') || !is_object($item)
+        || !method_exists($item, 'get_order_id')) return;
+    $order_id = absint($item->get_order_id());
+    $item_id = absint($item_id);
+    if (!$order_id || !$item_id) return;
+    $inventory = sanro_studio_order_preview_inventory($item);
+    if (empty($inventory['valid'])) return;
+    echo '<div class="sanro-studio-item-preview"><strong>' .
+        esc_html('SANRO Studio — Preview item') . '</strong>';
+    foreach (['front' => 'Depan', 'back' => 'Belakang'] as $side => $label) {
+        if (empty($inventory[$side])) {
+            echo '<p>' . esc_html($label . ': Belum tersedia') . '</p>';
+            continue;
+        }
+        $url = add_query_arg([
+            'action' => 'sanro_studio_order_preview',
+            'order_id' => $order_id,
+            'item_id' => $item_id,
+            'side' => $side,
+        ], admin_url('admin-post.php'));
+        $url = wp_nonce_url($url, 'sanro_order_preview_' . $order_id . '_' . $side);
+        echo '<p><a target="_blank" rel="noopener noreferrer" href="' . esc_url($url) . '">' .
+            esc_html('Lihat preview ' . $label) . '</a></p>';
+    }
+    echo '</div>';
+}
