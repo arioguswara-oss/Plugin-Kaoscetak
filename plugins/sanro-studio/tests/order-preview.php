@@ -149,3 +149,27 @@ $noPreviewManifest = sanro_studio_order_item_production_manifest($noPreviewOrder
 verify($noPreviewManifest['valid'] && $noPreviewManifest['eligible']
     && !$noPreviewManifest['ready_for_drive_integration'],
     'paid order without preview remains ineligible for Drive integration');
+
+class SanroProductionReadyOrderFixture {
+    public $meta = [];
+    public $saveResult = 1;
+    public function get_id() { return 99; }
+    public function get_meta($key, $single = true) { return $this->meta[$key] ?? ''; }
+    public function update_meta_data($key, $value) { $this->meta[$key] = $value; }
+    public function save() { return $this->saveResult; }
+    public function is_paid() { return false; }
+}
+$readyOrder = new SanroProductionReadyOrderFixture();
+$GLOBALS['admin_enabled'] = false;
+verify(sanro_studio_mark_order_production_ready($readyOrder)['error'] === 'forbidden',
+    'non-admin cannot mark production ready');
+$GLOBALS['admin_enabled'] = true;
+verify(sanro_studio_mark_order_production_ready($readyOrder)['valid']
+    && sanro_studio_order_production_file_status($readyOrder)['eligible'],
+    'admin production-ready transition unlocks eligibility');
+verify(sanro_studio_mark_order_production_ready($readyOrder)['already_ready'],
+    'production-ready transition idempotent');
+$failedReady = new SanroProductionReadyOrderFixture();
+$failedReady->saveResult = false;
+verify(sanro_studio_mark_order_production_ready($failedReady)['error'] === 'production_ready_save_failed',
+    'production-ready persistence failure reported');
