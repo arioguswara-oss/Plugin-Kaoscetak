@@ -326,6 +326,39 @@
  }
  if(saveButton&&config.draft_api){
   const quoteButton=q('#sanro-server-quote'),quoteStatus=q('#sanro-server-quote-status');
+  const uploadButton=q('#sanro-upload-previews'),uploadStatus=q('#sanro-preview-upload-status');
+  if(uploadButton&&config.preview_upload_enabled){
+   uploadButton.addEventListener('click',async()=>{
+    if(!savedId||!ownerToken||savedRevision!==editRevision){
+     uploadStatus.textContent='Simpan draft terbaru sebelum mengirim preview.';return;
+    }
+    uploadButton.disabled=true;
+    const revisionAtStart=editRevision;
+    uploadStatus.textContent='Menyiapkan preview privat…';
+    try{
+     const completed=[];
+     for(const name of ['front','back']){
+      const encoded=await makeTextPreview(name);
+      if(!encoded)continue;
+      if(editRevision!==revisionAtStart)throw new Error('Desain berubah. Simpan ulang sebelum upload.');
+      const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/previews/'+name,{
+       method:'POST',credentials:'same-origin',cache:'no-store',
+       headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken},
+       body:JSON.stringify({image_base64:encoded})
+      });
+      if(response.status===410)throw new Error('Draft kedaluwarsa. Simpan draft baru.');
+      const result=await response.json();
+      if(!response.ok||!result.valid)throw new Error('Upload '+name+' gagal ('+response.status+').');
+      completed.push(name);
+     }
+     uploadStatus.textContent=completed.length
+      ?'Preview privat tersimpan: '+completed.join(', ')+'. Belum terhubung ke checkout.'
+      :'Tidak ada teks untuk dipratinjau. Gambar sumber belum didukung.';
+    }catch(error){uploadStatus.textContent=error.message||'Upload preview gagal.'}
+    finally{uploadButton.disabled=false}
+   });
+  }
+
   quoteButton.addEventListener('click',async()=>{
    if(!savedId||!ownerToken){quoteStatus.textContent='Simpan draft teks terlebih dahulu.';return}
    if(editRevision!==savedRevision){quoteStatus.textContent='Ada perubahan belum tersimpan. Simpan draft terlebih dahulu untuk harga terbaru.';return}
