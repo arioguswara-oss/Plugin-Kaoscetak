@@ -3,7 +3,7 @@
  const root=document.getElementById('sanro-studio-buyer'),config=window.SANRO_STUDIO_EDITOR_CONFIG;
  if(!root||!config||!config.safe_areas)return;
  const q=s=>root.querySelector(s),sides={front:{},back:{}};
- const make=()=>({url:null,text:'',imageSize:60,fontSize:22,textColor:'#171717',imageX:10,imageY:10,textX:10,textY:65,category:'A5'});
+ const make=()=>({url:null,file:null,text:'',imageSize:60,fontSize:22,textColor:'#171717',imageX:10,imageY:10,textX:10,textY:65,category:'A5'});
  sides.front=make();sides.back=make();let side=config.safe_areas.front?'front':'back';
  const image=q('.sanro-safe img'),text=q('.sanro-text'),safe=q('.sanro-safe');
  const categories=config.categories;
@@ -150,7 +150,7 @@
     return;
    }
    if(target.url)URL.revokeObjectURL(target.url);
-   target.url=url;target.pending=null;
+   target.url=url;target.file=file;target.pending=null;
    // Fit the image into the safe preview without changing its aspect ratio.
    const safeWidth=safe.clientWidth,safeHeight=safe.clientHeight;
    if(safeWidth>0&&safeHeight>0&&probe.naturalWidth>0&&probe.naturalHeight>0){
@@ -178,7 +178,7 @@
   d.imageY=Math.max(0,(rect.height-box.height)/rect.height*50);
   editRevision++;render();
  });
- q('#sanro-remove-image').addEventListener('click',()=>{editRevision++;const d=sides[side];if(d.url)URL.revokeObjectURL(d.url);if(d.pending)URL.revokeObjectURL(d.pending);d.url=null;d.pending=null;image.removeAttribute('src');render()});
+ q('#sanro-remove-image').addEventListener('click',()=>{editRevision++;const d=sides[side];if(d.url)URL.revokeObjectURL(d.url);if(d.pending)URL.revokeObjectURL(d.pending);d.url=null;d.file=null;d.pending=null;image.removeAttribute('src');render()});
  // Object URLs are browser-local temporary resources; never persist them as draft masters.
  window.addEventListener('pagehide',()=>{
   for(const name of ['front','back']){
@@ -349,6 +349,53 @@
   throw new Error('Preview melebihi 50 KB.');
  }
  if(saveButton&&config.draft_api){
+  const masterButton=q('#sanro-upload-master'),masterStatus=q('#sanro-master-upload-status');
+  if(masterButton&&config.master_upload_enabled){
+   masterButton.addEventListener('click',async()=>{
+    if(!savedId||!ownerToken){
+     masterStatus.textContent='Simpan draft teks terlebih dahulu, kemudian pilih gambar.';return;
+    }
+    const selected=['front','back'].filter(name=>sides[name].file&&sides[name].url&&!sides[name].pending);
+    if(!selected.length){masterStatus.textContent='Pilih gambar PNG/JPEG untuk depan atau belakang.';return;}
+    if(['front','back'].some(name=>sides[name].pending)){
+     masterStatus.textContent='Tunggu gambar selesai dimuat.';return;
+    }
+    const revisionAtStart=editRevision;
+    masterButton.disabled=true;masterStatus.textContent='Mengunggah master privat…';
+    try{
+     const completed=[];
+     for(const name of selected){
+      const file=sides[name].file;
+      if(editRevision!==revisionAtStart||sides[name].file!==file)
+       throw new Error('Desain berubah. Ulangi upload setelah perubahan selesai.');
+      const encoded=await new Promise((resolve,reject)=>{
+       const reader=new FileReader();
+       reader.onload=()=>resolve(String(reader.result).split(',')[1]||'');
+       reader.onerror=()=>reject(new Error('Gagal membaca gambar.'));
+       reader.readAsDataURL(file);
+      });
+      if(editRevision!==revisionAtStart||sides[name].file!==file)
+       throw new Error('Desain berubah selama persiapan upload.');
+      const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/masters/'+name,{
+       method:'POST',credentials:'same-origin',cache:'no-store',
+       headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,
+        'X-Sanro-Owner-Token':ownerToken},
+       body:JSON.stringify({image_base64:encoded})
+      });
+      const result=await response.json();
+      if(!response.ok||!result.valid||typeof result.file_id!=='string'
+       ||!result.file_id.startsWith(savedId.toLowerCase()+'-'+name+'-'))
+       throw new Error('Upload master '+name+' gagal ('+response.status+').');
+      if(editRevision!==revisionAtStart||sides[name].file!==file)
+       throw new Error('Desain berubah selama upload. Periksa ulang draft.');
+      completed.push(name);
+     }
+     masterStatus.textContent='Master privat tersimpan untuk '+completed.join(', ')
+      +'. Checkout belum tersedia; gambar belum dapat dipulihkan otomatis.';
+    }catch(error){masterStatus.textContent=error.message||'Upload master gagal.';}
+    finally{masterButton.disabled=false;}
+   });
+  }
   const quoteButton=q('#sanro-server-quote'),quoteStatus=q('#sanro-server-quote-status');
   const uploadButton=q('#sanro-upload-previews'),uploadStatus=q('#sanro-preview-upload-status');
   if(uploadButton&&config.preview_upload_enabled){
