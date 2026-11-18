@@ -49,6 +49,7 @@ class SanroLockItem {
     public function __construct($product, $quantity = 2) { $this->product = $product; $this->quantity = $quantity; }
     public function get_product_id() { return $this->product; }
     public function get_quantity() { return $this->quantity; }
+    public function get_subtotal() { return '150000.00'; }
 }
 class SanroLockOrder {
     private $items;
@@ -71,5 +72,18 @@ function sanro_studio_quote_size_quantities($product, $design, $quantities, $sle
     if ($product !== 12 || $quantities !== ['M' => 2]) {
         return ['valid' => false, 'error' => 'invalid_quantities'];
     }
-    return ['valid' => true, 'total_quantity' => 2, 'total_price' => 150000];
+    return ['valid' => true, 'total_quantity' => 2, 'total_price' => 150000, 'currency' => 'IDR'];
 }
+
+$priceQuote = ['valid' => true, 'currency' => 'IDR', 'total_price' => 150000];
+class SanroSubtotalFixture {
+    private $subtotal;
+    public function __construct($subtotal) { $this->subtotal = $subtotal; }
+    public function get_subtotal() { return $this->subtotal; }
+}
+verify(sanro_studio_validate_order_item_quote_amount(new SanroSubtotalFixture('150000.00'), $priceQuote)['valid'], 'undiscounted IDR subtotal matches');
+verify(sanro_studio_validate_order_item_quote_amount(new SanroSubtotalFixture('149999.00'), $priceQuote)['error'] === 'order_amount_mismatch', 'underpriced order rejected');
+verify(sanro_studio_validate_order_item_quote_amount(new SanroSubtotalFixture('150000.01'), $priceQuote)['error'] === 'order_amount_mismatch', 'fractional mismatch rejected');
+verify(sanro_studio_validate_order_item_quote_amount(new SanroSubtotalFixture('150000e0'), $priceQuote)['error'] === 'order_amount_unavailable', 'scientific notation rejected');
+$foreignQuote = $priceQuote; $foreignQuote['currency'] = 'USD';
+verify(sanro_studio_validate_order_item_quote_amount(new SanroSubtotalFixture('150000'), $foreignQuote)['error'] === 'order_amount_unavailable', 'foreign currency quote rejected');
