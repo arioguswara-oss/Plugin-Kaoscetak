@@ -33,11 +33,15 @@ function sanro_studio_validate_print_side($objects, $category, $safe_area) {
         return ['valid' => false, 'error' => 'invalid_safe_area'];
     }
     if (count($objects) > 2) return ['valid' => false, 'error' => 'too_many_objects'];
+    // A JSON array of objects is required; associative keys must not bypass object limits.
+    if (array_keys($objects) !== range(0, count($objects) - 1) && $objects !== []) {
+        return ['valid' => false, 'error' => 'invalid_objects'];
+    }
     $seen = [];
     $min_x = $min_y = INF;
     $max_x = $max_y = -INF;
     foreach ($objects as $object) {
-        if (!is_array($object) || !isset($object['type'])
+        if (!is_array($object) || array_diff(array_keys($object), ['type', 'x', 'y', 'width', 'height']) || !isset($object['type'])
             || !in_array($object['type'], ['image', 'text'], true)
             || isset($seen[$object['type']])) {
             return ['valid' => false, 'error' => 'invalid_object_type'];
