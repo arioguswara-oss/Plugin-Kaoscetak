@@ -62,7 +62,11 @@ function sanro_studio_validate_cart_design_identity($contract, $cart_item) {
         || $contract['product_id'] !== $cart_item['product_id']) {
         return ['valid' => false, 'error' => 'cart_identity_mismatch'];
     }
-    if (!is_array($contract['quote']) || !isset($contract['quote']['total_quantity'])
+    if (!is_array($contract['quote']) || ($contract['quote']['valid'] ?? null) !== true
+        || ($contract['quote']['currency'] ?? null) !== 'IDR'
+        || !isset($contract['quote']['total_price'])
+        || !is_int($contract['quote']['total_price']) || $contract['quote']['total_price'] <= 0
+        || !isset($contract['quote']['total_quantity'])
         || !is_int($contract['quote']['total_quantity'])
         || !isset($cart_item['quantity']) || !is_int($cart_item['quantity'])
         || $cart_item['quantity'] !== $contract['quote']['total_quantity']) {
