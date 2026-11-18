@@ -102,13 +102,24 @@ try {
     $failed_closed = true;
 }
 gate_check($failed_closed, 'order metadata cannot bind without request authorization');
-$GLOBALS['sanro_studio_checkout_verified'] = ['contract'=>$contract];
+$GLOBALS['sanro_studio_checkout_verified'] = ['contract'=>$contract, 'bound_sizes'=>[]];
 $order_line = new GateOrderItem('130000.00');
 sanro_studio_stage_checkout_create_order_line_item(
     $order_line, 'key', $GLOBALS['gate_wc']->cart->lines[0], null
 );
 gate_check($order_line->get_meta('_sanro_studio_size')==='M', 'verified order item bound');
 gate_check($order_line->get_meta('_sanro_studio_design_id')===$id, 'verified order design bound');
+$duplicate_rejected = false;
+try {
+    sanro_studio_stage_checkout_create_order_line_item(
+        new GateOrderItem('130000.00'), 'duplicate',
+        $GLOBALS['gate_wc']->cart->lines[0], null
+    );
+} catch (RuntimeException $exception) {
+    $duplicate_rejected = true;
+}
+gate_check($duplicate_rejected, 'duplicate size binding rejected');
+gate_check(count($GLOBALS['sanro_studio_checkout_verified']['bound_sizes'])===1, 'bound size tracked once');
 unset($GLOBALS['sanro_studio_checkout_verified']);
 function wp_verify_nonce($nonce, $action) {
     return $nonce === 'validnonce' && $action === 'sanro_studio_checkout_auth';
@@ -124,4 +135,4 @@ $_POST['sanro_studio_checkout_token'] = 'not-a-token';
 gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'invalid token rejected');
 unset($_POST['sanro_studio_checkout_token'], $_POST['sanro_studio_checkout_nonce']);
 gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'missing checkout credentials rejected');
-echo "PASS: 23 checkout gate checks\n";
+echo "PASS: 25 checkout gate checks\n";
