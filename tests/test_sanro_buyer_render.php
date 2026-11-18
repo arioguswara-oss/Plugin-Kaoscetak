@@ -13,6 +13,7 @@ $GLOBALS['config'] = ['valid'=>true,'product_id'=>17,'unit'=>'cm',
 function absint($v) { return abs((int)$v); }
 function get_option($key, $default=false) { return $default; }
 function esc_html($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
+function esc_attr($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
 function is_product() { return true; }
 function get_queried_object_id() { return 17; }
 function sanro_studio_public_editor_config($id) { return $GLOBALS['config']; }
