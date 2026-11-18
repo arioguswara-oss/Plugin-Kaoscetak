@@ -38,6 +38,8 @@ function sanro_studio_render_buyer_editor() {
     // Supply API bootstrap only on explicitly enabled staging; no owner token
     // is ever included in page HTML or a shared JavaScript configuration.
     if (function_exists('sanro_studio_draft_rest_enabled') && sanro_studio_draft_rest_enabled()) {
+        // Do not serve stale per-page nonce bootstrap through page caches.
+        if (function_exists('nocache_headers')) nocache_headers();
         $config['draft_api'] = [
             'url' => esc_url_raw(rest_url('sanro-studio/v1/drafts')),
             'nonce' => wp_create_nonce('sanro_studio_draft'),
