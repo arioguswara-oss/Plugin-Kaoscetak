@@ -28,6 +28,7 @@
    if(pieces>5000)return null;
    total+=count*p;
   }
+  if(pieces===0)return null;
   return {pieces,total,currency:'IDR'};
  }
  return Object.freeze({unit,estimate});
