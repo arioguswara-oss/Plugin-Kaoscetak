@@ -131,6 +131,40 @@ function sanro_studio_prepare_size_cart_lines($contract) {
 }
 
 /**
+ * Reconcile a full set of WooCommerce cart candidates with a fresh authorized
+ * server quote. This is a fail-closed boundary, not an add-to-cart hook.
+ * Do not accept browser prices or owner tokens as persisted cart metadata.
+ */
+function sanro_studio_validate_size_cart_lines($contract, $lines) {
+    $expected = sanro_studio_prepare_size_cart_lines($contract);
+    if (empty($expected['valid'])) return $expected;
+    if (!is_array($lines) || count($lines) !== count($expected['lines'])) {
+        return ['valid' => false, 'error' => 'cart_line_count_mismatch'];
+    }
+    $by_size = [];
+    foreach ($expected['lines'] as $line) $by_size[$line['sanro_studio_size']] = $line;
+    foreach ($lines as $line) {
+        if (!is_array($line) || !isset($line['sanro_studio_size'])
+            || !is_string($line['sanro_studio_size'])
+            || !isset($by_size[$line['sanro_studio_size']])) {
+            return ['valid' => false, 'error' => 'cart_size_mismatch'];
+        }
+        $size = $line['sanro_studio_size'];
+        foreach (['product_id','quantity','sanro_studio_design_id',
+            'sanro_studio_size','sanro_studio_unit_price',
+            'sanro_studio_line_subtotal','sanro_studio_quote_currency'] as $key) {
+            if (!array_key_exists($key, $line) || $line[$key] !== $by_size[$size][$key]) {
+                return ['valid' => false, 'error' => 'cart_line_mismatch'];
+            }
+        }
+        unset($by_size[$size]);
+    }
+    if ($by_size) return ['valid' => false, 'error' => 'cart_missing_size'];
+    return ['valid' => true, 'total_quantity' => $expected['total_quantity'],
+        'total_price' => $expected['total_price'], 'cart_mutation_enabled' => false];
+}
+
+/**
  * Verify a cart item's public design identity against a freshly authorized
  * draft contract. This does not add products or change WooCommerce prices.
  * Caller must hold the owner token transiently; never put it in cart metadata.
