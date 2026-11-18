@@ -150,6 +150,14 @@ try {
 }
 gate_check($incomplete_rejected, 'incomplete batch rejected before save');
 unset($GLOBALS['sanro_studio_checkout_verified']);
+$missing_guard_rejected = false;
+try {
+    sanro_studio_stage_checkout_verify_order_batch($validOrder, []);
+} catch (RuntimeException $exception) { $missing_guard_rejected = true; }
+gate_check($missing_guard_rejected, 'final save rejects Studio cart without authorization');
+$GLOBALS['gate_wc']->cart->lines = [];
+sanro_studio_stage_checkout_verify_order_batch($validOrder, []);
+gate_check(true, 'ordinary cart remains unaffected by final save guard');
 function wp_verify_nonce($nonce, $action) {
     return $nonce === 'validnonce' && $action === 'sanro_studio_checkout_auth';
 }
@@ -164,4 +172,4 @@ $_POST['sanro_studio_checkout_token'] = 'not-a-token';
 gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'invalid token rejected');
 unset($_POST['sanro_studio_checkout_token'], $_POST['sanro_studio_checkout_nonce']);
 gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'missing checkout credentials rejected');
-echo "PASS: 29 checkout gate checks\n";
+echo "PASS: 31 checkout gate checks\n";
