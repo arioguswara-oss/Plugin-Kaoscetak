@@ -14,7 +14,7 @@ class SanroQuoteProductFixture {
     public function get_status() { return 'publish'; }
     public function is_purchasable() { return true; }
 }
-function wc_get_product($id) { return $id === 17 ? new SanroQuoteProductFixture() : false; }
+function wc_get_product($id) { return in_array($id, [17, 18], true) ? new SanroQuoteProductFixture() : false; }
 function get_post_meta($id, $key, $single) { return $GLOBALS['fixture_meta'][$id][$key] ?? null; }
 foreach (['print-area', 'product-area', 'pricing', 'quote'] as $file) {
     require __DIR__ . '/../plugins/sanro-studio/includes/' . $file . '.php';
