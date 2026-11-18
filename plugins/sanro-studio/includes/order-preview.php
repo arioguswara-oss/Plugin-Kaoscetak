@@ -373,3 +373,26 @@ function sanro_studio_order_item_production_manifest($order, $item_id) {
         'drive_url' => null,
     ];
 }
+
+/**
+ * Admin-only production readiness transition. Never accepts a buyer request,
+ * never changes payment status, and never creates a Drive folder.
+ */
+function sanro_studio_mark_order_production_ready($order) {
+    if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) {
+        return ['valid' => false, 'error' => 'forbidden'];
+    }
+    if (!is_object($order) || !method_exists($order, 'get_id')
+        || !method_exists($order, 'get_meta') || !method_exists($order, 'update_meta_data')
+        || !method_exists($order, 'save') || (int) $order->get_id() < 1) {
+        return ['valid' => false, 'error' => 'invalid_order'];
+    }
+    if ($order->get_meta('_sanro_studio_production_ready', true) === 'yes') {
+        return ['valid' => true, 'already_ready' => true];
+    }
+    $order->update_meta_data('_sanro_studio_production_ready', 'yes');
+    if ($order->save() === false) {
+        return ['valid' => false, 'error' => 'production_ready_save_failed'];
+    }
+    return ['valid' => true, 'already_ready' => false];
+}
