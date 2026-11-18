@@ -1,7 +1,7 @@
 <?php
 /** Fail-closed order lock boundary: wrong/missing design cannot mutate a draft. */
 define('ABSPATH', __DIR__);
-function current_user_can($cap) { return $cap === 'manage_woocommerce'; }
+function current_user_can($cap) { global $sanro_test_admin; return $sanro_test_admin && $cap === 'manage_woocommerce'; }
 function get_option($key, $default=false) {
     global $sanro_test_draft_id, $sanro_test_token;
     if ($key !== 'sanro_studio_draft_' . $sanro_test_draft_id) return $default;
@@ -29,6 +29,7 @@ final class SanroStudioLockOrder {
     public function get_items($type='line_item') { return [7=>$this->item]; }
 }
 $id='11111111-1111-4111-8111-111111111111';
+$sanro_test_admin=true;
 $sanro_test_draft_id=$id;
 $sanro_test_token=str_repeat('a',64);
 foreach ([
@@ -106,3 +107,18 @@ if (($result['error'] ?? null)!=='order_quantity_mismatch' || $wrong->writes!==0
     fwrite(STDERR,"FAIL: binder_wrong_quantity\n"); exit(1);
 }
 echo "PASS: binder_wrong_quantity\n";
+
+$sanro_test_admin=false;
+$item=new SanroStudioMutableItem();
+$result=sanro_studio_bind_order_item_design_identity($id,$sanro_test_token,new SanroStudioLockOrder($item),7);
+if (($result['error'] ?? null)!=='forbidden' || $item->writes!==0) {
+    fwrite(STDERR,"FAIL: binder_forbidden\n"); exit(1);
+}
+echo "PASS: binder_forbidden\n";
+$sanro_test_admin=true;
+$item=new SanroStudioMutableItem();
+$result=sanro_studio_bind_order_item_design_identity($id,str_repeat('b',64),new SanroStudioLockOrder($item),7);
+if (($result['error'] ?? null)!=='not_found' || $item->writes!==0) {
+    fwrite(STDERR,"FAIL: binder_invalid_owner_token\n"); exit(1);
+}
+echo "PASS: binder_invalid_owner_token\n";
