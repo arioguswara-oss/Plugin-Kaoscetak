@@ -3,7 +3,7 @@
 define('ABSPATH', __DIR__);
 define('DAY_IN_SECONDS', 86400);
 $GLOBALS['record'] = [
-    'product_id' => 12, 'design' => [], 'token_hash' => hash('sha256', str_repeat('a', 64)),
+    'product_id' => 12, 'design' => ['quantities' => ['M' => 2], 'long_sleeve' => false], 'token_hash' => hash('sha256', str_repeat('a', 64)),
     'expires_at' => time() + 3600, 'status' => 'draft',
 ];
 function get_option($key, $default = false) { return $GLOBALS['record']; }
@@ -47,6 +47,7 @@ class SanroLockItem {
     private $product;
     public function __construct($product) { $this->product = $product; }
     public function get_product_id() { return $this->product; }
+    public function get_quantity() { return 2; }
 }
 class SanroLockOrder {
     private $items;
@@ -63,3 +64,10 @@ $wpdb->affected = 1;
 $claimed = sanro_studio_lock_draft_for_order_item($id, $token, $order, 7);
 verify(!empty($claimed['valid']) && $GLOBALS['record']['order_id'] === 30 && $GLOBALS['record']['order_item_id'] === 7, 'matching order item locks draft');
 verify(sanro_studio_lock_draft_for_order_item($id, $token, $order, 7)['error'] === 'draft_locked', 'repeat order lock denied');
+
+function sanro_studio_quote_size_quantities($product, $design, $quantities, $sleeve) {
+    if ($product !== 12 || $quantities !== ['M' => 2]) {
+        return ['valid' => false, 'error' => 'invalid_quantities'];
+    }
+    return ['valid' => true, 'total_quantity' => 2, 'total_price' => 150000];
+}
