@@ -23,4 +23,17 @@ $bad = $contract; $bad['design_id'] = 'not-uuid';
 check_cart(sanro_studio_prepare_cart_line_snapshot($bad)['valid'] === false, 'invalid design id rejected');
 $bad = $contract; $bad['quote']['total_price'] = 0;
 check_cart(sanro_studio_prepare_cart_line_snapshot($bad)['valid'] === false, 'zero quote rejected');
-echo "PASS: 9 isolated cart-line checks\n";
+$priced = $contract;
+$priced['quote']['items'] = [
+    'M' => ['quantity'=>1,'unit_price'=>45000,'subtotal'=>45000],
+    'L' => ['quantity'=>1,'unit_price'=>55000,'subtotal'=>55000],
+];
+$sizeLines = sanro_studio_prepare_size_cart_lines($priced);
+check_cart(($sizeLines['valid'] ?? false) === true && count($sizeLines['lines']) === 2, 'two size lines created');
+check_cart($sizeLines['lines'][0]['sanro_studio_unit_price'] === 45000, 'unit price not total');
+check_cart($sizeLines['total_price'] === 100000, 'sum matches quote');
+$bad = $priced; $bad['quote']['items']['L']['subtotal'] = 1;
+check_cart(sanro_studio_prepare_size_cart_lines($bad)['valid'] === false, 'tampered size subtotal rejected');
+$bad = $priced; $bad['quote']['items']['L']['quantity'] = 2; $bad['quote']['items']['L']['subtotal'] = 110000;
+check_cart(sanro_studio_prepare_size_cart_lines($bad)['valid'] === false, 'tampered aggregate rejected');
+echo "PASS: 14 isolated cart-line checks\n";
