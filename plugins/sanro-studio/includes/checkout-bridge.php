@@ -40,3 +40,37 @@ function sanro_studio_prepare_checkout_order_item($contract, $cart_item, $order_
         'checkout_enabled' => false,
     ];
 }
+
+/**
+ * Verify a WooCommerce order line against one server-priced size candidate.
+ * Only after all lines are verified may the caller bind the design metadata.
+ * No hook or order write is performed by this helper.
+ */
+function sanro_studio_validate_size_order_item($candidate, $order_item) {
+    if (!is_array($candidate) || !is_object($order_item)
+        || !method_exists($order_item, 'get_product_id')
+        || !method_exists($order_item, 'get_quantity')
+        || !method_exists($order_item, 'get_subtotal')
+        || !isset($candidate['product_id'], $candidate['quantity'],
+            $candidate['sanro_studio_line_subtotal'], $candidate['sanro_studio_size'])
+        || !is_int($candidate['product_id']) || !is_int($candidate['quantity'])
+        || !is_int($candidate['sanro_studio_line_subtotal'])
+        || $candidate['quantity'] < 1
+        || !in_array($candidate['sanro_studio_size'], ['S','M','L','XL','2XL','3XL','4XL','5XL'], true)
+        || $order_item->get_product_id() !== $candidate['product_id']
+        || $order_item->get_quantity() !== $candidate['quantity']) {
+        return ['valid' => false, 'error' => 'size_order_identity_mismatch'];
+    }
+    $subtotal = $order_item->get_subtotal();
+    if ((!is_string($subtotal) && !is_int($subtotal) && !is_float($subtotal))
+        || !preg_match('/^(?:0|[1-9][0-9]*)(?:\\.[0-9]{1,2})?$/D', (string) $subtotal)) {
+        return ['valid' => false, 'error' => 'size_order_amount_invalid'];
+    }
+    $parts = explode('.', (string) $subtotal, 2);
+    if ($parts[0] !== (string) $candidate['sanro_studio_line_subtotal']
+        || str_pad($parts[1] ?? '', 2, '0') !== '00') {
+        return ['valid' => false, 'error' => 'size_order_amount_mismatch'];
+    }
+    return ['valid' => true, 'size' => $candidate['sanro_studio_size'],
+        'design_id' => $candidate['sanro_studio_design_id'] ?? null];
+}
