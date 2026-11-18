@@ -16,6 +16,7 @@ require_once __DIR__ . '/includes/core.php';
 require_once __DIR__ . '/includes/print-area.php';
 require_once __DIR__ . '/includes/product-area.php';
 require_once __DIR__ . '/includes/pricing.php';
+require_once __DIR__ . '/includes/quote.php';
 require_once __DIR__ . '/includes/runtime.php';
 require_once __DIR__ . '/includes/admin.php';
 
