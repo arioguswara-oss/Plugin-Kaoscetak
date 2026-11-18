@@ -96,6 +96,10 @@ function sanro_studio_rest_upload_preview($request) {
     if (!sanro_studio_preview_upload_enabled()) {
         return new WP_Error('sanro_preview_disabled', 'Preview uploads unavailable.', ['status' => 403]);
     }
+    $expected_hash = $request->get_param('design_hash');
+    if (!is_string($expected_hash) || !preg_match('/^[a-f0-9]{64}$/D', $expected_hash)) {
+        return new WP_Error('sanro_revision_required', 'Draft revision required.', ['status' => 409]);
+    }
     $encoded = $request->get_param('image_base64');
     if (!is_string($encoded) || strlen($encoded) > 70000
         || !preg_match('/^[A-Za-z0-9+\\/]+={0,2}$/D', $encoded)) {
@@ -236,9 +240,13 @@ function sanro_studio_rest_upload_master($request) {
         if (!set_transient($budget_key, $count === false ? 1 : $count + 1, HOUR_IN_SECONDS)) {
             return new WP_Error('sanro_master_unavailable', 'Upload unavailable.', ['status' => 503]);
         }
+        if (!isset($current['design_hash'])
+            || !hash_equals($current['design_hash'], $expected_hash)) {
+            return new WP_Error('sanro_draft_conflict', 'Draft changed. Reload before upload.', ['status' => 409]);
+        }
         $stored = sanro_studio_store_owned_draft_master($id, $token, $side, $bytes);
         if (empty($stored['valid'])) return sanro_studio_rest_draft_response($stored);
-        $bound = sanro_studio_bind_owned_draft_master($id, $token, $side, $stored['file_id']);
+        $bound = sanro_studio_bind_owned_draft_master($id, $token, $side, $stored['file_id'], $expected_hash);
         if (empty($bound['valid'])) return sanro_studio_rest_draft_response($bound);
     } finally {
         $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock_name));
