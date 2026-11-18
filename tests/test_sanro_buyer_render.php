@@ -37,9 +37,9 @@ register_shutdown_function(function () {
         'CSS path'=>isset($assets[0]) && strpos($assets[0][1][1],'/sanro-studio/assets/buyer.css')!==false,
         'estimate JS path'=>isset($assets[1]) && strpos($assets[1][1][1],'/sanro-studio/assets/estimate.js')!==false,
         'buyer JS path'=>isset($assets[2]) && strpos($assets[2][1][1],'/sanro-studio/assets/buyer.js')!==false,
-        'public config'=>isset($assets[2]) && strpos($assets[3][1][1],'"product_id":17')!==false,
-        'no owner token'=>isset($assets[2]) && strpos($assets[3][1][1],'owner_token')===false,
-        'inline script escaped'=>isset($assets[2]) && strpos($assets[3][1][1],'</script>')===false && strpos($assets[3][1][1],'\\u003C')!==false,
+        'public config'=>isset($assets[3]) && strpos($assets[3][1][1],'"product_id":17')!==false,
+        'no owner token'=>isset($assets[3]) && strpos($assets[3][1][1],'owner_token')===false,
+        'inline script escaped'=>isset($assets[3]) && strpos($assets[3][1][1],'</script>')===false && strpos($assets[3][1][1],'\\u003C')!==false,
     ];
     ob_end_clean();
     foreach ($assertions as $label=>$ok) {
