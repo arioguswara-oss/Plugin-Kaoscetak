@@ -48,7 +48,7 @@ class SanroMutablePreviewItem {
     public function get_meta($key, $single = true) { return $this->meta[$key] ?? ''; }
     public function get_product_id() { return 12; }
     public function update_meta_data($key, $value) { $this->meta[$key] = $value; }
-    public function save() { $this->saves++; }
+    public function save() { $this->saves++; return $GLOBALS['preview_save_result'] ?? 1; }
 }
 function sanro_studio_read_draft($id, $token) {
     return ['valid' => true, 'status' => 'draft', 'product_id' => 12];
@@ -69,3 +69,9 @@ $otherDesignRef = $otherId . '-back-' . str_repeat('c', 64) . '.png';
 verify(sanro_studio_attach_item_preview_refs($previewOrder, 20, $otherId, 'owner', ['back' => $otherDesignRef])['error'] === 'design_conflict', 'cross-design preview refused');
 verify($mutable->get_meta('_sanro_studio_preview_front_ref') === $ref
     && $mutable->get_meta('_sanro_studio_preview_back_ref') === '', 'conflicts leave existing references intact');
+
+$GLOBALS['preview_save_result'] = false;
+$failedSaveItem = new SanroMutablePreviewItem();
+$failedSaveOrder = new SanroItemPreviewOrderFixture([30 => $failedSaveItem]);
+verify(sanro_studio_attach_item_preview_refs($failedSaveOrder, 30, $id, 'owner', ['front' => $ref])['error'] === 'preview_save_failed', 'failed WooCommerce item save not reported as success');
+unset($GLOBALS['preview_save_result']);
