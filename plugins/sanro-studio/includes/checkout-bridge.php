@@ -106,3 +106,33 @@ function sanro_studio_prepare_size_checkout_order_item($candidate, $order_item) 
         'size' => $verified['size'], 'requires_item_save' => true,
         'checkout_enabled' => false];
 }
+
+/**
+ * Validate a complete set of unsaved WooCommerce order items before binding
+ * any design metadata. Never partially bind a multi-size order.
+ */
+function sanro_studio_validate_size_checkout_batch($contract, $order_items) {
+    if (!function_exists('sanro_studio_prepare_size_cart_lines')) {
+        return ['valid' => false, 'error' => 'cart_contract_unavailable'];
+    }
+    $expected = sanro_studio_prepare_size_cart_lines($contract);
+    if (empty($expected['valid'])) return $expected;
+    if (!is_array($order_items) || count($order_items) !== count($expected['lines'])) {
+        return ['valid' => false, 'error' => 'order_line_count_mismatch'];
+    }
+    // Explicit size keys are necessary: product ID alone cannot distinguish
+    // two different size lines for the same shirt design.
+    $remaining = [];
+    foreach ($expected['lines'] as $line) $remaining[$line['sanro_studio_size']] = $line;
+    foreach ($order_items as $size => $item) {
+        if (!is_string($size) || !isset($remaining[$size])) {
+            return ['valid' => false, 'error' => 'order_size_mismatch'];
+        }
+        $result = sanro_studio_validate_size_order_item($remaining[$size], $item);
+        if (empty($result['valid'])) return $result;
+        unset($remaining[$size]);
+    }
+    if ($remaining) return ['valid' => false, 'error' => 'order_missing_size'];
+    return ['valid' => true, 'total_price' => $expected['total_price'],
+        'total_quantity' => $expected['total_quantity'], 'checkout_enabled' => false];
+}
