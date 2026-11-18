@@ -62,6 +62,7 @@ add_action('template_redirect', 'sanro_studio_render_buyer_editor', 20);
 
 // Admin-only, read-only order preview status; no public file delivery.
 add_action('woocommerce_admin_order_data_after_order_details', 'sanro_studio_admin_order_preview_status');
+add_action('woocommerce_admin_order_data_after_order_details', 'sanro_studio_admin_production_status', 15);
 
 // Authenticated admin-post route; never register a nopriv counterpart.
 add_action('admin_post_sanro_studio_order_preview', 'sanro_studio_admin_deliver_order_preview');
