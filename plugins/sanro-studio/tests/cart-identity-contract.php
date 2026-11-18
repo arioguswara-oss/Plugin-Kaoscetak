@@ -27,3 +27,21 @@ foreach ($cases as $name => [$input, $cart, $valid, $error]) {
     }
     echo "PASS: $name\n";
 }
+
+$totals_cases = [
+    'valid_total' => ['IDR', 90000, true],
+    'price_tampered' => ['IDR', 1, false],
+    'currency_tampered' => ['USD', 90000, false],
+    'string_total' => ['IDR', '90000', false],
+    'negative_total' => ['IDR', -90000, false],
+];
+foreach ($totals_cases as $name => [$currency, $total, $expected]) {
+    $result = sanro_studio_validate_checkout_totals($contract, $item, $currency, $total);
+    if (($result['valid'] ?? false) !== $expected
+        || (!$expected && ($result['error'] ?? null) !== 'checkout_total_mismatch')
+        || ($result['checkout_enabled'] ?? false) !== false) {
+        fwrite(STDERR, "FAIL: $name\n");
+        exit(1);
+    }
+    echo "PASS: $name\n";
+}
