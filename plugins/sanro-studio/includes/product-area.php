@@ -38,7 +38,7 @@ function sanro_studio_validate_product_design($product_id, $design) {
         if (array_key_exists('text', $geometry[$side])) {
             $value = $geometry[$side]['text'];
             if (!is_string($value) || strlen($value) > 1200
-                || preg_match('/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]/', $value)) {
+                || preg_match('~[\x00-\x08\x0B\x0C\x0E-\x1F]~', $value)) {
                 return ['valid' => false, 'error' => 'invalid_text'];
             }
             $has_text = false;
