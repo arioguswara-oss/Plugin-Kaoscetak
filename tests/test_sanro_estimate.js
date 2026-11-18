@@ -24,5 +24,7 @@ for(const result of [
  price.unit('S','A5',null,1),price.estimate({S:-1},'A5',null),
  price.estimate({S:1.5},'A5',null),price.estimate({S:1000},'A5',null),
  price.estimate({BAD:1},'A5',null),price.estimate(null,'A5',null),
+ price.estimate({S:999,M:999,L:999,XL:999,'2XL':999,'3XL':6},'A5',null),
 ]){assert.equal(result,null);checks++;}
+assert.equal(price.estimate({S:999,M:999,L:999,XL:999,'2XL':999,'3XL':5},'A5',null).pieces,5000);checks++;
 console.log('SANRO estimator: '+checks+' assertions PASS, 0 FAIL');
