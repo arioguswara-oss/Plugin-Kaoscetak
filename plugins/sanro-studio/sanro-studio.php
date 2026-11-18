@@ -58,3 +58,6 @@ add_action('woocommerce_admin_order_data_after_order_details', 'sanro_studio_adm
 
 // Authenticated admin-post route; never register a nopriv counterpart.
 add_action('admin_post_sanro_studio_order_preview', 'sanro_studio_admin_deliver_order_preview');
+
+// Per-line-item admin previews; no buyer-facing file URL.
+add_action('woocommerce_after_order_itemmeta', 'sanro_studio_admin_item_preview_status', 10, 3);
