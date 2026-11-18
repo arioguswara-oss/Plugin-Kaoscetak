@@ -243,6 +243,8 @@ function sanro_studio_attach_item_preview_refs($order, $item_id, $design_id, $ow
     }
     // Bind the line item to one design, and never silently replace a preview.
     // Reattaching the same references is idempotent; conflicts fail closed.
+    // Reject a second design before touching metadata; require a complete
+    // pair of references when an item is first bound to its design.
     $bound_design = $item->get_meta('_sanro_studio_design_id', true);
     if ($bound_design !== '' && $bound_design !== $design_id) {
         return ['valid' => false, 'error' => 'design_conflict'];
@@ -257,7 +259,10 @@ function sanro_studio_attach_item_preview_refs($order, $item_id, $design_id, $ow
     foreach ($refs as $side => $ref) {
         $item->update_meta_data('_sanro_studio_preview_' . $side . '_ref', $ref);
     }
-    $item->save();
+    $saved = $item->save();
+    if ($saved === false) {
+        return ['valid' => false, 'error' => 'preview_save_failed'];
+    }
     return ['valid' => true, 'item_id' => $item_id, 'attached_sides' => array_keys($refs)];
 }
 
