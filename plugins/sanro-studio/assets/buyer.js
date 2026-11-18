@@ -304,13 +304,16 @@
   const ctx=canvas.getContext('2d');
   if(!ctx)throw new Error('Canvas tidak tersedia.');
   ctx.fillStyle=shirtColor.value;ctx.fillRect(0,0,640,640);
-  const scale=640/Math.max(safe.clientWidth,1);
+  const width=safe.clientWidth,height=safe.clientHeight;
+  if(width<=0||height<=0)throw new Error('Area preview belum siap.');
+  const scale=640/width;
+  const fontPx=Math.max(10,Math.round(d.fontSize*scale));
+  const x=d.textX/100*640,y=d.textY/100*height*scale;
   ctx.fillStyle=d.textColor;
-  ctx.font=Math.max(10,Math.round(d.fontSize*scale))+'px sans-serif';
+  ctx.font=fontPx+'px sans-serif';
   ctx.textBaseline='top';
   const lines=d.text.split('\\n');
-  const x=d.textX*6.4,y=d.textY*6.4;
-  lines.forEach((line,i)=>ctx.fillText(line,x,y+i*d.fontSize*scale*1.2,640-x));
+  lines.forEach((line,i)=>ctx.fillText(line,x,y+i*fontPx*1.2,Math.max(0,640-x)));
   for(const quality of [0.75,0.55,0.35,0.2]){
    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
    if(blob&&blob.size>=100&&blob.size<=51200){
