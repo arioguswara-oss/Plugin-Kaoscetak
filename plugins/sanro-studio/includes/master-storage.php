@@ -181,3 +181,49 @@ function sanro_studio_read_owned_draft_master($design_id, $owner_token, $side, $
         'sha256' => $checked['sha256'], 'width' => $checked['width'],
         'height' => $checked['height']];
 }
+
+/**
+ * Bind a verified private master to an editable draft using an atomic option
+ * compare-and-swap. Never trust a client-provided file ID without readback.
+ * No REST route is registered; upload quotas and buyer API remain prerequisites.
+ */
+function sanro_studio_bind_owned_draft_master($design_id, $owner_token, $side, $file_id) {
+    if (!in_array($side, ['front', 'back'], true)) {
+        return ['valid' => false, 'error' => 'invalid_master_target'];
+    }
+    $verified = sanro_studio_read_owned_draft_master($design_id, $owner_token, $side, $file_id);
+    if (empty($verified['valid'])) return $verified;
+    global $wpdb;
+    if (!isset($wpdb) || !is_object($wpdb) || !isset($wpdb->options)
+        || !preg_match('/^[A-Za-z0-9_]+$/D', $wpdb->options)
+        || !method_exists($wpdb, 'prepare') || !method_exists($wpdb, 'query')
+        || !function_exists('get_option') || !function_exists('maybe_serialize')
+        || !function_exists('wp_cache_delete')) {
+        return ['valid' => false, 'error' => 'storage_unavailable'];
+    }
+    $key = 'sanro_studio_draft_' . $design_id;
+    $before = get_option($key, false);
+    if (!is_array($before) || ($before['status'] ?? null) !== 'draft'
+        || !isset($before['token_hash'], $before['expires_at'])
+        || !is_string($before['token_hash']) || !is_int($before['expires_at'])
+        || $before['expires_at'] <= time()
+        || !hash_equals($before['token_hash'], hash('sha256', $owner_token))) {
+        return ['valid' => false, 'error' => 'draft_conflict'];
+    }
+    $after = $before;
+    if (!isset($after['master_refs']) || !is_array($after['master_refs'])) {
+        $after['master_refs'] = [];
+    }
+    $after['master_refs'][$side] = $file_id;
+    $after['updated_at'] = max(time(), (int) ($before['updated_at'] ?? $before['created_at'] ?? 0) + 1);
+    $changed = $wpdb->query($wpdb->prepare(
+        "UPDATE `{$wpdb->options}` SET option_value = %s WHERE option_name = %s AND BINARY option_value = BINARY %s",
+        maybe_serialize($after), $key, maybe_serialize($before)
+    ));
+    if ($changed !== 1) {
+        return ['valid' => false, 'error' => $changed === false ? 'storage_failed' : 'draft_conflict'];
+    }
+    wp_cache_delete($key, 'options');
+    return ['valid' => true, 'design_id' => $design_id, 'side' => $side,
+        'file_id' => $file_id, 'sha256' => $verified['sha256']];
+}
