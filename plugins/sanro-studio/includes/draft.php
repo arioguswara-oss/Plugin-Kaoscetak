@@ -132,7 +132,7 @@ function sanro_studio_update_draft($id, $token, $design) {
  */
 function sanro_studio_cleanup_expired_drafts($limit = 50, $after_id = 0) {
     global $wpdb;
-    $empty = ['scanned' => 0, 'deleted' => 0, 'next_cursor' => 0, 'has_more' => false];
+    $empty = ['scanned' => 0, 'deleted' => 0, 'next_cursor' => max(0, (int) $after_id), 'has_more' => false];
     if (!is_object($wpdb) || !isset($wpdb->options)
         || !preg_match('/^[A-Za-z0-9_]+$/D', $wpdb->options)
         || !method_exists($wpdb, 'get_results') || !method_exists($wpdb, 'prepare')
@@ -142,6 +142,7 @@ function sanro_studio_cleanup_expired_drafts($limit = 50, $after_id = 0) {
     }
     $limit = max(1, min(100, (int) $limit));
     $after_id = max(0, (int) $after_id);
+    if (!defined('ARRAY_A')) return $empty + ['error' => 'storage_unavailable'];
     $rows = $wpdb->get_results($wpdb->prepare(
         "SELECT option_id, option_name, option_value FROM `{$wpdb->options}`
          WHERE option_id > %d AND option_name LIKE %s
