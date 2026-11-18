@@ -10,7 +10,7 @@
  function render(){
   const d=sides[side];q('#sanro-text-input').value=d.text;q('#sanro-image-size').value=d.imageSize;
   q('#sanro-font-size').value=d.fontSize;q('#sanro-category').value=d.category;
-  image.hidden=!d.url;if(d.url&&image.src!==d.url)image.src=d.url;
+  image.hidden=!d.url;if(d.url&&image.getAttribute('src')!==d.url)image.setAttribute('src',d.url);if(!d.url)image.removeAttribute('src');
   image.style.left=d.imageX+'%';image.style.top=d.imageY+'%';image.style.width=d.imageSize+'%';
   text.hidden=!d.text;text.textContent=d.text;text.style.left=d.textX+'%';text.style.top=d.textY+'%';text.style.fontSize=d.fontSize+'px';
   root.querySelectorAll('[data-side]').forEach(b=>{b.disabled=!config.safe_areas[b.dataset.side];b.setAttribute('aria-pressed',String(b.dataset.side===side))});
@@ -41,11 +41,11 @@
   const file=e.target.files[0];if(!file)return;
   if(!['image/png','image/jpeg'].includes(file.type)||file.size>10485760){q('#sanro-validation').textContent='File ditolak: PNG/JPEG maksimal 10 MB';e.target.value='';return}
   const target=sides[side],url=URL.createObjectURL(file),probe=new Image();
-  probe.onload=()=>{if(target.url)URL.revokeObjectURL(target.url);target.url=url;render()};
-  probe.onerror=()=>{URL.revokeObjectURL(url);q('#sanro-validation').textContent='Gambar tidak valid'};
-  probe.src=url;e.target.value='';
+  probe.onload=()=>{if(target.pending!==url){URL.revokeObjectURL(url);return}if(target.url)URL.revokeObjectURL(target.url);target.url=url;target.pending=null;render()};
+  probe.onerror=()=>{URL.revokeObjectURL(url);if(target.pending===url){target.pending=null;q('#sanro-validation').textContent='Gambar tidak valid'}};
+  target.pending=url;probe.src=url;e.target.value='';
  });
- q('#sanro-remove-image').addEventListener('click',()=>{const d=sides[side];if(d.url)URL.revokeObjectURL(d.url);d.url=null;image.removeAttribute('src');render()});
+ q('#sanro-remove-image').addEventListener('click',()=>{const d=sides[side];if(d.url)URL.revokeObjectURL(d.url);d.url=null;d.pending=null;image.removeAttribute('src');render()});
  function drag(el,prefix){let start=null;el.addEventListener('pointerdown',e=>{if(el.hidden)return;const d=sides[side];start={side,x:e.clientX,y:e.clientY,px:d[prefix+'X'],py:d[prefix+'Y']};el.setPointerCapture(e.pointerId)});
  el.addEventListener('pointermove',e=>{if(!start)return;const d=sides[start.side],rect=safe.getBoundingClientRect();if(!rect.width||!rect.height)return;
   d[prefix+'X']=Math.max(0,Math.min(100-el.offsetWidth/rect.width*100,start.px+(e.clientX-start.x)/rect.width*100));
