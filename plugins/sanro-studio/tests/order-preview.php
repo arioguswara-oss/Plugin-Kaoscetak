@@ -135,3 +135,17 @@ verify($pendingManifest['valid'] && !$pendingManifest['eligible']
     && !$pendingManifest['ready_for_drive_integration'], 'pending item not Drive-ready');
 verify(sanro_studio_order_item_production_manifest($paidOrder, 99)['error'] === 'invalid_order_item',
     'unknown item cannot produce manifest');
+
+$crossDesign = new SanroOrderPreviewFixture([
+    '_sanro_studio_design_id' => $otherId,
+    '_sanro_studio_preview_front_ref' => $ref,
+]);
+$crossOrder = new SanroProductionItemOrderFixture([52 => $crossDesign], true);
+verify(sanro_studio_order_item_production_manifest($crossOrder, 52)['error'] === 'preview_design_mismatch',
+    'paid order cannot use another design preview in production manifest');
+$noPreview = new SanroOrderPreviewFixture(['_sanro_studio_design_id' => $id]);
+$noPreviewOrder = new SanroProductionItemOrderFixture([53 => $noPreview], true);
+$noPreviewManifest = sanro_studio_order_item_production_manifest($noPreviewOrder, 53);
+verify($noPreviewManifest['valid'] && $noPreviewManifest['eligible']
+    && !$noPreviewManifest['ready_for_drive_integration'],
+    'paid order without preview remains ineligible for Drive integration');
