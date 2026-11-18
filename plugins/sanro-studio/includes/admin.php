@@ -7,9 +7,6 @@ function sanro_studio_admin_menu() {
 }
 
 function sanro_studio_save_settings() {
-    if (!defined('SANRO_STUDIO_ENABLE_LEGACY_COMPAT') || SANRO_STUDIO_ENABLE_LEGACY_COMPAT !== true) {
-        wp_die('Pengaturan kompatibilitas tidak aktif.', '', ['response' => 403]);
-    }
     if (!current_user_can('manage_options')) {
         wp_die('Akses ditolak.', '', ['response' => 403]);
     }
@@ -17,12 +14,21 @@ function sanro_studio_save_settings() {
         wp_die('Gunakan formulir pengaturan.', '', ['response' => 405]);
     }
     check_admin_referer('sanro_studio_settings');
-    // Dedicated native setting: only published WordPress pages can be selected.
-    $page_id = isset($_POST['editor_page_id']) ? absint(wp_unslash($_POST['editor_page_id'])) : 0;
-    if ($page_id && (get_post_type($page_id) !== 'page' || get_post_status($page_id) !== 'publish')) {
-        wp_die('Halaman editor harus berupa halaman WordPress yang diterbitkan.', '', ['response' => 400]);
+    // Native page selector and legacy preview use distinct actions; do not overwrite either accidentally.
+    $settings_type = isset($_POST['settings_type']) && is_string($_POST['settings_type']) ? sanitize_key(wp_unslash($_POST['settings_type'])) : '';
+    if ($settings_type === 'editor_page') {
+        $page_id = isset($_POST['editor_page_id']) ? absint(wp_unslash($_POST['editor_page_id'])) : 0;
+        if ($page_id && (get_post_type($page_id) !== 'page' || get_post_status($page_id) !== 'publish')) {
+            wp_die('Halaman editor harus berupa halaman WordPress yang diterbitkan.', '', ['response' => 400]);
+        }
+        update_option('sanro_studio_editor_page_id', $page_id, false);
+    } elseif ($settings_type === 'legacy_preview' && defined('SANRO_STUDIO_ENABLE_LEGACY_COMPAT') && SANRO_STUDIO_ENABLE_LEGACY_COMPAT === true) {
+        update_option('sanro_studio_options', [
+            'admin_preview' => isset($_POST['admin_preview']) && $_POST['admin_preview'] === 'yes' ? 'yes' : 'no',
+        ], false);
+    } else {
+        wp_die('Jenis pengaturan tidak valid.', '', ['response' => 400]);
     }
-    update_option('sanro_studio_editor_page_id', $page_id, false);
     wp_safe_redirect(admin_url('admin.php?page=sanro-studio&saved=1'));
     exit;
 }
@@ -96,6 +102,7 @@ function sanro_studio_render_settings() {
     echo '<h2>Pengaturan Umum</h2>';
     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
     echo '<input type="hidden" name="action" value="sanro_studio_save">';
+    echo '<input type="hidden" name="settings_type" value="editor_page">';
     wp_nonce_field('sanro_studio_settings');
     echo '<p><label for="sanro-editor-page">Halaman Editor</label></p>';
     wp_dropdown_pages(['name' => 'editor_page_id', 'id' => 'sanro-editor-page', 'selected' => (int) get_option('sanro_studio_editor_page_id', 0), 'show_option_none' => '— Pilih halaman WordPress —', 'option_none_value' => '0', 'post_status' => 'publish']);
