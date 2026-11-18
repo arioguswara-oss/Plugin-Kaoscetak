@@ -18,6 +18,7 @@ assert_native(!$status['woocommerce_loaded'] && !$status['runtime_dependencies_s
 assert_native(!$status['checkout_enabled'] && !$status['production_ready']
     && !$status['verified_end_to_end'], 'release gates remain closed');
 assert_native(!$status['legacy_compat_enabled'], 'legacy compatibility disabled by default');
+assert_native(!$status['legacy_runtime_loaded'], 'legacy runtime not loaded in native mode');
 function sanro_studio_render_buyer_editor() {}
 function sanro_studio_public_editor_config() {}
 function sanro_studio_validate_product_design() {}
