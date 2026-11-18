@@ -84,7 +84,7 @@ function sanro_studio_update_draft($id, $token, $design) {
     // atomic with respect to a concurrent lock or another editor save.
     global $wpdb;
     if (!isset($wpdb) || !is_object($wpdb) || !isset($wpdb->options)
-        || !method_exists($wpdb, 'update') || !function_exists('maybe_serialize')
+        || !function_exists('maybe_serialize')
         || !function_exists('wp_cache_delete')) {
         return ['valid' => false, 'error' => 'storage_unavailable'];
     }
@@ -99,13 +99,16 @@ function sanro_studio_update_draft($id, $token, $design) {
     $record = $before;
     $record['design'] = $design;
     $record['updated_at'] = max(time(), (int) ($before['updated_at'] ?? $before['created_at'] ?? 0) + 1);
-    $changed = $wpdb->update(
-        $wpdb->options,
-        ['option_value' => maybe_serialize($record)],
-        ['option_name' => $key, 'option_value' => maybe_serialize($before)],
-        ['%s'],
-        ['%s', '%s']
-    );
+    // Compare serialized bytes exactly. wpdb->update() uses the column's
+    // collation, which can be case-insensitive and is unsafe for CAS.
+    if (!method_exists($wpdb, 'prepare') || !method_exists($wpdb, 'query')
+        || !preg_match('/^[A-Za-z0-9_]+$/D', $wpdb->options)) {
+        return ['valid' => false, 'error' => 'storage_unavailable'];
+    }
+    $changed = $wpdb->query($wpdb->prepare(
+        "UPDATE `{$wpdb->options}` SET option_value = %s WHERE option_name = %s AND BINARY option_value = BINARY %s",
+        maybe_serialize($record), $key, maybe_serialize($before)
+    ));
     if ($changed !== 1) {
         return ['valid' => false, 'error' => $changed === false ? 'storage_failed' : 'draft_conflict'];
     }
