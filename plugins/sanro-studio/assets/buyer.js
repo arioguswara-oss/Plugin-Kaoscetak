@@ -661,8 +661,12 @@
   saveButton.addEventListener('click',async()=>{
    if(saving)return;
    let design;
-   try{design=savedId?await exportBoundDraft():exportTextDraft()}
-   catch(error){saveStatus.textContent=error.message;return}
+   try{
+    const hasLocalImage=['front','back'].some(name=>sides[name].url||sides[name].pending);
+    design=savedId?await exportBoundDraft()
+     :hasLocalImage&&config.master_upload_enabled
+      ?exportTextDraft(true,true):exportTextDraft();
+   }catch(error){saveStatus.textContent=error.message;return}
    const revisionAtSave=editRevision;
    saving=true;saveButton.disabled=true;saveStatus.textContent='Menyimpan metadata teks…';
    try{
