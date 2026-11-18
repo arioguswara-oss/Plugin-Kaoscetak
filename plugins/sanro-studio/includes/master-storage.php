@@ -187,7 +187,7 @@ function sanro_studio_read_owned_draft_master($design_id, $owner_token, $side, $
  * compare-and-swap. Never trust a client-provided file ID without readback.
  * No REST route is registered; upload quotas and buyer API remain prerequisites.
  */
-function sanro_studio_bind_owned_draft_master($design_id, $owner_token, $side, $file_id) {
+function sanro_studio_bind_owned_draft_master($design_id, $owner_token, $side, $file_id, $expected_design_hash = null) {
     if (!in_array($side, ['front', 'back'], true)) {
         return ['valid' => false, 'error' => 'invalid_master_target'];
     }
@@ -208,6 +208,15 @@ function sanro_studio_bind_owned_draft_master($design_id, $owner_token, $side, $
         || !is_string($before['token_hash']) || !is_int($before['expires_at'])
         || $before['expires_at'] <= time()
         || !hash_equals($before['token_hash'], hash('sha256', $owner_token))) {
+        return ['valid' => false, 'error' => 'draft_conflict'];
+    }
+    // Optional for internal callers; mandatory at the public REST boundary.
+    // A concurrent draft edit changes this hash and invalidates the upload.
+    if ($expected_design_hash !== null
+        && (!is_string($expected_design_hash)
+            || !preg_match('/^[a-f0-9]{64}$/D', $expected_design_hash)
+            || !isset($before['design']) || !is_array($before['design'])
+            || !hash_equals(hash('sha256', maybe_serialize($before['design'])), $expected_design_hash))) {
         return ['valid' => false, 'error' => 'draft_conflict'];
     }
     $after = $before;
