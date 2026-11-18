@@ -50,11 +50,46 @@ function sanro_studio_preview_upload_enabled() {
 
 function sanro_studio_register_preview_upload_route() {
     if (!sanro_studio_preview_upload_enabled()) return;
+    register_rest_route('sanro-studio/v1', '/drafts/(?P<id>[a-fA-F0-9-]{36})/previews/(?P<side>front|back)/(?P<file_id>[a-f0-9-]{36}-(?:front|back)-[a-f0-9]{64}\\.(?:png|jpg|webp))', [
+        'methods' => 'GET',
+        'callback' => 'sanro_studio_rest_read_preview',
+        'permission_callback' => 'sanro_studio_rest_draft_nonce',
+    ]);
     register_rest_route('sanro-studio/v1', '/drafts/(?P<id>[a-fA-F0-9-]{36})/previews/(?P<side>front|back)', [
         'methods' => 'POST',
         'callback' => 'sanro_studio_rest_upload_preview',
         'permission_callback' => 'sanro_studio_rest_draft_nonce',
     ]);
+}
+
+/**
+ * Owner-authorized private preview readback for draft restoration.
+ * File IDs are immutable content-addressed references, never public URLs.
+ * This does not restore or persist original print-resolution masters.
+ */
+function sanro_studio_rest_read_preview($request) {
+    if (!sanro_studio_preview_upload_enabled()) {
+        return new WP_Error('sanro_preview_disabled', 'Preview unavailable.', ['status' => 403]);
+    }
+    $result = sanro_studio_read_owned_draft_preview(
+        $request->get_param('id'), $request->get_header('X-Sanro-Owner-Token'),
+        $request->get_param('side'), $request->get_param('file_id')
+    );
+    if (empty($result['valid'])) {
+        $error = $result['error'] ?? 'preview_not_found';
+        $status = $error === 'draft_expired' ? 410
+            : (in_array($error, ['invalid_credentials', 'not_found', 'preview_not_found'], true) ? 404 : 400);
+        return new WP_Error('sanro_' . $error, 'Preview unavailable.', ['status' => $status]);
+    }
+    if (function_exists('nocache_headers')) nocache_headers();
+    $response = rest_ensure_response([
+        'valid' => true,
+        'mime' => $result['mime'],
+        'image_base64' => base64_encode($result['bytes']),
+    ]);
+    $response->header('Cache-Control', 'private, no-store, max-age=0');
+    $response->header('X-Content-Type-Options', 'nosniff');
+    return $response;
 }
 
 function sanro_studio_rest_upload_preview($request) {
