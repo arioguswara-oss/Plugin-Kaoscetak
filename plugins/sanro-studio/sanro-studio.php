@@ -79,4 +79,6 @@ if (defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
     add_action('woocommerce_checkout_process', 'sanro_studio_stage_checkout_process', 5);
     add_action('woocommerce_checkout_create_order_line_item',
         'sanro_studio_stage_checkout_create_order_line_item', 10, 4);
+    add_action('woocommerce_checkout_create_order',
+        'sanro_studio_stage_checkout_verify_order_batch', 10, 2);
 }
