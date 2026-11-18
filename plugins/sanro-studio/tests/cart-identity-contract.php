@@ -19,6 +19,8 @@ $cases = [
     'invalid_contract' => [array_merge($contract, ['valid' => false]), $item, false, 'cart_identity_mismatch'],
     'invalid_quote' => [array_merge($contract, ['quote' => array_merge($contract['quote'], ['valid' => false])]), $item, false, 'cart_quantity_mismatch'],
     'missing_quote_price' => [array_merge($contract, ['quote' => ['valid' => true, 'total_quantity' => 3, 'currency' => 'IDR']]), $item, false, 'cart_quantity_mismatch'],
+    'zero_quantity' => [array_merge($contract, ['quote' => array_merge($contract['quote'], ['total_quantity' => 0])]), array_merge($item, ['quantity' => 0]), false, 'cart_quantity_mismatch'],
+    'negative_quantity' => [array_merge($contract, ['quote' => array_merge($contract['quote'], ['total_quantity' => -1])]), array_merge($item, ['quantity' => -1]), false, 'cart_quantity_mismatch'],
     'wrong_quote_currency' => [array_merge($contract, ['quote' => array_merge($contract['quote'], ['currency' => 'USD'])]), $item, false, 'cart_quantity_mismatch'],
 ];
 foreach ($cases as $name => [$input, $cart, $valid, $error]) {
