@@ -8,6 +8,7 @@ $GLOBALS['headers'] = 0;
 $GLOBALS['footers'] = 0;
 $GLOBALS['config'] = ['valid'=>true,'product_id'=>17,'unit'=>'cm',
     'safe_areas'=>['front'=>['width'=>32.0,'height'=>48.0]],
+    'label'=>'</script><script>alert(1)</script>',
     'categories'=>['A5'=>[14.8,21.0],'A4'=>[21.0,29.7],'A3'=>[29.7,42.0],'A3+'=>[32.0,48.0]]];
 function absint($v) { return abs((int)$v); }
 function is_product() { return true; }
@@ -20,7 +21,7 @@ function plugin_dir_url($file) {
 function wp_enqueue_style(...$args) { $GLOBALS['enqueued'][]=['css',$args]; }
 function wp_enqueue_script(...$args) { $GLOBALS['enqueued'][]=['js',$args]; }
 function wp_add_inline_script(...$args) { $GLOBALS['enqueued'][]=['inline',$args]; }
-function wp_json_encode($v) { return json_encode($v); }
+function wp_json_encode($v, $flags = 0) { return json_encode($v, $flags); }
 function get_header() { $GLOBALS['headers']++; echo '<header>HEADER</header>'; }
 function get_footer() { $GLOBALS['footers']++; echo '<footer>FOOTER</footer>'; }
 require __DIR__.'/../plugins/sanro-studio/includes/buyer.php';
@@ -37,6 +38,7 @@ register_shutdown_function(function () {
         'JS path'=>isset($assets[1]) && strpos($assets[1][1][1],'/sanro-studio/assets/buyer.js')!==false,
         'public config'=>isset($assets[2]) && strpos($assets[2][1][1],'"product_id":17')!==false,
         'no owner token'=>isset($assets[2]) && strpos($assets[2][1][1],'owner_token')===false,
+        'inline script escaped'=>isset($assets[2]) && strpos($assets[2][1][1],'</script>')===false && strpos($assets[2][1][1],'\\u003C')!==false,
     ];
     ob_end_clean();
     foreach ($assertions as $label=>$ok) {
