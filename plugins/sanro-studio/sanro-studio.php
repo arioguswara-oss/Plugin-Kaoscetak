@@ -72,6 +72,7 @@ add_action('woocommerce_after_order_itemmeta', 'sanro_studio_admin_item_preview_
  // Staging checkout validation is inert unless explicitly enabled.
 if (defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
     && SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK === true) {
+    add_action('wp_enqueue_scripts', 'sanro_studio_stage_enqueue_checkout_authorization', 30);
     add_action('woocommerce_review_order_before_submit',
         'sanro_studio_stage_checkout_credential_field', 5);
     add_filter('sanro_studio_staging_checkout_owner_token',
