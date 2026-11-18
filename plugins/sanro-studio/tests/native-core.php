@@ -5,6 +5,10 @@ function assert_native($condition, $message) {
     if (!$condition) { fwrite(STDERR, "FAIL: $message\n"); exit(1); }
     echo "PASS: $message\n";
 }
+assert_native(!function_exists('sanro_studio_boot_runtime')
+    && !function_exists('sanro_studio_dependencies')
+    && !function_exists('sanro_studio_filter_settings'),
+    'native core does not load legacy compatibility functions');
 $status = sanro_studio_native_core_status();
 assert_native($status['valid'] && $status['native_components_present'],
     'native function inventory detects provided fixtures');
