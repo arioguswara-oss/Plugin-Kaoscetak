@@ -25,3 +25,7 @@ verify(sanro_studio_store_owned_draft_preview($fakeId, 'wrong', 'front', 'bytes'
 verify(sanro_studio_store_owned_draft_preview('locked', 'owner-secret', 'front', 'bytes')['error'] === 'draft_locked', 'locked draft cannot write preview');
 verify(sanro_studio_store_owned_draft_preview($fakeId, 'owner-secret', 'other', 'bytes')['error'] === 'invalid_preview_target', 'reject unknown side');
 verify(sanro_studio_store_owned_draft_preview($fakeId, 'owner-secret', 'front', 'bytes')['error'] === 'preview_storage_disabled', 'authorized write still requires storage opt-in');
+
+verify(sanro_studio_read_owned_draft_preview($fakeId, 'wrong', 'front', 'x')['error'] === 'not_found', 'preview read rejects wrong owner');
+verify(sanro_studio_read_owned_draft_preview($fakeId, 'owner-secret', 'front', '../secret')['error'] === 'invalid_preview_reference', 'preview read rejects traversal');
+verify(sanro_studio_read_owned_draft_preview($fakeId, 'owner-secret', 'front', strtolower($fakeId) . '-front-' . str_repeat('a', 64) . '.png')['error'] === 'preview_storage_disabled', 'preview read is disabled by default');
