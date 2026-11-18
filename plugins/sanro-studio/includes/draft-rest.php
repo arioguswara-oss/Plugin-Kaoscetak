@@ -325,7 +325,7 @@ function sanro_studio_draft_image_binding_allowed($design, $master_refs, $design
     return true;
 }
 
-function sanro_studio_draft_payload_allowed($design) {
+function sanro_studio_draft_payload_allowed($design, $allow_image_geometry = false) {
     if (!is_array($design) || !function_exists('wp_json_encode')) return false;
     $json = wp_json_encode($design);
     if (!is_string($json) || strlen($json) > 16384
@@ -335,7 +335,7 @@ function sanro_studio_draft_payload_allowed($design) {
     foreach (['front', 'back'] as $side) {
         if (!isset($design[$side]) || !is_array($design[$side])) continue;
         foreach (($design[$side]['objects'] ?? []) as $object) {
-            if (is_array($object) && ($object['type'] ?? null) === 'image') return false;
+            if (is_array($object) && ($object['type'] ?? null) === 'image' && !$allow_image_geometry) return false;
         }
     }
     return true;
@@ -363,7 +363,9 @@ function sanro_studio_rest_create_draft($request) {
 function sanro_studio_rest_update_draft($request) {
     $token = $request->get_header('X-Sanro-Owner-Token');
     $design = $request->get_param('design');
-    if (!sanro_studio_draft_payload_allowed($design)) {
+    // Image geometry is allowed only on existing drafts; the update layer
+    // checks the bound master for each side against its CAS snapshot.
+    if (!sanro_studio_draft_payload_allowed($design, true)) {
         return new WP_Error('sanro_invalid_design', 'Invalid design.', ['status' => 400]);
     }
     $expected_hash = $request->get_param('expected_design_hash');
