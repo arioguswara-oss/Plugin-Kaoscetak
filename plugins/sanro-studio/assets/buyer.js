@@ -4,7 +4,7 @@
  if(!root||!config||!config.safe_areas)return;
  const q=s=>root.querySelector(s),sides={front:{},back:{}};
  const make=()=>({url:null,file:null,text:'',imageSize:60,fontSize:22,textColor:'#171717',imageX:10,imageY:10,textX:10,textY:65,category:'A5'});
- sides.front=make();sides.back=make();let side=(config.default_side==='back'&&config.safe_areas.back)?'back':(config.safe_areas.front?'front':'back');
+ sides.front=make();sides.back=make();let side=(config.safe_areas[config.default_side]?config.default_side:(config.safe_areas.front?'front':'back'));
  const image=q('.sanro-safe img'),text=q('.sanro-text'),safe=q('.sanro-safe');
  const categories=config.categories;
  const shirtColors=new Set(['#ffffff','#171717','#b91c1c','#1d4ed8','#166534']);
