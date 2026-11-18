@@ -5,6 +5,11 @@ defined('ABSPATH') || exit;
  * Private draft metadata only. Master images never enter WordPress.
  * No public routes, share tokens or checkout permission are exposed here.
  */
+/** Private draft lifetime; expired records cannot be read, edited or quoted. */
+function sanro_studio_draft_ttl_seconds() {
+    return 7 * DAY_IN_SECONDS;
+}
+
 function sanro_studio_create_draft($product_id, $design) {
     $product_id = absint($product_id);
     if (!$product_id) return ['valid' => false, 'error' => 'invalid_product'];
@@ -17,6 +22,7 @@ function sanro_studio_create_draft($product_id, $design) {
         'design' => $design,
         'token_hash' => hash('sha256', $token),
         'created_at' => time(),
+        'expires_at' => time() + sanro_studio_draft_ttl_seconds(),
         'status' => 'draft',
     ];
     // Store minimal validated geometry in non-autoloaded options, not a public post.
@@ -42,12 +48,17 @@ function sanro_studio_read_draft($id, $token) {
         || !is_string($record['status'])) {
         return ['valid' => false, 'error' => 'not_found'];
     }
+    if (!isset($record['expires_at']) || !is_int($record['expires_at'])
+        || $record['expires_at'] <= time()) {
+        return ['valid' => false, 'error' => 'draft_expired'];
+    }
     return [
         'valid' => true,
         'design_id' => $id,
         'product_id' => $record['product_id'],
         'design' => $record['design'],
         'status' => $record['status'],
+        'expires_at' => $record['expires_at'],
     ];
 }
 
@@ -89,7 +100,9 @@ function sanro_studio_update_draft($id, $token, $design) {
         || !is_string($before['token_hash'])
         || !hash_equals($before['token_hash'], hash('sha256', $token))
         || ($before['status'] ?? null) !== 'draft'
-        || ($before['product_id'] ?? null) !== $existing['product_id']) {
+        || ($before['product_id'] ?? null) !== $existing['product_id']
+        || !isset($before['expires_at']) || !is_int($before['expires_at'])
+        || $before['expires_at'] <= time()) {
         return ['valid' => false, 'error' => 'draft_conflict'];
     }
     $record = $before;
