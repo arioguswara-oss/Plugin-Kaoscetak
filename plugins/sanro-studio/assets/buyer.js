@@ -22,7 +22,7 @@
    output.textContent='Estimasi tidak tersedia: periksa jumlah per ukuran';return;
   }
   const qty=Object.fromEntries(qtyInputs.map(input=>[input.dataset.size,Number(input.value)]));
-  const result=calc.estimate(qty,designCategory(sides.front),designCategory(sides.back));
+  const result=calc.estimate(qty,designCategory(sides.front),designCategory(sides.back),q('#sanro-sleeve').value==='long');
   output.textContent=result&&result.pieces>0?'Estimasi: '+new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(result.total)+' (belum final)':'Estimasi harga: lengkapi desain dan jumlah';
  }
  function updateQty(){
@@ -41,6 +41,7 @@
   updateEstimate();
  }
  qtyInputs.forEach(input=>input.addEventListener('input',()=>{editRevision++;updateQty()}));
+ q('#sanro-sleeve').addEventListener('change',()=>{editRevision++;updateEstimate()});
  updateQty();
  function render(){
   // Rendering is not itself a user edit; revision changes only in input handlers.
@@ -185,6 +186,10 @@
     ||obj.x<0||obj.y<0||obj.x+obj.width>area.width+0.000001
     ||obj.y+obj.height>area.height+0.000001)throw new Error('Geometri draft tidak valid.');
   }
+  if(design.long_sleeve!==undefined){
+   if(typeof design.long_sleeve!=='boolean')throw new Error('Model lengan draft tidak valid.');
+   q('#sanro-sleeve').value=design.long_sleeve?'long':'short';
+  }
   if(design.shirt_color!==undefined){
    if(!shirtColors.has(design.shirt_color))throw new Error('Warna draft tidak valid.');
    shirtColor.value=design.shirt_color;q('.sanro-shirt').style.backgroundColor=shirtColor.value;
@@ -261,6 +266,7 @@
   if(Object.values(quantities).some(v=>!Number.isInteger(v)||v<0||v>999)
    ||Object.values(quantities).reduce((a,b)=>a+b,0)>5000)throw new Error('Jumlah per ukuran tidak valid.');
   design.shirt_color=shirtColor.value;design.quantities=quantities;
+  design.long_sleeve=q('#sanro-sleeve').value==='long';
   return design;
  }
  if(saveButton&&config.draft_api){
