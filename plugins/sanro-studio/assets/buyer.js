@@ -75,7 +75,7 @@
   if(!Number.isFinite(next)||next<10||next>100)return;
   // Scale proportionally around the current center, then constrain within the safe area.
   const ratio=next/d.imageSize;
-  const currentHeight=image.naturalWidth>0?d.imageSize*image.naturalHeight/image.naturalWidth:0;
+  const currentHeight=image.naturalWidth>0&&safe.clientHeight>0?d.imageSize*(safe.clientWidth/safe.clientHeight)*image.naturalHeight/image.naturalWidth:0;
   const nextHeight=currentHeight*ratio;
   d.imageX=Math.max(0,Math.min(100-next,d.imageX+(d.imageSize-next)/2));
   d.imageY=Math.max(0,Math.min(100-nextHeight,d.imageY+(currentHeight-nextHeight)/2));
