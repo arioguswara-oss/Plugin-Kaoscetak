@@ -134,7 +134,7 @@
  q('#sanro-image').addEventListener('change',e=>{
   const file=e.target.files[0];if(!file)return;
   if(!['image/png','image/jpeg'].includes(file.type)||file.size>10485760){q('#sanro-validation').textContent='File ditolak: PNG/JPEG maksimal 10 MB';e.target.value='';return}
-  const target=sides[side],url=URL.createObjectURL(file),probe=new Image();
+  const uploadSide=side,target=sides[uploadSide],url=URL.createObjectURL(file),probe=new Image();
   editRevision++;
   if(target.pending)URL.revokeObjectURL(target.pending);
   probe.onload=()=>{
@@ -151,9 +151,11 @@
     target.imageX=Math.max(0,(100-target.imageSize)/2);
     target.imageY=Math.max(0,(100-target.imageSize*safeWidth*probe.naturalHeight/(safeHeight*probe.naturalWidth))/2);
    }
-   render();
+   // A slow image load must never redraw or alter the currently selected opposite side.
+   if(side===uploadSide)render();
+   else updateEstimate();
   };
-  probe.onerror=()=>{if(target.pending===url){URL.revokeObjectURL(url);target.pending=null;q('#sanro-validation').textContent='Gambar tidak valid'}};
+  probe.onerror=()=>{if(target.pending===url){URL.revokeObjectURL(url);target.pending=null;if(side===uploadSide)q('#sanro-validation').textContent='Gambar tidak valid'}};
   target.pending=url;probe.src=url;e.target.value='';
  });
  q('#sanro-center-image').addEventListener('click',()=>{
@@ -167,6 +169,15 @@
   editRevision++;render();
  });
  q('#sanro-remove-image').addEventListener('click',()=>{editRevision++;const d=sides[side];if(d.url)URL.revokeObjectURL(d.url);if(d.pending)URL.revokeObjectURL(d.pending);d.url=null;d.pending=null;image.removeAttribute('src');render()});
+ // Object URLs are browser-local temporary resources; never persist them as draft masters.
+ window.addEventListener('pagehide',()=>{
+  for(const name of ['front','back']){
+   const d=sides[name];
+   if(d.url)URL.revokeObjectURL(d.url);
+   if(d.pending)URL.revokeObjectURL(d.pending);
+   d.url=null;d.pending=null;
+  }
+ },{once:true});
  function drag(el,prefix){
   let start=null;
   el.addEventListener('pointerdown',e=>{
