@@ -6,7 +6,7 @@ $contract = [
     'valid' => true,
     'design_id' => '11111111-1111-4111-8111-111111111111',
     'product_id' => 42,
-    'quote' => ['total_quantity' => 3, 'total_price' => 90000, 'currency' => 'IDR'],
+    'quote' => ['valid' => true, 'total_quantity' => 3, 'total_price' => 90000, 'currency' => 'IDR'],
 ];
 $item = ['product_id' => 42, 'sanro_studio_design_id' => $contract['design_id'], 'quantity' => 3];
 $cases = [
@@ -17,6 +17,9 @@ $cases = [
     'string_quantity' => [$contract, array_merge($item, ['quantity' => '3']), false, 'cart_quantity_mismatch'],
     'missing_identity' => [$contract, ['product_id' => 42, 'quantity' => 3], false, 'cart_identity_mismatch'],
     'invalid_contract' => [array_merge($contract, ['valid' => false]), $item, false, 'cart_identity_mismatch'],
+    'invalid_quote' => [array_merge($contract, ['quote' => array_merge($contract['quote'], ['valid' => false])]), $item, false, 'cart_quantity_mismatch'],
+    'missing_quote_price' => [array_merge($contract, ['quote' => ['valid' => true, 'total_quantity' => 3, 'currency' => 'IDR']]), $item, false, 'cart_quantity_mismatch'],
+    'wrong_quote_currency' => [array_merge($contract, ['quote' => array_merge($contract['quote'], ['currency' => 'USD'])]), $item, false, 'cart_quantity_mismatch'],
 ];
 foreach ($cases as $name => [$input, $cart, $valid, $error]) {
     $result = sanro_studio_validate_cart_design_identity($input, $cart);
