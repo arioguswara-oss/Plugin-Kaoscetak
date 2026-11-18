@@ -243,7 +243,13 @@
  function restoreDesign(design,masterUrls={}){
   if(!design||typeof design!=='object')throw new Error('Metadata draft tidak valid.');
   for(const name of ['front','back']){
-   const entry=design[name];if(!entry)continue;
+   const entry=design[name];
+   if(!entry){
+    const d=sides[name];
+    if(d.url&&d.url.startsWith('blob:'))URL.revokeObjectURL(d.url);
+    Object.assign(d,make());
+    continue;
+   }
    if(!config.safe_areas[name]||!categories[entry.category]||!Array.isArray(entry.objects)
     ||entry.objects.length<1||entry.objects.length>2
     ||entry.objects.some(obj=>!['image','text'].includes(obj.type))
