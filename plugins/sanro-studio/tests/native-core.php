@@ -12,6 +12,8 @@ assert_native(!function_exists('sanro_studio_boot_runtime')
 $status = sanro_studio_native_core_status();
 assert_native($status['valid'] && $status['native_components_present'],
     'native function inventory detects provided fixtures');
+assert_native(!$status['woocommerce_loaded'] && !$status['runtime_dependencies_satisfied'],
+    'missing WooCommerce keeps runtime readiness false despite native symbols');
 assert_native(!$status['checkout_enabled'] && !$status['production_ready']
     && !$status['verified_end_to_end'], 'release gates remain closed');
 assert_native(!$status['legacy_compat_enabled'], 'legacy compatibility disabled by default');
@@ -26,4 +28,6 @@ function sanro_studio_order_item_production_manifest() {}
 $present = sanro_studio_native_core_status();
 assert_native($present['native_components_present'] && !$present['missing_components'],
     'all required native symbols present');
+assert_native(!$present['runtime_dependencies_satisfied'],
+    'native symbols do not bypass missing WooCommerce');
 assert_native(!$present['verified_end_to_end'], 'symbols never imply end-to-end verification');
