@@ -20,6 +20,7 @@ require_once __DIR__ . '/includes/editor-config.php';
 require_once __DIR__ . '/includes/buyer.php';
 require_once __DIR__ . '/includes/pricing.php';
 require_once __DIR__ . '/includes/quote.php';
+require_once __DIR__ . '/includes/cart-contract.php';
 require_once __DIR__ . '/includes/draft.php';
 require_once __DIR__ . '/includes/storage-policy.php';
 require_once __DIR__ . '/includes/order-preview.php';
