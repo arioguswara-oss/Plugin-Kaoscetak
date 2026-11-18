@@ -25,12 +25,12 @@ require_once __DIR__ . '/includes/draft.php';
 require_once __DIR__ . '/includes/storage-policy.php';
 require_once __DIR__ . '/includes/order-preview.php';
 require_once __DIR__ . '/includes/draft-rest.php';
-require_once __DIR__ . '/includes/runtime.php';
 require_once __DIR__ . '/includes/admin.php';
 
 // Native SANRO Studio is the default. The legacy compatibility bootstrap is
 // explicitly opt-in for isolated development only; it never runs by default.
 if (defined('SANRO_STUDIO_ENABLE_LEGACY_COMPAT') && SANRO_STUDIO_ENABLE_LEGACY_COMPAT === true) {
+    require_once __DIR__ . '/includes/runtime.php';
     add_filter('lumise_settings', 'sanro_studio_filter_settings', 100);
     add_action('plugins_loaded', 'sanro_studio_boot_runtime', 20);
 }
