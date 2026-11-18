@@ -7,7 +7,7 @@ define('SANRO_STUDIO_ENABLE_STAGING_CART', true);
 define('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT', true);
 function get_woocommerce_currency() { return 'IDR'; }
 function sanro_studio_read_draft($id, $token) {
-    if ($token !== 'owner' || $id !== '00000000-0000-4000-8000-000000000000') return ['valid'=>false];
+    if (!in_array($token, ['owner', str_repeat('a', 64)], true) || $id !== '00000000-0000-4000-8000-000000000000') return ['valid'=>false];
     return ['valid'=>true,'status'=>'draft','design_id'=>$id,'product_id'=>42,
         'design'=>['quantities'=>['M'=>2]],'master_refs'=>[]];
 }
@@ -92,6 +92,12 @@ unset($GLOBALS['gate_wc']->cart->lines[0]['sanro_studio_design_id']);
 sanro_studio_stage_checkout_process();
 gate_check(count($GLOBALS['gate_notices'])===1, 'partial SANRO metadata cannot bypass checkout gate');
 $GLOBALS['gate_wc']->cart = new GateCart('65000');
+$GLOBALS['gate_filter_token'] = str_repeat('a', 64);
+$GLOBALS['gate_notices'] = [];
+sanro_studio_stage_checkout_process();
+gate_check(count($GLOBALS['gate_notices'])===0, 'authorized classic checkout accepts fresh valid draft');
+gate_check(!empty($GLOBALS['sanro_studio_checkout_verified']['contract']['valid']), 'authorized checkout stores valid request-scoped contract');
+$GLOBALS['gate_filter_token'] = null;
 $failed_closed = false;
 try {
     sanro_studio_stage_checkout_create_order_line_item(
@@ -101,6 +107,15 @@ try {
 } catch (RuntimeException $exception) {
     $failed_closed = true;
 }
+gate_check(!$failed_closed, 'order binding accepts prior authorized request');
+unset($GLOBALS['sanro_studio_checkout_verified']);
+$failed_closed = false;
+try {
+    sanro_studio_stage_checkout_create_order_line_item(
+        new GateOrderItem('130000.00'), 'key',
+        $GLOBALS['gate_wc']->cart->lines[0], null
+    );
+} catch (RuntimeException $exception) { $failed_closed = true; }
 gate_check($failed_closed, 'order metadata cannot bind without request authorization');
 $GLOBALS['sanro_studio_checkout_verified'] = ['contract'=>$contract, 'bound_sizes'=>[]];
 $order_line = new GateOrderItem('130000.00');
@@ -172,4 +187,4 @@ $_POST['sanro_studio_checkout_token'] = 'not-a-token';
 gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'invalid token rejected');
 unset($_POST['sanro_studio_checkout_token'], $_POST['sanro_studio_checkout_nonce']);
 gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'missing checkout credentials rejected');
-echo "PASS: 31 checkout gate checks\n";
+echo "PASS: 34 checkout gate checks\n";
