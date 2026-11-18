@@ -7,6 +7,28 @@
  sides.front=make();sides.back=make();let side=config.safe_areas.front?'front':'back';
  const image=q('.sanro-safe img'),text=q('.sanro-text'),safe=q('.sanro-safe');
  const categories=config.categories;
+ const shirtColors=new Set(['#ffffff','#171717','#b91c1c','#1d4ed8','#166534']);
+ const shirtColor=q('#sanro-shirt-color');
+ shirtColor.addEventListener('change',()=>{
+  if(shirtColors.has(shirtColor.value))q('.sanro-shirt').style.backgroundColor=shirtColor.value;
+ });
+ q('.sanro-shirt').style.backgroundColor=shirtColor.value;
+ const qtyInputs=Array.from(root.querySelectorAll('[data-size]'));
+ function updateQty(){
+  let total=0;
+  for(const input of qtyInputs){
+   const value=Number(input.value);
+   if(!Number.isSafeInteger(value)||value<0||value>999){
+    input.setCustomValidity('Jumlah harus bilangan bulat 0–999');
+   }else{
+    input.setCustomValidity('');
+    total+=value;
+   }
+  }
+  q('#sanro-qty-total').textContent=qtyInputs.some(input=>!input.validity.valid)?'Periksa jumlah tiap ukuran':'Total: '+total+' pcs';
+ }
+ qtyInputs.forEach(input=>input.addEventListener('input',updateQty));
+ updateQty();
  function render(){
   const d=sides[side];q('#sanro-text-input').value=d.text;q('#sanro-image-size').value=d.imageSize;
   q('#sanro-font-size').value=d.fontSize;q('#sanro-category').value=d.category;
