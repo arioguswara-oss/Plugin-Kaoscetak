@@ -35,6 +35,14 @@ function sanro_studio_render_buyer_editor() {
     wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], SANRO_STUDIO_VERSION);
     wp_enqueue_script('sanro-studio-estimate', $asset . 'estimate.js', [], SANRO_STUDIO_VERSION, true);
     wp_enqueue_script('sanro-studio-buyer', $asset . 'buyer.js', ['sanro-studio-estimate'], SANRO_STUDIO_VERSION, true);
+    // Supply API bootstrap only on explicitly enabled staging; no owner token
+    // is ever included in page HTML or a shared JavaScript configuration.
+    if (function_exists('sanro_studio_draft_rest_enabled') && sanro_studio_draft_rest_enabled()) {
+        $config['draft_api'] = [
+            'url' => esc_url_raw(rest_url('sanro-studio/v1/drafts')),
+            'nonce' => wp_create_nonce('sanro_studio_draft'),
+        ];
+    }
     wp_add_inline_script('sanro-studio-buyer', 'window.SANRO_STUDIO_EDITOR_CONFIG=' . wp_json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';', 'before');
 
     // WordPress may have a canonical redirect for product query arguments.
