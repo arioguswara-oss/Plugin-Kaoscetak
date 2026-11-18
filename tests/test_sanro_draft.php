@@ -42,6 +42,10 @@ $wpdb = new class {
         if (!empty($GLOBALS['draft_cas_conflict'])) {
             $GLOBALS['options'][$key]['status'] = 'locked';
         }
+        if (!empty($GLOBALS['draft_cas_case_conflict'])) {
+            // A case-insensitive SQL collation would consider these values equal.
+            $GLOBALS['options'][$key]['status'] = 'DRAFT';
+        }
         // Simulate byte-exact SQL BINARY compare, not a case-insensitive collation.
         if (serialize($GLOBALS['options'][$key]) !== $expected) return 0;
         $GLOBALS['options'][$key] = unserialize($new, ['allowed_classes' => false]);
@@ -87,6 +91,10 @@ check_draft(true, sanro_studio_read_draft($created['design_id'], $created['owner
 $GLOBALS['draft_cas_conflict'] = true;
 check_draft('draft_conflict', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'CAS detects concurrent lock before write');
 $GLOBALS['draft_cas_conflict'] = false;
+$GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['status'] = 'draft';
+$GLOBALS['draft_cas_case_conflict'] = true;
+check_draft('draft_conflict', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'CAS rejects case-only concurrent change');
+$GLOBALS['draft_cas_case_conflict'] = false;
 $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['status'] = 'draft';
 // Simulate status changing between the first and second get_option reads.
 $GLOBALS['draft_read_count'] = 0;
