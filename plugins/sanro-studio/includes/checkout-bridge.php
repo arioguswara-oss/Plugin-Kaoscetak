@@ -398,3 +398,25 @@ function sanro_studio_stage_checkout_post_token($default, $design_id, $product_i
     $token = $_POST['sanro_studio_checkout_token'];
     return preg_match('/^[a-f0-9]{64}$/D', $token) ? $token : null;
 }
+
+/**
+ * Final pre-save guard: all expected sizes must have been bound exactly once.
+ * Called by classic WooCommerce checkout_create_order before order persistence.
+ */
+function sanro_studio_stage_checkout_verify_order_batch($order, $data) {
+    if (!defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
+        || SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK !== true) return;
+    $verified = $GLOBALS['sanro_studio_checkout_verified'] ?? null;
+    if (!is_array($verified) || empty($verified['contract']['valid'])) return;
+    $expected = sanro_studio_prepare_size_cart_lines($verified['contract']);
+    if (empty($expected['valid']) || !isset($verified['bound_sizes'])
+        || !is_array($verified['bound_sizes'])) {
+        throw new RuntimeException('SANRO Studio: incomplete checkout contract.');
+    }
+    $sizes = [];
+    foreach ($expected['lines'] as $line) $sizes[$line['sanro_studio_size']] = true;
+    if (count($sizes) !== count($verified['bound_sizes'])
+        || array_diff_key($sizes, $verified['bound_sizes'])) {
+        throw new RuntimeException('SANRO Studio: incomplete order size batch.');
+    }
+}
