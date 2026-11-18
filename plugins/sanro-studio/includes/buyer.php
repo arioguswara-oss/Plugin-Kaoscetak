@@ -66,6 +66,7 @@ function sanro_studio_render_buyer_editor() {
         echo '<label>' . esc_html($size) . '<input type="number" data-size="' . esc_attr($size) . '" min="0" max="999" step="1" value="0" inputmode="numeric"></label>';
     }
     echo '</fieldset><p id="sanro-qty-total" role="status">Total: 0 pcs</p>';
+    echo '<label>Model lengan<select id="sanro-sleeve"><option value="short">Lengan pendek</option><option value="long">Lengan panjang (+Rp10.000/pcs)</option></select></label>';
     echo '<p id="sanro-price-estimate" role="status">Estimasi harga: pilih desain dan jumlah. Harga final dihitung saat checkout.</p>';
     echo '<label>Gambar PNG/JPEG maks. 10 MB<input type="file" id="sanro-image" accept="image/png,image/jpeg"></label>';
     echo '<label>Ukuran gambar<input type="range" id="sanro-image-size" min="10" max="100" value="60"></label>';
