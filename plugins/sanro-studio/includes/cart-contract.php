@@ -20,6 +20,16 @@ function sanro_studio_prepare_cart_design_contract($design_id, $owner_token, $pr
         return ['valid' => false, 'error' => 'product_mismatch'];
     }
     $design = $draft['design'] ?? null;
+    // Never issue a cart contract for an image-only bootstrap, malformed
+    // geometry, or a draft whose image master binding was revoked.
+    if (!function_exists('sanro_studio_validate_product_design')
+        || !function_exists('sanro_studio_draft_image_binding_allowed')
+        || empty(sanro_studio_validate_product_design($product_id, $design)['valid'])
+        || !sanro_studio_draft_image_binding_allowed(
+            $design, $draft['master_refs'] ?? [], $draft['design_id']
+        )) {
+        return ['valid' => false, 'error' => 'draft_not_print_ready'];
+    }
     if (!is_array($design) || !isset($design['quantities'])
         || !is_array($design['quantities'])) {
         return ['valid' => false, 'error' => 'invalid_design'];
