@@ -29,10 +29,15 @@ function sanro_studio_render_settings() {
     if (!current_user_can('manage_options')) {
         wp_die('Akses ditolak.', '', ['response' => 403]);
     }
-    $state = sanro_studio_dependencies();
     $legacy_compat = defined('SANRO_STUDIO_ENABLE_LEGACY_COMPAT') && SANRO_STUDIO_ENABLE_LEGACY_COMPAT === true;
+    // Legacy helpers live in runtime.php, which is deliberately not loaded in native mode.
+    $state = $legacy_compat ? sanro_studio_dependencies() : [
+        'woocommerce' => class_exists('WooCommerce', false),
+        'lumise' => false,
+        'lumise_version' => '',
+    ];
     $runtime = $legacy_compat ? sanro_studio_runtime_status() : ['state' => 'native_default', 'mode' => 'native'];
-    $options = sanro_studio_options();
+    $options = $legacy_compat ? sanro_studio_options() : ['admin_preview' => false];
     $native = sanro_studio_native_capabilities();
     echo '<div class="wrap"><h1>SANRO Studio</h1>';
     echo '<p>Fondasi editor SANRO Studio. Integrasi harga Kaoscetak dan Drive belum diaktifkan.</p>';
