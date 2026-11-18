@@ -37,4 +37,8 @@ check_area('invalid_design', sanro_studio_validate_print_design(['front' => $fro
 check_area('invalid_design', sanro_studio_validate_print_design(['front' => $front + ['price' => 1]], $areas)['error'], 'browser price rejected');
 check_area('category_exceeded', sanro_studio_validate_print_design(['front' => ['objects' => [$img, $text], 'category' => 'A5']], $areas)['error'], 'oversized side rejected');
 check_area('front', sanro_studio_validate_print_design(['front' => ['objects' => [$img, $text], 'category' => 'A5']], $areas)['side'], 'failure side identified');
+check_area('invalid_objects', sanro_studio_validate_print_side(['image' => $img], 'A5', $area)['error'], 'associative object map rejected');
+check_area('invalid_objects', sanro_studio_validate_print_side([1 => $img], 'A5', $area)['error'], 'sparse object list rejected');
+check_area('invalid_object_type', sanro_studio_validate_print_side([array_merge($img, ['price' => 1])], 'A5', $area)['error'], 'untrusted object price rejected');
+check_area('invalid_object_type', sanro_studio_validate_print_side([array_merge($img, ['safe_area' => $area])], 'A5', $area)['error'], 'untrusted safe area field rejected');
 echo "SANRO print bounds: {$checks} assertions PASS, 0 FAIL\n";
