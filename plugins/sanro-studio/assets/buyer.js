@@ -97,10 +97,13 @@
    if(!area)continue;
    if(d.url||d.pending)throw new Error('Gambar belum dapat disimpan. Hapus gambar terlebih dahulu.');
    if(!d.text.trim())continue;
-   const current=side;
-   side=name;render();
+   // Measure the other side without switching editor state or touching inputs.
+   const previous={content:text.textContent,font:text.style.fontSize,left:text.style.left,top:text.style.top,hidden:text.hidden};
+   text.hidden=false;text.textContent=d.text;text.style.fontSize=d.fontSize+'px';
+   text.style.left=d.textX+'%';text.style.top=d.textY+'%';
    const rect=safe.getBoundingClientRect(),box=text.getBoundingClientRect();
-   side=current;render();
+   text.textContent=previous.content;text.style.fontSize=previous.font;
+   text.style.left=previous.left;text.style.top=previous.top;text.hidden=previous.hidden;
    if(!rect.width||!rect.height||!box.width||!box.height)throw new Error('Ukuran pratinjau belum siap.');
    const object={type:'text',x:d.textX*area.width/100,y:d.textY*area.height/100,
     width:box.width*area.width/rect.width,height:box.height*area.height/rect.height};
@@ -125,7 +128,7 @@
     const headers={'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce};
     if(savedId&&ownerToken)headers['X-Sanro-Owner-Token']=ownerToken;
     const endpoint=savedId?config.draft_api.url+'/'+encodeURIComponent(savedId):config.draft_api.url;
-    const payload=savedId?{design}:{product_id:config.product_id,design};
+    const payload=savedId?{design}:{product_id:Number(config.product_id),design};
     const response=await fetch(endpoint,{method:'POST',headers,body:JSON.stringify(payload),credentials:'same-origin',cache:'no-store'});
     const result=await response.json();
     if(!response.ok||!result.valid)throw new Error('Penyimpanan gagal ('+response.status+').');
