@@ -40,7 +40,9 @@
  qtyInputs.forEach(input=>input.addEventListener('input',updateQty));
  updateQty();
  function render(){
-  const d=sides[side];q('#sanro-text-input').value=d.text;q('#sanro-image-size').value=d.imageSize;
+  const d=sides[side];q('#sanro-text-input').value=d.text;
+  q('#sanro-image-size').min=String(Math.min(10,d.imageSize));
+  q('#sanro-image-size').value=d.imageSize;
   q('#sanro-font-size').value=d.fontSize;q('#sanro-text-color').value=d.textColor;q('#sanro-category').value=d.category;
   image.hidden=!d.url;if(d.url&&image.getAttribute('src')!==d.url)image.setAttribute('src',d.url);if(!d.url)image.removeAttribute('src');
   image.style.left=d.imageX+'%';image.style.top=d.imageY+'%';image.style.width=d.imageSize+'%';image.style.height='auto';
@@ -72,13 +74,17 @@
  q('#sanro-text-input').addEventListener('input',e=>{sides[side].text=e.target.value;render()});
  q('#sanro-image-size').addEventListener('input',e=>{
   const d=sides[side],next=Number(e.target.value);
-  if(!Number.isFinite(next)||next<10||next>100)return;
+  if(!Number.isFinite(next)||next<Number(e.target.min)||next>100)return;
   // Scale proportionally around the current center, then constrain within the safe area.
   const ratio=next/d.imageSize;
   const currentHeight=image.naturalWidth>0&&safe.clientHeight>0?d.imageSize*(safe.clientWidth/safe.clientHeight)*image.naturalHeight/image.naturalWidth:0;
   const nextHeight=currentHeight*ratio;
+  if(nextHeight>100){
+   e.target.value=String(d.imageSize);
+   q('#sanro-validation').textContent='Ukuran gambar terlalu tinggi untuk area aman.';
+   return;
+  }
   d.imageX=Math.max(0,Math.min(100-next,d.imageX+(d.imageSize-next)/2));
-  if(nextHeight>100){q('#sanro-validation').textContent='Ukuran gambar terlalu tinggi untuk area aman.';return;}
   d.imageY=Math.max(0,Math.min(100-nextHeight,d.imageY+(currentHeight-nextHeight)/2));
   d.imageSize=next;render();
  });
@@ -109,7 +115,9 @@
    const safeWidth=safe.clientWidth,safeHeight=safe.clientHeight;
    if(safeWidth>0&&safeHeight>0&&probe.naturalWidth>0&&probe.naturalHeight>0){
     const maxWidth=Math.min(100,100*safeHeight*probe.naturalWidth/(safeWidth*probe.naturalHeight));
-    target.imageSize=Math.max(1,Math.min(60,maxWidth));
+    target.imageSize=Math.min(60,maxWidth);
+    // Tall images may need less than the slider's 10% minimum.
+    q('#sanro-image-size').min=String(Math.min(10,target.imageSize));
     target.imageX=Math.max(0,(100-target.imageSize)/2);
     target.imageY=Math.max(0,(100-target.imageSize*safeWidth*probe.naturalHeight/(safeHeight*probe.naturalWidth))/2);
    }
