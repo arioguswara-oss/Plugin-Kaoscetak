@@ -386,6 +386,18 @@
       if(!response.ok||!result.valid||typeof result.file_id!=='string'
        ||!result.file_id.startsWith(savedId.toLowerCase()+'-'+name+'-'))
        throw new Error('Upload master '+name+' gagal ('+response.status+').');
+      // Verify owner-bound readback and byte-for-byte integrity before success.
+      const readback=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)
+       +'/masters/'+name+'/'+encodeURIComponent(result.file_id),{
+       method:'GET',credentials:'same-origin',cache:'no-store',
+       headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken}
+      });
+      if(!readback.ok)throw new Error('Verifikasi master '+name+' gagal ('+readback.status+').');
+      const verified=await readback.json();
+      if(!verified.valid||verified.file_id!==result.file_id
+       ||verified.image_base64!==encoded||verified.mime!==file.type
+       ||verified.sha256!==result.sha256)
+       throw new Error('Integritas master '+name+' tidak sesuai.');
       if(editRevision!==revisionAtStart||sides[name].file!==file)
        throw new Error('Desain berubah selama upload. Periksa ulang draft.');
       completed.push(name);
