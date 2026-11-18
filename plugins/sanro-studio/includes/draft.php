@@ -28,7 +28,7 @@ function sanro_studio_create_draft($product_id, $design) {
 
 /** Read draft only with the independent secret owner token. */
 function sanro_studio_read_draft($id, $token) {
-    if (!is_string($id) || !preg_match('/^[a-f0-9-]{36}$/i', $id)
+    if (!is_string($id) || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $id)
         || !is_string($token) || !preg_match('/^[a-f0-9]{64}$/', $token)) {
         return ['valid' => false, 'error' => 'invalid_credentials'];
     }
