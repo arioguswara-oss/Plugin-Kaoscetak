@@ -200,6 +200,12 @@ function sanro_studio_order_item_preview_inventory($order, $item_id) {
     $item = $items[$item_id];
     $inventory = sanro_studio_order_preview_inventory($item);
     $design_id = $item->get_meta('_sanro_studio_design_id', true);
+    // An item preview must always have an explicit design binding; otherwise
+    // an orphaned reference could be displayed against the wrong line item.
+    if ((!is_string($design_id) || $design_id === '')
+        && (!empty($inventory['front']) || !empty($inventory['back']))) {
+        return ['valid' => false, 'error' => 'design_not_bound'];
+    }
     // A bound line item must never serve preview references for another design.
     if ($design_id !== '' && (!is_string($design_id)
         || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id))) {
@@ -289,7 +295,9 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
     $order_id = absint($item->get_order_id());
     $item_id = absint($item_id);
     if (!$order_id || !$item_id) return;
-    $inventory = sanro_studio_order_preview_inventory($item);
+    // Use the same strict binding validation as the private delivery endpoint.
+    $order = function_exists('wc_get_order') ? wc_get_order($order_id) : false;
+    $inventory = sanro_studio_order_item_preview_inventory($order, $item_id);
     if (empty($inventory['valid'])) return;
     $design_id = method_exists($item, 'get_meta') ? $item->get_meta('_sanro_studio_design_id', true) : '';
     if ($design_id !== '') {
