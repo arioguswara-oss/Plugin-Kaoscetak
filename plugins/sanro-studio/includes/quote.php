@@ -37,7 +37,7 @@ function sanro_studio_quote_product_design($product_id, $design, $size, $long_sl
 /**
  * Read-only quotation for one design with quantities by size.
  * Prices and subtotal are derived exclusively on the server.
- * Max 1000 pieces per size and 5000 pieces per quote; actual checkout limits
+ * Max 999 pieces per size and 5000 pieces per quote; actual checkout limits
  * may be stricter and must be independently validated.
  */
 function sanro_studio_quote_size_quantities($product_id, $design, $quantities, $long_sleeve = false) {
@@ -51,9 +51,10 @@ function sanro_studio_quote_size_quantities($product_id, $design, $quantities, $
     $total_price = 0;
     foreach ($quantities as $size => $quantity) {
         if (!is_string($size) || !isset($allowed[$size])
-            || !is_int($quantity) || $quantity < 1 || $quantity > 1000) {
+            || !is_int($quantity) || $quantity < 0 || $quantity > 999) {
             return ['valid' => false, 'error' => 'invalid_quantities'];
         }
+        if ($quantity === 0) continue;
         $total_quantity += $quantity;
         if ($total_quantity > 5000) {
             return ['valid' => false, 'error' => 'invalid_quantities'];
@@ -68,6 +69,7 @@ function sanro_studio_quote_size_quantities($product_id, $design, $quantities, $
             'subtotal' => $subtotal,
         ];
     }
+    if ($total_quantity === 0) return ['valid' => false, 'error' => 'invalid_quantities'];
     return [
         'valid' => true,
         'currency' => 'IDR',
