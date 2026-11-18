@@ -21,6 +21,9 @@
   if(!area||!rect.width||!rect.height)return;
   for(const [el,type,x,y] of [[image,'image',d.imageX,d.imageY],[text,'text',d.textX,d.textY]]){
    if(el.hidden)continue;
+   if(type==='image' && (!image.complete || !image.naturalWidth || !image.naturalHeight)){
+    q('#sanro-validation').textContent='Memuat gambar untuk pemeriksaan area cetak…';return;
+   }
    const box=el.getBoundingClientRect();
    objects.push({type,x:x*area.width/100,y:y*area.height/100,width:box.width*area.width/rect.width,height:box.height*area.height/rect.height});
   }
@@ -52,5 +55,6 @@
   d[prefix+'X']=Math.max(0,Math.min(100-el.offsetWidth/rect.width*100,start.px+(e.clientX-start.x)/rect.width*100));
   d[prefix+'Y']=Math.max(0,Math.min(100-el.offsetHeight/rect.height*100,start.py+(e.clientY-start.y)/rect.height*100));render()});
  el.addEventListener('pointerup',()=>start=null);el.addEventListener('pointercancel',()=>start=null)}
+ image.addEventListener('load',validate);
  drag(image,'image');drag(text,'text');window.addEventListener('resize',validate);render();
 })();
