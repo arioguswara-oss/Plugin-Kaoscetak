@@ -3,7 +3,7 @@
  const root=document.getElementById('sanro-studio-buyer'),config=window.SANRO_STUDIO_EDITOR_CONFIG;
  if(!root||!config||!config.safe_areas)return;
  const q=s=>root.querySelector(s),sides={front:{},back:{}};
- const make=()=>({url:null,text:'',imageSize:60,fontSize:22,imageX:10,imageY:10,textX:10,textY:65,category:'A5'});
+ const make=()=>({url:null,text:'',imageSize:60,fontSize:22,textColor:'#171717',imageX:10,imageY:10,textX:10,textY:65,category:'A5'});
  sides.front=make();sides.back=make();let side=config.safe_areas.front?'front':'back';
  const image=q('.sanro-safe img'),text=q('.sanro-text'),safe=q('.sanro-safe');
  const categories=config.categories;
@@ -41,10 +41,10 @@
  updateQty();
  function render(){
   const d=sides[side];q('#sanro-text-input').value=d.text;q('#sanro-image-size').value=d.imageSize;
-  q('#sanro-font-size').value=d.fontSize;q('#sanro-category').value=d.category;
+  q('#sanro-font-size').value=d.fontSize;q('#sanro-text-color').value=d.textColor;q('#sanro-category').value=d.category;
   image.hidden=!d.url;if(d.url&&image.getAttribute('src')!==d.url)image.setAttribute('src',d.url);if(!d.url)image.removeAttribute('src');
   image.style.left=d.imageX+'%';image.style.top=d.imageY+'%';image.style.width=d.imageSize+'%';
-  text.hidden=!d.text;text.textContent=d.text;text.style.left=d.textX+'%';text.style.top=d.textY+'%';text.style.fontSize=d.fontSize+'px';
+  text.hidden=!d.text;text.textContent=d.text;text.style.left=d.textX+'%';text.style.top=d.textY+'%';text.style.fontSize=d.fontSize+'px';text.style.color=d.textColor;
   root.querySelectorAll('[data-side]').forEach(b=>{b.disabled=!config.safe_areas[b.dataset.side];b.setAttribute('aria-pressed',String(b.dataset.side===side))});
   updateEstimate();requestAnimationFrame(validate);
  }
@@ -71,6 +71,7 @@
  q('#sanro-text-input').addEventListener('input',e=>{sides[side].text=e.target.value;render()});
  q('#sanro-image-size').addEventListener('input',e=>{sides[side].imageSize=Number(e.target.value);render()});
  q('#sanro-font-size').addEventListener('input',e=>{sides[side].fontSize=Number(e.target.value);render()});
+ q('#sanro-text-color').addEventListener('input',e=>{sides[side].textColor=e.target.value;render()});
  q('#sanro-category').addEventListener('change',e=>{sides[side].category=e.target.value;render()});
  q('#sanro-image').addEventListener('change',e=>{
   const file=e.target.files[0];if(!file)return;
@@ -97,7 +98,8 @@
    const entry=design[name];if(!entry)continue;
    if(!config.safe_areas[name]||!categories[entry.category]||!Array.isArray(entry.objects)
     ||entry.objects.length!==1||entry.objects[0].type!=='text'||typeof entry.text!=='string'
-    ||!Number.isInteger(entry.font_size)||entry.font_size<10||entry.font_size>48)throw new Error('Format draft tidak didukung.');
+    ||!Number.isInteger(entry.font_size)||entry.font_size<10||entry.font_size>48
+    ||typeof entry.text_color!=='string'||!/^#[0-9a-f]{6}$/i.test(entry.text_color))throw new Error('Format draft tidak didukung.');
    const obj=entry.objects[0],area=config.safe_areas[name];
    if(![obj.x,obj.y,obj.width,obj.height].every(Number.isFinite)||obj.width<=0||obj.height<=0
     ||obj.x<0||obj.y<0||obj.x+obj.width>area.width+0.000001
@@ -120,7 +122,7 @@
   for(const name of ['front','back']){
    const entry=design[name];const d=sides[name];
    if(!entry){d.text='';continue}
-   d.text=entry.text;d.category=entry.category;d.fontSize=entry.font_size;
+   d.text=entry.text;d.category=entry.category;d.fontSize=entry.font_size;d.textColor=entry.text_color;
    d.textX=entry.objects[0].x/config.safe_areas[name].width*100;
    d.textY=entry.objects[0].y/config.safe_areas[name].height*100;
   }
@@ -162,7 +164,7 @@
     ||object.width>limit[0]+0.000001||object.height>limit[1]+0.000001){
     throw new Error('Teks di luar area aman atau kategori cetak.');
    }
-   design[name]={category:d.category,objects:[object],text:d.text,font_size:d.fontSize};
+   design[name]={category:d.category,objects:[object],text:d.text,font_size:d.fontSize,text_color:d.textColor};
   }
   if(!Object.keys(design).length)throw new Error('Tambahkan teks terlebih dahulu.');
   const quantities=Object.fromEntries(qtyInputs.map(input=>[input.dataset.size,Number(input.value)]));
