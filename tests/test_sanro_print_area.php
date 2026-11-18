@@ -23,4 +23,18 @@ check_area('outside_safe_area', sanro_studio_validate_print_side([array_merge($i
 check_area(true, sanro_studio_validate_print_side([], 'A5', $area)['empty'], 'empty side');
 check_area('invalid_safe_area', sanro_studio_validate_print_side([$img], 'A5', ['width' => 0, 'height' => 10])['error'], 'invalid safe area');
 check_area('category_exceeded', sanro_studio_validate_print_side([array_merge($img, ['width' => 30])], 'A4', $area)['error'], 'category remains fixed when object too wide');
+$front = ['objects' => [$img], 'category' => 'A5'];
+$back = ['objects' => [$text], 'category' => 'A4'];
+$areas = ['front' => $area, 'back' => $area];
+check_area(true, sanro_studio_validate_print_design(['front' => $front, 'back' => $back], $areas)['valid'], 'both sides valid');
+check_area(true, sanro_studio_validate_print_design(['back' => $back], $areas)['valid'], 'back only valid');
+check_area(true, sanro_studio_validate_print_design(['front' => $front], $areas)['valid'], 'front only valid');
+check_area('empty_design', sanro_studio_validate_print_design([], $areas)['error'], 'no printable side rejected');
+check_area('empty_design', sanro_studio_validate_print_design(['front' => ['objects' => [], 'category' => 'A5']], $areas)['error'], 'empty front rejected');
+check_area('invalid_design', sanro_studio_validate_print_design(['left' => $front], $areas)['error'], 'unknown side rejected');
+check_area('invalid_design', sanro_studio_validate_print_design(['front' => ['objects' => [$img]]], $areas)['error'], 'missing category rejected');
+check_area('invalid_design', sanro_studio_validate_print_design(['front' => $front], [])['error'], 'missing admin safe area rejected');
+check_area('invalid_design', sanro_studio_validate_print_design(['front' => $front + ['price' => 1]], $areas)['error'], 'browser price rejected');
+check_area('category_exceeded', sanro_studio_validate_print_design(['front' => ['objects' => [$img, $text], 'category' => 'A5']], $areas)['error'], 'oversized side rejected');
+check_area('front', sanro_studio_validate_print_design(['front' => ['objects' => [$img, $text], 'category' => 'A5']], $areas)['side'], 'failure side identified');
 echo "SANRO print bounds: {$checks} assertions PASS, 0 FAIL\n";
