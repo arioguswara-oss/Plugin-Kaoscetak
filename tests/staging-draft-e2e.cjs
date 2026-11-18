@@ -79,7 +79,7 @@ catch (_) { console.error('BLOCKED: Playwright unavailable; set NODE_PATH to iso
   assert.match(credentials.token,/^[a-f0-9]{64}$/);
   console.log('PASS synthetic text draft saved; private reference retained without logging token');
   // Track only the REST status, never the private draft URL, ID, owner token, or response body.
-  const draftApiBase = await page.evaluate(() => String(window.SANRO_STUDIO_EDITOR_CONFIG.draft_api.url).replace(/\\/$/, ''));
+  const draftApiBase = await page.evaluate(() => String(window.SANRO_STUDIO_EDITOR_CONFIG.draft_api.url).replace(/\/$/, ''));
   const restoreReads = [];
   const browserErrorTypes = [];
   page.on('response', response => {
@@ -105,7 +105,7 @@ catch (_) { console.error('BLOCKED: Playwright unavailable; set NODE_PATH to iso
   }
   const restoredStatus = (await page.locator('#sanro-save-status').innerText()).trim();
   const safeStatus = restoredStatus.replace(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/ig,'[draft-id]')
-   .replace(/\\b[a-f0-9]{64}\\b/ig,'[redacted]');
+   .replace(/\b[a-f0-9]{64}\b/ig,'[redacted]');
   const diagnostics = 'restore status='+JSON.stringify(safeStatus)
    +'; draft GET status='+(restoreReads.length?restoreReads.join(','):'not observed')
    +'; browser errors='+(browserErrorTypes.length?browserErrorTypes.join(','):'none');
