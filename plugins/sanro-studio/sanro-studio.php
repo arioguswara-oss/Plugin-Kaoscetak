@@ -39,6 +39,7 @@ add_action('admin_menu', 'sanro_studio_admin_menu');
 add_action('admin_post_sanro_studio_save', 'sanro_studio_save_settings');
 
 add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_area_fields');
+add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_readiness_notice', 30);
 add_action('woocommerce_admin_process_product_object', 'sanro_studio_save_product_areas');
 
 add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_pricing_fields');
