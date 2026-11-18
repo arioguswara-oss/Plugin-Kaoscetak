@@ -24,7 +24,9 @@
    if(!sizes.includes(size)||!Number.isSafeInteger(count)||count<0||count>999)return null;
    const p=unit(size,front,back,longSleeve);
    if(p===null)return null;
-   pieces+=count;total+=count*p;
+   pieces+=count;
+   if(pieces>5000)return null;
+   total+=count*p;
   }
   return {pieces,total,currency:'IDR'};
  }
