@@ -15,7 +15,9 @@ function sanro_studio_product_editor_link() {
     if (!is_object($product) || !method_exists($product, 'get_id')) return;
     $id = absint($product->get_id());
     if (empty(sanro_studio_public_editor_config($id)['valid'])) return;
-    $url = add_query_arg(['sanro_studio_editor' => '1', 'product_id' => $id], get_permalink($id));
+    $editor_page_id = (int) get_option('sanro_studio_editor_page_id', 0);
+    $editor_page_url = $editor_page_id && get_post_type($editor_page_id) === 'page' && get_post_status($editor_page_id) === 'publish' ? get_permalink($editor_page_id) : false;
+    $url = add_query_arg(['sanro_studio_editor' => '1', 'product_id' => $id], $editor_page_url ?: get_permalink($id));
     echo '<p class="sanro-studio-entry"><a class="button alt" href="' . esc_url($url) . '">Custom Desain (SANRO Studio)</a></p>';
 }
 
@@ -23,10 +25,15 @@ function sanro_studio_product_editor_link() {
 function sanro_studio_render_buyer_editor() {
     if (!sanro_studio_frontend_enabled() || !isset($_GET['sanro_studio_editor'])
         || !is_string($_GET['sanro_studio_editor']) || $_GET['sanro_studio_editor'] !== '1') return;
-    if (!function_exists('is_product') || !is_product()) return;
-    $product_id = absint(get_queried_object_id());
-    if (!$product_id || !isset($_GET['product_id']) || !is_scalar($_GET['product_id'])
-        || (string) $product_id !== (string) $_GET['product_id']) return;
+    $editor_page_id = (int) get_option('sanro_studio_editor_page_id', 0);
+    $on_selected_page = $editor_page_id > 0 && get_post_type($editor_page_id) === 'page'
+        && get_post_status($editor_page_id) === 'publish' && function_exists('is_page') && is_page($editor_page_id);
+    $on_product = function_exists('is_product') && is_product();
+    if (!$on_selected_page && !$on_product) return;
+    if (!isset($_GET['product_id']) || !is_scalar($_GET['product_id'])) return;
+    $product_id = absint($_GET['product_id']);
+    if (!$product_id || (string) $product_id !== (string) $_GET['product_id']) return;
+    if ($on_product && $product_id !== absint(get_queried_object_id())) return;
     $config = sanro_studio_public_editor_config($product_id);
     if (empty($config['valid'])) return;
 
