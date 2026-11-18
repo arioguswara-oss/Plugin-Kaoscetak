@@ -126,7 +126,7 @@ catch (_) { console.error('BLOCKED: Playwright unavailable; set NODE_PATH to iso
    return /Draft teks tersimpan|Penyimpanan gagal|Teks di luar area|Jumlah per ukuran tidak valid/.test(value);
   },null,{timeout:30000});
   const saved = await status.innerText();
-  if (/Penyimpanan gagal \\(429\\)/.test(saved)) {
+  if (/Penyimpanan gagal \(429\)/.test(saved)) {
    console.error('BLOCKED: staging draft creation reached its 20-per-IP hourly limit. No automatic retries; reuse a private QA draft or run after the server budget refreshes.');
    process.exitCode=2;
    return;
