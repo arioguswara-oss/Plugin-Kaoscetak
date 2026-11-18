@@ -2,6 +2,36 @@
 
 Keputusan Owner 18 November 2026: gunakan dua konsep visual yang telah disetujui untuk backend dan buyer; target satu plugin SANRO Studio aktif dengan core berlisensi internal, sehingga kedua plugin editor lama dapat dinonaktifkan setelah QA. Harga resmi Kaoscetak dipertahankan. Screenshot hasil implementasi sebenarnya harus ditampilkan sebelum instalasi produksi. Konsep visual tidak dianggap screenshot implementasi.
 
+## Checkpoint koordinasi terbaru — 18 November 2026
+
+> **Acuan laporan operasional terbaru (Kordinasi 2).** Tabel 35% di bawah bagian ini adalah snapshot audit berbobot yang lebih lama, **bukan** status koordinasi terkini. Jangan menggunakannya untuk mereset progres saat berganti chat. Angka 90% belum direkonsiliasi dengan formula bobot audit lama dan **bukan** release readiness.
+
+- **Keseluruhan dilaporkan: 90%** (tetap dari checkpoint Kordinasi 2).
+- **Fondasi core: 73% → 75% (+2 poin)** pada putaran staging readiness.
+- Per tahap dari laporan checkpoint Owner:
+
+| Tahap | Progres laporan terbaru | Klasifikasi |
+| --- | ---: | --- |
+| Fondasi core | 75% | IMPLEMENTED sebagian; runtime nyata belum VERIFIED |
+| Backend produk | 79% | IMPLEMENTED sebagian |
+| Frontend buyer | 94% | IMPLEMENTED sebagian |
+| Integrasi harga | 83% | IMPLEMENTED sebagian |
+| Simpan/share | 97% | IMPLEMENTED sebagian |
+| Checkout/Drive | 46% | IMPLEMENTED sebagian; checkout production belum dibuka |
+| QA/rilis | 40% | VERIFIED sebagian; staging/browser belum lulus penuh |
+
+Commit referensi yang dilaporkan Owner: `52671846` (ready_for_staging), `a4d1a13f` (staging test opt-in), `1e0170fb` (isolasi runtime legacy), `bf0f5914` (simulasi WooCommerce untuk readiness). Periksa SHA dan HEAD branch aktual sebelum menganggap seluruhnya VERIFIED.
+
+**Gate:** staging mensyaratkan komponen native, WooCommerce dimuat, dan fitur buyer diaktifkan secara eksplisit. Staging-ready tidak berarti production-ready. Checkout dan production tetap tertutup. Tidak boleh deaktivasi plugin lama di production, merge, deploy, atau mengubah database live tanpa persetujuan Owner.
+
+**Prioritas selanjutnya:** (1) rekonsiliasi evidence dan HEAD, (2) PHP lint/tes unit HEAD tanpa GitHub Actions berbayar, (3) staging terisolasi dengan data sintetis, (4) validasi draft → cart → checkout server-side, (5) screenshot backend dan buyer implementasi nyata sebelum instalasi.
+
+**Aturan pembaruan:** persentase hanya naik berdasarkan implementasi baru yang memiliki bukti commit dan pengujian; laporkan DECIDED, IMPLEMENTED, VERIFIED secara terpisah. Bila angka koordinasi dan audit berbeda, pertahankan keduanya dengan label metodologi, bukan mengganti diam-diam.
+
+---
+
+## Snapshot audit berbobot terdahulu (historis; bukan checkpoint terbaru)
+
 Persentase di bawah adalah estimasi pekerjaan berbobot, bukan persentase tes atau bukti kesiapan rilis.
 
 | Tahap | Hasil yang dituju | Bobot | Penyelesaian tahap | Kontribusi |
