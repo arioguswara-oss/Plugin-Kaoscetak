@@ -192,6 +192,10 @@ function sanro_studio_lock_draft_for_order($id, $token, $order_id, $item_id = nu
     if (!is_int($order_id) || $order_id < 1) {
         return ['valid' => false, 'error' => 'invalid_order'];
     }
+    // Direct calls must not bypass the administrator-only order boundary.
+    if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) {
+        return ['valid' => false, 'error' => 'forbidden'];
+    }
     if ($item_id !== null && (!is_int($item_id) || $item_id < 1)) {
         return ['valid' => false, 'error' => 'invalid_order_item'];
     }
