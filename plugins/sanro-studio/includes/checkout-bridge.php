@@ -344,3 +344,45 @@ function sanro_studio_stage_checkout_create_order_line_item($item, $cart_item_ke
         throw new RuntimeException('SANRO Studio: order item validation failed.');
     }
 }
+
+/**
+ * Staging-only classic checkout credential entry. A draft owner token is
+ * submitted with the checkout POST, not saved to WC cart/session/order.
+ * This is an integration QA path, not the final buyer experience.
+ */
+function sanro_studio_stage_checkout_credential_field() {
+    if (!defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
+        || SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK !== true
+        || !function_exists('WC') || !function_exists('wp_nonce_field')) return;
+    $wc = WC();
+    if (!is_object($wc) || !isset($wc->cart)
+        || !is_object($wc->cart) || !method_exists($wc->cart, 'get_cart')) return;
+    foreach ((array) $wc->cart->get_cart() as $line) {
+        if (!is_array($line)) continue;
+        foreach (array_keys($line) as $key) {
+            if (is_string($key) && strpos($key, 'sanro_studio_') === 0) {
+                echo '<div class="sanro-studio-staging-authorization">';
+                echo '<label for="sanro_studio_checkout_token">SANRO Studio draft owner token (staging only)</label>';
+                echo '<input type="password" id="sanro_studio_checkout_token" name="sanro_studio_checkout_token" autocomplete="off" maxlength="64" required>';
+                wp_nonce_field('sanro_studio_checkout_auth', 'sanro_studio_checkout_nonce');
+                echo '</div>';
+                return;
+            }
+        }
+    }
+}
+
+/** Resolve the secret only from the current verified checkout request. */
+function sanro_studio_stage_checkout_post_token($default, $design_id, $product_id) {
+    if (!defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
+        || SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK !== true
+        || !isset($_POST['sanro_studio_checkout_token'], $_POST['sanro_studio_checkout_nonce'])
+        || !is_string($_POST['sanro_studio_checkout_token'])
+        || !is_string($_POST['sanro_studio_checkout_nonce'])
+        || !function_exists('wp_verify_nonce')) return null;
+    $nonce = $_POST['sanro_studio_checkout_nonce'];
+    if (!preg_match('/^[a-zA-Z0-9]+$/D', $nonce)
+        || !wp_verify_nonce($nonce, 'sanro_studio_checkout_auth')) return null;
+    $token = $_POST['sanro_studio_checkout_token'];
+    return preg_match('/^[a-f0-9]{64}$/D', $token) ? $token : null;
+}
