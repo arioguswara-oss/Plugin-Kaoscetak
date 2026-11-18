@@ -245,6 +245,9 @@ function sanro_studio_lock_draft_for_order_item($id, $token, $order, $item_id) {
     if (!is_int($order_id) || $order_id < 1) {
         return ['valid' => false, 'error' => 'invalid_order'];
     }
+    if (!method_exists($order, 'get_currency') || $order->get_currency() !== 'IDR') {
+        return ['valid' => false, 'error' => 'order_currency_mismatch'];
+    }
     $items = $order->get_items('line_item');
     if (!is_array($items) || !isset($items[$item_id])
         || !is_object($items[$item_id])
