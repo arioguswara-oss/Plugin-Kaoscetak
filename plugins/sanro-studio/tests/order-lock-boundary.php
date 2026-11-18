@@ -44,3 +44,31 @@ if (($result['error'] ?? null)!=='invalid_order_item') {
     fwrite(STDERR, "FAIL: missing_metadata_mutator\n"); exit(1);
 }
 echo "PASS: missing_metadata_mutator\n";
+
+final class SanroStudioMutableItem {
+    private $meta;
+    public $writes = 0;
+    public function __construct($meta=[]) { $this->meta=$meta; }
+    public function get_product_id() { return 42; }
+    public function get_quantity() { return 2; }
+    public function get_subtotal() { return '90000.00'; }
+    public function get_meta($key, $single=false) { return $this->meta[$key] ?? null; }
+    public function update_meta_data($key, $value) { $this->meta[$key]=$value; ++$this->writes; }
+}
+$bind_cases = [
+    'valid_binding' => [[], true, null, 1],
+    'reject_existing_binding' => [['_sanro_studio_design_id'=>$id], false, 'order_design_already_bound', 0],
+    'reject_foreign_binding' => [['_sanro_studio_design_id'=>'other-design'], false, 'order_design_already_bound', 0],
+];
+foreach ($bind_cases as $name=>[$meta,$expected,$error,$writes]) {
+    $item=new SanroStudioMutableItem($meta);
+    $result=sanro_studio_bind_order_item_design_identity($id, 'test-secret', new SanroStudioLockOrder($item), 7);
+    if (($result['valid'] ?? false)!==$expected || (!$expected && ($result['error'] ?? null)!==$error)
+        || $item->writes!==$writes
+        || ($expected && ($item->get_meta('_sanro_studio_design_id',true)!==$id
+            || ($result['requires_item_save'] ?? false)!==true
+            || ($result['checkout_enabled'] ?? true)!==false))) {
+        fwrite(STDERR, "FAIL: $name\n"); exit(1);
+    }
+    echo "PASS: $name\n";
+}
