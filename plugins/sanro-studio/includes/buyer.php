@@ -81,6 +81,14 @@ function sanro_studio_render_buyer_editor() {
     $config = sanro_studio_public_editor_config($product_id);
     if (empty($config['valid'])) return;
 
+    // Admin preferences affect presentation only; never alter product, pricing or checkout authorization.
+    $preferences = get_option('sanro_studio_native_preferences', []);
+    if (!is_array($preferences)) $preferences = [];
+    $studio_label = isset($preferences['studio_label']) && is_string($preferences['studio_label'])
+        && trim($preferences['studio_label']) !== '' ? $preferences['studio_label'] : 'SANRO Studio';
+    $preferred_side = ($preferences['default_side'] ?? 'front') === 'back' ? 'back' : 'front';
+    $config['default_side'] = isset($config['safe_areas'][$preferred_side])
+        ? $preferred_side : (isset($config['safe_areas']['front']) ? 'front' : 'back');
     // Explicit product identity for the REST draft creation payload.
     $config['product_id'] = $product_id;
     // Render as a dedicated view: no WooCommerce add-to-cart form is included.
@@ -113,7 +121,7 @@ function sanro_studio_render_buyer_editor() {
     // This view is selected only after product identity and visibility checks.
     get_header();
     echo '<main id="sanro-studio-buyer" class="sanro-buyer" aria-label="SANRO Studio">';
-    echo '<header><h1>SANRO Studio</h1><p>Editor kaos — pratinjau saja, belum dapat checkout</p>';
+    echo '<header><h1>' . esc_html($studio_label) . '</h1><p>Editor kaos — pratinjau saja, belum dapat checkout</p>';
     // Keep the standalone catalog reachable without losing the selected editor page.
     if ($on_selected_page) {
         echo '<p><a class="sanro-back-to-products" href="' . esc_url(get_permalink($editor_page_id)) . '">← Kembali pilih produk</a></p>';
@@ -126,7 +134,7 @@ function sanro_studio_render_buyer_editor() {
     }
     echo '</header>';
     echo '<div class="sanro-layout"><section class="sanro-preview" aria-label="Pratinjau desain">';
-    echo '<nav aria-label="Sisi kaos"><button type="button" data-side="front" aria-pressed="true">Depan</button> <button type="button" data-side="back" aria-pressed="false">Belakang</button></nav>';
+    echo '<nav aria-label="Sisi kaos"><button type="button" data-side="front" aria-pressed="' . ($config['default_side'] === 'front' ? 'true' : 'false') . '">Depan</button> <button type="button" data-side="back" aria-pressed="' . ($config['default_side'] === 'back' ? 'true' : 'false') . '">Belakang</button></nav>';
     echo '<div class="sanro-shirt"><div class="sanro-safe"><img alt="Gambar desain" hidden><div class="sanro-text" hidden></div></div></div>';
     echo '<p id="sanro-side-summary" role="status">Depan: kosong · Belakang: kosong</p>';
     echo '<p class="sanro-hint">Geser gambar atau teks. Ukuran cetak dihitung dalam cm.</p></section>';
