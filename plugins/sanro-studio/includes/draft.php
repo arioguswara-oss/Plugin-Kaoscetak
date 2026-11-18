@@ -57,6 +57,7 @@ function sanro_studio_read_draft($id, $token) {
         'design_id' => $id,
         'product_id' => $record['product_id'],
         'design' => $record['design'],
+        'design_hash' => hash('sha256', maybe_serialize($record['design'])),
         'status' => $record['status'],
         'expires_at' => $record['expires_at'],
         'master_refs' => is_array($record['master_refs'] ?? null)
