@@ -292,6 +292,27 @@
   return design;
  }
  if(saveButton&&config.draft_api){
+  const quoteButton=q('#sanro-server-quote'),quoteStatus=q('#sanro-server-quote-status');
+  quoteButton.addEventListener('click',async()=>{
+   if(!savedId||!ownerToken){quoteStatus.textContent='Simpan draft teks terlebih dahulu.';return}
+   quoteButton.disabled=true;
+   const revisionAtRequest=editRevision;
+   quoteStatus.textContent='Memeriksa harga server…';
+   try{
+    const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/quote',{
+     method:'GET',headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken},
+     credentials:'same-origin',cache:'no-store'
+    });
+    const result=await response.json();
+    if(!response.ok||!result.valid||!result.quote||!Number.isSafeInteger(result.quote.total_price))
+     throw new Error('Harga server belum tersedia ('+response.status+').');
+    const formatted=new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(result.quote.total_price);
+    quoteStatus.textContent='Harga server draft tersimpan: '+formatted+' untuk '+result.quote.total_quantity+' pcs. '
+     +(editRevision!==revisionAtRequest?'Desain lokal berubah selama pemeriksaan; simpan ulang untuk harga terbaru. ':'')
+     +'Belum dapat checkout.';
+   }catch(error){quoteStatus.textContent=error.message||'Gagal memeriksa harga server.'}
+   finally{quoteButton.disabled=false}
+  });
   try{reopenDraft().catch(error=>{saveStatus.textContent=error.message})}catch(_error){}
   saveButton.addEventListener('click',async()=>{
    if(saving)return;
