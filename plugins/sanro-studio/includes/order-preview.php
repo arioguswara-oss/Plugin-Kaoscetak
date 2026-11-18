@@ -92,3 +92,73 @@ function sanro_studio_attach_order_preview_refs($order, $design_id, $owner_token
     $order->save();
     return ['valid' => true, 'attached_sides' => array_keys($refs)];
 }
+
+/**
+ * Resolve order-linked preview for an authorized WooCommerce administrator.
+ * No owner token is needed after a reference has been attached to the order.
+ * No public URL or filesystem path is returned.
+ */
+function sanro_studio_admin_order_preview_bytes($order, $side) {
+    if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) {
+        return ['valid' => false, 'error' => 'forbidden'];
+    }
+    if (!in_array($side, ['front', 'back'], true)) {
+        return ['valid' => false, 'error' => 'invalid_side'];
+    }
+    $inventory = sanro_studio_order_preview_inventory($order);
+    if (empty($inventory['valid']) || empty($inventory[$side])) {
+        return ['valid' => false, 'error' => 'preview_not_found'];
+    }
+    $ref = $inventory[$side];
+    if (!defined('SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS')
+        || SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS !== true
+        || !defined('SANRO_STUDIO_PRIVATE_PREVIEW_DIR')
+        || !is_string(SANRO_STUDIO_PRIVATE_PREVIEW_DIR)) {
+        return ['valid' => false, 'error' => 'preview_storage_disabled'];
+    }
+    $directory = realpath(SANRO_STUDIO_PRIVATE_PREVIEW_DIR);
+    $root = defined('ABSPATH') ? realpath(ABSPATH) : false;
+    if (!$directory || !is_dir($directory) || is_link(SANRO_STUDIO_PRIVATE_PREVIEW_DIR)
+        || !$root || $directory === $root
+        || strpos($directory, $root . DIRECTORY_SEPARATOR) === 0) {
+        return ['valid' => false, 'error' => 'unsafe_preview_directory'];
+    }
+    $path = $directory . DIRECTORY_SEPARATOR . $ref;
+    if (is_link($path) || !is_file($path) || !is_readable($path)
+        || filesize($path) > 51200) {
+        return ['valid' => false, 'error' => 'preview_not_found'];
+    }
+    $bytes = @file_get_contents($path);
+    $checked = sanro_studio_validate_preview_bytes($bytes);
+    if (empty($checked['valid'])
+        || !preg_match('/-' . $checked['sha256'] . '\\.(png|jpg|webp)$/D', $ref)
+        || !hash_equals(
+            ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp'][$checked['mime']],
+            substr($ref, strrpos($ref, '.') + 1)
+        )) {
+        return ['valid' => false, 'error' => 'preview_integrity_failed'];
+    }
+    return ['valid' => true, 'bytes' => $bytes, 'mime' => $checked['mime']];
+}
+
+/** Explicitly admin-only delivery, protected by order-scoped nonce. */
+function sanro_studio_admin_deliver_order_preview() {
+    if (!current_user_can('manage_woocommerce')) wp_die('Forbidden', '', ['response' => 403]);
+    $order_id = isset($_GET['order_id']) ? absint($_GET['order_id']) : 0;
+    $side = isset($_GET['side']) && is_string($_GET['side']) ? $_GET['side'] : '';
+    $nonce = isset($_GET['_wpnonce']) && is_string($_GET['_wpnonce']) ? $_GET['_wpnonce'] : '';
+    if (!$order_id || !in_array($side, ['front', 'back'], true)
+        || !wp_verify_nonce($nonce, 'sanro_order_preview_' . $order_id . '_' . $side)) {
+        wp_die('Forbidden', '', ['response' => 403]);
+    }
+    $order = function_exists('wc_get_order') ? wc_get_order($order_id) : false;
+    $result = sanro_studio_admin_order_preview_bytes($order, $side);
+    if (empty($result['valid'])) wp_die('Preview unavailable', '', ['response' => 404]);
+    if (function_exists('nocache_headers')) nocache_headers();
+    header('Content-Type: ' . $result['mime']);
+    header('Content-Disposition: inline; filename="sanro-preview-' . $side . '.img"');
+    header('X-Content-Type-Options: nosniff');
+    header('Content-Security-Policy: sandbox');
+    echo $result['bytes'];
+    exit;
+}
