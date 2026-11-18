@@ -17,6 +17,7 @@ for scenario in missing_woocommerce buyer_disabled buyer_enabled; do
   "$PHP_BIN" plugins/sanro-studio/tests/native-readiness-gates.php "$scenario"
 done
 "$PHP_BIN" plugins/sanro-studio/tests/native-missing-component.php
+"$PHP_BIN" plugins/sanro-studio/tests/cart-identity-contract.php
 for test_file in tests/test_*.php; do "$PHP_BIN" "$test_file"; done
 python3 -m unittest discover -s tests -p 'test_sanro_runtime.py'
 git diff --check
