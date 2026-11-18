@@ -72,8 +72,8 @@ for ($i = 0; $i < 20; $i++) {
 }
 $limited = sanro_studio_rest_create_draft($request);
 verify_rest($limited instanceof WP_Error && $limited->data['status'] === 429, 'guest creation budget enforced');
-$bad = sanro_studio_rest_update_draft(new SanroTestRequest(['id' => 'draft', 'design' => []], ['X-Sanro-Owner-Token' => 'bad']));
+$bad = sanro_studio_rest_update_draft(new SanroTestRequest(['id' => 'draft', 'design' => ['front' => ['text' => 'OK']]], ['X-Sanro-Owner-Token' => 'bad']));
 verify_rest($bad instanceof WP_Error && $bad->data['status'] === 404, 'owner token required');
-$good = sanro_studio_rest_update_draft(new SanroTestRequest(['id' => 'draft', 'design' => []], ['X-Sanro-Owner-Token' => str_repeat('a', 64)]));
+$good = sanro_studio_rest_update_draft(new SanroTestRequest(['id' => 'draft', 'design' => ['front' => ['text' => 'OK']]], ['X-Sanro-Owner-Token' => str_repeat('a', 64)]));
 verify_rest($good['valid'] === true, 'owner update accepted');
 echo "SANRO draft REST: {$checks} assertions PASS, 0 FAIL\n";
