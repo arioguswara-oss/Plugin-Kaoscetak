@@ -61,5 +61,5 @@ verify(sanro_studio_lock_draft_for_order_item($id, $token, $order, 9)['error'] =
 verify(sanro_studio_lock_draft_for_order_item($id, $token, $order, 8)['error'] === 'product_mismatch', 'mismatched item product denied');
 $wpdb->affected = 1;
 $claimed = sanro_studio_lock_draft_for_order_item($id, $token, $order, 7);
-verify(!empty($claimed['valid']) && $GLOBALS['record']['order_id'] === 30, 'matching order item locks draft');
+verify(!empty($claimed['valid']) && $GLOBALS['record']['order_id'] === 30 && $GLOBALS['record']['order_item_id'] === 7, 'matching order item locks draft');
 verify(sanro_studio_lock_draft_for_order_item($id, $token, $order, 7)['error'] === 'draft_locked', 'repeat order lock denied');
