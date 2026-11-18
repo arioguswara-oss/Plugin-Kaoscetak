@@ -1,6 +1,8 @@
 <?php
 $runtime_case = $argv[1] ?? 'external';
 $argv[1] = $runtime_case === 'missing_woo' ? 'missing_woo' : ($runtime_case === 'external' ? 'normal' : 'missing_lumise');
+// Legacy runtime is opt-in; enable it only for this isolated compatibility test.
+define('SANRO_STUDIO_ENABLE_LEGACY_COMPAT', true);
 require __DIR__ . '/sanro-studio-fixture.php';
 require __DIR__ . '/../plugins/sanro-studio/sanro-studio.php';
 $before = $GLOBALS['ss_options'];
