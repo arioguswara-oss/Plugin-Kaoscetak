@@ -93,3 +93,27 @@ function sanro_studio_store_private_master($design_id, $side, $bytes) {
     return ['valid' => true, 'file_id' => $filename, 'sha256' => $checked['sha256'],
         'mime' => $checked['mime'], 'bytes' => $checked['bytes']];
 }
+
+/**
+ * Authenticated draft-owner boundary for future private master uploads.
+ * This is deliberately internal: no REST registration or checkout activation.
+ * A draft can hold at most one current master per side; repeat uploads are
+ * idempotent at the content-addressed storage layer.
+ */
+function sanro_studio_store_owned_draft_master($design_id, $owner_token, $side, $bytes) {
+    if (!function_exists('sanro_studio_read_draft')) {
+        return ['valid' => false, 'error' => 'draft_store_unavailable'];
+    }
+    $draft = sanro_studio_read_draft($design_id, $owner_token);
+    if (empty($draft['valid'])) return $draft;
+    if (($draft['status'] ?? null) !== 'draft') {
+        return ['valid' => false, 'error' => 'draft_locked'];
+    }
+    if (!in_array($side, ['front', 'back'], true)) {
+        return ['valid' => false, 'error' => 'invalid_master_target'];
+    }
+    // Enforce the byte limit before the filesystem writer is reached.
+    $checked = sanro_studio_validate_master_bytes($bytes);
+    if (empty($checked['valid'])) return $checked;
+    return sanro_studio_store_private_master($design_id, $side, $bytes);
+}
