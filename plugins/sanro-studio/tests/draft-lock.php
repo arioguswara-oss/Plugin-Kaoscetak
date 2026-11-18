@@ -54,6 +54,8 @@ class SanroLockItem {
     public function get_product_id() { return $this->product; }
     public function get_quantity() { return $this->quantity; }
     public function get_subtotal() { return '150000.00'; }
+    public function get_total() { return '135000.00'; }
+    public function get_total_tax() { return '14850.00'; }
 }
 class SanroLockOrder {
     private $items;
@@ -87,6 +89,7 @@ class SanroSubtotalFixture {
     public function get_subtotal() { return $this->subtotal; }
 }
 verify(sanro_studio_validate_order_item_quote_amount(new SanroSubtotalFixture('150000.00'), $priceQuote)['valid'], 'undiscounted IDR subtotal matches');
+verify(sanro_studio_validate_order_item_quote_amount(new SanroLockItem(12), $priceQuote)['valid'], 'discount and tax do not change pre-discount quote comparison');
 verify(sanro_studio_validate_order_item_quote_amount(new SanroSubtotalFixture('149999.00'), $priceQuote)['error'] === 'order_amount_mismatch', 'underpriced order rejected');
 verify(sanro_studio_validate_order_item_quote_amount(new SanroSubtotalFixture('150000.01'), $priceQuote)['error'] === 'order_amount_mismatch', 'fractional mismatch rejected');
 verify(sanro_studio_validate_order_item_quote_amount(new SanroSubtotalFixture('150000e0'), $priceQuote)['error'] === 'order_amount_unavailable', 'scientific notation rejected');
