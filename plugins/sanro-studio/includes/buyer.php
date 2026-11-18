@@ -30,6 +30,8 @@ function sanro_studio_render_buyer_editor() {
     $config = sanro_studio_public_editor_config($product_id);
     if (empty($config['valid'])) return;
 
+    // Explicit product identity for the REST draft creation payload.
+    $config['product_id'] = $product_id;
     // Render as a dedicated view: no WooCommerce add-to-cart form is included.
     $asset = plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/';
     wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], SANRO_STUDIO_VERSION);
