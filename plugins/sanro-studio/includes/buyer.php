@@ -77,6 +77,8 @@ function sanro_studio_render_buyer_editor() {
     echo '<label>Warna teks<input type="color" id="sanro-text-color" value="#171717"></label>';
     echo '<button type="button" id="sanro-center-text">Posisikan teks ke tengah</button>';
     echo '<button type="button" id="sanro-remove-text">Hapus teks sisi ini</button>';
+    echo '<button type="button" id="sanro-copy-text">Salin teks ke sisi lainnya</button>';
+    echo '<p id="sanro-copy-status" role="status" aria-live="polite"></p>';
     echo '<label>Kategori cetak<select id="sanro-category"><option>A5</option><option>A4</option><option>A3</option><option>A3+</option></select></label>';
     echo '<button type="button" id="sanro-reset-side">Kosongkan desain sisi ini</button>';
     echo '<p id="sanro-validation" role="status">Belum ada desain.</p>';
