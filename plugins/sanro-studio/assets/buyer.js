@@ -137,6 +137,8 @@
   const uploadSide=side,target=sides[uploadSide],url=URL.createObjectURL(file),probe=new Image();
   editRevision++;
   if(target.pending)URL.revokeObjectURL(target.pending);
+  // Claim ownership before assigning src; cancellation invalidates this pending URL.
+  target.pending=url;
   probe.onload=()=>{
    if(target.pending!==url)return;
    if(target.url)URL.revokeObjectURL(target.url);
@@ -147,7 +149,7 @@
     const maxWidth=Math.min(100,100*safeHeight*probe.naturalWidth/(safeWidth*probe.naturalHeight));
     target.imageSize=Math.min(60,maxWidth);
     // Tall images may need less than the slider's 10% minimum.
-    q('#sanro-image-size').min=String(Math.min(10,target.imageSize));
+    if(side===uploadSide)q('#sanro-image-size').min=String(Math.min(10,target.imageSize));
     target.imageX=Math.max(0,(100-target.imageSize)/2);
     target.imageY=Math.max(0,(100-target.imageSize*safeWidth*probe.naturalHeight/(safeHeight*probe.naturalWidth))/2);
    }
@@ -156,7 +158,7 @@
    else updateEstimate();
   };
   probe.onerror=()=>{if(target.pending===url){URL.revokeObjectURL(url);target.pending=null;if(side===uploadSide)q('#sanro-validation').textContent='Gambar tidak valid'}};
-  target.pending=url;probe.src=url;e.target.value='';
+  probe.src=url;e.target.value='';
  });
  q('#sanro-center-image').addEventListener('click',()=>{
   const d=sides[side];
