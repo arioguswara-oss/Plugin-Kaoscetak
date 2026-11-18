@@ -137,7 +137,7 @@ function sanro_studio_cleanup_expired_drafts($limit = 50, $after_id = 0) {
         || !preg_match('/^[A-Za-z0-9_]+$/D', $wpdb->options)
         || !method_exists($wpdb, 'get_results') || !method_exists($wpdb, 'prepare')
         || !method_exists($wpdb, 'esc_like') || !method_exists($wpdb, 'query')
-        || !function_exists('maybe_serialize') || !function_exists('wp_cache_delete')) {
+        || !function_exists('maybe_unserialize') || !function_exists('wp_cache_delete')) {
         return $empty + ['error' => 'storage_unavailable'];
     }
     $limit = max(1, min(100, (int) $limit));
