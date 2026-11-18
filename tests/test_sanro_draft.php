@@ -43,6 +43,8 @@ check_draft(false, isset($GLOBALS['options']['sanro_studio_draft_' . $created['d
 check_draft(true, sanro_studio_read_draft($created['design_id'], $created['owner_token'])['valid'], 'authorized read');
 check_draft('not_found', sanro_studio_read_draft($created['design_id'], str_repeat('a', 64))['error'], 'wrong owner token');
 check_draft('invalid_credentials', sanro_studio_read_draft('../wp-config.php', $created['owner_token'])['error'], 'path rejected');
+check_draft('invalid_credentials', sanro_studio_read_draft(str_repeat('-', 36), $created['owner_token'])['error'], 'malformed UUID rejected');
+check_draft('invalid_credentials', sanro_studio_read_draft('12345678123442348234123456789abc----', $created['owner_token'])['error'], 'invalid UUID separators rejected');
 check_draft('not_found', sanro_studio_update_draft($created['design_id'], str_repeat('a', 64), ['front' => 'valid'])['error'], 'unauthorized update');
 check_draft('invalid_design', sanro_studio_update_draft($created['design_id'], $created['owner_token'], [])['error'], 'invalid replacement rejected');
 check_draft(true, sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['valid'], 'authorized update');
