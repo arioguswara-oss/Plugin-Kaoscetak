@@ -240,6 +240,7 @@ function sanro_studio_stage_bind_size_order_batch($contract, $order_items) {
  * Unrelated ordinary carts remain untouched.
  */
 function sanro_studio_stage_checkout_process() {
+    unset($GLOBALS['sanro_studio_checkout_verified']);
     if (!defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
         || SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK !== true
         || !function_exists('WC') || !function_exists('wc_add_notice')) return;
@@ -289,4 +290,57 @@ function sanro_studio_stage_checkout_process() {
         'design_id' => $id, 'product_id' => $product_id,
         'contract' => sanro_studio_prepare_cart_design_contract($id, $token, $product_id),
     ];
+}
+
+/**
+ * WooCommerce creates each order line after the checkout_process gate.
+ * Never trust a cart item's claimed design or price without the live quote.
+ * A failed item aborts checkout rather than persisting an unbound design.
+ */
+function sanro_studio_stage_checkout_create_order_line_item($item, $cart_item_key, $values, $order) {
+    if (!defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
+        || SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK !== true
+        || !is_array($values)) return;
+    $is_studio = false;
+    foreach (array_keys($values) as $key) {
+        if (is_string($key) && strpos($key, 'sanro_studio_') === 0) {
+            $is_studio = true;
+            break;
+        }
+    }
+    if (!$is_studio) return;
+    $verified = $GLOBALS['sanro_studio_checkout_verified'] ?? null;
+    if (!is_array($verified) || !isset($verified['contract'])
+        || empty($verified['contract']['valid'])) {
+        throw new RuntimeException('SANRO Studio: checkout authorization missing.');
+    }
+    $contract = $verified['contract'];
+    $candidates = sanro_studio_prepare_size_cart_lines($contract);
+    if (empty($candidates['valid'])) {
+        throw new RuntimeException('SANRO Studio: invalid size quote.');
+    }
+    $candidate = null;
+    foreach ($candidates['lines'] as $line) {
+        if ($line['sanro_studio_size'] === ($values['sanro_studio_size'] ?? null)) {
+            $candidate = $line;
+            break;
+        }
+    }
+    if (!is_array($candidate)) {
+        throw new RuntimeException('SANRO Studio: size not authorized.');
+    }
+    // Full-batch validation happens in checkout_process. Here compare the
+    // exact current line with the quote before binding metadata.
+    foreach (['product_id', 'quantity', 'sanro_studio_design_id',
+        'sanro_studio_size', 'sanro_studio_unit_price',
+        'sanro_studio_line_subtotal', 'sanro_studio_quote_currency'] as $field) {
+        if (!array_key_exists($field, $values)
+            || $values[$field] !== $candidate[$field]) {
+            throw new RuntimeException('SANRO Studio: cart item changed during checkout.');
+        }
+    }
+    $bound = sanro_studio_prepare_size_checkout_order_item($candidate, $item);
+    if (empty($bound['valid'])) {
+        throw new RuntimeException('SANRO Studio: order item validation failed.');
+    }
 }
