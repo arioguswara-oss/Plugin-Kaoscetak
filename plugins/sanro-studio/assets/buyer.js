@@ -355,6 +355,9 @@
     if(!savedId||!ownerToken){
      masterStatus.textContent='Simpan draft teks terlebih dahulu, kemudian pilih gambar.';return;
     }
+    if(savedRevision!==editRevision){
+     masterStatus.textContent='Desain berubah. Simpan revisi draft terbaru sebelum upload master.';return;
+    }
     const selected=['front','back'].filter(name=>sides[name].file&&sides[name].url&&!sides[name].pending);
     if(!selected.length){masterStatus.textContent='Pilih gambar PNG/JPEG untuk depan atau belakang.';return;}
     if(['front','back'].some(name=>sides[name].pending)){
@@ -373,7 +376,8 @@
       ||typeof currentDraft.design_hash!=='string'
       ||!/^[a-f0-9]{64}$/.test(currentDraft.design_hash))
       throw new Error('Revisi draft tidak valid.');
-     if(editRevision!==revisionAtStart)throw new Error('Desain berubah selama pemeriksaan draft.');
+     if(editRevision!==revisionAtStart||savedRevision!==revisionAtStart)
+      throw new Error('Desain berubah atau belum tersimpan.');
      const designHash=currentDraft.design_hash;
      const completed=[];
      for(const name of selected){
