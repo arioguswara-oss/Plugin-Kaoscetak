@@ -147,9 +147,13 @@ function sanro_studio_read_owned_draft_preview($design_id, $owner_token, $side, 
     if (empty($draft['valid'])) return $draft;
     if (!in_array($side, ['front', 'back'], true)
         || !is_string($file_id) || !is_string($design_id)
-        || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id)
-        || !preg_match('/^[a-f0-9]{64}\\.(png|jpg|webp)$/D', substr($file_id, strlen($design_id) + strlen($side) + 2))
-        || strpos($file_id, strtolower($design_id) . '-' . $side . '-') !== 0) {
+        || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id)) {
+        return ['valid' => false, 'error' => 'invalid_preview_reference'];
+    }
+    // Match the entire opaque reference, not a substring or path component.
+    $prefix = strtolower($design_id) . '-' . $side . '-';
+    if (strpos($file_id, $prefix) !== 0
+        || !preg_match('/^[a-f0-9]{64}[.](?:png|jpg|webp)$/D', substr($file_id, strlen($prefix)))) {
         return ['valid' => false, 'error' => 'invalid_preview_reference'];
     }
     if (!defined('SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS')
