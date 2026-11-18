@@ -340,3 +340,64 @@ function sanro_studio_validate_order_item_design_identity($item, $design_id) {
     }
     return ['valid' => true, 'design_id' => $design_id];
 }
+
+/**
+ * Internal admin-only metadata binding for an existing WooCommerce order line.
+ * Requires the same authorized draft and exact line identity; never called
+ * from a public checkout hook. No owner token is persisted in item metadata.
+ */
+function sanro_studio_bind_order_item_design_identity($id, $token, $order, $item_id) {
+    if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) {
+        return ['valid' => false, 'error' => 'forbidden'];
+    }
+    if (!is_object($order) || !method_exists($order, 'get_items')
+        || !method_exists($order, 'get_id') || !is_int($item_id) || $item_id < 1
+        || !is_int($order->get_id()) || $order->get_id() < 1) {
+        return ['valid' => false, 'error' => 'invalid_order_item'];
+    }
+    $items = $order->get_items('line_item');
+    if (!is_array($items) || !isset($items[$item_id])
+        || !is_object($items[$item_id])) {
+        return ['valid' => false, 'error' => 'invalid_order_item'];
+    }
+    $item = $items[$item_id];
+    if (!method_exists($item, 'get_product_id') || !method_exists($item, 'get_quantity')
+        || !method_exists($item, 'get_meta') || !method_exists($item, 'update_meta_data')
+        || !method_exists($item, 'get_subtotal')) {
+        return ['valid' => false, 'error' => 'invalid_order_item'];
+    }
+    $draft = sanro_studio_read_draft($id, $token);
+    if (empty($draft['valid'])) return $draft;
+    if (($draft['status'] ?? null) !== 'draft') {
+        return ['valid' => false, 'error' => 'draft_locked'];
+    }
+    if ($draft['product_id'] !== $item->get_product_id()) {
+        return ['valid' => false, 'error' => 'product_mismatch'];
+    }
+    if (!method_exists($order, 'get_currency') || $order->get_currency() !== 'IDR'
+        || !function_exists('sanro_studio_quote_size_quantities')
+        || !is_array($draft['design'] ?? null)
+        || !is_array($draft['design']['quantities'] ?? null)) {
+        return ['valid' => false, 'error' => 'quote_unavailable'];
+    }
+    $design = $draft['design'];
+    $quote = sanro_studio_quote_size_quantities($draft['product_id'], $design,
+        $design['quantities'], $design['long_sleeve'] ?? false);
+    if (empty($quote['valid']) || !isset($quote['total_quantity'])
+        || !is_int($quote['total_quantity']) || $quote['total_quantity'] < 1
+        || $item->get_quantity() !== $quote['total_quantity']) {
+        return ['valid' => false, 'error' => 'order_quantity_mismatch'];
+    }
+    $amount = sanro_studio_validate_order_item_quote_amount($item, $quote);
+    if (empty($amount['valid'])) return $amount;
+    $existing = $item->get_meta('_sanro_studio_design_id', true);
+    if ($existing !== '' && $existing !== null) {
+        return ['valid' => false, 'error' => 'order_design_already_bound'];
+    }
+    $item->update_meta_data('_sanro_studio_design_id', $draft['design_id']);
+    // The caller must persist the order item through WooCommerce after
+    // verifying the result. This helper does not save or lock the draft.
+    return ['valid' => true, 'design_id' => $draft['design_id'],
+        'order_item_id' => $item_id, 'requires_item_save' => true,
+        'checkout_enabled' => false];
+}
