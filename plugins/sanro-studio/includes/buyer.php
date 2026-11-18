@@ -137,6 +137,7 @@ function sanro_studio_render_buyer_editor() {
         }
     }
     echo '</header>';
+    echo '<nav class="sanro-workflow" aria-label="Tahapan desain"><span class="sanro-workflow-done">1. Pilih Produk</span><span class="sanro-workflow-current" aria-current="step">2. Atur Desain</span><span class="sanro-workflow-pending">3. Desain Saya</span></nav>';
     echo '<div class="sanro-layout"><section class="sanro-preview" aria-label="Pratinjau desain">';
     echo '<nav aria-label="Sisi kaos"><button type="button" data-side="front" aria-pressed="' . ($config['default_side'] === 'front' ? 'true' : 'false') . '">Depan</button> <button type="button" data-side="back" aria-pressed="' . ($config['default_side'] === 'back' ? 'true' : 'false') . '">Belakang</button></nav>';
     echo '<div class="sanro-shirt"><div class="sanro-safe"><img alt="Gambar desain" hidden><div class="sanro-text" hidden></div></div></div>';
