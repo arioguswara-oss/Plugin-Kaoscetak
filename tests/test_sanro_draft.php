@@ -15,6 +15,9 @@ function get_option($key, $fallback) {
     if (!empty($GLOBALS['draft_rebind_on_second_read']) && ++$GLOBALS['draft_read_count'] === 2) {
         $GLOBALS['options'][$key]['product_id'] = 18;
     }
+    if (!empty($GLOBALS['draft_corrupt_hash_on_second_read']) && ++$GLOBALS['draft_read_count'] === 2) {
+        $GLOBALS['options'][$key]['token_hash'] = ['invalid'];
+    }
     return $GLOBALS['options'][$key] ?? $fallback;
 }
 function update_option($key, $value, $autoload = null) {
@@ -64,6 +67,12 @@ $GLOBALS['draft_rebind_on_second_read'] = true;
 check_draft('draft_locked', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'interleaved product rebinding rejected');
 $GLOBALS['draft_rebind_on_second_read'] = false;
 $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['product_id'] = 17;
+// Simulate corrupted option metadata after the first authorized read.
+$GLOBALS['draft_read_count'] = 0;
+$GLOBALS['draft_corrupt_hash_on_second_read'] = true;
+check_draft('not_found', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'malformed token hash fails closed');
+$GLOBALS['draft_corrupt_hash_on_second_read'] = false;
+$GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['token_hash'] = hash('sha256', $created['owner_token']);
 $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['status'] = 'locked';
 check_draft('draft_locked', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'locked draft denied');
 check_draft('storage_failed', sanro_studio_create_draft(17, ['front' => 'valid'])['error'], 'collision fails closed');
