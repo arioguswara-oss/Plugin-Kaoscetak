@@ -396,3 +396,37 @@ function sanro_studio_mark_order_production_ready($order) {
     }
     return ['valid' => true, 'already_ready' => false];
 }
+
+/**
+ * Persist an opaque Drive folder ID only after an authorized integration has
+ * independently created and verified that folder. This function does not
+ * verify remote ownership or create a Google Drive URL.
+ */
+function sanro_studio_attach_item_production_folder_id($order, $item_id, $folder_id) {
+    if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) {
+        return ['valid' => false, 'error' => 'forbidden'];
+    }
+    if (!is_string($folder_id) || !preg_match('/^[A-Za-z0-9_-]{10,128}$/D', $folder_id)) {
+        return ['valid' => false, 'error' => 'invalid_folder_id'];
+    }
+    $manifest = sanro_studio_order_item_production_manifest($order, $item_id);
+    if (empty($manifest['valid'])) return $manifest;
+    if (empty($manifest['ready_for_drive_integration'])) {
+        return ['valid' => false, 'error' => 'production_not_ready'];
+    }
+    $items = $order->get_items('line_item');
+    $item = $items[$item_id];
+    if (!method_exists($item, 'update_meta_data') || !method_exists($item, 'save')) {
+        return ['valid' => false, 'error' => 'invalid_order_item'];
+    }
+    $existing = $item->get_meta('_sanro_studio_drive_folder_id', true);
+    if ($existing !== '' && $existing !== $folder_id) {
+        return ['valid' => false, 'error' => 'folder_conflict'];
+    }
+    if ($existing === $folder_id) return ['valid' => true, 'already_attached' => true];
+    $item->update_meta_data('_sanro_studio_drive_folder_id', $folder_id);
+    if ($item->save() === false) {
+        return ['valid' => false, 'error' => 'folder_save_failed'];
+    }
+    return ['valid' => true, 'already_attached' => false];
+}
