@@ -55,6 +55,7 @@ class SanroLockOrder {
     private $items;
     public function __construct($items) { $this->items = $items; }
     public function get_id() { return 30; }
+    public function get_currency() { return 'IDR'; }
     public function get_items($type) { return $type === 'line_item' ? $this->items : []; }
 }
 $order = new SanroLockOrder([7 => new SanroLockItem(12), 8 => new SanroLockItem(13), 10 => new SanroLockItem(12, 3)]);
@@ -87,3 +88,9 @@ verify(sanro_studio_validate_order_item_quote_amount(new SanroSubtotalFixture('1
 verify(sanro_studio_validate_order_item_quote_amount(new SanroSubtotalFixture('150000e0'), $priceQuote)['error'] === 'order_amount_unavailable', 'scientific notation rejected');
 $foreignQuote = $priceQuote; $foreignQuote['currency'] = 'USD';
 verify(sanro_studio_validate_order_item_quote_amount(new SanroSubtotalFixture('150000'), $foreignQuote)['error'] === 'order_amount_unavailable', 'foreign currency quote rejected');
+
+class SanroForeignCurrencyOrder extends SanroLockOrder {
+    public function get_currency() { return 'USD'; }
+}
+$foreignOrder = new SanroForeignCurrencyOrder([7 => new SanroLockItem(12)]);
+verify(sanro_studio_lock_draft_for_order_item($id, $token, $foreignOrder, 7)['error'] === 'order_currency_mismatch', 'non-IDR order denied before locking');
