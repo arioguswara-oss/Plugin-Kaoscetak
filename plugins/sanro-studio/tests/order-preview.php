@@ -87,3 +87,22 @@ $invalidBinding = new SanroOrderPreviewFixture([
     '_sanro_studio_preview_front_ref' => $ref,
 ]);
 verify(sanro_studio_order_item_preview_inventory(new SanroItemPreviewOrderFixture([41 => $invalidBinding]), 41)['error'] === 'invalid_design_binding', 'invalid bound design rejected');
+
+class SanroProductionEligibilityFixture {
+    private $paid;
+    private $ready;
+    public function __construct($paid, $ready) { $this->paid = $paid; $this->ready = $ready; }
+    public function is_paid() { return $this->paid; }
+    public function get_meta($key, $single = true) {
+        return $key === '_sanro_studio_production_ready' ? $this->ready : '';
+    }
+}
+verify(sanro_studio_order_production_file_status(null)['error'] === 'invalid_order', 'invalid production order rejected');
+$pending = sanro_studio_order_production_file_status(new SanroProductionEligibilityFixture(false, 'no'));
+verify($pending['valid'] && !$pending['eligible'] && $pending['drive_url'] === null, 'pending order cannot create production folder');
+$paid = sanro_studio_order_production_file_status(new SanroProductionEligibilityFixture(true, 'no'));
+verify($paid['eligible'] && $paid['reason'] === 'payment_confirmed' && !$paid['drive_link_available'], 'paid order eligible without invented Drive URL');
+$ready = sanro_studio_order_production_file_status(new SanroProductionEligibilityFixture(false, 'yes'));
+verify($ready['eligible'] && $ready['reason'] === 'production_ready', 'production-ready order eligible');
+$forged = sanro_studio_order_production_file_status(new SanroProductionEligibilityFixture(false, 'true'));
+verify(!$forged['eligible'], 'arbitrary truthy production status rejected');
