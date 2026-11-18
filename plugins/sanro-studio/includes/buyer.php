@@ -47,6 +47,9 @@ function sanro_studio_render_buyer_editor() {
             'nonce' => wp_create_nonce('sanro_studio_draft'),
         ];
     }
+    if (function_exists('sanro_studio_preview_upload_enabled') && sanro_studio_preview_upload_enabled()) {
+        $config['preview_upload_enabled'] = true;
+    }
     wp_add_inline_script('sanro-studio-buyer', 'window.SANRO_STUDIO_EDITOR_CONFIG=' . wp_json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';', 'before');
 
     // WordPress may have a canonical redirect for product query arguments.
@@ -84,6 +87,10 @@ function sanro_studio_render_buyer_editor() {
     echo '<p id="sanro-validation" role="status">Belum ada desain.</p>';
     if (!empty($config['draft_api'])) {
         echo '<button type="button" id="sanro-save-draft">Simpan draft teks</button>';
+        if (!empty($config['preview_upload_enabled'])) {
+            echo '<button type="button" id="sanro-upload-previews">Simpan preview depan/belakang (staging)</button>';
+            echo '<p id="sanro-preview-upload-status" role="status" aria-live="polite"></p>';
+        }
         echo '<button type="button" id="sanro-server-quote">Cek harga resmi draft tersimpan</button>';
         echo '<p id="sanro-server-quote-status" role="status" aria-live="polite">Simpan draft teks sebelum meminta harga server.</p>';
         echo '<p id="sanro-save-status" role="status">Penyimpanan gambar dan checkout belum tersedia.</p>';
