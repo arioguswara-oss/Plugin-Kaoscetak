@@ -27,6 +27,7 @@ function sanro_studio_product_editor_link() {
  * Read-only, bounded listing; no checkout or private product data.
  */
 function sanro_studio_render_product_picker($page_url) {
+    // Use the shared buyer stylesheet for responsive layout; enqueue before get_header().
     $ids = wc_get_products(['status' => 'publish', 'limit' => 48, 'return' => 'ids', 'orderby' => 'title', 'order' => 'ASC']);
     echo '<main id="sanro-studio-buyer" class="sanro-buyer sanro-product-picker" aria-label="SANRO Studio">';
     echo '<header><h1>SANRO Studio</h1><p>Pilih produk untuk mulai mendesain.</p></header>';
@@ -50,7 +51,7 @@ function sanro_studio_render_product_picker($page_url) {
     if (!$shown) echo '<p>Belum ada produk yang siap didesain. Administrator perlu mengatur area cetak dan profil harga produk.</p>';
     echo '<p id="sanro-product-empty" hidden>Tidak ada produk yang cocok.</p>';
     echo '</main>';
-    echo '<style>.sanro-product-picker{max-width:1100px;margin:2rem auto;padding:1rem}.sanro-product-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-top:1rem}.sanro-product-card{display:flex;flex-direction:column;gap:.5rem;padding:1rem;border:1px solid #ddd;border-radius:10px;text-decoration:none}.sanro-product-card img{width:100%;height:auto;object-fit:contain}.sanro-product-picker input[type=search]{max-width:100%;width:320px}</style>';
+
     echo '<script>document.addEventListener("DOMContentLoaded",function(){var input=document.getElementById("sanro-product-search"),cards=[].slice.call(document.querySelectorAll(".sanro-product-card")),empty=document.getElementById("sanro-product-empty");if(!input)return;input.addEventListener("input",function(){var q=input.value.toLocaleLowerCase().trim(),count=0;cards.forEach(function(card){var match=card.dataset.name.includes(q);card.hidden=!match;if(match)count++});if(empty)empty.hidden=count>0||cards.length===0})});</script>';
 }
 
@@ -65,6 +66,8 @@ function sanro_studio_render_buyer_editor() {
     // The configured page is an entrypoint even without query parameters.
     // Never hijack unrelated pages or product URLs.
     if ($on_selected_page && !isset($_GET['product_id']) && !isset($_GET['sanro_studio_editor'])) {
+        $asset = plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/';
+        wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], SANRO_STUDIO_VERSION);
         get_header();
         sanro_studio_render_product_picker(get_permalink($editor_page_id));
         get_footer();
