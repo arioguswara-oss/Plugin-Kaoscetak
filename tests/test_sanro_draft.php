@@ -8,7 +8,12 @@ function add_option($key, $value, $deprecated, $autoload) {
     $GLOBALS['options'][$key] = $value;
     return true;
 }
-function get_option($key, $fallback) { return $GLOBALS['options'][$key] ?? $fallback; }
+function get_option($key, $fallback) {
+    if (!empty($GLOBALS['draft_lock_on_second_read']) && ++$GLOBALS['draft_read_count'] === 2) {
+        $GLOBALS['options'][$key]['status'] = 'locked';
+    }
+    return $GLOBALS['options'][$key] ?? $fallback;
+}
 function update_option($key, $value, $autoload = null) {
     if (!isset($GLOBALS['options'][$key])) return false;
     $GLOBALS['options'][$key] = $value;
@@ -40,6 +45,12 @@ $first_update_at = $GLOBALS['options']['sanro_studio_draft_' . $created['design_
 check_draft(true, sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['valid'], 'immediate repeated save');
 check_draft(true, $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['updated_at'] > $first_update_at, 'monotonic update timestamp');
 check_draft(true, sanro_studio_read_draft($created['design_id'], $created['owner_token'])['valid'], 'read after update');
+// Simulate status changing between the first and second get_option reads.
+$GLOBALS['draft_read_count'] = 0;
+$GLOBALS['draft_lock_on_second_read'] = true;
+check_draft('draft_locked', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'interleaved lock rejected');
+$GLOBALS['draft_lock_on_second_read'] = false;
+$GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['status'] = 'draft';
 $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['status'] = 'locked';
 check_draft('draft_locked', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'locked draft denied');
 check_draft('storage_failed', sanro_studio_create_draft(17, ['front' => 'valid'])['error'], 'collision fails closed');
