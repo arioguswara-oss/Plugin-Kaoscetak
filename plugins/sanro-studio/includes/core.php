@@ -41,6 +41,9 @@ function sanro_studio_native_core_status() {
         'native_components_present' => !$missing,
         'woocommerce_loaded' => $capabilities['woocommerce_loaded'],
         'runtime_dependencies_satisfied' => !$missing && $capabilities['woocommerce_loaded'],
+        'ready_for_staging' => !$missing && $capabilities['woocommerce_loaded']
+            && defined('SANRO_STUDIO_ENABLE_BUYER_EDITOR')
+            && SANRO_STUDIO_ENABLE_BUYER_EDITOR === true,
         'missing_components' => $missing,
         'legacy_compat_enabled' => defined('SANRO_STUDIO_ENABLE_LEGACY_COMPAT')
             && SANRO_STUDIO_ENABLE_LEGACY_COMPAT === true,
