@@ -50,4 +50,11 @@ revision_assert(!sanro_studio_draft_image_binding_allowed($image, ['front' => $f
 revision_assert(!sanro_studio_draft_payload_allowed($image), 'new draft image creation remains gated');
 revision_assert(sanro_studio_draft_payload_allowed($image, true), 'existing draft accepts image geometry for server binding verification');
 revision_assert(!sanro_studio_draft_payload_allowed(['front' => ['objects' => [['type' => 'image', 'url' => 'data:image/png;base64,AAAA']]]], true), 'embedded image data rejected');
-echo "PASS: 14 draft REST and image-binding checks\n";
+define('SANRO_STUDIO_ENABLE_MASTER_UPLOAD', true);
+define('SANRO_STUDIO_ENABLE_PRIVATE_MASTERS', true);
+$bootstrap=['shirt_color'=>'#ffffff','quantities'=>['M'=>1],'long_sleeve'=>false];
+revision_assert(sanro_studio_image_bootstrap_allowed($bootstrap), 'image-only bootstrap accepted with private masters enabled');
+revision_assert(!sanro_studio_image_bootstrap_allowed($bootstrap + ['front'=>['objects'=>[]]]), 'bootstrap cannot embed printable objects');
+revision_assert(!sanro_studio_image_bootstrap_allowed(array_merge($bootstrap,['quantities'=>['M'=>-1]])), 'bootstrap rejects negative quantity');
+revision_assert(!sanro_studio_image_bootstrap_allowed(array_merge($bootstrap,['quantities'=>['M'=>1000]])), 'bootstrap rejects excessive quantity');
+echo "PASS: 18 draft REST and image-binding checks\n";
