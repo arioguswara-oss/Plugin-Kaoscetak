@@ -407,7 +407,30 @@ function sanro_studio_stage_checkout_verify_order_batch($order, $data) {
     if (!defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
         || SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK !== true) return;
     $verified = $GLOBALS['sanro_studio_checkout_verified'] ?? null;
-    if (!is_array($verified) || empty($verified['contract']['valid'])) return;
+    // Never allow an order containing Studio cart lines to pass this final
+    // boundary without a verified contract, even if earlier hooks were skipped.
+    $studio_cart = false;
+    if (function_exists('WC')) {
+        $wc = WC();
+        if (is_object($wc) && isset($wc->cart) && is_object($wc->cart)
+            && method_exists($wc->cart, 'get_cart')) {
+            foreach ((array) $wc->cart->get_cart() as $line) {
+                if (!is_array($line)) continue;
+                foreach (array_keys($line) as $key) {
+                    if (is_string($key) && strpos($key, 'sanro_studio_') === 0) {
+                        $studio_cart = true;
+                        break 2;
+                    }
+                }
+            }
+        }
+    }
+    if (!is_array($verified) || empty($verified['contract']['valid'])) {
+        if ($studio_cart) {
+            throw new RuntimeException('SANRO Studio: checkout authorization missing before order save.');
+        }
+        return;
+    }
     if (!is_object($order) || !method_exists($order, 'get_items')) {
         throw new RuntimeException('SANRO Studio: order inspection unavailable.');
     }
