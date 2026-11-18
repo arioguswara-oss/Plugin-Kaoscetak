@@ -15,6 +15,7 @@ define('SANRO_STUDIO_VERSION', '0.1.1-dev');
 require_once __DIR__ . '/includes/core.php';
 require_once __DIR__ . '/includes/print-area.php';
 require_once __DIR__ . '/includes/product-area.php';
+require_once __DIR__ . '/includes/pricing.php';
 require_once __DIR__ . '/includes/runtime.php';
 require_once __DIR__ . '/includes/admin.php';
 
