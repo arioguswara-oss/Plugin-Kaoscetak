@@ -69,4 +69,21 @@ gate_check(sanro_studio_stage_bind_size_order_batch($contract, $items)['valid']=
 $bad = new GateOrderItem('1.00');
 gate_check(sanro_studio_stage_bind_size_order_batch($contract, ['M'=>$bad])['valid']===false, 'wrong order subtotal refused');
 gate_check($bad->meta===[], 'invalid order never mutated');
-echo "PASS: 12 checkout gate checks\n";
+$GLOBALS['gate_notices'] = [];
+$GLOBALS['gate_filter_token'] = null;
+$GLOBALS['gate_wc'] = (object) ['cart'=>new GateCart('65000')];
+function WC() { return $GLOBALS['gate_wc']; }
+function wc_add_notice($message, $type) { $GLOBALS['gate_notices'][] = [$message, $type]; }
+function apply_filters($name, $default, $id, $product) { return $GLOBALS['gate_filter_token']; }
+define('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK', true);
+sanro_studio_stage_checkout_process();
+gate_check(count($GLOBALS['gate_notices'])===1, 'checkout blocked without transient credentials');
+$GLOBALS['gate_notices']=[];
+$GLOBALS['gate_wc']->cart->lines=[];
+sanro_studio_stage_checkout_process();
+gate_check(count($GLOBALS['gate_notices'])===0, 'ordinary empty cart untouched');
+$GLOBALS['gate_wc']->cart = new GateCart('65000');
+$GLOBALS['gate_wc']->cart->lines[] = ['product_id'=>999];
+sanro_studio_stage_checkout_process();
+gate_check(count($GLOBALS['gate_notices'])===1, 'mixed cart blocked');
+echo "PASS: 15 checkout gate checks\n";
