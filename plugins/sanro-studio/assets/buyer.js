@@ -216,6 +216,28 @@
  const saveButton=q('#sanro-save-draft'),saveStatus=q('#sanro-save-status');
  let savedId=null,ownerToken=null,saving=false,editRevision=0,savedRevision=-1,lastKnownDesignHash=null;
  const draftStorageKey='sanro-studio-draft:'+String(config.product_id);
+ async function readDraftMaster(id,token,name,fileId){
+  if(!config.master_upload_enabled||typeof fileId!=='string'
+   ||!fileId.startsWith(id.toLowerCase()+'-'+name+'-'))
+   throw new Error('Referensi master '+name+' tidak valid.');
+  const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(id)
+   +'/masters/'+name+'/'+encodeURIComponent(fileId),{
+   method:'GET',credentials:'same-origin',cache:'no-store',
+   headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':token}
+  });
+  if(!response.ok)throw new Error('Master privat '+name+' tidak tersedia ('+response.status+').');
+  const data=await response.json();
+  if(!data.valid||data.file_id!==fileId||data.side!==name
+   ||!['image/png','image/jpeg'].includes(data.mime)
+   ||typeof data.image_base64!=='string'||data.image_base64.length>14000000)
+   throw new Error('Respons master '+name+' tidak valid.');
+  const binary=atob(data.image_base64),bytes=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+  const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)))
+   .map(value=>value.toString(16).padStart(2,'0')).join('');
+  if(hash!==data.sha256)throw new Error('Checksum master '+name+' tidak cocok.');
+  return URL.createObjectURL(new Blob([bytes],{type:data.mime}));
+ }
  function restoreDesign(design){
   if(!design||typeof design!=='object')throw new Error('Metadata draft tidak valid.');
   for(const name of ['front','back']){
