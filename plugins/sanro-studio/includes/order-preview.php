@@ -289,6 +289,13 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
     if (!$order_id || !$item_id) return;
     $inventory = sanro_studio_order_preview_inventory($item);
     if (empty($inventory['valid'])) return;
+    $design_id = method_exists($item, 'get_meta') ? $item->get_meta('_sanro_studio_design_id', true) : '';
+    if ($design_id !== '') {
+        if (!is_string($design_id) || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id)) return;
+        foreach (['front', 'back'] as $side) {
+            if (!empty($inventory[$side]) && strpos($inventory[$side], strtolower($design_id) . '-' . $side . '-') !== 0) return;
+        }
+    }
     echo '<div class="sanro-studio-item-preview"><strong>' .
         esc_html('SANRO Studio — Preview item') . '</strong>';
     foreach (['front' => 'Depan', 'back' => 'Belakang'] as $side => $label) {
