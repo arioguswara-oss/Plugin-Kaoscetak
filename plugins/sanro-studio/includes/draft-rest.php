@@ -337,7 +337,7 @@ function sanro_studio_rest_update_draft($request) {
         return new WP_Error('sanro_invalid_design', 'Invalid design.', ['status' => 400]);
     }
     return sanro_studio_rest_draft_response(
-        sanro_studio_update_draft($request->get_param('id'), $token, $design)
+        sanro_studio_update_draft($request->get_param('id'), $token, $design, $request->get_param('expected_design_hash'))
     );
 }
 
