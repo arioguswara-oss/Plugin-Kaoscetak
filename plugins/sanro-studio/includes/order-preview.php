@@ -176,3 +176,68 @@ function sanro_studio_admin_deliver_order_preview() {
     echo $result['bytes'];
     exit;
 }
+
+/**
+ * Order-item-scoped inventory. Keeps designs for separate line items isolated.
+ * Legacy order-level metadata is intentionally not used as a fallback.
+ */
+function sanro_studio_order_item_preview_inventory($order, $item_id) {
+    if (!is_object($order) || !method_exists($order, 'get_items')
+        || !is_int($item_id) || $item_id < 1) {
+        return ['valid' => false, 'error' => 'invalid_order_item'];
+    }
+    $items = $order->get_items('line_item');
+    if (!is_array($items) || !isset($items[$item_id])
+        || !is_object($items[$item_id]) || !method_exists($items[$item_id], 'get_meta')) {
+        return ['valid' => false, 'error' => 'invalid_order_item'];
+    }
+    return sanro_studio_order_preview_inventory($items[$item_id]);
+}
+
+/**
+ * Internal-only attachment for one exact order line. No guest route.
+ * The owner token is used transiently for validation, never saved to order metadata.
+ */
+function sanro_studio_attach_item_preview_refs($order, $item_id, $design_id, $owner_token, $refs) {
+    if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) {
+        return ['valid' => false, 'error' => 'forbidden'];
+    }
+    $inventory = sanro_studio_order_item_preview_inventory($order, $item_id);
+    if (empty($inventory['valid']) || !is_array($refs) || !$refs || count($refs) > 2
+        || !function_exists('sanro_studio_read_draft')
+        || !function_exists('sanro_studio_read_owned_draft_preview')) {
+        return ['valid' => false, 'error' => 'invalid_order_item'];
+    }
+    $items = $order->get_items('line_item');
+    $item = $items[$item_id];
+    if (!method_exists($item, 'get_product_id') || !method_exists($item, 'update_meta_data')
+        || !method_exists($item, 'save')) {
+        return ['valid' => false, 'error' => 'invalid_order_item'];
+    }
+    $draft = sanro_studio_read_draft($design_id, $owner_token);
+    if (empty($draft['valid'])) return $draft;
+    if (($draft['status'] ?? null) !== 'draft') {
+        return ['valid' => false, 'error' => 'draft_locked'];
+    }
+    if ((int) $draft['product_id'] !== (int) $item->get_product_id()) {
+        return ['valid' => false, 'error' => 'product_mismatch'];
+    }
+    foreach ($refs as $side => $ref) {
+        if (!in_array($side, ['front', 'back'], true)
+            || !is_string($design_id) || !is_string($ref)
+            || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id)
+            || !preg_match('/^' . preg_quote(strtolower($design_id), '/') . '-' . $side .
+                '-[a-f0-9]{64}\\.(png|jpg|webp)$/D', $ref)) {
+            return ['valid' => false, 'error' => 'invalid_preview_reference'];
+        }
+        $preview = sanro_studio_read_owned_draft_preview($design_id, $owner_token, $side, $ref);
+        if (empty($preview['valid'])) {
+            return ['valid' => false, 'error' => $preview['error'] ?? 'preview_not_found'];
+        }
+    }
+    foreach ($refs as $side => $ref) {
+        $item->update_meta_data('_sanro_studio_preview_' . $side . '_ref', $ref);
+    }
+    $item->save();
+    return ['valid' => true, 'item_id' => $item_id, 'attached_sides' => array_keys($refs)];
+}
