@@ -53,6 +53,7 @@ add_action('rest_api_init', 'sanro_studio_register_editor_config_route');
 add_action('rest_api_init', 'sanro_studio_register_draft_routes');
 // Separate staging-only preview upload opt-in; disabled by default.
 add_action('rest_api_init', 'sanro_studio_register_preview_upload_route');
+add_action('rest_api_init', 'sanro_studio_register_master_upload_route');
 
 // Disabled by default; staging must explicitly define SANRO_STUDIO_ENABLE_BUYER_EDITOR.
 add_action('woocommerce_single_product_summary', 'sanro_studio_product_editor_link', 35);
