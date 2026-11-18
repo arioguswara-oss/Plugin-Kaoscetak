@@ -31,7 +31,27 @@ function sanro_studio_validate_product_design($product_id, $design) {
     // Draft text is printable metadata; geometry validation still owns all
     // category and safe-area checks. Master images remain outside WordPress.
     if (!is_array($design)) return ['valid' => false, 'error' => 'invalid_design'];
+    // Order preferences are draft metadata only, never trusted for checkout pricing.
+    if (isset($design['shirt_color']) && (!is_string($design['shirt_color'])
+        || !in_array($design['shirt_color'], ['#ffffff', '#171717', '#b91c1c', '#1d4ed8', '#166534'], true))) {
+        return ['valid' => false, 'error' => 'invalid_shirt_color'];
+    }
+    if (isset($design['quantities'])) {
+        if (!is_array($design['quantities'])
+            || array_diff(array_keys($design['quantities']), ['S','M','L','XL','2XL','3XL','4XL','5XL'])) {
+            return ['valid' => false, 'error' => 'invalid_quantities'];
+        }
+        $total = 0;
+        foreach ($design['quantities'] as $quantity) {
+            if (!is_int($quantity) || $quantity < 0 || $quantity > 999) {
+                return ['valid' => false, 'error' => 'invalid_quantities'];
+            }
+            $total += $quantity;
+        }
+        if ($total > 5000) return ['valid' => false, 'error' => 'invalid_quantities'];
+    }
     $geometry = $design;
+    unset($geometry['shirt_color'], $geometry['quantities']);
     foreach (['front', 'back'] as $side) {
         if (!isset($geometry[$side])) continue;
         if (!is_array($geometry[$side])) return ['valid' => false, 'error' => 'invalid_design'];
