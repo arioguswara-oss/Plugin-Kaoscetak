@@ -84,3 +84,35 @@ function sanro_studio_stage_price_cart_line($contract, $line, $product) {
     return ['valid' => true, 'unit_price' => $matched['sanro_studio_unit_price'],
         'currency' => 'IDR', 'requires_totals_recalculation' => true];
 }
+
+/**
+ * Price every line only after the complete cart matches a fresh server quote.
+ * This method is for an isolated staging transaction; no WooCommerce hook is
+ * attached automatically. Caller must recalculate WC totals afterwards.
+ */
+function sanro_studio_stage_price_cart_batch($contract, $cart_lines) {
+    if (!defined('SANRO_STUDIO_ENABLE_STAGING_CART')
+        || SANRO_STUDIO_ENABLE_STAGING_CART !== true
+        || !is_array($cart_lines)) {
+        return ['valid' => false, 'error' => 'staging_pricing_disabled'];
+    }
+    $snapshots = [];
+    foreach ($cart_lines as $line) {
+        if (!is_array($line) || !isset($line['data'])
+            || !is_object($line['data']) || !method_exists($line['data'], 'set_price')) {
+            return ['valid' => false, 'error' => 'invalid_cart_product'];
+        }
+        $snapshot = $line;
+        unset($snapshot['data']);
+        $snapshots[] = $snapshot;
+    }
+    $verified = sanro_studio_validate_size_cart_lines($contract, $snapshots);
+    if (empty($verified['valid'])) return $verified;
+    // No product price is mutated until every line has passed validation.
+    foreach ($cart_lines as $line) {
+        $priced = sanro_studio_stage_price_cart_line($contract, $line, $line['data']);
+        if (empty($priced['valid'])) return $priced;
+    }
+    return ['valid' => true, 'total_quantity' => $verified['total_quantity'],
+        'total_price' => $verified['total_price'], 'requires_totals_recalculation' => true];
+}
