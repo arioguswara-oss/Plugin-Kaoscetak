@@ -63,6 +63,7 @@ function sanro_studio_update_draft($id, $token, $design) {
     $key = 'sanro_studio_draft_' . $id;
     $record = get_option($key, false);
     if (!is_array($record) || !isset($record['token_hash'])
+        || !is_string($record['token_hash'])
         || !hash_equals($record['token_hash'], hash('sha256', $token))) {
         return ['valid' => false, 'error' => 'not_found'];
     }
