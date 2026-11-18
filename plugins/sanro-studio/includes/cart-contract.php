@@ -44,3 +44,28 @@ function sanro_studio_prepare_cart_design_contract($design_id, $owner_token, $pr
         'cart_mutation_enabled' => false,
     ];
 }
+
+/**
+ * Verify a cart item's public design identity against a freshly authorized
+ * draft contract. This does not add products or change WooCommerce prices.
+ * Caller must hold the owner token transiently; never put it in cart metadata.
+ */
+function sanro_studio_validate_cart_design_identity($contract, $cart_item) {
+    if (!is_array($contract) || empty($contract['valid'])
+        || !is_array($cart_item)
+        || !isset($contract['design_id'], $contract['product_id'], $contract['quote'])
+        || !is_string($contract['design_id']) || !is_int($contract['product_id'])
+        || !isset($cart_item['product_id'], $cart_item['sanro_studio_design_id'])
+        || !is_int($cart_item['product_id']) || !is_string($cart_item['sanro_studio_design_id'])
+        || !hash_equals($contract['design_id'], $cart_item['sanro_studio_design_id'])
+        || $contract['product_id'] !== $cart_item['product_id']) {
+        return ['valid' => false, 'error' => 'cart_identity_mismatch'];
+    }
+    if (!isset($cart_item['quantity']) || !is_int($cart_item['quantity'])
+        || $cart_item['quantity'] !== $contract['quote']['total_quantity']) {
+        return ['valid' => false, 'error' => 'cart_quantity_mismatch'];
+    }
+    return ['valid' => true, 'design_id' => $contract['design_id'],
+        'product_id' => $contract['product_id'], 'quantity' => $cart_item['quantity'],
+        'checkout_enabled' => false];
+}
