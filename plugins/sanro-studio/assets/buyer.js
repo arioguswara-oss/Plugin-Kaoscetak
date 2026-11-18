@@ -151,6 +151,7 @@
    }
    if(target.url)URL.revokeObjectURL(target.url);
    target.url=url;target.file=file;target.pending=null;
+   delete boundMasterRefs[uploadSide];
    // Fit the image into the safe preview without changing its aspect ratio.
    const safeWidth=safe.clientWidth,safeHeight=safe.clientHeight;
    if(safeWidth>0&&safeHeight>0&&probe.naturalWidth>0&&probe.naturalHeight>0){
