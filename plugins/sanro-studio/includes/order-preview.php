@@ -445,3 +445,34 @@ function sanro_studio_attach_item_production_folder_id($order, $item_id, $folder
     }
     return ['valid' => true, 'already_attached' => false];
 }
+
+/**
+ * HPOS-compatible, read-only production status on the order details screen.
+ * No Drive link is emitted until an independently verified integration exists.
+ */
+function sanro_studio_admin_production_status($order) {
+    if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')
+        || !is_object($order) || !method_exists($order, 'get_items')) return;
+    $items = $order->get_items('line_item');
+    if (!is_array($items)) return;
+    $rows = [];
+    foreach ($items as $item_id => $item) {
+        if (!is_object($item) || !method_exists($item, 'get_meta')
+            || $item->get_meta('_sanro_studio_design_id', true) === '') continue;
+        $manifest = sanro_studio_order_item_production_manifest($order, $item_id);
+        if (empty($manifest['valid'])) {
+            $rows[] = 'Item ' . (int) $item_id . ': data produksi belum valid';
+            continue;
+        }
+        $rows[] = 'Item ' . (int) $item_id . ': '
+            . (!empty($manifest['eligible']) ? 'boleh diproses' : 'menunggu pembayaran atau persetujuan produksi')
+            . '; preview depan ' . (!empty($manifest['preview_front_available']) ? 'tersedia' : 'belum tersedia')
+            . '; belakang ' . (!empty($manifest['preview_back_available']) ? 'tersedia' : 'belum tersedia')
+            . '; Google Drive belum terhubung';
+    }
+    if (!$rows) return;
+    echo '<div class="sanro-studio-production-status"><h3>'
+        . esc_html('SANRO Studio — Status produksi') . '</h3>';
+    foreach ($rows as $row) echo '<p>' . esc_html($row) . '</p>';
+    echo '</div>';
+}
