@@ -28,7 +28,34 @@ function sanro_studio_product_safe_areas($product_id) {
 function sanro_studio_validate_product_design($product_id, $design) {
     $areas = sanro_studio_product_safe_areas($product_id);
     if (!$areas) return ['valid' => false, 'error' => 'product_area_unconfigured'];
-    return sanro_studio_validate_print_design($design, $areas);
+    // Draft text is printable metadata; geometry validation still owns all
+    // category and safe-area checks. Master images remain outside WordPress.
+    if (!is_array($design)) return ['valid' => false, 'error' => 'invalid_design'];
+    $geometry = $design;
+    foreach (['front', 'back'] as $side) {
+        if (!isset($geometry[$side])) continue;
+        if (!is_array($geometry[$side])) return ['valid' => false, 'error' => 'invalid_design'];
+        if (array_key_exists('text', $geometry[$side])) {
+            $value = $geometry[$side]['text'];
+            if (!is_string($value) || strlen($value) > 1200
+                || preg_match('/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]/', $value)) {
+                return ['valid' => false, 'error' => 'invalid_text'];
+            }
+            $has_text = false;
+            foreach (($geometry[$side]['objects'] ?? []) as $object) {
+                if (is_array($object) && ($object['type'] ?? null) === 'text') $has_text = true;
+            }
+            if (!$has_text || trim($value) === '') return ['valid' => false, 'error' => 'invalid_text'];
+            unset($geometry[$side]['text']);
+        } else {
+            foreach (($geometry[$side]['objects'] ?? []) as $object) {
+                if (is_array($object) && ($object['type'] ?? null) === 'text') {
+                    return ['valid' => false, 'error' => 'missing_text'];
+                }
+            }
+        }
+    }
+    return sanro_studio_validate_print_design($geometry, $areas);
 }
 
 /** Product edit screen only; never shown to shoppers. */
