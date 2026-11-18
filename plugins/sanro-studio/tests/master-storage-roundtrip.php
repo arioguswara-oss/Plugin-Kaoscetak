@@ -19,7 +19,7 @@ function master_assert($condition, $label) {
 }
 $id = '00000000-0000-4000-8000-000000000000';
 $token = str_repeat('a', 64);
-$bytes = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAATUlEQVR4nGNkYGBQFTbFjxj3PKkhrKjixA/CikzWlBBW9GHCB8KK1pTkEFaUEfGCsCIVmxTCih4oPCCsaA5LDGFFES9uEFYkAAAAASUVORK5CYII=', true);
+$bytes = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAATUlEQVR4nGNkYGBQFTbFjxj3PKkhrKjixA/CikzWlBBW9GHCB8KK1pTkEFaUEfGCsCIVmxTCih4oPCCsaA5LDGFFES9uEFYkciaEoCIAPtNKeUEU/EcAAAAASUVORK5CYII=', true);
 // Fixture intentionally uses a fixed PNG; check validity before testing writes.
 try {
     $validated = sanro_studio_validate_master_bytes($bytes);
