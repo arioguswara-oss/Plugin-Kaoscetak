@@ -16,7 +16,7 @@ function sanro_studio_read_draft($id, $token) {
 }
 function sanro_studio_quote_size_quantities($product, $design, $qty, $sleeve) {
     if ($qty !== ['M' => 2] || $product !== 12) return ['valid' => false, 'error' => 'invalid_quantities'];
-    return ['valid' => true, 'total_quantity' => 2, 'total_price' => 150000, 'currency' => 'IDR'];
+    return ['valid' => true, 'total_quantity' => 2, 'total_price' => $GLOBALS['quote_price'] ?? 150000, 'currency' => $GLOBALS['quote_currency'] ?? 'IDR'];
 }
 verify(sanro_studio_prepare_cart_design_contract('draft', 'bad', 12)['error'] === 'not_found', 'wrong owner rejected');
 verify(sanro_studio_prepare_cart_design_contract('locked', 'owner', 12)['error'] === 'draft_locked', 'locked draft rejected');
@@ -35,3 +35,9 @@ verify(sanro_studio_validate_cart_design_identity($contract, $wrongDraft)['error
 $wrongQty = $cart; $wrongQty['quantity'] = 3;
 verify(sanro_studio_validate_cart_design_identity($contract, $wrongQty)['error'] === 'cart_quantity_mismatch', 'cart quantity tampering denied');
 verify(sanro_studio_validate_cart_design_identity($contract, $cart)['checkout_enabled'] === false, 'cart validation does not enable checkout');
+
+$GLOBALS['quote_price'] = 0;
+verify(sanro_studio_prepare_cart_design_contract('draft', 'owner', 12)['error'] === 'invalid_quote', 'zero-price cart quote rejected');
+$GLOBALS['quote_price'] = 150000;
+$GLOBALS['quote_currency'] = 'USD';
+verify(sanro_studio_prepare_cart_design_contract('draft', 'owner', 12)['error'] === 'invalid_quote', 'foreign-currency cart quote rejected');
