@@ -109,6 +109,16 @@
   d.textY=Math.max(0,(rect.height-box.height)/rect.height*50);render();
  });
  q('#sanro-category').addEventListener('change',e=>{editRevision++;sides[side].category=e.target.value;render()});
+ q('#sanro-reset-side').addEventListener('click',()=>{
+  const d=sides[side];
+  if(!d.url&&!d.pending&&!d.text.trim())return;
+  if(!window.confirm('Kosongkan gambar dan teks pada sisi '+(side==='front'?'depan':'belakang')+'?'))return;
+  if(d.url)URL.revokeObjectURL(d.url);
+  if(d.pending)URL.revokeObjectURL(d.pending);
+  sides[side]=make();
+  editRevision++;
+  render();
+ });
  q('#sanro-image').addEventListener('change',e=>{
   const file=e.target.files[0];if(!file)return;
   if(!['image/png','image/jpeg'].includes(file.type)||file.size>10485760){q('#sanro-validation').textContent='File ditolak: PNG/JPEG maksimal 10 MB';e.target.value='';return}
