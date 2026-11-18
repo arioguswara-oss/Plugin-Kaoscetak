@@ -125,6 +125,8 @@ function sanro_studio_stage_price_cart_batch($contract, $cart_lines) {
 function sanro_studio_stage_commit_cart_lines($contract, $cart) {
     if (!defined('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT')
         || SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT !== true
+        || !defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
+        || SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK !== true
         || !is_object($cart) || !method_exists($cart, 'calculate_totals')) {
         return ['valid' => false, 'error' => 'cart_commit_disabled'];
     }
