@@ -183,6 +183,9 @@ $GLOBALS['admin_enabled'] = false;
 verify(sanro_studio_attach_item_production_folder_id($folderOrder, 60, $folderId)['error'] === 'forbidden',
     'folder reference attachment denies non-admin');
 $GLOBALS['admin_enabled'] = true;
+verify(sanro_studio_attach_item_production_folder_id($folderOrder, 60, $folderId)['error'] === 'drive_verification_required',
+    'unverified Drive folder attachment disabled by default');
+define('SANRO_STUDIO_ENABLE_VERIFIED_DRIVE_ATTACHMENT', true);
 verify(sanro_studio_attach_item_production_folder_id($folderOrder, 60, 'https://drive.google.com/folder')['error'] === 'invalid_folder_id',
     'folder URL rejected in favor of opaque ID');
 verify(sanro_studio_attach_item_production_folder_id($folderOrder, 60, $folderId)['valid'],
