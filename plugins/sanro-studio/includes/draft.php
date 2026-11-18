@@ -35,7 +35,11 @@ function sanro_studio_read_draft($id, $token) {
     $record = get_option('sanro_studio_draft_' . $id, false);
     if (!is_array($record) || !isset($record['token_hash'])
         || !is_string($record['token_hash'])
-        || !hash_equals($record['token_hash'], hash('sha256', $token))) {
+        || !hash_equals($record['token_hash'], hash('sha256', $token))
+        || !isset($record['product_id'], $record['design'], $record['status'])
+        || !is_int($record['product_id']) || $record['product_id'] < 1
+        || !is_array($record['design'])
+        || !is_string($record['status'])) {
         return ['valid' => false, 'error' => 'not_found'];
     }
     return [
