@@ -10,7 +10,7 @@
  const shirtColors=new Set(['#ffffff','#171717','#b91c1c','#1d4ed8','#166534']);
  const shirtColor=q('#sanro-shirt-color');
  shirtColor.addEventListener('change',()=>{
-  if(shirtColors.has(shirtColor.value))q('.sanro-shirt').style.backgroundColor=shirtColor.value;
+  if(shirtColors.has(shirtColor.value)){editRevision++;q('.sanro-shirt').style.backgroundColor=shirtColor.value;}
  });
  q('.sanro-shirt').style.backgroundColor=shirtColor.value;
  const qtyInputs=Array.from(root.querySelectorAll('[data-size]'));
@@ -37,7 +37,7 @@
   q('#sanro-qty-total').textContent=invalid?'Periksa jumlah tiap ukuran':total>5000?'Maksimal 5.000 pcs per pesanan':'Total: '+total+' pcs';
   updateEstimate();
  }
- qtyInputs.forEach(input=>input.addEventListener('input',updateQty));
+ qtyInputs.forEach(input=>input.addEventListener('input',()=>{editRevision++;updateQty()}));
  updateQty();
  function render(){
   // Rendering is not itself a user edit; revision changes only in input handlers.
@@ -100,6 +100,7 @@
   const rect=safe.getBoundingClientRect(),box=text.getBoundingClientRect();
   text.textContent=previous.content;text.style.fontSize=previous.font;text.hidden=previous.hidden;
   if(!rect.width||!rect.height||!box.width||!box.height)return;
+  editRevision++;
   d.textX=Math.max(0,(rect.width-box.width)/rect.width*50);
   d.textY=Math.max(0,(rect.height-box.height)/rect.height*50);render();
  });
@@ -129,7 +130,7 @@
   probe.onerror=()=>{if(target.pending===url){URL.revokeObjectURL(url);target.pending=null;q('#sanro-validation').textContent='Gambar tidak valid'}};
   target.pending=url;probe.src=url;e.target.value='';
  });
- q('#sanro-remove-image').addEventListener('click',()=>{const d=sides[side];if(d.url)URL.revokeObjectURL(d.url);if(d.pending)URL.revokeObjectURL(d.pending);d.url=null;d.pending=null;image.removeAttribute('src');render()});
+ q('#sanro-remove-image').addEventListener('click',()=>{editRevision++;const d=sides[side];if(d.url)URL.revokeObjectURL(d.url);if(d.pending)URL.revokeObjectURL(d.pending);d.url=null;d.pending=null;image.removeAttribute('src');render()});
  function drag(el,prefix){
   let start=null;
   el.addEventListener('pointerdown',e=>{
@@ -144,6 +145,7 @@
    if(!rect.width||!rect.height)return;
    const maxX=Math.max(0,100-el.offsetWidth/rect.width*100);
    const maxY=Math.max(0,100-el.offsetHeight/rect.height*100);
+   editRevision++;
    d[prefix+'X']=Math.max(0,Math.min(maxX,start.px+(e.clientX-start.x)/rect.width*100));
    d[prefix+'Y']=Math.max(0,Math.min(maxY,start.py+(e.clientY-start.y)/rect.height*100));
    render();
