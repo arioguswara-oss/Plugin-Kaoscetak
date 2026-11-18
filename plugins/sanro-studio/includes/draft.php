@@ -274,7 +274,7 @@ function sanro_studio_lock_draft_for_order_item($id, $token, $order, $item_id) {
     if (empty($quote['valid'])) return $quote;
     if (!isset($quote['total_quantity'], $quote['total_price'])
         || !is_int($quote['total_quantity']) || $quote['total_quantity'] < 1
-        || !is_int($quote['total_price']) || $quote['total_price'] < 0
+        || !is_int($quote['total_price']) || $quote['total_price'] <= 0
         || !method_exists($items[$item_id], 'get_quantity')
         || (int) $items[$item_id]->get_quantity() !== $quote['total_quantity']) {
         return ['valid' => false, 'error' => 'order_quantity_mismatch'];
