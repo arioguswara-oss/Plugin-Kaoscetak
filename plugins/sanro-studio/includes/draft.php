@@ -67,7 +67,9 @@ function sanro_studio_update_draft($id, $token, $design) {
         return ['valid' => false, 'error' => 'not_found'];
     }
     $record['design'] = $design;
-    $record['updated_at'] = time();
+    // WordPress update_option() returns false when the stored value is unchanged.
+    // Keep timestamps monotonic so a legitimate rapid repeat save is not reported as failure.
+    $record['updated_at'] = max(time(), (int) ($record['updated_at'] ?? $record['created_at'] ?? 0) + 1);
     if (!update_option($key, $record, false)) {
         return ['valid' => false, 'error' => 'storage_failed'];
     }
