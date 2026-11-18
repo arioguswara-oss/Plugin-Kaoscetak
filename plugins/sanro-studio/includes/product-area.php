@@ -36,6 +36,9 @@ function sanro_studio_validate_product_design($product_id, $design) {
         || !in_array($design['shirt_color'], ['#ffffff', '#171717', '#b91c1c', '#1d4ed8', '#166534'], true))) {
         return ['valid' => false, 'error' => 'invalid_shirt_color'];
     }
+    if (isset($design['long_sleeve']) && !is_bool($design['long_sleeve'])) {
+        return ['valid' => false, 'error' => 'invalid_variant'];
+    }
     if (isset($design['quantities'])) {
         if (!is_array($design['quantities'])
             || array_diff(array_keys($design['quantities']), ['S','M','L','XL','2XL','3XL','4XL','5XL'])) {
@@ -51,7 +54,7 @@ function sanro_studio_validate_product_design($product_id, $design) {
         if ($total > 5000) return ['valid' => false, 'error' => 'invalid_quantities'];
     }
     $geometry = $design;
-    unset($geometry['shirt_color'], $geometry['quantities']);
+    unset($geometry['shirt_color'], $geometry['quantities'], $geometry['long_sleeve']);
     foreach (['front', 'back'] as $side) {
         if (!isset($geometry[$side])) continue;
         if (!is_array($geometry[$side])) return ['valid' => false, 'error' => 'invalid_design'];
