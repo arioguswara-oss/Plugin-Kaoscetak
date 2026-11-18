@@ -29,6 +29,7 @@ function sanro_studio_render_settings() {
     $state = sanro_studio_dependencies();
     $runtime = sanro_studio_runtime_status();
     $options = sanro_studio_options();
+    $native = sanro_studio_native_capabilities();
     echo '<div class="wrap"><h1>SANRO Studio</h1>';
     echo '<p>Fondasi editor SANRO Studio. Integrasi harga Kaoscetak dan Drive belum diaktifkan.</p>';
     echo '<table class="widefat striped"><tbody>';
@@ -56,6 +57,24 @@ function sanro_studio_render_settings() {
     $rows['Pemuat core'] = $runtime_labels[$runtime['state']] ?? 'Status belum dikenali';
     foreach ($rows as $label => $value) {
         echo '<tr><th scope="row">' . esc_html($label) . '</th><td>' . esc_html($value) . '</td></tr>';
+    }
+    echo '</tbody></table>';
+    echo '<h2>Kapabilitas SANRO Studio native (tanpa core editor lama)</h2>';
+    echo '<table class="widefat striped"><tbody>';
+    $native_labels = [
+        'buyer_editor' => 'Editor buyer',
+        'product_configuration' => 'Konfigurasi produk',
+        'design_validation' => 'Validasi desain',
+        'server_quote' => 'Perhitungan harga server',
+        'private_text_drafts' => 'Draft teks privat',
+        'private_master_storage' => 'Penyimpanan file master privat',
+        'checkout' => 'Checkout',
+        'production_ready' => 'Siap production',
+    ];
+    foreach ($native_labels as $key => $label) {
+        echo '<tr><th scope="row">' . esc_html($label) . '</th><td>'
+            . esc_html(!empty($native[$key]) ? 'Kode tersedia (belum tentu lolos QA)' : 'Belum tersedia')
+            . '</td></tr>';
     }
     echo '</tbody></table>';
     $page_id = (int) get_option('lumise_editor_page', 0);
