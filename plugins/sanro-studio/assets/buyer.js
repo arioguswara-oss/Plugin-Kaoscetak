@@ -375,6 +375,16 @@
       if(!response.ok||!result.valid||typeof result.file_id!=='string'
        ||!result.file_id.startsWith(savedId.toLowerCase()+'-'+name+'-'))
        throw new Error('Upload '+name+' gagal ('+response.status+').');
+      // Verify private readback before reporting success. Preview is not a master file.
+      const readback=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)
+       +'/previews/'+name+'/'+encodeURIComponent(result.file_id),{
+       method:'GET',credentials:'same-origin',cache:'no-store',
+       headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken}
+      });
+      if(!readback.ok)throw new Error('Verifikasi preview '+name+' gagal ('+readback.status+').');
+      const verified=await readback.json();
+      if(!verified.valid||verified.image_base64!==encoded
+       ||verified.mime!=='image/jpeg')throw new Error('Integritas preview '+name+' tidak sesuai.');
       completed.push(name);
       if(editRevision!==revisionAtStart)
        throw new Error('Desain berubah selama upload. Simpan draft dan unggah preview terbaru.');
