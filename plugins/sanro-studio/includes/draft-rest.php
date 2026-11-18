@@ -36,6 +36,57 @@ function sanro_studio_register_draft_routes() {
     ]);
 }
 
+/**
+ * Private preview uploads require a separate explicit staging opt-in.
+ * Owner secret is checked by the storage boundary, not by a guest nonce.
+ */
+function sanro_studio_preview_upload_enabled() {
+    return sanro_studio_draft_rest_enabled()
+        && defined('SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS')
+        && SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS === true
+        && defined('SANRO_STUDIO_ENABLE_PREVIEW_UPLOAD')
+        && SANRO_STUDIO_ENABLE_PREVIEW_UPLOAD === true;
+}
+
+function sanro_studio_register_preview_upload_route() {
+    if (!sanro_studio_preview_upload_enabled()) return;
+    register_rest_route('sanro-studio/v1', '/drafts/(?P<id>[a-fA-F0-9-]{36})/previews/(?P<side>front|back)', [
+        'methods' => 'POST',
+        'callback' => 'sanro_studio_rest_upload_preview',
+        'permission_callback' => 'sanro_studio_rest_draft_nonce',
+    ]);
+}
+
+function sanro_studio_rest_upload_preview($request) {
+    if (!sanro_studio_preview_upload_enabled()) {
+        return new WP_Error('sanro_preview_disabled', 'Preview uploads unavailable.', ['status' => 403]);
+    }
+    $encoded = $request->get_param('image_base64');
+    if (!is_string($encoded) || strlen($encoded) > 70000
+        || !preg_match('/^[A-Za-z0-9+\\/]+={0,2}$/D', $encoded)) {
+        return new WP_Error('sanro_invalid_preview', 'Invalid preview payload.', ['status' => 400]);
+    }
+    $bytes = base64_decode($encoded, true);
+    if (!is_string($bytes) || strlen($bytes) > 51200) {
+        return new WP_Error('sanro_invalid_preview', 'Invalid preview payload.', ['status' => 400]);
+    }
+    $result = sanro_studio_store_owned_draft_preview(
+        $request->get_param('id'), $request->get_header('X-Sanro-Owner-Token'),
+        $request->get_param('side'), $bytes
+    );
+    if (empty($result['valid'])) {
+        $error = $result['error'] ?? 'invalid_preview';
+        $status = $error === 'draft_expired' ? 410
+            : (in_array($error, ['invalid_credentials', 'not_found'], true) ? 404 : 400);
+        return new WP_Error('sanro_' . $error, 'Preview upload rejected.', ['status' => $status]);
+    }
+    if (function_exists('nocache_headers')) nocache_headers();
+    return rest_ensure_response([
+        'valid' => true, 'file_id' => $result['file_id'],
+        'mime' => $result['mime'], 'bytes' => $result['bytes'],
+    ]);
+}
+
 function sanro_studio_rest_draft_nonce($request) {
     $nonce = $request->get_header('X-Sanro-Draft-Nonce');
     return is_string($nonce) && wp_verify_nonce($nonce, 'sanro_studio_draft')
