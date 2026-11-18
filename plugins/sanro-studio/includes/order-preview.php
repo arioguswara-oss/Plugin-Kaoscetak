@@ -163,12 +163,14 @@ function sanro_studio_admin_deliver_order_preview() {
     $order_id = isset($_GET['order_id']) ? absint($_GET['order_id']) : 0;
     $side = isset($_GET['side']) && is_string($_GET['side']) ? $_GET['side'] : '';
     $nonce = isset($_GET['_wpnonce']) && is_string($_GET['_wpnonce']) ? $_GET['_wpnonce'] : '';
+    $item_id = isset($_GET['item_id']) ? absint($_GET['item_id']) : null;
+    $nonce_action = 'sanro_order_preview_' . $order_id . '_' . $side
+        . ($item_id === null ? '' : '_item_' . $item_id);
     if (!$order_id || !in_array($side, ['front', 'back'], true)
-        || !wp_verify_nonce($nonce, 'sanro_order_preview_' . $order_id . '_' . $side)) {
+        || ($item_id !== null && $item_id < 1)
+        || !wp_verify_nonce($nonce, $nonce_action)) {
         wp_die('Forbidden', '', ['response' => 403]);
     }
-    $item_id = isset($_GET['item_id']) ? absint($_GET['item_id']) : null;
-    if ($item_id !== null && $item_id < 1) wp_die('Forbidden', '', ['response' => 403]);
     $order = function_exists('wc_get_order') ? wc_get_order($order_id) : false;
     $result = sanro_studio_admin_order_preview_bytes($order, $side, $item_id);
     if (empty($result['valid'])) wp_die('Preview unavailable', '', ['response' => 404]);
@@ -281,7 +283,7 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
             'item_id' => $item_id,
             'side' => $side,
         ], admin_url('admin-post.php'));
-        $url = wp_nonce_url($url, 'sanro_order_preview_' . $order_id . '_' . $side);
+        $url = wp_nonce_url($url, 'sanro_order_preview_' . $order_id . '_' . $side . '_item_' . $item_id);
         echo '<p><a target="_blank" rel="noopener noreferrer" href="' . esc_url($url) . '">' .
             esc_html('Lihat preview ' . $label) . '</a></p>';
     }
