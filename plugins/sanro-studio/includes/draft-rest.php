@@ -233,6 +233,10 @@ function sanro_studio_rest_upload_master($request) {
         if (($current['status'] ?? null) !== 'draft') {
             return new WP_Error('sanro_draft_locked', 'Draft is not editable.', ['status' => 409]);
         }
+        if (!isset($current['design_hash'])
+            || !hash_equals($current['design_hash'], $expected_hash)) {
+            return new WP_Error('sanro_draft_conflict', 'Draft changed. Reload before upload.', ['status' => 409]);
+        }
         $budget_key = 'sanro_master_budget_' . hash('sha256', strtolower($id));
         $count = get_transient($budget_key);
         if ($count !== false && (!is_int($count) || $count >= 10)) {
@@ -241,10 +245,6 @@ function sanro_studio_rest_upload_master($request) {
         // Reserve before writing, fail closed if quota storage fails.
         if (!set_transient($budget_key, $count === false ? 1 : $count + 1, HOUR_IN_SECONDS)) {
             return new WP_Error('sanro_master_unavailable', 'Upload unavailable.', ['status' => 503]);
-        }
-        if (!isset($current['design_hash'])
-            || !hash_equals($current['design_hash'], $expected_hash)) {
-            return new WP_Error('sanro_draft_conflict', 'Draft changed. Reload before upload.', ['status' => 409]);
         }
         $stored = sanro_studio_store_owned_draft_master($id, $token, $side, $bytes);
         if (empty($stored['valid'])) return sanro_studio_rest_draft_response($stored);
