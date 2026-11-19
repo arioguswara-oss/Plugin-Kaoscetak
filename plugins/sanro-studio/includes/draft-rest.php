@@ -546,9 +546,31 @@ function sanro_studio_rest_stage_draft_cart($request) {
     if (!is_object($cart) || !sanro_studio_stage_rest_session_ready()) {
         return new WP_Error('sanro_cart_unavailable', 'Cart session unavailable.', ['status'=>503]);
     }
-    $result = sanro_studio_stage_commit_cart_lines($contract, $cart);
-    if (empty($result['valid'])) {
-        return new WP_Error('sanro_cart_failed', 'Could not add verified design to cart.', ['status'=>409]);
+    // A client may retry after its first POST committed but the response was
+    // lost. Do not duplicate the order lines: permit reuse only after fresh
+    // owner authorization, full cart validation, and an identical server quote.
+    try {
+        $existing = method_exists($cart, 'get_cart') ? $cart->get_cart() : null;
+    } catch (Throwable $error) {
+        $existing = null;
+    }
+    if (!is_array($existing)) {
+        return new WP_Error('sanro_cart_unavailable', 'Cart cannot be inspected.', ['status'=>503]);
+    }
+    if ($existing) {
+        $result = function_exists('sanro_studio_stage_reauthorize_cart')
+            ? sanro_studio_stage_reauthorize_cart($id, $token, $product_id, $cart)
+            : ['valid'=>false];
+        $quoted_total = $contract['quote']['total_price'] ?? null;
+        if (empty($result['valid']) || !is_int($quoted_total)
+            || ($result['total_price'] ?? null) !== $quoted_total) {
+            return new WP_Error('sanro_cart_conflict', 'Cart has another design or stale pricing.', ['status'=>409]);
+        }
+    } else {
+        $result = sanro_studio_stage_commit_cart_lines($contract, $cart);
+        if (empty($result['valid'])) {
+            return new WP_Error('sanro_cart_failed', 'Could not add verified design to cart.', ['status'=>409]);
+        }
     }
     if (function_exists('nocache_headers')) nocache_headers();
     return rest_ensure_response([
