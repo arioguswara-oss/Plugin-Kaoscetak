@@ -81,6 +81,8 @@ if (defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
         && SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT === true) {
         add_action('woocommerce_before_calculate_totals',
             'sanro_studio_stage_reprice_signed_cart', 999, 1);
+        add_filter('woocommerce_get_item_data',
+            'sanro_studio_stage_cart_item_display', 20, 2);
     }
     add_action('wp_enqueue_scripts', 'sanro_studio_stage_enqueue_checkout_authorization', 30);
     add_action('woocommerce_review_order_before_submit',
