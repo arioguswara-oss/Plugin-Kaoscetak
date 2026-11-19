@@ -240,9 +240,17 @@ function sanro_studio_stage_reauthorize_cart($design_id, $owner_token, $product_
     if (!is_array($actual) || !$actual) {
         return ['valid' => false, 'error' => 'cart_empty'];
     }
-    $priced = sanro_studio_stage_price_cart_batch($contract, array_values($actual));
-    if (empty($priced['valid'])) return $priced;
-    $cart->calculate_totals();
+    try {
+        $priced = sanro_studio_stage_price_cart_batch($contract, array_values($actual));
+        if (empty($priced['valid'])) return $priced;
+        $cart->calculate_totals();
+        $checked = sanro_studio_stage_verify_cart_prices($contract, $cart);
+        if (empty($checked['valid'])) return $checked;
+    } catch (Throwable $error) {
+        // Session is untrusted on reload; never return a successful price
+        // authorization when a WooCommerce hook or pricing extension fails.
+        return ['valid' => false, 'error' => 'cart_reprice_failed'];
+    }
     return ['valid' => true, 'design_id' => $contract['design_id'],
         'total_price' => $priced['total_price'],
         'requires_checkout_reauthorization' => true];
