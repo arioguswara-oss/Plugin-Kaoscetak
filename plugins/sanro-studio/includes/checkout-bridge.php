@@ -479,6 +479,13 @@ function sanro_studio_stage_checkout_verify_order_batch($order, $data) {
     if (!is_object($order) || !method_exists($order, 'get_items')) {
         throw new RuntimeException('SANRO Studio: order inspection unavailable.');
     }
+    // The shop currency was checked during cart authorization, but a plugin
+    // can still change the unsaved order currency before this final hook.
+    // Never interpret an IDR quote as an amount in another currency.
+    if (!method_exists($order, 'get_currency')
+        || $order->get_currency() !== 'IDR') {
+        throw new RuntimeException('SANRO Studio: order currency does not match the IDR quote.');
+    }
     $expected = sanro_studio_prepare_size_cart_lines($verified['contract']);
     if (empty($expected['valid']) || !isset($verified['bound_sizes'])
         || !is_array($verified['bound_sizes'])) {
