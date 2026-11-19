@@ -42,7 +42,7 @@ do
   run_check "PHP lint $file" 'No syntax errors detected' php -l "$file"
 done
 
-run_check 'Editor config REST' '20 assertions PASS, 0 FAIL' php tests/test_sanro_editor_config.php
+run_check 'Editor config REST' '26 assertions PASS, 0 FAIL' php tests/test_sanro_editor_config.php
 run_check 'Pricing matrix' '356 assertions PASS, 0 FAIL' php tests/test_sanro_pricing.php
 run_check 'Draft REST' '35 assertions PASS, 0 FAIL' php tests/test_sanro_draft_rest.php
 run_check 'Checkout guards' '6 assertions PASS, 0 FAIL' php tests/test_sanro_checkout_guards.php
