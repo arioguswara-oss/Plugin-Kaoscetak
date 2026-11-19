@@ -47,4 +47,20 @@ $badLines = [$sizeLines['lines'][0]];
 check_cart(sanro_studio_validate_size_cart_lines($priced, $badLines)['valid'] === false, 'missing size rejected');
 $badLines = $sizeLines['lines']; $badLines[0]['sanro_studio_design_id'] = 'different';
 check_cart(sanro_studio_validate_size_cart_lines($priced, $badLines)['valid'] === false, 'different design rejected');
-echo "PASS: 20 isolated cart-line checks\n";
+$normalLines = $sizeLines['lines'];
+$normalLines[0]['data'] = new stdClass();
+$normalLines[0]['cart_item_key'] = 'wc-synthetic-line';
+check_cart(sanro_studio_validate_size_cart_lines($priced, $normalLines)['valid'] === true,
+    'ordinary WooCommerce cart fields remain supported');
+$badLines = $sizeLines['lines']; $badLines[0]['sanro_studio_owner_token'] = str_repeat('a', 64);
+$rejected = sanro_studio_validate_size_cart_lines($priced, $badLines);
+check_cart(($rejected['valid'] ?? null) === false
+    && ($rejected['error'] ?? null) === 'cart_unexpected_studio_metadata',
+    'owner token must not persist in SANRO cart metadata');
+$badLines = $sizeLines['lines']; $badLines[0]['sanro_studio_checkout_nonce'] = 'synthetic';
+check_cart(sanro_studio_validate_size_cart_lines($priced, $badLines)['valid'] === false,
+    'unexpected SANRO nonce rejected');
+$badLines = $sizeLines['lines']; $badLines[0]['sanro_studio_master_path'] = '/private/path';
+check_cart(sanro_studio_validate_size_cart_lines($priced, $badLines)['valid'] === false,
+    'private master references rejected');
+echo "PASS: 24 isolated cart-line checks\n";
