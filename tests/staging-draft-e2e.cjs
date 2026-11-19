@@ -182,7 +182,10 @@ catch (_) { console.error('BLOCKED: Playwright unavailable; set NODE_PATH to iso
    +'; draft GET status='+(restoreReads.length?restoreReads.join(','):'not observed')
    +'; browser errors='+(browserErrorTypes.length?browserErrorTypes.join(','):'none');
   assert(restoreStatusChanged, 'No restore result after reload; '+diagnostics);
-  assert.match(restoredStatus,/Draft berhasil dibuka kembali/, 'Draft restore failed; '+diagnostics);
+  // Staging still serves an earlier buyer.js that says 'Draft teks berhasil...';
+  // current source says 'Draft berhasil...'. Both are successful restore outcomes.
+  // Actual text and quantity are asserted below; the status alone cannot PASS.
+  assert.match(restoredStatus,/^Draft(?: teks)? berhasil dibuka kembali\./, 'Draft restore failed; '+diagnostics);
   await page.locator('[data-side="'+chosen+'"]').click();
   assert.equal(await page.locator('#sanro-text-input').inputValue(),marker);
   assert.equal(await page.locator('input[data-size="M"]').inputValue(),'1');
