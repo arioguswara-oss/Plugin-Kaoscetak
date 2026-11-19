@@ -1,0 +1,19 @@
+[Unit]
+Description=SANRO Studio isolated local CI checks (PR 15)
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/home/sanro/Plugin-Kaoscetak/.git
+
+[Service]
+Type=oneshot
+User=sanro
+Group=sanro
+WorkingDirectory=/home/sanro
+ExecStart=/usr/bin/bash /home/sanro/Plugin-Kaoscetak/scripts/sanro-studio-ci-scheduled.sh
+TimeoutStartSec=25min
+UMask=0077
+Nice=10
+IOSchedulingClass=idle
+NoNewPrivileges=yes
+PrivateTmp=yes
+# No ExecStartPost/ExecStopPost: this job never deploys or merges.
