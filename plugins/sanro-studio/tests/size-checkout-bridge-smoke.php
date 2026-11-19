@@ -7,13 +7,15 @@ function check_size($condition, $label) {
 }
 class SanroSizeOrderItem {
     private $meta = [];
-    private $product; private $quantity; private $subtotal;
-    function __construct($product, $quantity, $subtotal) {
+    private $product; private $quantity; private $subtotal; private $total;
+    function __construct($product, $quantity, $subtotal, $total = null) {
         $this->product = $product; $this->quantity = $quantity; $this->subtotal = $subtotal;
+        $this->total = $total === null ? $subtotal : $total;
     }
     function get_product_id() { return $this->product; }
     function get_quantity() { return $this->quantity; }
     function get_subtotal() { return $this->subtotal; }
+    function get_total() { return $this->total; }
     function get_meta($key, $single = true) { return $this->meta[$key] ?? ''; }
     function update_meta_data($key, $value) { $this->meta[$key] = $value; }
 }
@@ -31,8 +33,19 @@ $wrong = new SanroSizeOrderItem(42, 2, '130001.00');
 check_size(sanro_studio_validate_size_order_item($candidate, $wrong)['valid'] === false, 'amount mismatch rejected');
 $wrong = new SanroSizeOrderItem(42, 3, '130000.00');
 check_size(sanro_studio_validate_size_order_item($candidate, $wrong)['valid'] === false, 'quantity mismatch rejected');
+$discount = new SanroSizeOrderItem(42, 2, '130000.00', '1.00');
+check_size(sanro_studio_validate_size_order_item($candidate, $discount)['error'] === 'size_order_total_mismatch',
+    'coupon discount cannot undercharge server-quoted order');
+check_size(sanro_studio_prepare_size_checkout_order_item($candidate, $discount)['valid'] === false,
+    'discounted order cannot bind design metadata');
+$extra = new SanroSizeOrderItem(42, 2, '130000.00', '130001.00');
+check_size(sanro_studio_validate_size_order_item($candidate, $extra)['valid'] === false,
+    'third-party markup cannot change quoted order total');
+$invalid = new SanroSizeOrderItem(42, 2, '130000.00', '-1');
+check_size(sanro_studio_validate_size_order_item($candidate, $invalid)['error'] === 'size_order_total_invalid',
+    'malformed negative final total rejected');
 $wrong = $candidate; $wrong['sanro_studio_unit_price'] = 1;
 check_size(sanro_studio_prepare_size_checkout_order_item($wrong, new SanroSizeOrderItem(42, 2, 130000))['valid'] === false, 'tampered unit price rejected');
 $wrong = $candidate; $wrong['sanro_studio_quote_currency'] = 'USD';
 check_size(sanro_studio_prepare_size_checkout_order_item($wrong, new SanroSizeOrderItem(42, 2, 130000))['valid'] === false, 'currency mismatch rejected');
-echo "PASS: 9 isolated size-checkout checks\n";
+echo "PASS: 13 isolated size-checkout checks\n";
