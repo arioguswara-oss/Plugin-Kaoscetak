@@ -421,6 +421,33 @@ function sanro_studio_stage_checkout_post_token($default, $design_id, $product_i
  * Final pre-save guard: all expected sizes must have been bound exactly once.
  * Called by classic WooCommerce checkout_create_order before order persistence.
  */
+/**
+ * Reject an order-level discount/negative fee that makes the WooCommerce
+ * grand total lower than the freshly quoted Studio merchandise amount.
+ * Shipping and tax can raise the total; no coupon policy is enabled yet.
+ * Compare decimal whole parts as strings to avoid floating-point rounding.
+ */
+function sanro_studio_validate_order_grand_total($contract, $total) {
+    $minimum = $contract['quote']['total_price'] ?? null;
+    if (!is_array($contract) || ($contract['valid'] ?? null) !== true
+        || !is_int($minimum) || $minimum < 1
+        || ($contract['quote']['currency'] ?? null) !== 'IDR') {
+        return ['valid' => false, 'error' => 'order_grand_total_contract_invalid'];
+    }
+    if ((!is_string($total) && !is_int($total) && !is_float($total))
+        || !preg_match('/^(?:0|[1-9][0-9]*)(?:\\.[0-9]{1,2})?$/D', (string) $total)) {
+        return ['valid' => false, 'error' => 'order_grand_total_invalid'];
+    }
+    $whole = explode('.', (string) $total, 2)[0];
+    $minimum_text = (string) $minimum;
+    if (strlen($whole) < strlen($minimum_text)
+        || (strlen($whole) === strlen($minimum_text)
+            && strcmp($whole, $minimum_text) < 0)) {
+        return ['valid' => false, 'error' => 'order_grand_total_underquote'];
+    }
+    return ['valid' => true, 'minimum_total' => $minimum];
+}
+
 function sanro_studio_stage_checkout_verify_order_batch($order, $data) {
     if (!defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
         || SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK !== true) return;
@@ -487,6 +514,14 @@ function sanro_studio_stage_checkout_verify_order_batch($order, $data) {
             throw new RuntimeException('SANRO Studio: order price or quantity mismatch.');
         }
         $seen[$size] = true;
+    }
+    // Final order total may include shipping/tax, but cannot undercut
+    // the server quote through an order-level coupon or negative fee.
+    if (!method_exists($order, 'get_total')
+        || empty(sanro_studio_validate_order_grand_total(
+            $verified['contract'], $order->get_total()
+        )['valid'])) {
+        throw new RuntimeException('SANRO Studio: order grand total is below the server quote.');
     }
 }
 
