@@ -517,6 +517,31 @@ function sanro_studio_stage_rest_session_ready() {
 }
 
 /**
+ * The staging authorization flow is wired to WooCommerce classic checkout
+ * hooks. Checkout Blocks use the Store API and bypass those PHP classic hooks.
+ * Never create Studio cart lines if checkout would skip our owner/price gates.
+ * This intentionally rejects missing, unpublished or ambiguous checkout pages.
+ */
+function sanro_studio_stage_classic_checkout_ready() {
+    if (!function_exists('wc_get_page_id') || !function_exists('get_post')
+        || !function_exists('has_block') || !function_exists('has_shortcode')) {
+        return false;
+    }
+    try {
+        $checkout_id = wc_get_page_id('checkout');
+        if (!is_int($checkout_id) || $checkout_id < 1) return false;
+        $page = get_post($checkout_id);
+        if (!is_object($page) || ($page->post_type ?? null) !== 'page'
+            || ($page->post_status ?? null) !== 'publish'
+            || !is_string($page->post_content ?? null)) return false;
+        if (has_block('woocommerce/checkout', $page)) return false;
+        return has_shortcode($page->post_content, 'woocommerce_checkout') === true;
+    } catch (Throwable $error) {
+        return false;
+    }
+}
+
+/**
  * Staging-only buyer-to-cart boundary. The owner token is supplied in an
  * authenticated draft request header, never stored in WC cart metadata.
  */
@@ -530,6 +555,11 @@ function sanro_studio_rest_stage_draft_cart($request) {
         || SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK !== true
         || !function_exists('WC')) {
         return new WP_Error('sanro_cart_disabled', 'Staging cart disabled.', ['status'=>403]);
+    }
+    if (!sanro_studio_stage_classic_checkout_ready()) {
+        return new WP_Error('sanro_checkout_page_incompatible',
+            'Staging cart requires a published classic WooCommerce checkout page.',
+            ['status'=>503]);
     }
     $id = $request->get_param('id');
     $token = $request->get_header('X-Sanro-Owner-Token');
