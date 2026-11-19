@@ -157,4 +157,18 @@ check_adapter(sanro_studio_stage_reauthorize_cart($contract['design_id'], 'valid
 check_adapter($restored->totals === 1, 'restored cart recalculates totals');
 $restored->lines['line-0']['sanro_studio_unit_price'] = 1;
 check_adapter(sanro_studio_stage_reauthorize_cart($contract['design_id'], 'valid-owner-token', 42, $restored)['valid'] === false, 'tampered restored cart rejected');
-echo "PASS: 34 staging cart adapter checks\n";
+$restored->lines['line-0']['sanro_studio_unit_price'] = 65000;
+$restored->lines['line-0']['data']->price = '65000.00';
+check_adapter(sanro_studio_stage_verify_cart_prices($contract, $restored)['valid'] === true,
+    'canonical two-decimal server unit price accepted');
+$restored->totalsMode = 'price_drift';
+check_adapter(sanro_studio_stage_reauthorize_cart($contract['design_id'], 'valid-owner-token', 42, $restored)['valid'] === false,
+    'session reload price drift cannot authorize cart');
+$restored->totalsMode = 'throw';
+check_adapter(sanro_studio_stage_reauthorize_cart($contract['design_id'], 'valid-owner-token', 42, $restored)['valid'] === false,
+    'session reload exception fails closed');
+$restored->totalsMode = 'quantity_drift';
+$restored->lines['line-0']['quantity'] = 2;
+check_adapter(sanro_studio_stage_reauthorize_cart($contract['design_id'], 'valid-owner-token', 42, $restored)['valid'] === false,
+    'session reload quantity drift cannot authorize cart');
+echo "PASS: 38 staging cart adapter checks\n";
