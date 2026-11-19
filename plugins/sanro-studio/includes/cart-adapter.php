@@ -2,6 +2,77 @@
 defined('ABSPATH') || exit;
 
 /**
+ * Bind a staging cart line to a fresh server-authorized quote without
+ * persisting the draft owner token. The cart may be reconstructed from a WC
+ * session, so the price must be independently authenticated on each load.
+ */
+function sanro_studio_stage_cart_signature($line, $expires) {
+    if (!is_array($line) || !is_int($expires) || $expires < 1
+        || !function_exists('wp_salt')) return null;
+    $keys = ['product_id', 'quantity', 'sanro_studio_design_id',
+        'sanro_studio_size', 'sanro_studio_unit_price',
+        'sanro_studio_line_subtotal', 'sanro_studio_quote_currency'];
+    $values = ['sanro-cart-v1', $expires];
+    foreach ($keys as $key) {
+        if (!array_key_exists($key, $line)
+            || (!is_int($line[$key]) && !is_string($line[$key]))) return null;
+        $values[] = $line[$key];
+    }
+    $secret = wp_salt('auth');
+    if (!is_string($secret) || strlen($secret) < 16) return null;
+    $payload = json_encode($values, JSON_UNESCAPED_SLASHES);
+    return is_string($payload) ? hash_hmac('sha256', $payload, $secret) : null;
+}
+
+/**
+ * WooCommerce reconstructs product objects from its session, often restoring
+ * the ordinary catalog price. Reapply ONLY a server-signed Studio unit price.
+ * Tampered or expired Studio lines are removed instead of being charged at
+ * catalog prices. No order, payment, or owner token is involved.
+ */
+function sanro_studio_stage_reprice_signed_cart($cart) {
+    if (!defined('SANRO_STUDIO_ENABLE_STAGING_CART')
+        || SANRO_STUDIO_ENABLE_STAGING_CART !== true
+        || !defined('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT')
+        || SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT !== true
+        || !defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
+        || SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK !== true
+        || !is_object($cart) || !method_exists($cart, 'get_cart')
+        || !method_exists($cart, 'remove_cart_item')
+        || !function_exists('get_woocommerce_currency')
+        || get_woocommerce_currency() !== 'IDR') return;
+    try {
+        $items = $cart->get_cart();
+    } catch (Throwable $error) {
+        return;
+    }
+    if (!is_array($items)) return;
+    foreach ($items as $key => $line) {
+        if (!is_array($line) || !array_key_exists('sanro_studio_design_id', $line)) continue;
+        $expires = $line['_sanro_qa_expires'] ?? null;
+        $signature = $line['_sanro_qa_signature'] ?? null;
+        $expected = sanro_studio_stage_cart_signature($line, $expires);
+        $valid = is_int($expires) && time() <= $expires
+            && is_string($signature)
+            && preg_match('/^[a-f0-9]{64}$/D', $signature)
+            && is_string($expected) && hash_equals($expected, $signature)
+            && isset($line['data']) && is_object($line['data'])
+            && method_exists($line['data'], 'set_price')
+            && isset($line['sanro_studio_unit_price'])
+            && is_int($line['sanro_studio_unit_price'])
+            && $line['sanro_studio_unit_price'] > 0;
+        if (!$valid) {
+            try { $cart->remove_cart_item($key); } catch (Throwable $ignored) {}
+            if (function_exists('wc_add_notice')) {
+                wc_add_notice('SANRO Studio: harga desain tidak dapat diverifikasi. Simpan dan tambahkan ulang desain.', 'error');
+            }
+            continue;
+        }
+        $line['data']->set_price((string) $line['sanro_studio_unit_price']);
+    }
+}
+
+/**
  * Explicit staging-only WooCommerce cart adapter. Never registers a public
  * endpoint or hook. The owner-authorized contract is supplied transiently by
  * the caller; owner credentials must not enter WC session/cart metadata.
@@ -186,7 +257,14 @@ function sanro_studio_stage_commit_cart_lines($contract, $cart) {
     // during insertion/totals. Keep the batch all-or-nothing.
     try {
         foreach ($preflight['lines'] as $line) {
+            $expires = time() + 3600;
+            $signature = sanro_studio_stage_cart_signature($line, $expires);
+            if (!is_string($signature)) {
+                throw new RuntimeException('cart_signature_unavailable');
+            }
             $meta = [
+                '_sanro_qa_expires' => $expires,
+                '_sanro_qa_signature' => $signature,
                 'sanro_studio_design_id' => $line['sanro_studio_design_id'],
                 'sanro_studio_size' => $line['sanro_studio_size'],
                 'sanro_studio_unit_price' => $line['sanro_studio_unit_price'],
