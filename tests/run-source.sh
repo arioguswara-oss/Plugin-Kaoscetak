@@ -22,6 +22,7 @@ done
 # Each fixture is isolated, uses synthetic WooCommerce doubles, and writes no live data.
 "$PHP_BIN" plugins/sanro-studio/tests/cart-line-snapshot-smoke.php
 "$PHP_BIN" plugins/sanro-studio/tests/cart-adapter-smoke.php
+"$PHP_BIN" plugins/sanro-studio/tests/size-checkout-bridge-smoke.php
 "$PHP_BIN" plugins/sanro-studio/tests/checkout-gate-smoke.php
 "$PHP_BIN" plugins/sanro-studio/tests/order-amount-contract.php
 "$PHP_BIN" plugins/sanro-studio/tests/order-lock-boundary.php
