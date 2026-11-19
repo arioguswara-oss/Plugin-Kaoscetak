@@ -66,12 +66,14 @@ class SanroTransactionCart {
     public $totals = 0;
     public $failAfter = 0;
     public $totalsMode = 'normal';
+    public $throwAfterInsert = false;
     function get_cart() { return $this->lines; }
     function add_to_cart($product, $qty, $variation, $attrs, $meta) {
         if ($this->failAfter > 0 && count($this->lines) >= $this->failAfter) return false;
         $key = 'line-'.count($this->lines);
         $this->lines[$key] = array_merge(['product_id'=>$product, 'quantity'=>$qty,
             'data'=>new SanroPriceProduct()], $meta);
+        if ($this->throwAfterInsert) throw new RuntimeException('synthetic hook threw after insert');
         return $key;
     }
     function remove_cart_item($key) { unset($this->lines[$key]); return true; }
@@ -119,6 +121,12 @@ $throws->totalsMode = 'throw';
 check_adapter(sanro_studio_stage_commit_cart_lines($contract, $throws)['valid'] === false,
     'pricing hook exception converted to fail-closed result');
 check_adapter(count($throws->lines) === 0, 'exception rolls back all inserted lines');
+$midInsert = new SanroTransactionCart();
+$midInsert->throwAfterInsert = true;
+check_adapter(sanro_studio_stage_commit_cart_lines($contract, $midInsert)['valid'] === false,
+    'hook exception after insertion fails closed');
+check_adapter(count($midInsert->lines) === 0,
+    'untracked WooCommerce line removed after mid-insert exception');
 $twoSuccess = new SanroTransactionCart();
 $multi = sanro_studio_stage_commit_cart_lines($two, $twoSuccess);
 check_adapter($multi['valid'] === true && count($twoSuccess->lines) === 2,
@@ -171,4 +179,4 @@ $restored->totalsMode = 'quantity_drift';
 $restored->lines['line-0']['quantity'] = 2;
 check_adapter(sanro_studio_stage_reauthorize_cart($contract['design_id'], 'valid-owner-token', 42, $restored)['valid'] === false,
     'session reload quantity drift cannot authorize cart');
-echo "PASS: 38 staging cart adapter checks\n";
+echo "PASS: 40 staging cart adapter checks\n";
