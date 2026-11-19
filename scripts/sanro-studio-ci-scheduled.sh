@@ -8,6 +8,10 @@ qa_dir="${SANRO_STUDIO_QA_DIR:-/home/sanro/sanro-studio-ci-qa}"
 branch="fix/sanro-studio-editor-config-validation-20261119"
 lock_file="${SANRO_STUDIO_CI_LOCK:-/home/sanro/.sanro-studio-ci.lock}"
 
+if ! command -v flock >/dev/null 2>&1; then
+  echo 'FAIL: flock unavailable' >&2
+  exit 2
+fi
 exec 9>"$lock_file"
 if ! flock -n 9; then
   echo 'SANRO STUDIO CI: another run is active; skipping.'
