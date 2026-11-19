@@ -51,6 +51,7 @@ function sanro_studio_validate_size_order_item($candidate, $order_item) {
         || !method_exists($order_item, 'get_product_id')
         || !method_exists($order_item, 'get_quantity')
         || !method_exists($order_item, 'get_subtotal')
+        || !method_exists($order_item, 'get_total')
         || !isset($candidate['product_id'], $candidate['quantity'],
             $candidate['sanro_studio_line_subtotal'], $candidate['sanro_studio_size'])
         || !is_int($candidate['product_id']) || !is_int($candidate['quantity'])
@@ -70,6 +71,19 @@ function sanro_studio_validate_size_order_item($candidate, $order_item) {
     if ($parts[0] !== (string) $candidate['sanro_studio_line_subtotal']
         || str_pad($parts[1] ?? '', 2, '0') !== '00') {
         return ['valid' => false, 'error' => 'size_order_amount_mismatch'];
+    }
+    // Until coupon/discount policy is explicitly integrated, a WooCommerce
+    // line total must equal its server-quoted subtotal. Checking only subtotal
+    // would allow a coupon or third-party hook to silently undercharge.
+    $total = $order_item->get_total();
+    if ((!is_string($total) && !is_int($total) && !is_float($total))
+        || !preg_match('/^(?:0|[1-9][0-9]*)(?:\\.[0-9]{1,2})?$/D', (string) $total)) {
+        return ['valid' => false, 'error' => 'size_order_total_invalid'];
+    }
+    $total_parts = explode('.', (string) $total, 2);
+    if ($total_parts[0] !== (string) $candidate['sanro_studio_line_subtotal']
+        || str_pad($total_parts[1] ?? '', 2, '0') !== '00') {
+        return ['valid' => false, 'error' => 'size_order_total_mismatch'];
     }
     return ['valid' => true, 'size' => $candidate['sanro_studio_size'],
         'design_id' => $candidate['sanro_studio_design_id'] ?? null];
