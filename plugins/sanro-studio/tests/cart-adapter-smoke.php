@@ -67,6 +67,7 @@ class SanroTransactionCart {
     public $failAfter = 0;
     public $totalsMode = 'normal';
     public $throwAfterInsert = false;
+    public $failRollback = false;
     function get_cart() { return $this->lines; }
     function add_to_cart($product, $qty, $variation, $attrs, $meta) {
         if ($this->failAfter > 0 && count($this->lines) >= $this->failAfter) return false;
@@ -76,7 +77,11 @@ class SanroTransactionCart {
         if ($this->throwAfterInsert) throw new RuntimeException('synthetic hook threw after insert');
         return $key;
     }
-    function remove_cart_item($key) { unset($this->lines[$key]); return true; }
+    function remove_cart_item($key) {
+        if ($this->failRollback) return false;
+        unset($this->lines[$key]);
+        return true;
+    }
     function calculate_totals() {
         $this->totals++;
         if ($this->totalsMode === 'throw') throw new RuntimeException('synthetic pricing hook failure');
@@ -127,6 +132,15 @@ check_adapter(sanro_studio_stage_commit_cart_lines($contract, $midInsert)['valid
     'hook exception after insertion fails closed');
 check_adapter(count($midInsert->lines) === 0,
     'untracked WooCommerce line removed after mid-insert exception');
+$rollbackFailed = new SanroTransactionCart();
+$rollbackFailed->totalsMode = 'throw';
+$rollbackFailed->failRollback = true;
+$unsafe = sanro_studio_stage_commit_cart_lines($contract, $rollbackFailed);
+check_adapter(($unsafe['valid'] ?? null) === false
+    && ($unsafe['error'] ?? null) === 'cart_rollback_incomplete',
+    'incomplete rollback explicitly rejected');
+check_adapter(count($rollbackFailed->lines) === 1,
+    'staging guard reports failure without masking leftover cart entry');
 $twoSuccess = new SanroTransactionCart();
 $multi = sanro_studio_stage_commit_cart_lines($two, $twoSuccess);
 check_adapter($multi['valid'] === true && count($twoSuccess->lines) === 2,
@@ -179,4 +193,4 @@ $restored->totalsMode = 'quantity_drift';
 $restored->lines['line-0']['quantity'] = 2;
 check_adapter(sanro_studio_stage_reauthorize_cart($contract['design_id'], 'valid-owner-token', 42, $restored)['valid'] === false,
     'session reload quantity drift cannot authorize cart');
-echo "PASS: 40 staging cart adapter checks\n";
+echo "PASS: 42 staging cart adapter checks\n";
