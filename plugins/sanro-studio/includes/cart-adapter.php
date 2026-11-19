@@ -156,7 +156,7 @@ function sanro_studio_stage_verify_cart_prices($contract, $cart) {
         }
         $actual_price = $line['data']->get_price();
         if ((!is_string($actual_price) && !is_int($actual_price) && !is_float($actual_price))
-            || !preg_match('/^(?:0|[1-9][0-9]*)(?:\\.0{1,2})?$/D', (string) $actual_price)
+            || !preg_match('/^(?:0|[1-9][0-9]*)(?:\.0{1,2})?$/D', (string) $actual_price)
             || (float) $actual_price !== (float) $prices[$line['sanro_studio_size']]) {
             return ['valid' => false, 'error' => 'cart_price_mismatch'];
         }
