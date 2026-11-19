@@ -683,10 +683,9 @@
      const result=await response.json();
      if(!response.ok||!result.valid)throw new Error('Keranjang belum siap ('+response.status+').');
      cartStatus.textContent='Desain masuk keranjang. Lanjutkan melalui halaman keranjang untuk otorisasi checkout.';
-     if(typeof result.cart_url==='string'&&/^https?:\/\//.test(result.cart_url)
-        &&new URL(result.cart_url,location.href).origin===location.origin){
-      location.assign(result.cart_url);
-     }
+     const safeCartUrl=typeof window.SanroStudioSafeCartUrl==='function'
+      ?window.SanroStudioSafeCartUrl(result.cart_url,location.href):null;
+     if(safeCartUrl) location.assign(safeCartUrl);
     }catch(error){cartStatus.textContent=error.message||'Gagal menambah ke keranjang.'}
     finally{cartButton.disabled=false}
    });
