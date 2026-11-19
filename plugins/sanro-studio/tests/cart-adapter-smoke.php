@@ -12,9 +12,14 @@ class SanroMockProduct {
 class SanroMockCart {
     public $added = 0;
     public $contents = [];
+    public $throwOnRead = false;
+    public $nonArrayOnRead = false;
     function add_to_cart() { $this->added++; return 'key'; }
     function remove_cart_item($key) { return true; }
-    function get_cart() { return $this->contents; }
+    function get_cart() {
+        if ($this->throwOnRead) throw new RuntimeException('synthetic cart session failure');
+        return $this->nonArrayOnRead ? null : $this->contents;
+    }
 }
 function check_adapter($ok, $message) {
     if (!$ok) { fwrite(STDERR, "FAIL: ".$message."\n"); exit(1); }
@@ -33,6 +38,20 @@ check_adapter($cart->added === 0 && $ready['cart_mutation_enabled'] === false, '
 $cart->contents = ['existing'=>[]];
 check_adapter(sanro_studio_stage_add_cart_lines($contract, $cart)['valid'] === false, 'existing cart rejected');
 $cart->contents = [];
+$cart->throwOnRead = true;
+$unreadable = sanro_studio_stage_add_cart_lines($contract, $cart);
+check_adapter(($unreadable['valid'] ?? null) === false
+    && ($unreadable['error'] ?? null) === 'cart_unavailable',
+    'cart preflight exception fails closed');
+check_adapter($cart->added === 0, 'cart preflight exception never adds items');
+$cart->throwOnRead = false;
+$cart->nonArrayOnRead = true;
+$malformed = sanro_studio_stage_add_cart_lines($contract, $cart);
+check_adapter(($malformed['valid'] ?? null) === false
+    && ($malformed['error'] ?? null) === 'cart_unavailable',
+    'malformed WooCommerce cart fails closed');
+check_adapter($cart->added === 0, 'malformed cart preflight never adds items');
+$cart->nonArrayOnRead = false;
 $bad = $contract; $bad['quote']['items']['M']['unit_price'] = 1;
 check_adapter(sanro_studio_stage_add_cart_lines($bad, $cart)['valid'] === false, 'bad quote rejected');
 class SanroPriceProduct {
@@ -204,4 +223,4 @@ $quantityResult = sanro_studio_stage_reauthorize_cart(
 check_adapter(($quantityResult['valid'] ?? null) === false
     && ($quantityResult['error'] ?? null) === 'cart_line_mismatch',
     'session reload quantity drift cannot authorize cart');
-echo "PASS: 42 staging cart adapter checks\n";
+echo "PASS: 46 staging cart adapter checks\n";
