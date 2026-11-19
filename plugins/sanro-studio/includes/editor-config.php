@@ -36,7 +36,12 @@ function sanro_studio_register_editor_config_route() {
         'methods' => 'GET',
         'callback' => 'sanro_studio_rest_editor_config',
         'permission_callback' => '__return_true',
-        'args' => ['id' => ['required' => true, 'validate_callback' => 'is_numeric']],
+        'args' => ['id' => [
+            'required' => true,
+            'validate_callback' => static function ($value, $request, $param) {
+                return is_scalar($value) && ctype_digit((string) $value) && (int) $value > 0;
+            },
+        ]],
     ]);
 }
 
