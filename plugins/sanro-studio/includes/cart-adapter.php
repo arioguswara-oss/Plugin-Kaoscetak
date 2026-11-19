@@ -211,10 +211,33 @@ function sanro_studio_stage_commit_cart_lines($contract, $cart) {
             'total_price' => $priced['total_price'],
             'requires_session_checkout_guard' => true];
     } catch (Throwable $error) {
-        // Never expose exception details to the public REST response.
-        // Remove every line introduced by this transaction.
-        foreach ($keys as $added) {
+        // The cart was empty at preflight. A WooCommerce hook may insert a
+        // line and then throw before add_to_cart() returns its key. Remove
+        // both recorded keys and any untracked line from this failed batch.
+        // Never expose exception details or draft credentials in REST.
+        $rollback_keys = $keys;
+        try {
+            $pending = $cart->get_cart();
+            if (is_array($pending)) {
+                foreach (array_keys($pending) as $pending_key) {
+                    if (is_string($pending_key)
+                        && !in_array($pending_key, $rollback_keys, true)) {
+                        $rollback_keys[] = $pending_key;
+                    }
+                }
+            }
+        } catch (Throwable $ignored) {}
+        foreach ($rollback_keys as $added) {
             try { $cart->remove_cart_item($added); } catch (Throwable $ignored) {}
+        }
+        // If the cart could not be rolled back, explicitly fail closed.
+        try {
+            $remaining = $cart->get_cart();
+            if (!is_array($remaining) || $remaining) {
+                return ['valid' => false, 'error' => 'cart_rollback_incomplete'];
+            }
+        } catch (Throwable $ignored) {
+            return ['valid' => false, 'error' => 'cart_rollback_incomplete'];
         }
         return ['valid' => false, 'error' => 'cart_transaction_failed'];
     }
