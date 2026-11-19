@@ -490,6 +490,33 @@ function sanro_studio_stage_rest_cart() {
 }
 
 /**
+ * Ensure a guest cart from an authorized REST request can survive navigation
+ * to the WooCommerce cart page. REST requests do not reliably inherit
+ * WooCommerce's frontend session-cookie bootstrap.
+ *
+ * Call only AFTER checking the draft owner and the server-side quote, and
+ * BEFORE adding any cart items. A session failure must not leave a mutated
+ * cart behind or expose owner credentials in a response.
+ */
+function sanro_studio_stage_rest_session_ready() {
+    if (!function_exists('WC')) return false;
+    $wc = WC();
+    if (!is_object($wc) || !isset($wc->session)
+        || !is_object($wc->session)
+        || !method_exists($wc->session, 'has_session')
+        || !method_exists($wc->session, 'set_customer_session_cookie')) return false;
+    try {
+        if (!$wc->session->has_session()) {
+            if (headers_sent()) return false;
+            $wc->session->set_customer_session_cookie(true);
+        }
+        return $wc->session->has_session() === true;
+    } catch (Throwable $error) {
+        return false;
+    }
+}
+
+/**
  * Staging-only buyer-to-cart boundary. The owner token is supplied in an
  * authenticated draft request header, never stored in WC cart metadata.
  */
@@ -516,8 +543,8 @@ function sanro_studio_rest_stage_draft_cart($request) {
         return new WP_Error('sanro_cart_contract', 'Draft not ready for cart.', ['status'=>409]);
     }
     $cart = sanro_studio_stage_rest_cart();
-    if (!is_object($cart)) {
-        return new WP_Error('sanro_cart_unavailable', 'Cart unavailable.', ['status'=>503]);
+    if (!is_object($cart) || !sanro_studio_stage_rest_session_ready()) {
+        return new WP_Error('sanro_cart_unavailable', 'Cart session unavailable.', ['status'=>503]);
     }
     $result = sanro_studio_stage_commit_cart_lines($contract, $cart);
     if (empty($result['valid'])) {
