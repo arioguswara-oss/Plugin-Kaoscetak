@@ -465,6 +465,31 @@ function sanro_studio_rest_quote_draft($request) {
 }
 
 /**
+ * Resolve a WooCommerce cart in an authenticated REST request. WooCommerce
+ * does not always initialize frontend cart/session objects for REST routes.
+ * Loading must happen only AFTER the draft owner and quote are authorized.
+ * Never attempt bootstrap before woocommerce_init or mask load failures.
+ */
+function sanro_studio_stage_rest_cart() {
+    if (!function_exists('WC')) return null;
+    $wc = WC();
+    if (!is_object($wc)) return null;
+    if (!isset($wc->cart) || !is_object($wc->cart)) {
+        if (!function_exists('wc_load_cart')
+            || !function_exists('did_action')
+            || !did_action('woocommerce_init')) return null;
+        try {
+            wc_load_cart();
+        } catch (Throwable $error) {
+            return null;
+        }
+        $wc = WC();
+    }
+    return is_object($wc) && isset($wc->cart) && is_object($wc->cart)
+        ? $wc->cart : null;
+}
+
+/**
  * Staging-only buyer-to-cart boundary. The owner token is supplied in an
  * authenticated draft request header, never stored in WC cart metadata.
  */
@@ -490,11 +515,11 @@ function sanro_studio_rest_stage_draft_cart($request) {
     if (empty($contract['valid'])) {
         return new WP_Error('sanro_cart_contract', 'Draft not ready for cart.', ['status'=>409]);
     }
-    $wc = WC();
-    if (!is_object($wc) || !isset($wc->cart) || !is_object($wc->cart)) {
+    $cart = sanro_studio_stage_rest_cart();
+    if (!is_object($cart)) {
         return new WP_Error('sanro_cart_unavailable', 'Cart unavailable.', ['status'=>503]);
     }
-    $result = sanro_studio_stage_commit_cart_lines($contract, $wc->cart);
+    $result = sanro_studio_stage_commit_cart_lines($contract, $cart);
     if (empty($result['valid'])) {
         return new WP_Error('sanro_cart_failed', 'Could not add verified design to cart.', ['status'=>409]);
     }
