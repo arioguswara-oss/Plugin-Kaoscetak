@@ -73,6 +73,40 @@ function sanro_studio_stage_reprice_signed_cart($cart) {
 }
 
 /**
+ * Render safe, source-authenticated Studio details in WooCommerce Cart and
+ * Classic Checkout. Displaying a price is WooCommerce's job; never accept
+ * arbitrary cart metadata or reveal draft owner credentials to the buyer.
+ */
+function sanro_studio_stage_cart_item_display($item_data, $cart_item) {
+    if (!defined('SANRO_STUDIO_ENABLE_STAGING_CART')
+        || SANRO_STUDIO_ENABLE_STAGING_CART !== true
+        || !defined('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT')
+        || SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT !== true
+        || !defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
+        || SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK !== true
+        || !is_array($item_data) || !is_array($cart_item)) return $item_data;
+    $id = $cart_item['sanro_studio_design_id'] ?? null;
+    $size = $cart_item['sanro_studio_size'] ?? null;
+    $expires = $cart_item['_sanro_qa_expires'] ?? null;
+    $signature = $cart_item['_sanro_qa_signature'] ?? null;
+    if (!is_string($id)
+        || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $id)
+        || !is_string($size)
+        || !in_array($size, ['S','M','L','XL','2XL','3XL','4XL','5XL'], true)
+        || !is_int($expires) || time() > $expires
+        || !is_string($signature) || !preg_match('/^[a-f0-9]{64}$/D', $signature)) {
+        return $item_data;
+    }
+    $expected = sanro_studio_stage_cart_signature($cart_item, $expires);
+    if (!is_string($expected) || !hash_equals($expected, $signature)) {
+        return $item_data;
+    }
+    $item_data[] = ['key' => 'Ukuran kaos', 'value' => $size];
+    $item_data[] = ['key' => 'Kode desain', 'value' => substr($id, 0, 8)];
+    return $item_data;
+}
+
+/**
  * Explicit staging-only WooCommerce cart adapter. Never registers a public
  * endpoint or hook. The owner-authorized contract is supplied transiently by
  * the caller; owner credentials must not enter WC session/cart metadata.
