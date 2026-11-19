@@ -129,7 +129,7 @@ check_adapter(isset($transaction->lines['line-0']['_sanro_qa_expires'],
     $transaction->lines['line-0']['_sanro_qa_signature']),
     'commit includes signed short-lived server quote');
 $signed = $transaction->lines['line-0'];
-check_adapter(!isset($signed['owner_token'], $signed['sanro_studio_owner_token']),
+check_adapter(!isset($signed['owner_token']) && !isset($signed['sanro_studio_owner_token']),
     'no draft owner token persisted with signed cart');
 check_adapter(sanro_studio_stage_cart_signature($signed, $signed['_sanro_qa_expires'])
     === $signed['_sanro_qa_signature'], 'server quote signature verifies');
