@@ -147,16 +147,35 @@ gate_check(count($GLOBALS['sanro_studio_checkout_verified']['bound_sizes'])===1,
 class GateOrder {
     public $items;
     public $total;
-    function __construct($items, $total='130000.00') {
+    public $currency;
+    function __construct($items, $total='130000.00', $currency='IDR') {
         $this->items=$items;
         $this->total=$total;
+        $this->currency=$currency;
     }
     function get_items($type='line_item') { return $this->items; }
     function get_total() { return $this->total; }
+    function get_currency() { return $this->currency; }
 }
 $validOrder = new GateOrder([$order_line]);
 sanro_studio_stage_checkout_verify_order_batch($validOrder, []);
 gate_check(count($GLOBALS['sanro_studio_checkout_verified']['bound_sizes'])===1, 'complete batch accepted');
+$currency_rejected = false;
+try {
+    sanro_studio_stage_checkout_verify_order_batch(
+        new GateOrder([$order_line], '130000.00', 'USD'), []
+    );
+} catch (RuntimeException $exception) { $currency_rejected = true; }
+gate_check($currency_rejected, 'currency drift rejected before order save');
+class GateOrderWithoutCurrency {
+    function get_items($type='line_item') { return []; }
+    function get_total() { return '130000.00'; }
+}
+$missing_currency_rejected = false;
+try {
+    sanro_studio_stage_checkout_verify_order_batch(new GateOrderWithoutCurrency(), []);
+} catch (RuntimeException $exception) { $missing_currency_rejected = true; }
+gate_check($missing_currency_rejected, 'uninspectable order currency fails closed');
 sanro_studio_stage_checkout_verify_order_batch(
     new GateOrder([$order_line], '135000.00'), []
 );
@@ -235,4 +254,4 @@ $_POST['sanro_studio_checkout_token'] = 'not-a-token';
 gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'invalid token rejected');
 unset($_POST['sanro_studio_checkout_token'], $_POST['sanro_studio_checkout_nonce']);
 gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'missing checkout credentials rejected');
-echo "PASS: 41 checkout gate checks\n";
+echo "PASS: 43 checkout gate checks\n";
