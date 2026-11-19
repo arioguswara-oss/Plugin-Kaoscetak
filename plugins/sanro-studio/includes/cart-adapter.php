@@ -34,9 +34,18 @@ function sanro_studio_stage_add_cart_lines($contract, $cart) {
         || !$product->is_purchasable()) {
         return ['valid' => false, 'error' => 'unsupported_product_type'];
     }
-    // Do not touch an existing cart: price calculation and rollback are not
-    // yet integrated with WooCommerce totals and session restoration.
-    if (count($cart->get_cart()) !== 0) {
+    // A WooCommerce extension can throw or return malformed session data.
+    // Fail closed before adding or repricing anything in that situation.
+    try {
+        $existing_cart = $cart->get_cart();
+    } catch (Throwable $error) {
+        return ['valid' => false, 'error' => 'cart_unavailable'];
+    }
+    if (!is_array($existing_cart)) {
+        return ['valid' => false, 'error' => 'cart_unavailable'];
+    }
+    // Do not touch an existing cart: only an empty cart is accepted.
+    if ($existing_cart !== []) {
         return ['valid' => false, 'error' => 'cart_must_be_empty'];
     }
     // Read-only candidate output for the future transactional adapter.
