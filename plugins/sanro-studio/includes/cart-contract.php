@@ -150,6 +150,22 @@ function sanro_studio_validate_size_cart_lines($contract, $lines) {
             return ['valid' => false, 'error' => 'cart_size_mismatch'];
         }
         $size = $line['sanro_studio_size'];
+        // Fail closed if a WooCommerce filter injects extra SANRO fields,
+        // particularly a draft owner token, nonce or internal file reference.
+        // Ordinary WooCommerce cart fields (e.g. data and cart_item_key)
+        // remain allowed; only the SANRO namespace is constrained.
+        $allowed_studio_keys = [
+            'sanro_studio_design_id', 'sanro_studio_size',
+            'sanro_studio_unit_price', 'sanro_studio_line_subtotal',
+            'sanro_studio_quote_currency',
+        ];
+        foreach (array_keys($line) as $metadata_key) {
+            if (is_string($metadata_key)
+                && strpos($metadata_key, 'sanro_studio_') === 0
+                && !in_array($metadata_key, $allowed_studio_keys, true)) {
+                return ['valid' => false, 'error' => 'cart_unexpected_studio_metadata'];
+            }
+        }
         foreach (['product_id','quantity','sanro_studio_design_id',
             'sanro_studio_size','sanro_studio_unit_price',
             'sanro_studio_line_subtotal','sanro_studio_quote_currency'] as $key) {
