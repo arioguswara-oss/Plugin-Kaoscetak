@@ -37,7 +37,9 @@ for file in \
   tests/test_sanro_pricing.php \
   tests/test_sanro_draft_rest.php \
   tests/test_sanro_checkout_guards.php \
-  plugins/sanro-studio/includes/editor-config.php
+  plugins/sanro-studio/includes/editor-config.php \
+  plugins/sanro-studio/includes/cart-adapter.php \
+  plugins/sanro-studio/sanro-studio.php
 do
   run_check "PHP lint $file" 'No syntax errors detected' php -l "$file"
 done
@@ -53,7 +55,7 @@ for file in \
 do
   run_check "PHP lint $file" 'No syntax errors detected' php -l "$file"
 done
-run_check 'Cart adapter preflight and rollback' 'PASS: 46 staging cart adapter checks' php plugins/sanro-studio/tests/cart-adapter-smoke.php
+run_check 'Cart adapter preflight and rollback' 'PASS: 56 staging cart adapter checks' php plugins/sanro-studio/tests/cart-adapter-smoke.php
 run_check 'Cart line identity and metadata' 'PASS: 24 isolated cart-line checks' php plugins/sanro-studio/tests/cart-line-snapshot-smoke.php
 run_check 'Checkout authorization gate' 'PASS: 43 checkout gate checks' php plugins/sanro-studio/tests/checkout-gate-smoke.php
 run_check 'Size checkout order-line binding' 'PASS: 13 isolated size-checkout checks' php plugins/sanro-studio/tests/size-checkout-bridge-smoke.php
