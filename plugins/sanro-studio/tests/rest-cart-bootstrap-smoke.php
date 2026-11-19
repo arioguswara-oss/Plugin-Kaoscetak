@@ -1,12 +1,26 @@
 <?php
 /** Isolated staging REST cart-bootstrap regression; no WordPress, WC or live writes. */
 define('ABSPATH', dirname(__DIR__, 3) . '/');
+// Keep headers unsent until the simulated guest session cookie is set.
+ob_start();
 require_once __DIR__ . '/../includes/draft-rest.php';
 define('SANRO_STUDIO_ENABLE_DRAFT_API', true);
 define('SANRO_STUDIO_ENABLE_STAGING_CART', true);
 define('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT', true);
 define('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK', true);
-$GLOBALS['qa_cart'] = (object) ['cart'=>null];
+class QaSession {
+    public $active = false;
+    public $cookieCalls = 0;
+    public $fail = false;
+    public $noActivate = false;
+    function has_session() { return $this->active; }
+    function set_customer_session_cookie($create) {
+        $this->cookieCalls++;
+        if ($this->fail) throw new RuntimeException('synthetic cookie error');
+        if (!$this->noActivate && $create) $this->active = true;
+    }
+}
+$GLOBALS['qa_cart'] = (object) ['cart'=>null, 'session'=>new QaSession()];
 $GLOBALS['qa_loader_calls'] = 0;
 $GLOBALS['qa_init'] = true;
 $GLOBALS['qa_load_mode'] = 'ok';
@@ -77,8 +91,24 @@ $rejected = sanro_studio_rest_stage_draft_cart($request);
 qa_assert($rejected instanceof WP_Error && $rejected->code === 'sanro_cart_contract', 'invalid quote rejected');
 qa_assert($GLOBALS['qa_loader_calls'] === $before, 'invalid quote does not create WC session');
 $GLOBALS['qa_contract_valid'] = true;
+$GLOBALS['qa_cart']->session->fail = true;
+$failure = sanro_studio_rest_stage_draft_cart($request);
+qa_assert($failure instanceof WP_Error && $failure->code === 'sanro_cart_unavailable', 'cookie exception fails closed');
+qa_assert($GLOBALS['qa_commits'] === 0, 'cookie exception never mutates WC cart');
+$GLOBALS['qa_cart']->session->fail = false;
+$GLOBALS['qa_cart']->session->noActivate = true;
+$failure = sanro_studio_rest_stage_draft_cart($request);
+qa_assert($failure instanceof WP_Error && $failure->code === 'sanro_cart_unavailable', 'cookie not persisted fails closed');
+qa_assert($GLOBALS['qa_commits'] === 0, 'missing session never mutates WC cart');
+$GLOBALS['qa_cart']->session->noActivate = false;
 $accepted = sanro_studio_rest_stage_draft_cart($request);
 qa_assert(is_array($accepted) && $accepted['valid'] === true && $accepted['cart_url'] === '/cart/', 'authorized REST cart returns cart URL');
 qa_assert($GLOBALS['qa_commits'] === 1 && $GLOBALS['qa_loader_calls'] === $before + 1, 'authorized cart bootstraps then commits once');
+qa_assert($GLOBALS['qa_cart']->session->has_session() === true, 'guest session active before cart response');
+$cookieCalls = $GLOBALS['qa_cart']->session->cookieCalls;
+$accepted = sanro_studio_rest_stage_draft_cart($request);
+qa_assert(is_array($accepted) && $accepted['valid'] === true, 'existing guest session accepted');
+qa_assert($GLOBALS['qa_cart']->session->cookieCalls === $cookieCalls, 'existing session does not reset cookie');
 qa_assert(!array_key_exists('owner_token', $accepted) && !array_key_exists('checkout_enabled', $accepted), 'response never returns credential or checkout permission');
-echo "PASS: 15 staging REST cart-bootstrap checks\n";
+echo "PASS: 22 staging REST cart-bootstrap checks\n";
+ob_end_flush();
