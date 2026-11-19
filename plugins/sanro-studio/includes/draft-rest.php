@@ -517,10 +517,11 @@ function sanro_studio_stage_rest_session_ready() {
 }
 
 /**
- * The staging authorization flow is wired to WooCommerce classic checkout
- * hooks. Checkout Blocks use the Store API and bypass those PHP classic hooks.
- * Never create Studio cart lines if checkout would skip our owner/price gates.
- * This intentionally rejects missing, unpublished or ambiguous checkout pages.
+ * The staging authorization flow uses WooCommerce classic checkout hooks
+ * and server-repriced cart lines. WooCommerce Cart/Checkout Blocks instead use
+ * Store API requests which bypass these request-scoped authorization gates.
+ * Require both configured pages to be classic before any Studio cart mutation.
+ * Unconfigured, nonpublic and mixed-block pages fail closed.
  */
 function sanro_studio_stage_classic_checkout_ready() {
     if (!function_exists('wc_get_page_id') || !function_exists('get_post')
@@ -528,14 +529,20 @@ function sanro_studio_stage_classic_checkout_ready() {
         return false;
     }
     try {
-        $checkout_id = wc_get_page_id('checkout');
-        if (!is_int($checkout_id) || $checkout_id < 1) return false;
-        $page = get_post($checkout_id);
-        if (!is_object($page) || ($page->post_type ?? null) !== 'page'
-            || ($page->post_status ?? null) !== 'publish'
-            || !is_string($page->post_content ?? null)) return false;
-        if (has_block('woocommerce/checkout', $page)) return false;
-        return has_shortcode($page->post_content, 'woocommerce_checkout') === true;
+        foreach ([
+            'cart' => ['woocommerce/cart', 'woocommerce_cart'],
+            'checkout' => ['woocommerce/checkout', 'woocommerce_checkout'],
+        ] as $type => $format) {
+            $page_id = wc_get_page_id($type);
+            if (!is_int($page_id) || $page_id < 1) return false;
+            $page = get_post($page_id);
+            if (!is_object($page) || ($page->post_type ?? null) !== 'page'
+                || ($page->post_status ?? null) !== 'publish'
+                || !is_string($page->post_content ?? null)) return false;
+            if (has_block($format[0], $page)
+                || !has_shortcode($page->post_content, $format[1])) return false;
+        }
+        return true;
     } catch (Throwable $error) {
         return false;
     }
@@ -558,7 +565,7 @@ function sanro_studio_rest_stage_draft_cart($request) {
     }
     if (!sanro_studio_stage_classic_checkout_ready()) {
         return new WP_Error('sanro_checkout_page_incompatible',
-            'Staging cart requires a published classic WooCommerce checkout page.',
+            'Staging cart requires published classic WooCommerce cart and checkout pages.',
             ['status'=>503]);
     }
     $id = $request->get_param('id');
