@@ -69,6 +69,24 @@ function sanro_studio_stage_reauthorize_cart($id, $token, $product, $cart) {
 }
 function rest_ensure_response($value) { return $value; }
 function wc_get_cart_url() { return '/cart/'; }
+$GLOBALS['qa_checkout_mode'] = 'classic';
+function wc_get_page_id($kind) { return $kind === 'checkout' ? 17 : -1; }
+function get_post($id) {
+    if ($id !== 17 || $GLOBALS['qa_checkout_mode'] === 'missing') return null;
+    return (object)[
+        'post_type' => 'page',
+        'post_status' => $GLOBALS['qa_checkout_mode'] === 'unpublished' ? 'draft' : 'publish',
+        'post_content' => $GLOBALS['qa_checkout_mode'] === 'plain'
+            ? '<p>Not configured</p>' : '[woocommerce_checkout]',
+    ];
+}
+function has_block($name, $page) {
+    return $name === 'woocommerce/checkout' && $GLOBALS['qa_checkout_mode'] === 'block';
+}
+function has_shortcode($content, $name) {
+    return $name === 'woocommerce_checkout'
+        && strpos($content, '[woocommerce_checkout]') !== false;
+}
 class WP_Error {
     public $code;
     public $data;
@@ -83,6 +101,27 @@ function qa_assert($condition, $description) {
     echo "PASS: $description\n";
 }
 $request = new QaRequest();
+qa_assert(sanro_studio_stage_classic_checkout_ready() === true,
+    'published classic checkout is compatible');
+$GLOBALS['qa_checkout_mode'] = 'block';
+$beforeBlocked = $GLOBALS['qa_loader_calls'];
+$blocked = sanro_studio_rest_stage_draft_cart($request);
+qa_assert($blocked instanceof WP_Error && $blocked->code === 'sanro_checkout_page_incompatible'
+    && ($blocked->data['status'] ?? null) === 503,
+    'Checkout Block refused by REST staging cart');
+qa_assert($GLOBALS['qa_loader_calls'] === $beforeBlocked
+    && $GLOBALS['qa_commits'] === 0,
+    'block checkout does not initialize cart or mutate session');
+$GLOBALS['qa_checkout_mode'] = 'missing';
+qa_assert(sanro_studio_stage_classic_checkout_ready() === false,
+    'missing checkout page fails closed');
+$GLOBALS['qa_checkout_mode'] = 'unpublished';
+qa_assert(sanro_studio_stage_classic_checkout_ready() === false,
+    'unpublished checkout page fails closed');
+$GLOBALS['qa_checkout_mode'] = 'plain';
+qa_assert(sanro_studio_stage_classic_checkout_ready() === false,
+    'published page without classic shortcode fails closed');
+$GLOBALS['qa_checkout_mode'] = 'classic';
 $GLOBALS['qa_cart']->cart = new QaCart();
 qa_assert(sanro_studio_stage_rest_cart() === $GLOBALS['qa_cart']->cart, 'preloaded cart reused');
 qa_assert($GLOBALS['qa_loader_calls'] === 0, 'preloaded cart does not bootstrap');
@@ -154,5 +193,5 @@ $unreadable = sanro_studio_rest_stage_draft_cart($request);
 qa_assert($unreadable instanceof WP_Error && $unreadable->code === 'sanro_cart_unavailable',
     'cart read failure returns temporary unavailable without mutation');
 qa_assert($GLOBALS['qa_commits'] === 1, 'cart inspection failure never inserts lines');
-echo "PASS: 30 staging REST cart-bootstrap checks\n";
+echo "PASS: 36 staging REST cart-bootstrap checks\n";
 ob_end_flush();
