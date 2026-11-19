@@ -9,6 +9,7 @@ node tests/test_editor_unit.cjs
 node tests/test_sanro_editor_geometry.js
 node tests/test_sanro_estimate.js
 node tests/test_sanro_pricing_parity.js
+node plugins/sanro-studio/tests/cart-redirect-node.cjs
 command -v "$PHP_BIN" >/dev/null 2>&1 || { echo 'BLOCKED: PHP CLI unavailable' >&2; exit 127; }
 find plugins tests -path 'plugins/sanro-studio/runtime/editor' -prune -o -type f -name '*.php' -print0 | xargs -0 -n1 "$PHP_BIN" -l
 "$PHP_BIN" plugins/kaoscetak-lite-designer/tests/pricing-smoke.php
