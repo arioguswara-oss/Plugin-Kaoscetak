@@ -73,6 +73,15 @@ add_action('woocommerce_after_order_itemmeta', 'sanro_studio_admin_item_preview_
  // Staging checkout validation is inert unless explicitly enabled.
 if (defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
     && SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK === true) {
+    // Cart session restoration must never silently replace the signed Studio
+    // unit quote with WooCommerce's ordinary product catalog price.
+    if (defined('SANRO_STUDIO_ENABLE_STAGING_CART')
+        && SANRO_STUDIO_ENABLE_STAGING_CART === true
+        && defined('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT')
+        && SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT === true) {
+        add_action('woocommerce_before_calculate_totals',
+            'sanro_studio_stage_reprice_signed_cart', 999, 1);
+    }
     add_action('wp_enqueue_scripts', 'sanro_studio_stage_enqueue_checkout_authorization', 30);
     add_action('woocommerce_review_order_before_submit',
         'sanro_studio_stage_checkout_credential_field', 5);
