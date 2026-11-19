@@ -1,0 +1,36 @@
+name: SANRO Studio draft cleanup tests
+on:
+  push:
+    branches:
+      - work/sanro-studio-lumise-core-20261118
+    paths:
+      - 'plugins/sanro-studio/includes/draft.php'
+      - 'plugins/sanro-studio/tests/draft-cleanup.php'
+      - '.github/workflows/sanro-studio-draft-cleanup.yml'
+  pull_request:
+    paths:
+      - 'plugins/sanro-studio/includes/draft.php'
+      - 'plugins/sanro-studio/tests/draft-cleanup.php'
+      - '.github/workflows/sanro-studio-draft-cleanup.yml'
+permissions:
+  contents: read
+jobs:
+  php-regression:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.2']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      - name: Lint draft source and regression test
+        run: |
+          php -l plugins/sanro-studio/includes/draft.php
+          php -l plugins/sanro-studio/tests/draft-cleanup.php
+      - name: Run isolated cleanup regression
+        run: php plugins/sanro-studio/tests/draft-cleanup.php

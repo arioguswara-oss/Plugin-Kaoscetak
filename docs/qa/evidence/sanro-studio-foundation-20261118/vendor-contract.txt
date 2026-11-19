@@ -1,0 +1,1 @@
+Lumise 2.1.2 private source contract (not full runtime): 66 assertions PASS, 0 FAIL

@@ -1,0 +1,36 @@
+[
+  {
+    "command": [
+      "python3",
+      "tools/prepare-sanro-runtime.py",
+      "../lumise-source-review/lumise.zip"
+    ],
+    "exit_code": 0,
+    "output": "{\"bytes\": 18870893, \"files\": 386, \"metadata_entries_excluded\": 174, \"status\": \"verified_existing\", \"version\": \"2.1.2\"}\n"
+  },
+  {
+    "command": [
+      "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+      "tests/sanro-core-boot-contract.php"
+    ],
+    "exit_code": 0,
+    "output": "Private core bootstrap with both old plugins absent (not full runtime): 9 assertions PASS, 0 FAIL\n"
+  },
+  {
+    "command": [
+      "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+      "tests/sanro-core-boot-contract.php",
+      "missing_schema"
+    ],
+    "exit_code": 0,
+    "output": "Private core missing schema: 4 assertions PASS, 0 FAIL\n"
+  },
+  {
+    "command": [
+      "/workspace/scratch/72df3ab2da51/php-runtime/bin/php",
+      "tests/sanro-vendor-contract.php"
+    ],
+    "exit_code": 0,
+    "output": "Lumise 2.1.2 private source contract (not full runtime): 66 assertions PASS, 0 FAIL\n"
+  }
+]

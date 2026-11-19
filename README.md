@@ -1,6 +1,6 @@
 # Plugin Kaoscetak
 
-Repository privat untuk **berbagai plugin WordPress/WooCommerce khusus kaoscetak.id**. Bukan hanya satu plugin.
+Repository untuk **berbagai plugin WordPress/WooCommerce khusus kaoscetak.id**. Bukan hanya satu plugin. Kode vendor berlisensi dan kredensial tidak dimasukkan ke repository publik ini.
 
 ## Struktur
 
@@ -14,6 +14,10 @@ Repository privat untuk **berbagai plugin WordPress/WooCommerce khusus kaoscetak
 `plugins/kaoscetak-lite-designer/` — editor custom desain kaos ringan, mobile-first, terintegrasi WooCommerce.
 
 **Status: dalam pengembangan; belum ada rilis yang dinyatakan VERIFIED.** Jangan memasang ZIP lama v0.1.0 sebagai produk final.
+
+## SANRO Studio
+
+`plugins/sanro-studio/` — fondasi editor dengan komponen core berlisensi internal yang disiapkan privat. Target satu plugin editor aktif, sehingga kedua plugin editor lama dapat dinonaktifkan setelah integrasi dan QA. Nama tampilan: SANRO Studio. Lihat [status implementasi](plugins/sanro-studio/README.md) dan [8 tahap/progres](docs/architecture/sanro-studio-roadmap.md).
 
 ## Tata kelola
 
