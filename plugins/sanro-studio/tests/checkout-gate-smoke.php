@@ -52,10 +52,15 @@ gate_check(sanro_studio_stage_authorize_checkout($id,'owner',42,$cart)['valid']=
 class GateOrderItem {
     public $meta = [];
     public $subtotal;
-    function __construct($subtotal) { $this->subtotal=$subtotal; }
+    public $total;
+    function __construct($subtotal, $total = null) {
+        $this->subtotal=$subtotal;
+        $this->total=$total === null ? $subtotal : $total;
+    }
     function get_product_id() { return 42; }
     function get_quantity() { return 2; }
     function get_subtotal() { return $this->subtotal; }
+    function get_total() { return $this->total; }
     function get_meta($key, $single=true) { return $this->meta[$key] ?? ''; }
     function update_meta_data($key, $value) { $this->meta[$key]=$value; }
 }
@@ -69,6 +74,10 @@ gate_check(sanro_studio_stage_bind_size_order_batch($contract, $items)['valid']=
 $bad = new GateOrderItem('1.00');
 gate_check(sanro_studio_stage_bind_size_order_batch($contract, ['M'=>$bad])['valid']===false, 'wrong order subtotal refused');
 gate_check($bad->meta===[], 'invalid order never mutated');
+$discounted = new GateOrderItem('130000.00', '1.00');
+gate_check(sanro_studio_stage_bind_size_order_batch($contract, ['M'=>$discounted])['valid']===false,
+    'discounted WooCommerce total rejected before metadata binding');
+gate_check($discounted->meta===[], 'discounted line never mutates order metadata');
 $GLOBALS['gate_notices'] = [];
 $GLOBALS['gate_filter_token'] = null;
 $GLOBALS['gate_wc'] = (object) ['cart'=>new GateCart('65000')];
@@ -164,6 +173,14 @@ try {
     sanro_studio_stage_checkout_verify_order_batch(new GateOrder([$underpriced]), []);
 } catch (RuntimeException $exception) { $underprice_rejected = true; }
 gate_check($underprice_rejected, 'underpriced order line rejected before save');
+$discounted_order = new GateOrderItem('130000.00', '1.00');
+$discounted_order->update_meta_data('_sanro_studio_size', 'M');
+$discounted_order->update_meta_data('_sanro_studio_design_id', $id);
+$discount_rejected = false;
+try {
+    sanro_studio_stage_checkout_verify_order_batch(new GateOrder([$discounted_order]), []);
+} catch (RuntimeException $exception) { $discount_rejected = true; }
+gate_check($discount_rejected, 'final pre-save guard rejects coupon discount on order total');
 $GLOBALS['sanro_studio_checkout_verified']['bound_sizes'] = [];
 $incomplete_rejected = false;
 try {
@@ -195,4 +212,4 @@ $_POST['sanro_studio_checkout_token'] = 'not-a-token';
 gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'invalid token rejected');
 unset($_POST['sanro_studio_checkout_token'], $_POST['sanro_studio_checkout_nonce']);
 gate_check(sanro_studio_stage_checkout_post_token(null, $id, 42) === null, 'missing checkout credentials rejected');
-echo "PASS: 35 checkout gate checks\n";
+echo "PASS: 38 checkout gate checks\n";
