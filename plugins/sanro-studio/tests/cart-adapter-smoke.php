@@ -186,11 +186,22 @@ check_adapter(sanro_studio_stage_verify_cart_prices($contract, $restored)['valid
 $restored->totalsMode = 'price_drift';
 check_adapter(sanro_studio_stage_reauthorize_cart($contract['design_id'], 'valid-owner-token', 42, $restored)['valid'] === false,
     'session reload price drift cannot authorize cart');
+// Restore canonical unit price before testing a *different* failure mode.
+// Otherwise the earlier price_drift would make every later test trivially fail.
+$restored->lines['line-0']['data']->price = '65000';
 $restored->totalsMode = 'throw';
-check_adapter(sanro_studio_stage_reauthorize_cart($contract['design_id'], 'valid-owner-token', 42, $restored)['valid'] === false,
-    'session reload exception fails closed');
+$exceptionResult = sanro_studio_stage_reauthorize_cart(
+    $contract['design_id'], 'valid-owner-token', 42, $restored
+);
+check_adapter(($exceptionResult['valid'] ?? null) === false
+    && ($exceptionResult['error'] ?? null) === 'cart_reprice_failed',
+    'session reload exception fails closed with expected error');
 $restored->totalsMode = 'quantity_drift';
 $restored->lines['line-0']['quantity'] = 2;
-check_adapter(sanro_studio_stage_reauthorize_cart($contract['design_id'], 'valid-owner-token', 42, $restored)['valid'] === false,
+$quantityResult = sanro_studio_stage_reauthorize_cart(
+    $contract['design_id'], 'valid-owner-token', 42, $restored
+);
+check_adapter(($quantityResult['valid'] ?? null) === false
+    && ($quantityResult['error'] ?? null) === 'cart_quantity_mismatch',
     'session reload quantity drift cannot authorize cart');
 echo "PASS: 42 staging cart adapter checks\n";
