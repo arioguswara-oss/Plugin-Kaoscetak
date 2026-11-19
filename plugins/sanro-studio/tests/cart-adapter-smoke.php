@@ -202,6 +202,6 @@ $quantityResult = sanro_studio_stage_reauthorize_cart(
     $contract['design_id'], 'valid-owner-token', 42, $restored
 );
 check_adapter(($quantityResult['valid'] ?? null) === false
-    && ($quantityResult['error'] ?? null) === 'cart_quantity_mismatch',
+    && ($quantityResult['error'] ?? null) === 'cart_line_mismatch',
     'session reload quantity drift cannot authorize cart');
 echo "PASS: 42 staging cart adapter checks\n";
