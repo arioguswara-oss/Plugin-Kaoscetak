@@ -44,6 +44,20 @@ done
 
 run_check 'Staging cart gate PHP syntax' 'No syntax errors detected' php -l tests/test_sanro_staging_cart_gate.php
 run_check 'Cart REST smoke PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/rest-cart-bootstrap-smoke.php
+# Isolated cart/checkout contracts. All fixtures use local mocks; no WC DB writes.
+for file in \
+  plugins/sanro-studio/tests/cart-adapter-smoke.php \
+  plugins/sanro-studio/tests/cart-line-snapshot-smoke.php \
+  plugins/sanro-studio/tests/checkout-gate-smoke.php \
+  plugins/sanro-studio/tests/size-checkout-bridge-smoke.php
+do
+  run_check "PHP lint $file" 'No syntax errors detected' php -l "$file"
+done
+run_check 'Cart adapter preflight and rollback' 'PASS: 46 staging cart adapter checks' php plugins/sanro-studio/tests/cart-adapter-smoke.php
+run_check 'Cart line identity and metadata' 'PASS: 24 isolated cart-line checks' php plugins/sanro-studio/tests/cart-line-snapshot-smoke.php
+run_check 'Checkout authorization gate' 'PASS: 43 checkout gate checks' php plugins/sanro-studio/tests/checkout-gate-smoke.php
+run_check 'Size checkout order-line binding' 'PASS: 13 isolated size-checkout checks' php plugins/sanro-studio/tests/size-checkout-bridge-smoke.php
+
 run_check 'Default-disabled staging cart' '10 assertions PASS, 0 FAIL' php tests/test_sanro_staging_cart_gate.php
 run_check 'Cart REST ownership/session/idempotency' 'PASS: 30 staging REST cart-bootstrap checks' php plugins/sanro-studio/tests/rest-cart-bootstrap-smoke.php
 run_check 'Editor config REST' '26 assertions PASS, 0 FAIL' php tests/test_sanro_editor_config.php
