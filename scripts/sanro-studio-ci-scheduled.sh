@@ -22,12 +22,12 @@ if [[ "$qa_dir" == "$source_repo" ]]; then
   echo 'FAIL: QA directory must differ from source repository' >&2
   exit 2
 fi
-if [[ ! -x /usr/bin/php && ! $(command -v php || true) ]]; then
-  echo 'FAIL: PHP unavailable' >&2
-  exit 2
-fi
-command -v git >/dev/null || exit 2
-command -v node >/dev/null || exit 2
+for executable in php node git flock; do
+  if ! command -v "$executable" >/dev/null 2>&1; then
+    printf 'FAIL: %s unavailable\n' "$executable" >&2
+    exit 2
+  fi
+done
 
 echo 'SANRO STUDIO CI: fetching PR #15 branch for isolated QA.'
 git -C "$source_repo" fetch --no-tags origin \
