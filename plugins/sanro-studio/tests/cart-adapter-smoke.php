@@ -4,6 +4,7 @@ define('ABSPATH', dirname(__DIR__, 3) . '/');
 require_once __DIR__ . '/../includes/cart-contract.php';
 require_once __DIR__ . '/../includes/cart-adapter.php';
 function get_woocommerce_currency() { return 'IDR'; }
+function wp_salt($scheme) { return 'sanro-test-signing-key-00000000000000'; }
 function wc_get_product($id) { return new SanroMockProduct(); }
 class SanroMockProduct {
     function is_type($type) { return $type === 'simple'; }
@@ -124,6 +125,50 @@ $committed = sanro_studio_stage_commit_cart_lines($contract, $transaction);
 check_adapter($committed['valid'] === true && count($transaction->lines) === 1, 'staging cart line inserted');
 check_adapter($transaction->lines['line-0']['data']->price === '65000', 'inserted cart line priced');
 check_adapter($transaction->totals === 1, 'cart totals recalculated');
+check_adapter(isset($transaction->lines['line-0']['_sanro_qa_expires'],
+    $transaction->lines['line-0']['_sanro_qa_signature']),
+    'commit includes signed short-lived server quote');
+$signed = $transaction->lines['line-0'];
+check_adapter(!isset($signed['owner_token'], $signed['sanro_studio_owner_token']),
+    'no draft owner token persisted with signed cart');
+check_adapter(sanro_studio_stage_cart_signature($signed, $signed['_sanro_qa_expires'])
+    === $signed['_sanro_qa_signature'], 'server quote signature verifies');
+$transaction->lines['line-0']['data']->price = '76000.00';
+sanro_studio_stage_reprice_signed_cart($transaction);
+check_adapter($transaction->lines['line-0']['data']->get_price() === '65000',
+    'Woo session catalog price restored to authorized unit price');
+$tamperedPrice = new SanroTransactionCart();
+$tamperedPrice->lines['line-0'] = $signed;
+$tamperedPrice->lines['line-0']['sanro_studio_unit_price'] = 1;
+sanro_studio_stage_reprice_signed_cart($tamperedPrice);
+check_adapter(count($tamperedPrice->lines) === 0, 'forged quote price removed');
+$tamperedQty = new SanroTransactionCart();
+$tamperedQty->lines['line-0'] = $signed;
+$tamperedQty->lines['line-0']['quantity'] = 3;
+sanro_studio_stage_reprice_signed_cart($tamperedQty);
+check_adapter(count($tamperedQty->lines) === 0, 'modified size quantity removed');
+$expired = new SanroTransactionCart();
+$expired->lines['line-0'] = $signed;
+$expired->lines['line-0']['_sanro_qa_expires'] = time() - 60;
+$expired->lines['line-0']['_sanro_qa_signature'] =
+    sanro_studio_stage_cart_signature($signed, $expired->lines['line-0']['_sanro_qa_expires']);
+sanro_studio_stage_reprice_signed_cart($expired);
+check_adapter(count($expired->lines) === 0, 'expired signed quote removed');
+$unsigned = new SanroTransactionCart();
+$unsigned->lines['line-0'] = $signed;
+unset($unsigned->lines['line-0']['_sanro_qa_signature']);
+sanro_studio_stage_reprice_signed_cart($unsigned);
+check_adapter(count($unsigned->lines) === 0, 'unsigned Studio line removed');
+$regular = new SanroTransactionCart();
+$regular->lines['ordinary'] = ['product_id'=>9, 'quantity'=>1,
+    'data'=>new SanroPriceProduct()];
+sanro_studio_stage_reprice_signed_cart($regular);
+check_adapter(count($regular->lines) === 1, 'ordinary Woo cart line untouched');
+$wrongDesign = new SanroTransactionCart();
+$wrongDesign->lines['line-0'] = $signed;
+$wrongDesign->lines['line-0']['sanro_studio_design_id'] = 'another-design';
+sanro_studio_stage_reprice_signed_cart($wrongDesign);
+check_adapter(count($wrongDesign->lines) === 0, 'cross-design quote replay removed');
 $two = $contract;
 $two['quote']['items'] = ['M'=>['quantity'=>1,'unit_price'=>65000,'subtotal'=>65000],
     'L'=>['quantity'=>1,'unit_price'=>65000,'subtotal'=>65000]];
@@ -223,4 +268,4 @@ $quantityResult = sanro_studio_stage_reauthorize_cart(
 check_adapter(($quantityResult['valid'] ?? null) === false
     && ($quantityResult['error'] ?? null) === 'cart_line_mismatch',
     'session reload quantity drift cannot authorize cart');
-echo "PASS: 46 staging cart adapter checks\n";
+echo "PASS: 56 staging cart adapter checks\n";
