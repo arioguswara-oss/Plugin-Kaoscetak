@@ -42,6 +42,10 @@ do
   run_check "PHP lint $file" 'No syntax errors detected' php -l "$file"
 done
 
+run_check 'Staging cart gate PHP syntax' 'No syntax errors detected' php -l tests/test_sanro_staging_cart_gate.php
+run_check 'Cart REST smoke PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/rest-cart-bootstrap-smoke.php
+run_check 'Default-disabled staging cart' '10 assertions PASS, 0 FAIL' php tests/test_sanro_staging_cart_gate.php
+run_check 'Cart REST ownership/session/idempotency' 'PASS: 30 staging REST cart-bootstrap checks' php plugins/sanro-studio/tests/rest-cart-bootstrap-smoke.php
 run_check 'Editor config REST' '26 assertions PASS, 0 FAIL' php tests/test_sanro_editor_config.php
 run_check 'Pricing matrix' '356 assertions PASS, 0 FAIL' php tests/test_sanro_pricing.php
 run_check 'Draft REST' '35 assertions PASS, 0 FAIL' php tests/test_sanro_draft_rest.php
