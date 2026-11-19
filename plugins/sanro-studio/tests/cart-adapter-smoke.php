@@ -38,6 +38,7 @@ check_adapter(sanro_studio_stage_add_cart_lines($bad, $cart)['valid'] === false,
 class SanroPriceProduct {
     public $price = null;
     function set_price($price) { $this->price = $price; }
+    function get_price() { return $this->price; }
 }
 $priceProduct = new SanroPriceProduct();
 $line = $ready['lines'][0];
@@ -64,6 +65,7 @@ class SanroTransactionCart {
     public $lines = [];
     public $totals = 0;
     public $failAfter = 0;
+    public $totalsMode = 'normal';
     function get_cart() { return $this->lines; }
     function add_to_cart($product, $qty, $variation, $attrs, $meta) {
         if ($this->failAfter > 0 && count($this->lines) >= $this->failAfter) return false;
@@ -73,7 +75,18 @@ class SanroTransactionCart {
         return $key;
     }
     function remove_cart_item($key) { unset($this->lines[$key]); return true; }
-    function calculate_totals() { $this->totals++; }
+    function calculate_totals() {
+        $this->totals++;
+        if ($this->totalsMode === 'throw') throw new RuntimeException('synthetic pricing hook failure');
+        if ($this->totalsMode === 'price_drift') {
+            foreach ($this->lines as &$line) $line['data']->price = '1';
+            unset($line);
+        }
+        if ($this->totalsMode === 'quantity_drift') {
+            foreach ($this->lines as &$line) $line['quantity']++;
+            unset($line);
+        }
+    }
 }
 $transaction = new SanroTransactionCart();
 check_adapter(sanro_studio_stage_commit_cart_lines($contract, $transaction)['valid'] === false, 'commit disabled separately');
@@ -91,6 +104,28 @@ $two['quote']['items'] = ['M'=>['quantity'=>1,'unit_price'=>65000,'subtotal'=>65
 $failed = new SanroTransactionCart(); $failed->failAfter = 1;
 check_adapter(sanro_studio_stage_commit_cart_lines($two, $failed)['valid'] === false, 'partial add failure detected');
 check_adapter(count($failed->lines) === 0, 'partial add rolled back');
+$drift = new SanroTransactionCart();
+$drift->totalsMode = 'price_drift';
+check_adapter(sanro_studio_stage_commit_cart_lines($contract, $drift)['valid'] === false,
+    'third-party price drift after calculate_totals rejected');
+check_adapter(count($drift->lines) === 0, 'price drift rolls back every new line');
+$quantityDrift = new SanroTransactionCart();
+$quantityDrift->totalsMode = 'quantity_drift';
+check_adapter(sanro_studio_stage_commit_cart_lines($contract, $quantityDrift)['valid'] === false,
+    'quantity drift after totals rejected');
+check_adapter(count($quantityDrift->lines) === 0, 'quantity drift rolls back');
+$throws = new SanroTransactionCart();
+$throws->totalsMode = 'throw';
+check_adapter(sanro_studio_stage_commit_cart_lines($contract, $throws)['valid'] === false,
+    'pricing hook exception converted to fail-closed result');
+check_adapter(count($throws->lines) === 0, 'exception rolls back all inserted lines');
+$twoSuccess = new SanroTransactionCart();
+$multi = sanro_studio_stage_commit_cart_lines($two, $twoSuccess);
+check_adapter($multi['valid'] === true && count($twoSuccess->lines) === 2,
+    'two size lines committed with distinct cart keys');
+check_adapter($twoSuccess->lines['line-0']['data']->get_price() === '65000'
+    && $twoSuccess->lines['line-1']['data']->get_price() === '65000',
+    'both unit prices verified after WooCommerce totals');
 function sanro_studio_read_draft($id, $token) {
     global $contract;
     if ($token !== 'valid-owner-token' || $id !== $contract['design_id']) {
@@ -122,4 +157,4 @@ check_adapter(sanro_studio_stage_reauthorize_cart($contract['design_id'], 'valid
 check_adapter($restored->totals === 1, 'restored cart recalculates totals');
 $restored->lines['line-0']['sanro_studio_unit_price'] = 1;
 check_adapter(sanro_studio_stage_reauthorize_cart($contract['design_id'], 'valid-owner-token', 42, $restored)['valid'] === false, 'tampered restored cart rejected');
-echo "PASS: 26 staging cart adapter checks\n";
+echo "PASS: 34 staging cart adapter checks\n";
