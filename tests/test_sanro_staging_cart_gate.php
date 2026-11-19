@@ -43,7 +43,7 @@ sanro_studio_register_draft_routes();
 $routes = $GLOBALS['registered_routes'];
 $paths = array_column($routes, 'route');
 
-sanro_cart_gate_check(count($routes) === 5, 'only five draft REST route registrations');
+sanro_cart_gate_check(count($routes) === 4, 'only four draft REST route registrations');
 sanro_cart_gate_check(in_array('/drafts', $paths, true), 'draft creation route exists');
 sanro_cart_gate_check((bool) array_filter($paths, function($path) {
     return strpos($path, '/quote') !== false;
