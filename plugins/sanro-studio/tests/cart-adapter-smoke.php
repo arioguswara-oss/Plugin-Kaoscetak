@@ -169,6 +169,32 @@ $wrongDesign->lines['line-0'] = $signed;
 $wrongDesign->lines['line-0']['sanro_studio_design_id'] = 'another-design';
 sanro_studio_stage_reprice_signed_cart($wrongDesign);
 check_adapter(count($wrongDesign->lines) === 0, 'cross-design quote replay removed');
+$existingMeta = [['key'=>'Asal','value'=>'Tersimpan']];
+$visible = sanro_studio_stage_cart_item_display($existingMeta, $signed);
+check_adapter(count($visible) === 3, 'signed Studio cart shows size and design');
+check_adapter($visible[0] === $existingMeta[0], 'existing Woo item data preserved');
+check_adapter(($visible[1]['value'] ?? null) === 'M', 'buyer sees verified size M');
+check_adapter(($visible[2]['value'] ?? null) === '00000000', 'buyer sees short design reference');
+check_adapter(strpos(json_encode($visible), 'owner') === false,
+    'cart presentation never includes owner credential');
+check_adapter(sanro_studio_stage_cart_item_display([], ['product_id'=>42]) === [],
+    'ordinary Woo product has no Studio metadata');
+$unsignedDisplay = $signed;
+unset($unsignedDisplay['_sanro_qa_signature']);
+check_adapter(sanro_studio_stage_cart_item_display([], $unsignedDisplay) === [],
+    'unsigned Studio cart details hidden');
+$expiredDisplay = $signed;
+$expiredDisplay['_sanro_qa_expires'] = time()-60;
+$expiredDisplay['_sanro_qa_signature'] =
+    sanro_studio_stage_cart_signature($signed, $expiredDisplay['_sanro_qa_expires']);
+check_adapter(sanro_studio_stage_cart_item_display([], $expiredDisplay) === [],
+    'expired Studio cart details hidden');
+$forgedDisplay = $signed;
+$forgedDisplay['sanro_studio_size'] = 'XL';
+check_adapter(sanro_studio_stage_cart_item_display([], $forgedDisplay) === [],
+    'forged size never appears in cart or checkout');
+check_adapter(sanro_studio_stage_cart_item_display('unavailable', $signed) === 'unavailable',
+    'invalid upstream Woo item-data container preserved');
 $two = $contract;
 $two['quote']['items'] = ['M'=>['quantity'=>1,'unit_price'=>65000,'subtotal'=>65000],
     'L'=>['quantity'=>1,'unit_price'=>65000,'subtotal'=>65000]];
@@ -268,4 +294,4 @@ $quantityResult = sanro_studio_stage_reauthorize_cart(
 check_adapter(($quantityResult['valid'] ?? null) === false
     && ($quantityResult['error'] ?? null) === 'cart_line_mismatch',
     'session reload quantity drift cannot authorize cart');
-echo "PASS: 56 staging cart adapter checks\n";
+echo "PASS: 66 staging cart adapter checks\n";
