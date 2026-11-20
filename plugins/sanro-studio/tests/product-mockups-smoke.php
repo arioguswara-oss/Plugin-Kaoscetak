@@ -16,9 +16,11 @@ function get_post_meta($id,$key,$single=true) {
 function wp_attachment_is_image($id) { return in_array($id, [41,42,44], true); }
 function get_post_status($id) { return $id === 44 ? 'private' : 'inherit'; }
 function wp_get_attachment_image_url($id,$size) {
-    return $size === 'large' ? 'https://cdn.example.test/mockup-' . $id . '.jpg' : false;
+    return in_array($size, ['large', 'thumbnail'], true)
+        ? 'https://cdn.example.test/mockup-' . $id . '.jpg' : false;
 }
 function esc_url_raw($url) { return $url; }
+function esc_url($url) { return $url; }
 function get_the_ID() { return 17; }
 function current_user_can($cap,$id=0) { return $GLOBALS['can_edit']; }
 function woocommerce_wp_text_input($args) { $GLOBALS['input_fields'][] = $args; }
@@ -81,6 +83,12 @@ $html=ob_get_clean();
 verify_mockup(true,strpos($html,'data-sanro-side="front"')!==false,'front media chooser in admin');
 verify_mockup(true,strpos($html,'data-sanro-side="back"')!==false,'back media chooser in admin');
 verify_mockup(2,count($GLOBALS['input_fields']),'both WooCommerce metadata fields rendered');
+verify_mockup(true,strpos($html,'id="sanro-mockup-preview-front"')!==false,'front saved preview slot');
+verify_mockup(true,strpos($html,'id="sanro-mockup-preview-back"')!==false,'back saved preview slot');
+verify_mockup(true,strpos($html,'src="https://cdn.example.test/mockup-41.jpg"')!==false,
+    'saved front media thumbnail rendered after reload');
+verify_mockup(true,strpos($html,'src="https://cdn.example.test/mockup-42.jpg"')!==false,
+    'saved back media thumbnail rendered after reload');
 sanro_studio_enqueue_product_mockup_admin('index.php');
 verify_mockup(0,$GLOBALS['media_calls'],'media not loaded on unrelated admin screen');
 sanro_studio_enqueue_product_mockup_admin('post.php');
