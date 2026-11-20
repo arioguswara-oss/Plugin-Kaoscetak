@@ -94,8 +94,38 @@ catch (_) {
           ];
           const r = root?.getBoundingClientRect();
           const l = layout?.getBoundingClientRect();
+          const metrics = el => {
+            if (!el) return null;
+            const rect = el.getBoundingClientRect();
+            const cs = getComputedStyle(el);
+            return {tag:el.tagName.toLowerCase(),id:el.id.slice(0,55),
+              x:Math.round(rect.left),right:Math.round(rect.right),
+              width:Math.round(rect.width),client:el.clientWidth,
+              scroll:el.scrollWidth,minWidth:cs.minWidth,maxWidth:cs.maxWidth,
+              paddingLeft:cs.paddingLeft,paddingRight:cs.paddingRight,
+              overflowX:cs.overflowX};
+          };
+          const ancestors = [];
+          for (let el=root;el&&ancestors.length<12;el=el.parentElement) {
+            ancestors.push(metrics(el));
+          }
+          const visualWidth = window.visualViewport?.width ?? null;
+          const deviceWidth = window.screen.width;
+          const wideElements = [...document.querySelectorAll('body *')]
+            .filter(el => {
+              const cs = getComputedStyle(el);
+              if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+              const box=el.getBoundingClientRect();
+              return box.width>0 && (box.right>deviceWidth+2 || box.left< -2);
+            })
+            .slice(0,7).map(metrics);
           return {
-            width:window.innerWidth,
+            width:window.innerWidth,deviceWidth,visualWidth,
+            htmlClientWidth:document.documentElement.clientWidth,
+            htmlScrollWidth:document.documentElement.scrollWidth,
+            bodyClientWidth:document.body.clientWidth,
+            bodyScrollWidth:document.body.scrollWidth,
+            ancestors,wideElements,
             viewportMeta:document.querySelector('meta[name="viewport"]')?.getAttribute('content') || '(missing)',
             rootLeft:r?.left,rootRight:r?.right,
             layoutRight:l?.right,rootScrollWidth:root?.scrollWidth,
@@ -117,15 +147,19 @@ catch (_) {
         // Only public CSS/layout metrics: no cookies, HTML, nonce or draft credentials.
         console.log('MOBILE QA DIAGNOSTIC '+size.label+' css_sha256='+actualCssHash);
         console.log('MOBILE QA DIAGNOSTIC '+size.label+' '+
-          JSON.stringify({viewport:geometry.width,meta:geometry.viewportMeta,
-            cssLinked:geometry.cssLinked,root:[geometry.rootLeft,geometry.rootRight,
+          JSON.stringify({viewport:geometry.width,deviceWidth:geometry.deviceWidth,
+            visualWidth:geometry.visualWidth,htmlClientWidth:geometry.htmlClientWidth,
+            htmlScrollWidth:geometry.htmlScrollWidth,
+            bodyClientWidth:geometry.bodyClientWidth,bodyScrollWidth:geometry.bodyScrollWidth,
+            meta:geometry.viewportMeta,cssLinked:geometry.cssLinked,
+            root:[geometry.rootLeft,geometry.rootRight,
               geometry.rootClientWidth,geometry.rootScrollWidth],
-            layoutRight:geometry.layoutRight,buttons:geometry.buttons}));
+            layoutRight:geometry.layoutRight,ancestors:geometry.ancestors,
+            wideElements:geometry.wideElements,buttons:geometry.buttons}));
         assert.match(geometry.viewportMeta,/width\s*=\s*device-width/i,
           'Missing device-width viewport meta for SANRO buyer');
-        assert.equal(geometry.width,size.width,
-          'Unexpected mobile viewport width: rendered '+geometry.width+
-          'px, expected '+size.width+'px; meta='+geometry.viewportMeta);
+        assert.equal(geometry.deviceWidth,size.width,
+          'Configured emulated device screen width does not match target');
         assert(Number.isFinite(geometry.rootLeft) && geometry.rootLeft >= -2,
           'SANRO editor starts outside mobile viewport');
         assert(geometry.rootRight <= size.width + 2 &&
@@ -146,6 +180,10 @@ catch (_) {
         await front.tap();
         await page.waitForFunction(() => document.querySelector(
           '#sanro-studio-buyer button[data-side="front"]')?.getAttribute('aria-pressed') === 'true');
+        console.log('PASS TOUCH '+size.label+' '+size.width+'px: front/back taps');
+        assert.equal(geometry.width,size.width,
+          'Mobile layout width expanded to '+geometry.width+
+          'px for '+size.width+'px screen; see ancestors/wideElements');
 
         console.log('PASS MOBILE '+size.label+' '+size.width+
           'px: layout, 44px touch controls, front/back taps, buyer asset fingerprint');
