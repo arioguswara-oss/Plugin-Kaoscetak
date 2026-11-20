@@ -36,6 +36,19 @@ if [[ -z "${SANRO_CHROMIUM_EXECUTABLE:-}" ]]; then
   done
 fi
 
+# Explicitly opt into the full synthetic DTF front/back image flow.
+# The test creates only a staging private draft and staging Cart item, then
+# stops on the Checkout page before any order/payment submission.
+if [[ "${SANRO_STAGING_IMAGE_E2E:-0}" == "1" ]]; then
+  if [[ "${SANRO_STAGING_CART_E2E:-0}" == "1" || "${SANRO_STAGING_MOBILE_QA:-0}" == "1" ]]; then
+    echo "BLOCKED: image E2E must not be combined with other staging QA modes." >&2
+    exit 2
+  fi
+  echo "STAGING DTF IMAGE E2E: front/back private masters, quote, Cart, Checkout; NO ORDER/PAYMENT."
+  node "$ROOT/tests/staging-image-checkout-e2e.cjs"
+  exit $?
+fi
+
 # Dedicated mobile emulator gate is strictly read-only; it never starts
 # the synthetic Cart/Checkout branch even if a caller sets both flags.
 if [[ "${SANRO_STAGING_MOBILE_QA:-0}" == "1" ]]; then
