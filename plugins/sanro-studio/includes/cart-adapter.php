@@ -39,14 +39,27 @@ function sanro_studio_stage_reprice_signed_cart($cart) {
         || SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK !== true
         || !is_object($cart) || !method_exists($cart, 'get_cart')
         || !method_exists($cart, 'remove_cart_item')
-        || !function_exists('get_woocommerce_currency')
-        || get_woocommerce_currency() !== 'IDR') return;
+        || !function_exists('get_woocommerce_currency')) return;
     try {
         $items = $cart->get_cart();
+        $currency = get_woocommerce_currency();
     } catch (Throwable $error) {
         return;
     }
     if (!is_array($items)) return;
+    // Never leave an existing signed Studio line at WooCommerce's catalog
+    // price if a currency switcher changes the store currency. Remove only
+    // Studio lines; ordinary WooCommerce products are not SANRO's concern.
+    if ($currency !== 'IDR') {
+        foreach ($items as $key => $line) {
+            if (!is_array($line) || !array_key_exists('sanro_studio_design_id', $line)) continue;
+            try { $cart->remove_cart_item($key); } catch (Throwable $ignored) {}
+        }
+        if (function_exists('wc_add_notice')) {
+            wc_add_notice('SANRO Studio: harga desain hanya tersedia dalam IDR. Tambahkan ulang desain.', 'error');
+        }
+        return;
+    }
     foreach ($items as $key => $line) {
         if (!is_array($line) || !array_key_exists('sanro_studio_design_id', $line)) continue;
         $expires = $line['_sanro_qa_expires'] ?? null;
