@@ -72,3 +72,8 @@
  .sanro-buyer .sanro-shirt{width:min(100%,330px)}
  .sanro-buyer .sanro-size-qty{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* SANRO buyer theme-resistant touch targets. Theme button rules can override
+   default min-height; this applies ONLY inside the SANRO editor container. */
+#sanro-studio-buyer button{min-height:44px!important}
+#sanro-studio-buyer .sanro-preview nav button[data-side]{min-height:48px!important}
