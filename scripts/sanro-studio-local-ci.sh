@@ -90,6 +90,10 @@ run_check 'Auto-private installer default deny' 'PASS: 3 default-disabled SANRO 
 run_check 'Staging browser QA launcher shell syntax' '' bash -n scripts/sanro-studio-staging-browser-qa.sh
 run_check 'Pricing parity JS syntax' '' node --check tests/test_sanro_pricing_parity.js
 run_check 'Pricing PHP/JS parity' '400 cases PASS, 0 FAIL' node tests/test_sanro_pricing_parity.js
+run_check 'WooCommerce product mockup module syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/product-mockups.php
+run_check 'WooCommerce mockup Media Library JS syntax' '' node --check plugins/sanro-studio/assets/admin-mockups.js
+run_check 'WooCommerce mockup regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/product-mockups-smoke.php
+run_check 'WooCommerce product mockup settings and safety' 'PASS: SANRO product mockup metadata and admin controls' php plugins/sanro-studio/tests/product-mockups-smoke.php
 
 printf '\nSUMMARY: %s checks PASS, %s checks FAIL\n' "$passed" "$failed"
 if [[ $failed -gt 0 ]]; then
