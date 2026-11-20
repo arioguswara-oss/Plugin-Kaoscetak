@@ -44,6 +44,9 @@ sanro_check_viewport(sanro_studio_buyer_style_version() === SANRO_STUDIO_VERSION
     . '-' . substr(hash_file('sha256', $cssPath), 0, 12),
     'buyer CSS URL uses its actual content fingerprint');
 sanro_check_viewport(strpos($cssSource,
+    '.sanro-buyer,.sanro-buyer *{box-sizing:border-box}') !== false,
+    'SANRO root and descendants use border-box to prevent padding overflow');
+sanro_check_viewport(strpos($cssSource,
     '#sanro-studio-buyer button{min-height:44px!important}') !== false
     && strpos($cssSource,
     '#sanro-studio-buyer .sanro-preview nav button[data-side]{min-height:48px!important}') !== false,
@@ -51,4 +54,4 @@ sanro_check_viewport(strpos($cssSource,
 sanro_check_viewport(substr_count($source,
     "wp_enqueue_style('sanro-studio-buyer', \$asset . 'buyer.css', [], sanro_studio_buyer_style_version());") === 2,
     'both product picker and editor enqueue fingerprinted CSS');
-echo "PASS: 9 SANRO buyer viewport/CSS checks\n";
+echo "PASS: 10 SANRO buyer viewport/CSS checks\n";
