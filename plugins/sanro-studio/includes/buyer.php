@@ -75,6 +75,21 @@ function sanro_studio_render_product_picker($page_url) {
     echo '<script>document.addEventListener("DOMContentLoaded",function(){var input=document.getElementById("sanro-product-search"),cards=[].slice.call(document.querySelectorAll(".sanro-product-card")),empty=document.getElementById("sanro-product-empty");if(!input)return;input.addEventListener("input",function(){var q=input.value.toLocaleLowerCase().trim(),count=0;cards.forEach(function(card){var match=card.dataset.name.includes(q);card.hidden=!match;if(match)count++});if(empty)empty.hidden=count>0||cards.length===0})});</script>';
 }
 
+/**
+ * The active theme owns the document <head>. Some staging themes omit
+ * the mobile viewport meta tag, causing Chromium on a 320px phone to use
+ * its legacy 980px layout viewport and bypass SANRO's responsive CSS.
+ * Register only for the opted-in SANRO product picker/editor routes.
+ */
+function sanro_studio_print_buyer_viewport_meta() {
+    echo '<meta name="viewport" content="width=device-width, initial-scale=1">' . "\n";
+}
+function sanro_studio_register_buyer_viewport_meta() {
+    if (!has_action('wp_head', 'sanro_studio_print_buyer_viewport_meta')) {
+        add_action('wp_head', 'sanro_studio_print_buyer_viewport_meta', 1);
+    }
+}
+
 /** Dedicated buyer editor view, not wp-admin or Edit Post. */
 function sanro_studio_render_buyer_editor() {
     if (!sanro_studio_frontend_enabled()) return;
@@ -88,6 +103,7 @@ function sanro_studio_render_buyer_editor() {
     if ($on_selected_page && !isset($_GET['product_id']) && !isset($_GET['sanro_studio_editor'])) {
         $asset = plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/';
         wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], SANRO_STUDIO_VERSION);
+        sanro_studio_register_buyer_viewport_meta();
         get_header();
         sanro_studio_render_product_picker(get_permalink($editor_page_id));
         get_footer();
@@ -140,6 +156,7 @@ function sanro_studio_render_buyer_editor() {
 
     // WordPress may have a canonical redirect for product query arguments.
     // This view is selected only after product identity and visibility checks.
+    sanro_studio_register_buyer_viewport_meta();
     get_header();
     echo '<main id="sanro-studio-buyer" class="sanro-buyer" aria-label="SANRO Studio">';
     echo '<header><h1>' . esc_html($studio_label) . '</h1><p>Editor kaos — pratinjau saja, belum dapat checkout</p>';
