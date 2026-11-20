@@ -143,7 +143,7 @@ catch (_) {
         try { url=new URL(response.url()); } catch (_) { return; }
         if (url.hostname!==host) return;
         const match=url.pathname.match(
-          /\\/wp-json\\/sanro-studio\\/v1\\/drafts\\/[a-f0-9-]{36}\\/masters\\/(front|back)(?:\\/[^/]+)?$/i);
+          /\/wp-json\/sanro-studio\/v1\/drafts\/[a-f0-9-]{36}\/masters\/(front|back)(?:\/[^/]+)?$/i);
         if(!match) return;
         const row={side:match[1],method:request.method(),http:response.status(),code:'ok'};
         masterHttp.push(row);
@@ -166,7 +166,7 @@ catch (_) {
       const masterStatus=await page.locator('#sanro-master-upload-status').innerText();
       await Promise.all(masterReads);
       page.off('response',onMasterResponse);
-      const safeUiStatus=/^(?:Upload master (?:front|back) gagal \\(\\d{3}\\)|Verifikasi master (?:front|back) gagal \\(\\d{3}\\)|Master terunggah, tetapi metadata gambar belum tersimpan \\(\\d{3}\\)|Metadata teks, jumlah, atau warna berubah\\. Simpan draft teks sebelum upload master\\.|Master dan posisi gambar terverifikasi untuk front, back.*)$/
+      const safeUiStatus=/^(?:Upload master (?:front|back) gagal \(\d{3}\)|Verifikasi master (?:front|back) gagal \(\d{3}\)|Master terunggah, tetapi metadata gambar belum tersimpan \(\d{3}\)|Metadata teks, jumlah, atau warna berubah\. Simpan draft teks sebelum upload master\.|Master dan posisi gambar terverifikasi untuk front, back.*)$/
         .test(masterStatus)?masterStatus.slice(0,160):'other';
       console.log('DTF MASTER PHASE: '+JSON.stringify({ui:safeUiStatus,
         responses:masterHttp.map(row=>({side:row.side,method:row.method,
