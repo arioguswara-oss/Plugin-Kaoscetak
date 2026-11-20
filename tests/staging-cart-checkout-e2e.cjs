@@ -255,7 +255,8 @@ function redact(message) {
       .then(() => ({kind:'ui-error'}), () => ({kind:'timeout'}));
     const cartOutcome = await Promise.race([responseWait, uiErrorWait]);
     if (cartOutcome.kind !== 'response') {
-      const status = await page.locator('#sanro-cart-status').innerText();
+      const status = await page.locator('#sanro-cart-status').innerText({timeout:1500})
+        .catch(() => 'Editor already navigated or Cart status unavailable');
       throw new Error('Cart POST not observed; request_count=' + cartNetwork.started
         + '; http=' + cartNetwork.statuses.join(',') 
         + '; network_fail=' + cartNetwork.failed.length
@@ -263,7 +264,7 @@ function redact(message) {
     }
     const cartResponse = cartOutcome.response;
     if (cartResponse.status() !== 200) {
-      const status = await page.locator('#sanro-cart-status').innerText()
+      const status = await page.locator('#sanro-cart-status').innerText({timeout:1500})
         .catch(() => 'UI changed after Cart POST');
       throw new Error('Cart REST returned HTTP ' + cartResponse.status()
         + '; cart_ui=' + redact(status));
