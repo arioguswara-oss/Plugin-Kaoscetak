@@ -76,6 +76,7 @@ run_check 'Staging preflight JS syntax' '' node --check scripts/sanro-studio-sta
 run_check 'Staging preflight regression JS syntax' '' node --check tests/sanro-studio-staging-preflight-node.cjs
 run_check 'Staging preflight read-only regression' 'PASS: 8 staging preflight regression groups' node tests/sanro-studio-staging-preflight-node.cjs
 run_check 'Staging buyer Cart/Checkout E2E JS syntax' '' node --check tests/staging-cart-checkout-e2e.cjs
+run_check 'Mobile touch staging QA JS syntax' '' node --check tests/staging-mobile-readonly.cjs
 run_check 'Staging browser QA launcher shell syntax' '' bash -n scripts/sanro-studio-staging-browser-qa.sh
 run_check 'Pricing parity JS syntax' '' node --check tests/test_sanro_pricing_parity.js
 run_check 'Pricing PHP/JS parity' '400 cases PASS, 0 FAIL' node tests/test_sanro_pricing_parity.js
