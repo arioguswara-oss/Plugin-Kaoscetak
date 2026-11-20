@@ -54,7 +54,7 @@ if (
   php plugins/sanro-studio/tests/cart-adapter-smoke.php || exit $?
   bash scripts/sanro-studio-local-ci.sh || exit $?
 ) 2>&1 | tee "$LOG_FILE"; then
-  if grep -Fq 'PASS: 72 staging cart adapter checks' "$LOG_FILE" \
+  if grep -Fq 'PASS: 74 staging cart adapter checks' "$LOG_FILE" \
     && grep -Eq '^SUMMARY: [1-9][0-9]* checks PASS, 0 checks FAIL$' "$LOG_FILE"; then
     printf 'VERIFIED HERMES CI: PASS; SHA=%s\n' "$SOURCE_SHA"
     exit 0
