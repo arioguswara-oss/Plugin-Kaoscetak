@@ -96,6 +96,10 @@ run_check 'WooCommerce mockup regression PHP syntax' 'No syntax errors detected'
 run_check 'WooCommerce product mockup settings and safety' 'PASS: SANRO product mockup metadata and admin controls' php plugins/sanro-studio/tests/product-mockups-smoke.php
 run_check 'WooCommerce mockup preview JS regression syntax' '' node --check plugins/sanro-studio/tests/admin-mockups-node.cjs
 run_check 'WooCommerce mockup chooser/preview behavior' '15 SANRO product mockup chooser/preview checks' node plugins/sanro-studio/tests/admin-mockups-node.cjs
+run_check 'Per-product mockup print-zone module PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/product-print-zones.php
+run_check 'Per-product mockup print-zone regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/print-zone-smoke.php
+run_check 'Per-product print-zone validation and controls' 'PASS: SANRO per-product print overlay, security and admin controls' php plugins/sanro-studio/tests/print-zone-smoke.php
+run_check 'Buyer print-zone JS syntax' '' node --check plugins/sanro-studio/assets/buyer.js
 
 printf '\nSUMMARY: %s checks PASS, %s checks FAIL\n' "$passed" "$failed"
 if [[ $failed -gt 0 ]]; then
