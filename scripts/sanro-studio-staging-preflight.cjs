@@ -44,7 +44,7 @@ function findBuyerAsset(html) {
  * plugin secrets. Storage safety is independently validated server-side.
  */
 function visibleDtfGates(html) {
-  const hasButton = id => [...html.matchAll(/<button\\b[^>]*>/gi)]
+  const hasButton = id => [...html.matchAll(/<button\b[^>]*>/gi)]
     .some(m => attr(m[0], 'id') === id);
   return {
     draft:hasButton('sanro-save-draft'),
