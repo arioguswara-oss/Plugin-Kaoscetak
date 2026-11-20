@@ -14,6 +14,10 @@ const path = require('node:path');
 const host = 'saddlebrown-peafowl-616656.hostingersite.com';
 const pageUrl = new URL('https://' + host + '/custom-2/?sanro_studio_editor=1&product_id=24');
 const jsPath = '/wp-content/plugins/sanro-studio/assets/buyer.js';
+const cssPath = '/wp-content/plugins/sanro-studio/assets/buyer.css';
+const expectedCssHash = crypto.createHash('sha256').update(fs.readFileSync(
+  path.join(__dirname, '../plugins/sanro-studio/assets/buyer.css')
+)).digest('hex');
 const expectedHash = crypto.createHash('sha256').update(fs.readFileSync(
   path.join(__dirname, '../plugins/sanro-studio/assets/buyer.js')
 )).digest('hex');
@@ -54,6 +58,13 @@ catch (_) {
               u.pathname === jsPath;
           } catch (_) { return false; }
         }, {timeout:30000});
+        const cssResponse = page.waitForResponse(response => {
+          try {
+            const u = new URL(response.url());
+            return u.protocol === 'https:' && u.hostname === host &&
+              u.pathname === cssPath;
+          } catch (_) { return false; }
+        }, {timeout:30000});
         const response = await page.goto(pageUrl.href,
           {waitUntil:'domcontentloaded',timeout:30000});
         assert(response && response.status() === 200, 'Editor HTTP not 200');
@@ -62,6 +73,13 @@ catch (_) {
         assert.equal(asset.status(),200,'Buyer JS HTTP not 200');
         const actualHash = crypto.createHash('sha256').update(await asset.body()).digest('hex');
         assert.equal(actualHash,expectedHash,'Browser loaded stale buyer.js');
+        const cssAsset = await cssResponse;
+        assert.equal(cssAsset.status(),200,'SANRO buyer CSS HTTP not 200');
+        const actualCssHash = crypto.createHash('sha256').update(await cssAsset.body()).digest('hex');
+        assert.equal(actualCssHash,expectedCssHash,'Browser loaded stale buyer.css');
+        const servedCssUrl = new URL(cssAsset.url());
+        assert((servedCssUrl.searchParams.get('ver') || '').endsWith('-'+expectedCssHash.slice(0,12)),
+          'SANRO buyer.css URL must use its content fingerprint');
         await page.locator('#sanro-studio-buyer #sanro-text-input')
           .waitFor({state:'visible',timeout:15000});
 
@@ -97,6 +115,7 @@ catch (_) {
           };
         });
         // Only public CSS/layout metrics: no cookies, HTML, nonce or draft credentials.
+        console.log('MOBILE QA DIAGNOSTIC '+size.label+' css_sha256='+actualCssHash);
         console.log('MOBILE QA DIAGNOSTIC '+size.label+' '+
           JSON.stringify({viewport:geometry.width,meta:geometry.viewportMeta,
             cssLinked:geometry.cssLinked,root:[geometry.rootLeft,geometry.rootRight,
