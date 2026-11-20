@@ -219,6 +219,13 @@ function redact(message) {
       'Server quote invalid or unavailable; status ' + (quote.status ?? 'n/a'));
     console.log('PASS authoritative draft quote: IDR ' + quote.total);
 
+    // Save status may render before the handler's finally{} unlocks Save.
+    // Wait for that completion instead of racing Cart against the save handler.
+    await page.locator('#sanro-save-draft').waitFor({state:'visible'});
+    await page.waitForFunction(() =>
+      !document.querySelector('#sanro-save-draft')?.disabled,
+      null, {timeout:5000});
+
     // Observe both the actual API request and any early UI validation
     // rejection. Never log the draft ID, owner token, nonce or request URL.
     const cartNetwork = {started:0, statuses:[], failed:[]};
@@ -250,7 +257,7 @@ function redact(message) {
     await cartButton.click();
     const uiErrorWait = page.waitForFunction(() => {
       const text = document.querySelector('#sanro-cart-status')?.textContent || '';
-      return /Simpan seluruh perubahan|Keranjang belum siap|Gagal menambah|Draft.*kedaluwarsa/i.test(text);
+      return /Simpan seluruh perubahan|Tunggu sampai|Draft belum tersedia|Desain berubah setelah draft|Keranjang belum siap|Gagal menambah|Draft.*kedaluwarsa/i.test(text);
     }, null, {timeout:20000})
       .then(() => ({kind:'ui-error'}), () => ({kind:'timeout'}));
     const cartOutcome = await Promise.race([responseWait, uiErrorWait]);
