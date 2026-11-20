@@ -333,6 +333,14 @@ function redact(message) {
           statusChanges:state.statusChanges ?? -1
         };
       }).catch(() => ({clicked:-1,statusChanges:-1}));
+      // This numeric-only line remains readable even if the redacted error
+      // message below is truncated to 260 characters.
+      console.log('CART PROBE direct=' + directCartClickHandlers
+        + ' bubbled=' + signals.targetBubbled + '/' + signals.rootBubbled
+        + ' root=' + Number(initialCart.rootContainsButton)
+        + ' ids=' + initialCart.duplicateButtonIds
+        + ' script=' + Number(initialCart.buyerScriptPresent)
+        + ' resource=' + Number(initialCart.buyerResourceLoaded));
       throw new Error('Cart POST not observed; request_count=' + cartNetwork.started
         + '; http=' + cartNetwork.statuses.join(',')
         + '; network_fail=' + cartNetwork.failed.length
