@@ -1,7 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
-const {assertStagingUrl, findBuyerAsset, expectedVersion, probe} =
+const {assertStagingUrl, findBuyerAsset, visibleDtfGates, expectedVersion, probe} =
   require('../scripts/sanro-studio-staging-preflight.cjs');
 
 const origin = 'https://saddlebrown-peafowl-616656.hostingersite.com';
@@ -36,6 +36,19 @@ function stub({html=pageHtml, bytes=source, configStatus=200, assetStatus=200}={
   assert.equal(good.visited.length,3,'Only 3 GET targets expected');
   assert.equal(result.hash,sha);
   assert.equal(result.editorConfig,200);
+  assert.deepEqual(result.gates,
+    {draft:false,cart:false,master:false,previewOptional:false});
+  checks++;
+
+  const htmlGates='<button type="button" id="sanro-save-draft">Save</button>'+
+    '<button id="sanro-add-to-cart" type="button">Cart</button>';
+  const gateResult=visibleDtfGates(htmlGates);
+  assert.deepEqual(gateResult,
+    {draft:true,cart:true,master:false,previewOptional:false});
+  assert.deepEqual(visibleDtfGates(htmlGates+
+    '<button id="sanro-upload-master" type="button"></button>'+
+    '<button id="sanro-upload-previews" type="button"></button>'),
+    {draft:true,cart:true,master:true,previewOptional:true});
   checks++;
 
   assert.equal(findBuyerAsset("<script src='/x.js' id='sanro-studio-buyer-js'></script>"),'/x.js');
