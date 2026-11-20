@@ -45,7 +45,15 @@
  updateQty();
  function render(){
   // Rendering is not itself a user edit; revision changes only in input handlers.
-  const d=sides[side];q('#sanro-text-input').value=d.text;
+  const d=sides[side];
+  // Merchant-selected WooCommerce Media Library mockup; presentation only.
+  // Design geometry, authoritative area and DTF master bindings are unchanged.
+  const mockup = config.mockups && Object.prototype.hasOwnProperty.call(config.mockups,side)
+    ? config.mockups[side] : null;
+  const shirt=q('.sanro-shirt');
+  shirt.style.backgroundImage=(typeof mockup==='string' && /^https?:\/\//i.test(mockup))
+    ? 'url('+JSON.stringify(mockup)+')' : '';
+  q('#sanro-text-input').value=d.text;
   q('#sanro-image-size').min=String(Math.min(10,d.imageSize));
   q('#sanro-image-size').value=d.imageSize;
   q('#sanro-font-size').value=d.fontSize;q('#sanro-text-color').value=d.textColor;q('#sanro-category').value=d.category;
