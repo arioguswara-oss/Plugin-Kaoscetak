@@ -45,7 +45,11 @@ function redact(message) {
 }
 
 (async () => {
-  const browser = await chromium.launch({headless:true});
+  const launch = {headless:true};
+  if (process.env.SANRO_CHROMIUM_EXECUTABLE) {
+    launch.executablePath = process.env.SANRO_CHROMIUM_EXECUTABLE;
+  }
+  const browser = await chromium.launch(launch);
   const context = await browser.newContext({
     viewport:{width:390,height:844}, locale:'id-ID',
     acceptDownloads:false
