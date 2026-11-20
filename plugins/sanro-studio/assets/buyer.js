@@ -668,6 +668,9 @@
   });
   try{reopenDraft().catch(error=>{saveStatus.textContent=error.message})}catch(_error){}
   const cartButton=q('#sanro-add-to-cart'),cartStatus=q('#sanro-cart-status');
+  // Prevent a second Cart POST while the first is pending, even if a DOM
+  // optimiser replaces the disabled button before the response arrives.
+  let cartPending=false;
   if(cartButton&&cartStatus){
    // Delegate from the stable editor root. A layout/optimisation plugin may
    // replace the Cart button DOM after buyer.js initialises; binding directly
@@ -675,7 +678,7 @@
    root.addEventListener('click',async event=>{
     const target=event.target&&typeof event.target.closest==='function'
      ?event.target.closest('#sanro-add-to-cart'):null;
-    if(!target||!root.contains(target))return;
+    if(!target||!root.contains(target)||cartPending)return;
     const status=q('#sanro-cart-status');
     if(!status)return;
     if(saving){
@@ -690,6 +693,7 @@
     if(editRevision!==savedRevision){
      status.textContent='Desain berubah setelah draft terakhir disimpan. Simpan ulang sebelum membuka keranjang.';return;
     }
+    cartPending=true;
     target.disabled=true;
     status.textContent='Memvalidasi draft dan harga server…';
     try{
@@ -704,7 +708,7 @@
       ?window.SanroStudioSafeCartUrl(result.cart_url,location.href):null;
      if(safeCartUrl)location.assign(safeCartUrl);
     }catch(error){status.textContent=error.message||'Gagal menambah ke keranjang.'}
-    finally{target.disabled=false}
+    finally{cartPending=false;target.disabled=false}
    });
   }
   saveButton.addEventListener('click',async()=>{
