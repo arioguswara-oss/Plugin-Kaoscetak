@@ -177,6 +177,18 @@ catch (_) {
           const img=document.querySelector('#sanro-studio-buyer .sanro-safe img');
           return img && !img.hidden && img.complete && img.naturalWidth>0;
         },null,{timeout:15000});
+        // Confirm that restoration did not substitute the opposite side's
+        // private master. Read one synthetic PNG background pixel, not artwork.
+        const rgb=await page.evaluate(()=>{
+          const img=document.querySelector('#sanro-studio-buyer .sanro-safe img');
+          const c=document.createElement('canvas');
+          c.width=img.naturalWidth;c.height=img.naturalHeight;
+          const ctx=c.getContext('2d');
+          ctx.drawImage(img,0,0);
+          return Array.from(ctx.getImageData(2,2,1,1).data).slice(0,3);
+        });
+        assert.deepEqual(rgb,side==='front'?[200,49,70]:[18,62,102],
+          'Restored private master image does not match '+side+' side');
       }
       console.log('PASS: both owned DTF masters restored after browser reload');
 
