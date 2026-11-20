@@ -3,7 +3,7 @@
 define('ABSPATH', dirname(__DIR__, 3) . '/');
 require_once __DIR__ . '/../includes/cart-contract.php';
 require_once __DIR__ . '/../includes/cart-adapter.php';
-function get_woocommerce_currency() { return 'IDR'; }
+function get_woocommerce_currency() { return $GLOBALS['sanro_test_currency'] ?? 'IDR'; }
 function wp_salt($scheme) { return 'sanro-test-signing-key-00000000000000'; }
 function wc_get_product($id) { return new SanroMockProduct(); }
 class SanroMockProduct {
@@ -164,6 +164,23 @@ $regular->lines['ordinary'] = ['product_id'=>9, 'quantity'=>1,
     'data'=>new SanroPriceProduct()];
 sanro_studio_stage_reprice_signed_cart($regular);
 check_adapter(count($regular->lines) === 1, 'ordinary Woo cart line untouched');
+// Currency switching must never reprice SANRO lines at the ordinary
+// catalog price; regular WooCommerce items must remain intact.
+$GLOBALS['sanro_test_currency'] = 'USD';
+$currencySwitched = new SanroTransactionCart();
+$currencySwitched->lines['studio'] = $signed;
+$currencySwitched->lines['ordinary'] = $regular->lines['ordinary'];
+sanro_studio_stage_reprice_signed_cart($currencySwitched);
+check_adapter(!isset($currencySwitched->lines['studio']),
+    'non-IDR currency removes signed SANRO Studio line');
+check_adapter(isset($currencySwitched->lines['ordinary']),
+    'non-IDR currency preserves ordinary WooCommerce line');
+$unrelatedCurrency = new SanroTransactionCart();
+$unrelatedCurrency->lines = $regular->lines;
+sanro_studio_stage_reprice_signed_cart($unrelatedCurrency);
+check_adapter(count($unrelatedCurrency->lines) === 1,
+    'non-IDR ordinary-only cart is preserved');
+unset($GLOBALS['sanro_test_currency']);
 $wrongDesign = new SanroTransactionCart();
 $wrongDesign->lines['line-0'] = $signed;
 $wrongDesign->lines['line-0']['sanro_studio_design_id'] = 'another-design';
@@ -294,4 +311,4 @@ $quantityResult = sanro_studio_stage_reauthorize_cart(
 check_adapter(($quantityResult['valid'] ?? null) === false
     && ($quantityResult['error'] ?? null) === 'cart_line_mismatch',
     'session reload quantity drift cannot authorize cart');
-echo "PASS: 66 staging cart adapter checks\n";
+echo "PASS: 69 staging cart adapter checks\n";
