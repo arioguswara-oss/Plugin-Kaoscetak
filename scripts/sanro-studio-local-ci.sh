@@ -74,7 +74,7 @@ run_check 'Cart handler regression JS syntax' '' node --check plugins/sanro-stud
 run_check 'Cart handler delegation and no duplicate POST' 'PASS: 8 delegated Cart handler regression checks' node plugins/sanro-studio/tests/buyer-cart-handler-node.cjs
 run_check 'Staging preflight JS syntax' '' node --check scripts/sanro-studio-staging-preflight.cjs
 run_check 'Staging preflight regression JS syntax' '' node --check tests/sanro-studio-staging-preflight-node.cjs
-run_check 'Staging preflight read-only regression' 'PASS: 8 staging preflight regression groups' node tests/sanro-studio-staging-preflight-node.cjs
+run_check 'Staging preflight read-only regression' 'PASS: 9 staging preflight regression groups' node tests/sanro-studio-staging-preflight-node.cjs
 run_check 'Staging buyer Cart/Checkout E2E JS syntax' '' node --check tests/staging-cart-checkout-e2e.cjs
 run_check 'Staging DTF front/back image E2E JS syntax' '' node --check tests/staging-image-checkout-e2e.cjs
 run_check 'Private DTF image previews and master binding' 'PASS: 7 private DTF image-preview and master-binding checks' node plugins/sanro-studio/tests/buyer-image-preview-node.cjs
@@ -82,6 +82,9 @@ run_check 'Mobile touch staging QA JS syntax' '' node --check tests/staging-mobi
 run_check 'Buyer mobile viewport PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/buyer.php
 run_check 'Scoped buyer viewport regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/mobile-viewport-smoke.php
 run_check 'Scoped buyer viewport registration' 'PASS: 10 SANRO buyer viewport/CSS checks' php plugins/sanro-studio/tests/mobile-viewport-smoke.php
+run_check 'Auto-private installer PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/private-master-setup.php
+run_check 'Auto-private installer regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/private-master-setup-smoke.php
+run_check 'Auto-private installer security and idempotency' 'PASS: 11 isolated SANRO auto-private installer checks' php plugins/sanro-studio/tests/private-master-setup-smoke.php
 run_check 'Staging browser QA launcher shell syntax' '' bash -n scripts/sanro-studio-staging-browser-qa.sh
 run_check 'Pricing parity JS syntax' '' node --check tests/test_sanro_pricing_parity.js
 run_check 'Pricing PHP/JS parity' '400 cases PASS, 0 FAIL' node tests/test_sanro_pricing_parity.js
