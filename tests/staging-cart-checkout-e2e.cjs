@@ -146,17 +146,52 @@ function redact(message) {
       'Server quote invalid or unavailable; status ' + (quote.status ?? 'n/a'));
     console.log('PASS authoritative draft quote: IDR ' + quote.total);
 
-    // Keep the POST inside the editor's real code path; never forge cart lines
-    // or supply a client-provided price to the API.
+    // Observe both the actual API request and any early UI validation
+    // rejection. Never log the draft ID, owner token, nonce or request URL.
+    const cartNetwork = {started:0, statuses:[], failed:[]};
+    const isStagingCartPost = request => {
+      try {
+        const target = new URL(request.url());
+        return request.method() === 'POST'
+          && target.hostname === expectedHost
+          && target.pathname.endsWith('/cart');
+      } catch (_error) { return false; }
+    };
+    page.on('request', request => {
+      if (isStagingCartPost(request)) cartNetwork.started += 1;
+    });
+    page.on('response', response => {
+      if (isStagingCartPost(response.request()))
+        cartNetwork.statuses.push(response.status());
+    });
+    page.on('requestfailed', request => {
+      if (isStagingCartPost(request))
+        cartNetwork.failed.push('network-request-failed');
+    });
+    const cartButton = page.locator('#sanro-add-to-cart');
+    assert(await cartButton.isEnabled(), 'Add to Cart button is disabled');
     const responseWait = page.waitForResponse(response =>
-      response.request().method() === 'POST'
-        && new URL(response.url()).pathname.endsWith('/cart')
-        && new URL(response.url()).hostname === expectedHost,
-      {timeout:30000});
-    await page.locator('#sanro-add-to-cart').click();
-    const cartResponse = await responseWait;
+      isStagingCartPost(response.request()), {timeout:20000})
+      .then(response => ({kind:'response', response}),
+        () => ({kind:'timeout'}));
+    await cartButton.click();
+    const uiErrorWait = page.waitForFunction(() => {
+      const text = document.querySelector('#sanro-cart-status')?.textContent || '';
+      return /Simpan seluruh perubahan|Keranjang belum siap|Gagal menambah|Draft.*kedaluwarsa/i.test(text);
+    }, null, {timeout:20000})
+      .then(() => ({kind:'ui-error'}), () => ({kind:'timeout'}));
+    const cartOutcome = await Promise.race([responseWait, uiErrorWait]);
+    if (cartOutcome.kind !== 'response') {
+      const status = await page.locator('#sanro-cart-status').innerText();
+      throw new Error('Cart POST not observed; request_count=' + cartNetwork.started
+        + '; http=' + cartNetwork.statuses.join(',') 
+        + '; network_fail=' + cartNetwork.failed.length
+        + '; cart_ui=' + redact(status));
+    }
+    const cartResponse = cartOutcome.response;
     assert.equal(cartResponse.status(), 200,
-      'Cart REST returned HTTP ' + cartResponse.status());
+      'Cart REST returned HTTP ' + cartResponse.status()
+      + '; cart_ui=' + redact(await page.locator('#sanro-cart-status').innerText()));
     await page.waitForURL(u =>
       u.hostname === expectedHost && /^\/cart\/?$/.test(u.pathname),
       {waitUntil:'domcontentloaded', timeout:30000});
