@@ -133,6 +133,30 @@ catch (_) {
         /Draft teks tersimpan/,'Image bootstrap draft creation failed');
       console.log('PASS: owner-bound private image-only bootstrap draft');
 
+      // Capture only HTTP status, side, method and allowlisted WP error codes.
+      // Do NOT record request headers, draft IDs, tokens, image bytes or REST bodies.
+      const masterHttp = [];
+      const masterReads = [];
+      const onMasterResponse = response => {
+        const request=response.request();
+        let url;
+        try { url=new URL(response.url()); } catch (_) { return; }
+        if (url.hostname!==host) return;
+        const match=url.pathname.match(
+          /\\/wp-json\\/sanro-studio\\/v1\\/drafts\\/[a-f0-9-]{36}\\/masters\\/(front|back)(?:\\/[^/]+)?$/i);
+        if(!match) return;
+        const row={side:match[1],method:request.method(),http:response.status(),code:'ok'};
+        masterHttp.push(row);
+        masterReads.push((async()=>{
+          if(response.ok())return;
+          try {
+            const payload=await response.json();
+            row.code=(typeof payload?.code==='string'&&/^sanro_[a-z0-9_]{1,70}$/.test(payload.code))
+              ?payload.code:'http_error';
+          } catch (_) {row.code='non_json_error';}
+        })());
+      };
+      page.on('response',onMasterResponse);
       await page.locator('#sanro-upload-master').click();
       await page.waitForFunction(()=>{
         const b=document.querySelector('#sanro-upload-master');
@@ -140,8 +164,15 @@ catch (_) {
         return b && !b.disabled && s && !s.includes('Mengunggah master privat');
       },null,{timeout:75000});
       const masterStatus=await page.locator('#sanro-master-upload-status').innerText();
+      await Promise.all(masterReads);
+      page.off('response',onMasterResponse);
+      const safeUiStatus=/^(?:Upload master (?:front|back) gagal \\(\\d{3}\\)|Verifikasi master (?:front|back) gagal \\(\\d{3}\\)|Master terunggah, tetapi metadata gambar belum tersimpan \\(\\d{3}\\)|Metadata teks, jumlah, atau warna berubah\\. Simpan draft teks sebelum upload master\\.|Master dan posisi gambar terverifikasi untuk front, back.*)$/
+        .test(masterStatus)?masterStatus.slice(0,160):'other';
+      console.log('DTF MASTER PHASE: '+JSON.stringify({ui:safeUiStatus,
+        responses:masterHttp.map(row=>({side:row.side,method:row.method,
+          http:row.http,code:row.code}))}));
       assert.match(masterStatus,/Master dan posisi gambar terverifikasi untuk front, back/,
-        'Private front/back master upload or binding failed');
+        'Private front/back master upload or binding failed; see DTF MASTER PHASE');
       console.log('PASS: both private DTF masters uploaded and bound to same draft');
 
       const metadata=await page.evaluate(async ()=>{
