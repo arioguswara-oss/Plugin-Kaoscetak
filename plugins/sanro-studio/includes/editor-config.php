@@ -26,6 +26,9 @@ function sanro_studio_public_editor_config($product_id) {
         'product_id' => $product_id,
         'unit' => $config['unit'],
         'safe_areas' => $config['safe_areas'],
+        // Visual overlay placement only; centimeter limits remain server-owned.
+        'print_zones' => function_exists('sanro_studio_product_print_zones')
+            ? sanro_studio_product_print_zones($product_id) : [],
         'categories' => $config['categories'],
         'pricing_profile' => 'cotton_combed_24s',
         // Public, verified Media Library image URLs only. Never private DTF masters.
