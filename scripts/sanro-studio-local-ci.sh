@@ -85,6 +85,8 @@ run_check 'Scoped buyer viewport registration' 'PASS: 10 SANRO buyer viewport/CS
 run_check 'Auto-private installer PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/private-master-setup.php
 run_check 'Auto-private installer regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/private-master-setup-smoke.php
 run_check 'Auto-private installer security and idempotency' 'PASS: 11 isolated SANRO auto-private installer checks' php plugins/sanro-studio/tests/private-master-setup-smoke.php
+run_check 'Auto-private installer default deny PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/private-master-default-off-smoke.php
+run_check 'Auto-private installer default deny' 'PASS: 3 default-disabled SANRO private-master gate checks' php plugins/sanro-studio/tests/private-master-default-off-smoke.php
 run_check 'Staging browser QA launcher shell syntax' '' bash -n scripts/sanro-studio-staging-browser-qa.sh
 run_check 'Pricing parity JS syntax' '' node --check tests/test_sanro_pricing_parity.js
 run_check 'Pricing PHP/JS parity' '400 cases PASS, 0 FAIL' node tests/test_sanro_pricing_parity.js
