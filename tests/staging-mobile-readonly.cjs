@@ -76,7 +76,9 @@ catch (_) {
           const r = root?.getBoundingClientRect();
           const l = layout?.getBoundingClientRect();
           return {
-            width:window.innerWidth,rootLeft:r?.left,rootRight:r?.right,
+            width:window.innerWidth,
+            viewportMeta:document.querySelector('meta[name="viewport"]')?.getAttribute('content') || '(missing)',
+            rootLeft:r?.left,rootRight:r?.right,
             layoutRight:l?.right,rootScrollWidth:root?.scrollWidth,
             rootClientWidth:root?.clientWidth,
             buttons:controls.map(selector => {
@@ -89,7 +91,11 @@ catch (_) {
             })
           };
         });
-        assert.equal(geometry.width,size.width,'Unexpected mobile viewport width');
+        assert.match(geometry.viewportMeta,/width\s*=\s*device-width/i,
+          'Missing device-width viewport meta for SANRO buyer');
+        assert.equal(geometry.width,size.width,
+          'Unexpected mobile viewport width: rendered '+geometry.width+
+          'px, expected '+size.width+'px; meta='+geometry.viewportMeta);
         assert(Number.isFinite(geometry.rootLeft) && geometry.rootLeft >= -2,
           'SANRO editor starts outside mobile viewport');
         assert(geometry.rootRight <= size.width + 2 &&
