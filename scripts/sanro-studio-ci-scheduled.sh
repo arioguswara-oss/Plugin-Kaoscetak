@@ -59,4 +59,39 @@ if [[ ! -f "$qa_dir/scripts/sanro-studio-local-ci.sh" ]]; then
   exit 2
 fi
 echo "SANRO STUDIO CI: running checks in $qa_dir"
-bash "$qa_dir/scripts/sanro-studio-local-ci.sh"
+# Preserve evidence even if local CI fails. No GitHub Actions or deployment.
+evidence_dir="${SANRO_STUDIO_CI_EVIDENCE_DIR:-/home/sanro/sanro-studio-ci-evidence}"
+mkdir -p -- "$evidence_dir"
+run_stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+log_file="$evidence_dir/pr15-${target_sha:0:12}-$run_stamp.log"
+latest_file="$evidence_dir/latest.txt"
+result='FAIL'
+
+if bash "$qa_dir/scripts/sanro-studio-local-ci.sh" >"$log_file" 2>&1; then
+  if grep -Fq 'PASS: 74 staging cart adapter checks' "$log_file" \
+     && grep -Eq '^SUMMARY: [1-9][0-9]* checks PASS, 0 checks FAIL$' "$log_file"; then
+    result='PASS'
+  fi
+fi
+
+cat -- "$log_file"
+# Write the latest receipt atomically; never claim PASS based on grep alone
+# when the actual CI process exited unsuccessfully.
+receipt_temp="$(mktemp "$evidence_dir/.latest.XXXXXXXX")"
+{
+  printf 'PROJECT=SANRO_STUDIO\nPR=15\n'
+  printf 'SOURCE_SHA=%s\n' "$target_sha"
+  printf 'RUN_UTC=%s\n' "$run_stamp"
+  printf 'RESULT=%s\n' "$result"
+  printf 'LOG=%s\n' "$log_file"
+  grep -F 'PASS: 74 staging cart adapter checks' "$log_file" || true
+  grep -E '^SUMMARY: ' "$log_file" || true
+} >"$receipt_temp"
+mv -f -- "$receipt_temp" "$latest_file"
+
+if [[ "$result" == 'PASS' ]]; then
+  printf 'VERIFIED HERMES SCHEDULED CI: PASS; SHA=%s\n' "$target_sha"
+  exit 0
+fi
+printf 'FAIL: Hermes scheduled CI did not complete required 74 Cart checks and 0-failure suite; log=%s\n' "$log_file" >&2
+exit 1
