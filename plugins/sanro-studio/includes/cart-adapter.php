@@ -25,6 +25,20 @@ function sanro_studio_stage_cart_signature($line, $expires) {
 }
 
 /**
+ * Removal must succeed or abort the current Cart/Checkout request.
+ * A false return or thrown hook error must never leave an unsafe Studio line
+ * eligible for WooCommerce's regular catalog price.
+ */
+function sanro_studio_stage_remove_untrusted_cart_line($cart, $key) {
+    try {
+        if ($cart->remove_cart_item($key) === true) return;
+    } catch (Throwable $ignored) {
+        // Never downgrade an unsafe removal failure to a successful request.
+    }
+    throw new RuntimeException('SANRO Studio: unsafe cart item could not be removed.');
+}
+
+/**
  * WooCommerce reconstructs product objects from its session, often restoring
  * the ordinary catalog price. Reapply ONLY a server-signed Studio unit price.
  * Tampered or expired Studio lines are removed instead of being charged at
@@ -55,7 +69,7 @@ function sanro_studio_stage_reprice_signed_cart($cart) {
         foreach ($items as $key => $line) {
             if (!is_array($line) || !array_key_exists('sanro_studio_design_id', $line)) continue;
             $has_studio_line = true;
-            try { $cart->remove_cart_item($key); } catch (Throwable $ignored) {}
+            sanro_studio_stage_remove_untrusted_cart_line($cart, $key);
         }
         if ($has_studio_line && function_exists('wc_add_notice')) {
             wc_add_notice('SANRO Studio: harga desain hanya tersedia dalam IDR. Tambahkan ulang desain.', 'error');
@@ -77,7 +91,7 @@ function sanro_studio_stage_reprice_signed_cart($cart) {
             && is_int($line['sanro_studio_unit_price'])
             && $line['sanro_studio_unit_price'] > 0;
         if (!$valid) {
-            try { $cart->remove_cart_item($key); } catch (Throwable $ignored) {}
+            sanro_studio_stage_remove_untrusted_cart_line($cart, $key);
             if (function_exists('wc_add_notice')) {
                 wc_add_notice('SANRO Studio: harga desain tidak dapat diverifikasi. Simpan dan tambahkan ulang desain.', 'error');
             }
