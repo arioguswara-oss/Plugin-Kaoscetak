@@ -36,6 +36,18 @@ if [[ -z "${SANRO_CHROMIUM_EXECUTABLE:-}" ]]; then
   done
 fi
 
+# Dedicated mobile emulator gate is strictly read-only; it never starts
+# the synthetic Cart/Checkout branch even if a caller sets both flags.
+if [[ "${SANRO_STAGING_MOBILE_QA:-0}" == "1" ]]; then
+  if [[ "${SANRO_STAGING_CART_E2E:-0}" == "1" ]]; then
+    echo "BLOCKED: Mobile QA is read-only; cannot combine with Cart E2E." >&2
+    exit 2
+  fi
+  echo "STAGING MOBILE QA: touch emulation at 320/390/768px, no draft/cart/order/payment."
+  node "$ROOT/tests/staging-mobile-readonly.cjs"
+  exit $?
+fi
+
 if [[ "${SANRO_STAGING_CART_E2E:-0}" == "1" ]]; then
   echo "STAGING E2E: one synthetic draft and one cart addition; no order or payment."
 else
