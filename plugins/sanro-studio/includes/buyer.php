@@ -5,6 +5,21 @@ defined('ABSPATH') || exit;
  * Frontend entrypoint is opt-in and inert until SANRO Studio is explicitly
  * enabled on a staging site. No existing WooCommerce purchase flow is replaced.
  */
+/**
+ * Content-based cache busting for the buyer runtime. Dev assets may change
+ * without a plugin version bump; a static ver=0.1.1-dev can leave browsers
+ * running a stale Cart handler after an approved staging update.
+ * Failure to hash falls back to the ordinary plugin version.
+ */
+function sanro_studio_buyer_script_version() {
+    $path = __DIR__ . '/../assets/buyer.js';
+    if (!is_file($path) || !is_readable($path)) return SANRO_STUDIO_VERSION;
+    $hash = hash_file('sha256', $path);
+    return is_string($hash) && preg_match('/^[a-f0-9]{64}$/D', $hash)
+        ? SANRO_STUDIO_VERSION . '-' . substr($hash, 0, 12)
+        : SANRO_STUDIO_VERSION;
+}
+
 function sanro_studio_frontend_enabled() {
     return defined('SANRO_STUDIO_ENABLE_BUYER_EDITOR') && SANRO_STUDIO_ENABLE_BUYER_EDITOR === true;
 }
@@ -101,7 +116,7 @@ function sanro_studio_render_buyer_editor() {
     wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], SANRO_STUDIO_VERSION);
     wp_enqueue_script('sanro-studio-estimate', $asset . 'estimate.js', [], SANRO_STUDIO_VERSION, true);
     wp_enqueue_script('sanro-studio-cart-redirect', $asset . 'cart-redirect.js', [], SANRO_STUDIO_VERSION, true);
-    wp_enqueue_script('sanro-studio-buyer', $asset . 'buyer.js', ['sanro-studio-estimate', 'sanro-studio-cart-redirect'], SANRO_STUDIO_VERSION, true);
+    wp_enqueue_script('sanro-studio-buyer', $asset . 'buyer.js', ['sanro-studio-estimate', 'sanro-studio-cart-redirect'], sanro_studio_buyer_script_version(), true);
     // Supply API bootstrap only on explicitly enabled staging; no owner token
     // is ever included in page HTML or a shared JavaScript configuration.
     if (function_exists('sanro_studio_draft_rest_enabled') && sanro_studio_draft_rest_enabled()) {
