@@ -77,3 +77,11 @@
    default min-height; this applies ONLY inside the SANRO editor container. */
 #sanro-studio-buyer button{min-height:44px!important}
 #sanro-studio-buyer .sanro-preview nav button[data-side]{min-height:48px!important}
+
+/* Optional merchant-controlled product mockup, behind the print-safe overlay.
+   Fallback remains the existing colored shirt when no mockup is configured. */
+#sanro-studio-buyer .sanro-shirt{
+ background-position:center;
+ background-size:contain;
+ background-repeat:no-repeat;
+}
