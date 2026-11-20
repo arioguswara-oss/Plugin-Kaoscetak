@@ -39,6 +39,20 @@ function findBuyerAsset(html) {
   }
   throw Error('Expected buyer script was not found in staging page');
 }
+/**
+ * Read-only public UI gate check; reports button presence, never page HTML or
+ * plugin secrets. Storage safety is independently validated server-side.
+ */
+function visibleDtfGates(html) {
+  const hasButton = id => [...html.matchAll(/<button\\b[^>]*>/gi)]
+    .some(m => attr(m[0], 'id') === id);
+  return {
+    draft:hasButton('sanro-save-draft'),
+    cart:hasButton('sanro-add-to-cart'),
+    master:hasButton('sanro-upload-master'),
+    previewOptional:hasButton('sanro-upload-previews')
+  };
+}
 function expectedVersion(source, pluginPhp) {
   const version = pluginPhp.match(/define\('SANRO_STUDIO_VERSION',\s*'([^']+)'\)/);
   assert(version, 'Plugin version constant unavailable');
@@ -62,7 +76,7 @@ async function probe({read, source, pluginPhp}) {
   assert.equal(remoteHash, localHash, 'Staging browser-loaded asset differs from branch');
   const configResult = await read(assertStagingUrl(EDITOR_CONFIG), 1024 * 1024);
   assert.equal(configResult.status, 200, 'Staging editor-config REST HTTP not 200');
-  return {page:200, asset:200, editorConfig:200, hash:localHash, version};
+  return {page:200, asset:200, editorConfig:200, hash:localHash, version, gates:visibleDtfGates(html)};
 }
 async function readOnlyGet(url, maxBytes) {
   assertStagingUrl(url.href);
@@ -96,9 +110,11 @@ if (require.main === module) {
       + ' editor-config=' + result.editorConfig);
     console.log('BUYER_JS_SHA256=' + result.hash);
     console.log('BUYER_JS_VERSION=' + result.version);
+    console.log('STAGING DTF UI GATES: '+Object.entries(result.gates)
+      .map(([gate,enabled])=>gate+'='+(enabled?'ON':'OFF')).join(' '));
   })().catch(error => {
     console.error('FAIL: staging preflight: ' + String(error.message).slice(0, 200));
     process.exitCode = 1;
   });
 }
-module.exports = {assertStagingUrl,findBuyerAsset,expectedVersion,probe};
+module.exports = {assertStagingUrl,findBuyerAsset,visibleDtfGates,expectedVersion,probe};
