@@ -72,6 +72,9 @@ run_check 'Buyer asset fingerprint' 'PASS: 3 SANRO Studio buyer asset fingerprin
 run_check 'Staging buyer frontend JS syntax' '' node --check plugins/sanro-studio/assets/buyer.js
 run_check 'Cart handler regression JS syntax' '' node --check plugins/sanro-studio/tests/buyer-cart-handler-node.cjs
 run_check 'Cart handler delegation and no duplicate POST' 'PASS: 8 delegated Cart handler regression checks' node plugins/sanro-studio/tests/buyer-cart-handler-node.cjs
+run_check 'Staging preflight JS syntax' '' node --check scripts/sanro-studio-staging-preflight.cjs
+run_check 'Staging preflight regression JS syntax' '' node --check tests/sanro-studio-staging-preflight-node.cjs
+run_check 'Staging preflight read-only regression' 'PASS: 8 staging preflight regression groups' node tests/sanro-studio-staging-preflight-node.cjs
 run_check 'Staging buyer Cart/Checkout E2E JS syntax' '' node --check tests/staging-cart-checkout-e2e.cjs
 run_check 'Staging browser QA launcher shell syntax' '' bash -n scripts/sanro-studio-staging-browser-qa.sh
 run_check 'Pricing parity JS syntax' '' node --check tests/test_sanro_pricing_parity.js
