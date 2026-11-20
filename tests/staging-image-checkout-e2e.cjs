@@ -123,14 +123,53 @@ catch (_) {
         console.log('PASS: '+side+' synthetic DTF image fits configured print area');
       }
 
+      // Collect only HTTP status and the allowlisted public WP error code.
+      // Never print response bodies, draft identifiers, owner tokens or nonces.
+      const draftCreates=[];
+      const draftReads=[];
+      const onDraftCreateResponse=response=>{
+        let url;
+        try { url=new URL(response.url()); } catch (_) { return; }
+        if(url.hostname!==host||response.request().method()!=='POST')return;
+        const route=url.searchParams.get('rest_route');
+        if(!url.pathname.replace(/\/$/,'').endsWith('/wp-json/sanro-studio/v1/drafts')
+          && route!=='/sanro-studio/v1/drafts')return;
+        const item={http:response.status(),code:'ok'};
+        draftCreates.push(item);
+        draftReads.push((async()=>{
+          if(response.ok())return;
+          try {
+            const payload=await response.json();
+            item.code=typeof payload?.code==='string'
+              && /^sanro_[a-z0-9_]{1,70}$/.test(payload.code)
+              ?payload.code:'http_error';
+          }catch(_){item.code='non_json_error';}
+        })());
+      };
+      page.on('response',onDraftCreateResponse);
       await page.locator('#sanro-save-draft').click();
       await page.waitForFunction(()=>{
         const b=document.querySelector('#sanro-save-draft');
         const s=document.querySelector('#sanro-save-status')?.textContent||'';
         return b && !b.disabled && !s.includes('Menyimpan metadata');
       },null,{timeout:30000});
-      assert.match(await page.locator('#sanro-save-status').innerText(),
-        /Draft teks tersimpan/,'Image bootstrap draft creation failed');
+      const draftStatus=await page.locator('#sanro-save-status').innerText();
+      await Promise.all(draftReads);
+      page.off('response',onDraftCreateResponse);
+      const draftOutcome=/^Draft teks tersimpan/.test(draftStatus)?'saved'
+        :/^Penyimpanan gagal \(\d{3}\)\.$/.test(draftStatus)?'http_error'
+        :'other';
+      console.log('DTF DRAFT PHASE: '+JSON.stringify({ui:draftOutcome,
+        responses:draftCreates.map(item=>({http:item.http,code:item.code}))}));
+      if(draftCreates.some(item=>item.http===429
+         && item.code==='sanro_rate_limited')){
+        console.error('BLOCKED: hourly guest draft-creation limit reached on staging. '+
+          'Do not retry until normal expiration; server rate limit remains enabled.');
+        process.exitCode=2;
+        return;
+      }
+      assert.match(draftStatus,/Draft teks tersimpan/,
+        'Image bootstrap draft creation failed; see DTF DRAFT PHASE');
       console.log('PASS: owner-bound private image-only bootstrap draft');
 
       // Capture only HTTP status, side, method and allowlisted WP error codes.
