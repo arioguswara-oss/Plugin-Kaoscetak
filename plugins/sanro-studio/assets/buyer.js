@@ -670,8 +670,17 @@
   const cartButton=q('#sanro-add-to-cart'),cartStatus=q('#sanro-cart-status');
   if(cartButton&&cartStatus){
    cartButton.addEventListener('click',async()=>{
-    if(saving||uploadingMaster||!savedId||!ownerToken||editRevision!==savedRevision){
-     cartStatus.textContent='Simpan seluruh perubahan desain sebelum menambah ke keranjang.';return;
+    if(saving){
+     cartStatus.textContent='Tunggu sampai penyimpanan draft selesai sebelum membuka keranjang.';return;
+    }
+    if(uploadingMaster){
+     cartStatus.textContent='Tunggu sampai upload master selesai sebelum membuka keranjang.';return;
+    }
+    if(!savedId||!ownerToken){
+     cartStatus.textContent='Draft belum tersedia pada sesi editor ini. Simpan desain sebelum membuka keranjang.';return;
+    }
+    if(editRevision!==savedRevision){
+     cartStatus.textContent='Desain berubah setelah draft terakhir disimpan. Simpan ulang sebelum membuka keranjang.';return;
     }
     cartButton.disabled=true;
     cartStatus.textContent='Memvalidasi draft dan harga server…';
