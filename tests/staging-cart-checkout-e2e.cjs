@@ -189,9 +189,12 @@ function redact(message) {
         + '; cart_ui=' + redact(status));
     }
     const cartResponse = cartOutcome.response;
-    assert.equal(cartResponse.status(), 200,
-      'Cart REST returned HTTP ' + cartResponse.status()
-      + '; cart_ui=' + redact(await page.locator('#sanro-cart-status').innerText()));
+    if (cartResponse.status() !== 200) {
+      const status = await page.locator('#sanro-cart-status').innerText()
+        .catch(() => 'UI changed after Cart POST');
+      throw new Error('Cart REST returned HTTP ' + cartResponse.status()
+        + '; cart_ui=' + redact(status));
+    }
     await page.waitForURL(u =>
       u.hostname === expectedHost && /^\/cart\/?$/.test(u.pathname),
       {waitUntil:'domcontentloaded', timeout:30000});
