@@ -20,6 +20,20 @@ function sanro_studio_buyer_script_version() {
         : SANRO_STUDIO_VERSION;
 }
 
+/**
+ * Cache-bust the buyer stylesheet as well as buyer.js: plugin staging builds
+ * retain the same development version, while theme/CDN caches can keep an
+ * older 35px mobile button stylesheet after a ZIP overwrite.
+ */
+function sanro_studio_buyer_style_version() {
+    $path = __DIR__ . '/../assets/buyer.css';
+    if (!is_file($path) || !is_readable($path)) return SANRO_STUDIO_VERSION;
+    $hash = hash_file('sha256', $path);
+    return is_string($hash) && preg_match('/^[a-f0-9]{64}$/D', $hash)
+        ? SANRO_STUDIO_VERSION . '-' . substr($hash, 0, 12)
+        : SANRO_STUDIO_VERSION;
+}
+
 function sanro_studio_frontend_enabled() {
     return defined('SANRO_STUDIO_ENABLE_BUYER_EDITOR') && SANRO_STUDIO_ENABLE_BUYER_EDITOR === true;
 }
@@ -102,7 +116,7 @@ function sanro_studio_render_buyer_editor() {
     // Never hijack unrelated pages or product URLs.
     if ($on_selected_page && !isset($_GET['product_id']) && !isset($_GET['sanro_studio_editor'])) {
         $asset = plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/';
-        wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], SANRO_STUDIO_VERSION);
+        wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], sanro_studio_buyer_style_version());
         sanro_studio_register_buyer_viewport_meta();
         get_header();
         sanro_studio_render_product_picker(get_permalink($editor_page_id));
@@ -129,7 +143,7 @@ function sanro_studio_render_buyer_editor() {
     $config['product_id'] = $product_id;
     // Render as a dedicated view: no WooCommerce add-to-cart form is included.
     $asset = plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/';
-    wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], SANRO_STUDIO_VERSION);
+    wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], sanro_studio_buyer_style_version());
     wp_enqueue_script('sanro-studio-estimate', $asset . 'estimate.js', [], SANRO_STUDIO_VERSION, true);
     wp_enqueue_script('sanro-studio-cart-redirect', $asset . 'cart-redirect.js', [], SANRO_STUDIO_VERSION, true);
     wp_enqueue_script('sanro-studio-buyer', $asset . 'buyer.js', ['sanro-studio-estimate', 'sanro-studio-cart-redirect'], sanro_studio_buyer_script_version(), true);
