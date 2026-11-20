@@ -55,8 +55,23 @@ catch (_) {
           draft:!!cfg.draft_api?.url};
       });
       assert.equal(flags.product,24,'Wrong staging test product');
-      if(!flags.master||!flags.cart||!flags.draft){
-        console.error('BLOCKED: staging image master/draft/cart gates are not enabled; no draft created.');
+      // Expose only public boolean feature gates, never owner tokens,
+      // nonces, draft identifiers, URLs, storage paths or server config.
+      const gateStatus = {
+        master:flags.master===true,
+        draft:flags.draft===true,
+        cart:flags.cart===true,
+        previewOptional:flags.preview===true
+      };
+      console.log('STAGING DTF GATES: '+Object.entries(gateStatus)
+        .map(([key,enabled])=>key+'='+(enabled?'ON':'OFF')).join(' '));
+      const required=Object.entries(gateStatus)
+        .filter(([key,enabled])=>key!=='previewOptional'&&!enabled)
+        .map(([key])=>key);
+      if(required.length){
+        console.error('BLOCKED: required DTF gates OFF: '+required.join(', ')+
+          '. No draft or cart mutation. Private master gate requires '+
+          'staging-only server constants and a protected storage directory outside web root.');
         process.exitCode=2;return;
       }
       const servedJs=await page.evaluate(async () => {
