@@ -145,17 +145,20 @@ catch (_) {
           };
         });
         // Only public CSS/layout metrics: no cookies, HTML, nonce or draft credentials.
-        console.log('MOBILE QA DIAGNOSTIC '+size.label+' css_sha256='+actualCssHash);
-        console.log('MOBILE QA DIAGNOSTIC '+size.label+' '+
-          JSON.stringify({viewport:geometry.width,deviceWidth:geometry.deviceWidth,
-            visualWidth:geometry.visualWidth,htmlClientWidth:geometry.htmlClientWidth,
-            htmlScrollWidth:geometry.htmlScrollWidth,
-            bodyClientWidth:geometry.bodyClientWidth,bodyScrollWidth:geometry.bodyScrollWidth,
-            meta:geometry.viewportMeta,cssLinked:geometry.cssLinked,
-            root:[geometry.rootLeft,geometry.rootRight,
-              geometry.rootClientWidth,geometry.rootScrollWidth],
-            layoutRight:geometry.layoutRight,ancestors:geometry.ancestors,
-            wideElements:geometry.wideElements,buttons:geometry.buttons}));
+        console.log('MOBILE WIDTH '+size.label+
+          ' screen='+geometry.deviceWidth+'px inner='+geometry.width+
+          'px visual='+geometry.visualWidth+'px html='+
+          geometry.htmlClientWidth+'/'+geometry.htmlScrollWidth+
+          'px body='+geometry.bodyClientWidth+'/'+geometry.bodyScrollWidth+
+          'px cssHashOk='+Boolean(actualCssHash===expectedCssHash));
+        console.log('MOBILE PARENTS '+size.label+' '+JSON.stringify(
+          geometry.ancestors.filter(e => e.scroll>size.width+2 ||
+            e.right>size.width+2 || e.paddingLeft!=='0px' ||
+            e.paddingRight!=='0px').slice(0,8)));
+        console.log('MOBILE WIDE '+size.label+' '+JSON.stringify(geometry.wideElements));
+        console.log('MOBILE BUTTONS '+size.label+' '+JSON.stringify(
+          geometry.buttons.map(b=>({control:b.selector.replace('#sanro-studio-buyer ',''),
+            height:b.height,minHeight:b.minHeight,right:b.right}))));
         assert.match(geometry.viewportMeta,/width\s*=\s*device-width/i,
           'Missing device-width viewport meta for SANRO buyer');
         assert.equal(geometry.deviceWidth,size.width,
