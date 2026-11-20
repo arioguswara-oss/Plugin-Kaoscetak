@@ -21,6 +21,7 @@ add_action('init', 'sanro_studio_initialize_auto_private_master_storage', 0);
 require_once __DIR__ . '/includes/core.php';
 require_once __DIR__ . '/includes/print-area.php';
 require_once __DIR__ . '/includes/product-area.php';
+require_once __DIR__ . '/includes/product-print-zones.php';
 require_once __DIR__ . '/includes/product-pricing.php';
 require_once __DIR__ . '/includes/product-mockups.php';
 require_once __DIR__ . '/includes/editor-config.php';
@@ -51,6 +52,8 @@ add_action('admin_post_sanro_studio_save', 'sanro_studio_save_settings');
 add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_area_fields');
 add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_readiness_notice', 30);
 add_action('woocommerce_admin_process_product_object', 'sanro_studio_save_product_areas');
+add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_print_zone_fields');
+add_action('woocommerce_admin_process_product_object', 'sanro_studio_save_product_print_zones');
 
 add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_pricing_fields');
 add_action('woocommerce_admin_process_product_object', 'sanro_studio_save_product_pricing');
