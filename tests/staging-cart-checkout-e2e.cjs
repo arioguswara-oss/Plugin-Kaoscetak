@@ -250,6 +250,28 @@ function redact(message) {
     });
     const cartButton = page.locator('#sanro-add-to-cart');
     assert(await cartButton.isEnabled(), 'Add to Cart button is disabled');
+    // Trace only nonsensitive DOM/interaction signals. The initial Cart status
+    // in buyer.php is a placeholder, NOT proof that a click was rejected.
+    const initialCart = await page.evaluate(() => {
+      const button = document.querySelector('#sanro-add-to-cart');
+      const status = document.querySelector('#sanro-cart-status');
+      if (!button || !status) return {instrumented:false};
+      window.__sanroQaCartSignals = {clicked:0, statusChanges:0};
+      button.addEventListener('click', () => {
+        window.__sanroQaCartSignals.clicked += 1;
+      }, {capture:true});
+      new MutationObserver(() => {
+        window.__sanroQaCartSignals.statusChanges += 1;
+      }).observe(status, {subtree:true, childList:true, characterData:true});
+      return {
+        instrumented:true,
+        buyerScriptPresent:[...document.scripts].some(script =>
+          /\\/sanro-studio\\/assets\\/buyer\\.js(?:\\?|$)/.test(script.src)),
+        staticPlaceholder:/Simpan desain terlebih dahulu\\. Checkout memerlukan otorisasi ulang\\./i
+          .test(status.textContent || '')
+      };
+    });
+    assert(initialCart.instrumented, 'Cart interaction instrumentation unavailable');
     const responseWait = page.waitForResponse(response =>
       isStagingCartPost(response.request()), {timeout:20000})
       .then(response => ({kind:'response', response}),
@@ -264,9 +286,18 @@ function redact(message) {
     if (cartOutcome.kind !== 'response') {
       const status = await page.locator('#sanro-cart-status').innerText({timeout:1500})
         .catch(() => 'Editor already navigated or Cart status unavailable');
+      const signals = await page.evaluate(() => {
+        const state = window.__sanroQaCartSignals || {};
+        return {clicked:state.clicked ?? -1, statusChanges:state.statusChanges ?? -1};
+      }).catch(() => ({clicked:-1,statusChanges:-1}));
       throw new Error('Cart POST not observed; request_count=' + cartNetwork.started
-        + '; http=' + cartNetwork.statuses.join(',') 
+        + '; http=' + cartNetwork.statuses.join(',')
         + '; network_fail=' + cartNetwork.failed.length
+        + '; dom_click=' + signals.clicked
+        + '; status_changes=' + signals.statusChanges
+        + '; buyer_script_tag=' + Number(initialCart.buyerScriptPresent)
+        + '; initial_placeholder=' + Number(initialCart.staticPlaceholder)
+        + '; js_errors=' + (jsErrors.join(',') || 'none')
         + '; cart_ui=' + redact(status));
     }
     const cartResponse = cartOutcome.response;
