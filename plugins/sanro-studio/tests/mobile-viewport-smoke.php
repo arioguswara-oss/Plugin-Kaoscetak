@@ -1,6 +1,7 @@
 <?php
 /** No WordPress, database or network: SANRO editor mobile viewport smoke. */
 define('ABSPATH', dirname(__DIR__, 3) . '/');
+define('SANRO_STUDIO_VERSION', '0.1.1-dev');
 $GLOBALS['sanro_qa_actions'] = [];
 function has_action($tag, $callback) {
     return $GLOBALS['sanro_qa_actions'][$tag][$callback] ?? false;
@@ -35,4 +36,19 @@ $source = file_get_contents(__DIR__ . '/../includes/buyer.php');
 sanro_check_viewport(is_string($source)
     && substr_count($source, 'sanro_studio_register_buyer_viewport_meta();') === 2,
     'product picker and editor both register viewport only on their scoped routes');
-echo "PASS: 5 SANRO buyer viewport checks\n";
+$cssPath = __DIR__ . '/../assets/buyer.css';
+$cssSource = file_get_contents($cssPath);
+sanro_check_viewport(is_string($cssSource) && strlen($cssSource) > 0,
+    'buyer CSS source is readable');
+sanro_check_viewport(sanro_studio_buyer_style_version() === SANRO_STUDIO_VERSION
+    . '-' . substr(hash_file('sha256', $cssPath), 0, 12),
+    'buyer CSS URL uses its actual content fingerprint');
+sanro_check_viewport(strpos($cssSource,
+    '#sanro-studio-buyer button{min-height:44px!important}') !== false
+    && strpos($cssSource,
+    '#sanro-studio-buyer .sanro-preview nav button[data-side]{min-height:48px!important}') !== false,
+    'touch sizing overrides theme only inside SANRO Studio');
+sanro_check_viewport(substr_count($source,
+    "wp_enqueue_style('sanro-studio-buyer', \$asset . 'buyer.css', [], sanro_studio_buyer_style_version());") === 2,
+    'both product picker and editor enqueue fingerprinted CSS');
+echo "PASS: 9 SANRO buyer viewport/CSS checks\n";
