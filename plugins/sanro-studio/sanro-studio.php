@@ -12,6 +12,12 @@
 defined('ABSPATH') || exit;
 
 define('SANRO_STUDIO_VERSION', '0.1.1-dev');
+require_once __DIR__ . '/includes/private-master-setup.php';
+// Activation provisions a private sibling directory when the hosting layout permits.
+// Existing sites that update the plugin receive the same safe setup on init,
+// but upload remains disabled unless BOTH buyer + draft gates are explicitly on.
+register_activation_hook(__FILE__, 'sanro_studio_provision_private_master_storage');
+add_action('init', 'sanro_studio_initialize_auto_private_master_storage', 0);
 require_once __DIR__ . '/includes/core.php';
 require_once __DIR__ . '/includes/print-area.php';
 require_once __DIR__ . '/includes/product-area.php';
