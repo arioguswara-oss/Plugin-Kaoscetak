@@ -59,7 +59,7 @@ if (
     printf 'VERIFIED HERMES CI: PASS; SHA=%s\n' "$SOURCE_SHA"
     exit 0
   fi
-  printf 'FAIL: missing required 72-assertion or zero-failure CI evidence\n' >&2
+  printf 'FAIL: missing required 74-assertion or zero-failure CI evidence\n' >&2
   exit 1
 else
   printf 'FAIL: Hermes CI failed; see %s\n' "$LOG_FILE" >&2
