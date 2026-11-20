@@ -53,6 +53,19 @@
   const shirt=q('.sanro-shirt');
   shirt.style.backgroundImage=(typeof mockup==='string' && /^https?:\/\//i.test(mockup))
     ? 'url('+JSON.stringify(mockup)+')' : '';
+  // Merchant-controlled visual overlay; authoritative geometry uses
+  // independent centimeter bounds from the server. An unsafe zone falls back
+  // to the existing 27/22/46/54 layout without modifying the saved design.
+  const zone=config.print_zones && config.print_zones[side];
+  const validZone=zone && ['x','y','width','height'].every(key=>
+    typeof zone[key]==='number' && Number.isFinite(zone[key]))
+    && zone.x>=0 && zone.y>=0 && zone.width>0 && zone.height>0
+    && zone.x+zone.width<=100 && zone.y+zone.height<=100;
+  const placement=validZone?zone:{x:27,y:22,width:46,height:54};
+  safe.style.left=placement.x+'%';
+  safe.style.top=placement.y+'%';
+  safe.style.width=placement.width+'%';
+  safe.style.height=placement.height+'%';
   q('#sanro-text-input').value=d.text;
   q('#sanro-image-size').min=String(Math.min(10,d.imageSize));
   q('#sanro-image-size').value=d.imageSize;
