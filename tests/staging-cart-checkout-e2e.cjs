@@ -266,9 +266,9 @@ function redact(message) {
       return {
         instrumented:true,
         buyerScriptPresent:[...document.scripts].some(script =>
-          /\\/sanro-studio\\/assets\\/buyer\\.js(?:\\?|$)/.test(script.src)),
-        staticPlaceholder:/Simpan desain terlebih dahulu\\. Checkout memerlukan otorisasi ulang\\./i
-          .test(status.textContent || '')
+          script.src.includes('/sanro-studio/assets/buyer.js')),
+        staticPlaceholder:(status.textContent || '').includes(
+          'Simpan desain terlebih dahulu. Checkout memerlukan otorisasi ulang.')
       };
     });
     assert(initialCart.instrumented, 'Cart interaction instrumentation unavailable');
