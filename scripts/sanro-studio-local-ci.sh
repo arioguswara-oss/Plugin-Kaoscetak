@@ -77,6 +77,7 @@ run_check 'Staging preflight regression JS syntax' '' node --check tests/sanro-s
 run_check 'Staging preflight read-only regression' 'PASS: 8 staging preflight regression groups' node tests/sanro-studio-staging-preflight-node.cjs
 run_check 'Staging buyer Cart/Checkout E2E JS syntax' '' node --check tests/staging-cart-checkout-e2e.cjs
 run_check 'Staging DTF front/back image E2E JS syntax' '' node --check tests/staging-image-checkout-e2e.cjs
+run_check 'Private DTF image previews and master binding' 'PASS: 7 private DTF image-preview and master-binding checks' node plugins/sanro-studio/tests/buyer-image-preview-node.cjs
 run_check 'Mobile touch staging QA JS syntax' '' node --check tests/staging-mobile-readonly.cjs
 run_check 'Buyer mobile viewport PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/buyer.php
 run_check 'Scoped buyer viewport regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/mobile-viewport-smoke.php
