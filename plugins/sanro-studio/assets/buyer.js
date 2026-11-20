@@ -389,8 +389,9 @@
   for(const name of ['front','back']){
    const d=sides[name],area=config.safe_areas[name];
    if(!area||!d.url)continue;
-   if(d.pending||d.file&&!boundMasterRefs[name])
-    throw new Error('Upload master privat '+name+' sebelum menyimpan.');
+   // Never accept a locally replaced image with the prior bound master ID.
+   if(d.pending||d.file)
+    throw new Error('Unggah gambar baru '+name+' sebelum menyimpan.');
    if(!boundMasterRefs[name])
     throw new Error('Master privat '+name+' belum terikat.');
    const dimensions=await new Promise((resolve,reject)=>{
@@ -416,37 +417,60 @@
   if(!design.front&&!design.back)throw new Error('Tambahkan desain terlebih dahulu.');
   return design;
  }
- // Lightweight, text-only snapshot. Never persist source artwork in a preview.
- async function makeTextPreview(name){
+ // Derived private JPEG preview, not original print-resolution artwork.
+ // Require the owner-bound master before previewing an uploaded image.
+ async function makeDesignPreview(name){
   const d=sides[name],area=config.safe_areas[name];
-  if(!area||d.url||d.pending||!d.text.trim())return null;
-  const canvas=document.createElement('canvas');
-  canvas.width=640;canvas.height=640;
-  const ctx=canvas.getContext('2d');
-  if(!ctx)throw new Error('Canvas tidak tersedia.');
-  ctx.fillStyle=shirtColor.value;ctx.fillRect(0,0,640,640);
-  const width=safe.clientWidth,height=safe.clientHeight;
-  if(width<=0||height<=0)throw new Error('Area preview belum siap.');
-  const scale=640/width;
-  const fontPx=Math.max(10,Math.round(d.fontSize*scale));
-  const x=d.textX/100*640,y=d.textY/100*height*scale;
-  ctx.fillStyle=d.textColor;
-  ctx.font=fontPx+'px sans-serif';
-  ctx.textBaseline='top';
-  const lines=d.text.split('\n');
-  lines.forEach((line,i)=>ctx.fillText(line,x,y+i*fontPx*1.2,Math.max(0,640-x)));
-  for(const quality of [0.75,0.55,0.35,0.2]){
-   const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
-   if(blob&&blob.size>=100&&blob.size<=51200){
-    return await new Promise((resolve,reject)=>{
-     const reader=new FileReader();
-     reader.onload=()=>resolve(String(reader.result).split(',')[1]);
-     reader.onerror=()=>reject(new Error('Preview gagal dibaca.'));
-     reader.readAsDataURL(blob);
-    });
+  if(!area||(!d.url&&!d.text.trim()))return null;
+  if(d.pending||d.file||(d.url&&!boundMasterRefs[name]))
+   throw new Error('Unggah dan simpan master '+name+' sebelum membuat preview.');
+  const bounds=safe.getBoundingClientRect();
+  if(!bounds.width||!bounds.height)throw new Error('Area preview belum siap.');
+  let imagePreview=null;
+  if(d.url){
+   imagePreview=await new Promise((resolve,reject)=>{
+    const probe=new Image();
+    probe.onload=()=>probe.naturalWidth>0&&probe.naturalHeight>0
+     ?resolve(probe):reject(new Error('Gambar preview tidak valid.'));
+    probe.onerror=()=>reject(new Error('Gambar preview gagal dibaca.'));
+    probe.src=d.url;
+   });
+  }
+  // Fit the private 50 KiB server cap by reducing resolution, then quality.
+  // Source/master image bytes are never serialized into this preview payload.
+  for(const size of [640,480,360,256]){
+   const canvas=document.createElement('canvas');
+   canvas.width=size;canvas.height=size;
+   const ctx=canvas.getContext('2d');
+   if(!ctx)throw new Error('Canvas tidak tersedia.');
+   ctx.fillStyle=shirtColor.value;ctx.fillRect(0,0,size,size);
+   if(imagePreview){
+    const width=d.imageSize/100*size;
+    const height=width*bounds.width/bounds.height
+     *imagePreview.naturalHeight/imagePreview.naturalWidth;
+    ctx.drawImage(imagePreview,d.imageX/100*size,d.imageY/100*size,width,height);
+   }
+   if(d.text.trim()){
+    const fontPx=Math.max(8,Math.round(d.fontSize*size/bounds.width));
+    const x=d.textX/100*size,y=d.textY/100*size;
+    ctx.fillStyle=d.textColor;
+    ctx.font=fontPx+'px sans-serif';ctx.textBaseline='top';
+    d.text.split('\n').forEach((line,i)=>
+     ctx.fillText(line,x,y+i*fontPx*1.2,Math.max(0,size-x)));
+   }
+   for(const quality of [0.75,0.55,0.35,0.2]){
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
+    if(blob&&blob.size>=100&&blob.size<=51200){
+     return await new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(String(reader.result).split(',')[1]);
+      reader.onerror=()=>reject(new Error('Preview gagal dibaca.'));
+      reader.readAsDataURL(blob);
+     });
+    }
    }
   }
-  throw new Error('Preview melebihi 50 KB.');
+  throw new Error('Preview melebihi batas 50 KB.');
  }
  if(saveButton&&config.draft_api){
   const masterButton=q('#sanro-upload-master'),masterStatus=q('#sanro-master-upload-status');
@@ -596,7 +620,7 @@
     try{
      const completed=[];
      for(const name of ['front','back']){
-      const encoded=await makeTextPreview(name);
+      const encoded=await makeDesignPreview(name);
       if(!encoded)continue;
       if(editRevision!==revisionAtStart)throw new Error('Desain berubah. Simpan ulang sebelum upload.');
       const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/previews/'+name,{
@@ -625,7 +649,7 @@
      }
      uploadStatus.textContent=completed.length
       ?'Preview privat tersimpan: '+completed.join(', ')+'. Belum terhubung ke checkout.'
-      :'Tidak ada teks untuk dipratinjau. Gambar sumber belum didukung.';
+      :'Tidak ada desain yang dapat dipratinjau.';
     }catch(error){uploadStatus.textContent=error.message||'Upload preview gagal.'}
     finally{uploadButton.disabled=false}
    });
