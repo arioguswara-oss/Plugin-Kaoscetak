@@ -12,6 +12,7 @@
  */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const crypto = require('node:crypto');
 const path = require('node:path');
 const expectedHost = 'saddlebrown-peafowl-616656.hostingersite.com';
 const editor = new URL(process.env.SANRO_STAGING_EDITOR_URL ||
@@ -111,6 +112,18 @@ function redact(message) {
     }, priorDraft);
   }
   const page = await context.newPage();
+  // Verify the exact script executed by Chromium, not only a curl request
+  // to an unversioned URL. Cache/CDN query variants can serve stale code.
+  const expectedBuyerJs = crypto.createHash('sha256').update(
+    fs.readFileSync(path.join(__dirname, '../plugins/sanro-studio/assets/buyer.js'))
+  ).digest('hex');
+  const buyerResponsePromise = page.waitForResponse(response => {
+    try {
+      const url = new URL(response.url());
+      return url.hostname === expectedHost
+        && url.pathname.endsWith('/sanro-studio/assets/buyer.js');
+    } catch (_) { return false; }
+  }, {timeout:30000}).catch(() => null);
   const jsErrors = [];
   page.on('pageerror', error => {
     if (jsErrors.length < 5) jsErrors.push(redact(error.name));
@@ -121,6 +134,15 @@ function redact(message) {
     });
     assert(opened && opened.ok(), 'Editor HTTP response is not 2xx');
     verifyHost(page);
+    const buyerResponse = await buyerResponsePromise;
+    const buyerBytes = buyerResponse ? await buyerResponse.body().catch(() => null) : null;
+    const browserBuyerJs = buyerBytes
+      ? crypto.createHash('sha256').update(buyerBytes).digest('hex') : null;
+    console.log('BUYER JS browser_sha256=' + (browserBuyerJs || 'missing')
+      + ' expected_sha256=' + expectedBuyerJs
+      + ' http=' + (buyerResponse?.status() ?? 'none'));
+    assert(browserBuyerJs === expectedBuyerJs,
+      'Staging browser buyer.js differs from PR source; update STAGING asset first.');
     await page.locator('#sanro-studio-buyer #sanro-text-input')
       .waitFor({timeout:15000});
     const capabilities = await page.evaluate(() => {
