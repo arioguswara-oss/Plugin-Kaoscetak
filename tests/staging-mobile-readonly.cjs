@@ -163,13 +163,6 @@ catch (_) {
           'Missing device-width viewport meta for SANRO buyer');
         assert.equal(geometry.deviceWidth,size.width,
           'Configured emulated device screen width does not match target');
-        assert(Number.isFinite(geometry.rootLeft) && geometry.rootLeft >= -2,
-          'SANRO editor starts outside mobile viewport');
-        assert(geometry.rootRight <= size.width + 2 &&
-          geometry.layoutRight <= size.width + 2,
-          'SANRO editor extends past mobile viewport');
-        assert(geometry.rootScrollWidth <= geometry.rootClientWidth + 2,
-          'SANRO editor has horizontal overflow');
         for (const b of geometry.buttons) {
           assert(b.visible && b.height >= 44 &&
             b.left >= -2 && b.right <= size.width + 2,
@@ -184,6 +177,13 @@ catch (_) {
         await page.waitForFunction(() => document.querySelector(
           '#sanro-studio-buyer button[data-side="front"]')?.getAttribute('aria-pressed') === 'true');
         console.log('PASS TOUCH '+size.label+' '+size.width+'px: front/back taps');
+        assert(Number.isFinite(geometry.rootLeft) && geometry.rootLeft >= -2,
+          'SANRO editor starts outside mobile viewport');
+        assert(geometry.rootRight <= size.width + 2 &&
+          geometry.layoutRight <= size.width + 2,
+          'SANRO editor extends past mobile viewport');
+        assert(geometry.rootScrollWidth <= geometry.rootClientWidth + 2,
+          'SANRO editor has horizontal overflow');
         assert.equal(geometry.width,size.width,
           'Mobile layout width expanded to '+geometry.width+
           'px for '+size.width+'px screen; see ancestors/wideElements');
