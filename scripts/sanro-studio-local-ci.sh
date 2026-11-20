@@ -66,6 +66,7 @@ run_check 'Editor config REST' '26 assertions PASS, 0 FAIL' php tests/test_sanro
 run_check 'Pricing matrix' '356 assertions PASS, 0 FAIL' php tests/test_sanro_pricing.php
 run_check 'Draft REST' '35 assertions PASS, 0 FAIL' php tests/test_sanro_draft_rest.php
 run_check 'Checkout guards' '6 assertions PASS, 0 FAIL' php tests/test_sanro_checkout_guards.php
+run_check 'Staging buyer frontend JS syntax' '' node --check plugins/sanro-studio/assets/buyer.js
 run_check 'Staging buyer Cart/Checkout E2E JS syntax' '' node --check tests/staging-cart-checkout-e2e.cjs
 run_check 'Staging browser QA launcher shell syntax' '' bash -n scripts/sanro-studio-staging-browser-qa.sh
 run_check 'Pricing parity JS syntax' '' node --check tests/test_sanro_pricing_parity.js
