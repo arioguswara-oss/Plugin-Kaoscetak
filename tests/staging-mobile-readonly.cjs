@@ -37,6 +37,7 @@ catch (_) {
   }
   const browser = await chromium.launch(launch);
   let passed = 0;
+  const failures = [];
   try {
     for (const size of sizes) {
       const context = await browser.newContext({
@@ -81,16 +82,26 @@ catch (_) {
             rootLeft:r?.left,rootRight:r?.right,
             layoutRight:l?.right,rootScrollWidth:root?.scrollWidth,
             rootClientWidth:root?.clientWidth,
+            cssLinked:[...document.querySelectorAll('link[rel="stylesheet"]')]
+              .some(link => { try { return new URL(link.href).pathname ===
+                '/wp-content/plugins/sanro-studio/assets/buyer.css'; } catch (_) { return false; } }),
             buttons:controls.map(selector => {
               const el = document.querySelector(selector);
               const b = el?.getBoundingClientRect();
               const style = el && getComputedStyle(el);
               return {selector,width:b?.width,height:b?.height,left:b?.left,
-                right:b?.right,visible:!!(b && b.width && b.height &&
+                right:b?.right,minHeight:style?.minHeight,display:style?.display,
+                visible:!!(b && b.width && b.height &&
                   style.visibility !== 'hidden' && style.display !== 'none')};
             })
           };
         });
+        // Only public CSS/layout metrics: no cookies, HTML, nonce or draft credentials.
+        console.log('MOBILE QA DIAGNOSTIC '+size.label+' '+
+          JSON.stringify({viewport:geometry.width,meta:geometry.viewportMeta,
+            cssLinked:geometry.cssLinked,root:[geometry.rootLeft,geometry.rootRight,
+              geometry.rootClientWidth,geometry.rootScrollWidth],
+            layoutRight:geometry.layoutRight,buttons:geometry.buttons}));
         assert.match(geometry.viewportMeta,/width\s*=\s*device-width/i,
           'Missing device-width viewport meta for SANRO buyer');
         assert.equal(geometry.width,size.width,
@@ -120,10 +131,16 @@ catch (_) {
         console.log('PASS MOBILE '+size.label+' '+size.width+
           'px: layout, 44px touch controls, front/back taps, buyer asset fingerprint');
         passed++;
+      } catch (error) {
+        const message = String(error.message || error).slice(0,250);
+        console.error('FAIL MOBILE '+size.label+' '+size.width+'px: '+message);
+        failures.push(size.label);
       } finally {
         await context.close();
       }
     }
+    assert.equal(failures.length,0,
+      'Mobile QA failed in '+failures.join(', '));
     console.log('PASS: '+passed+' staging mobile touch read-only profiles; NO DRAFT/CART/ORDER/PAYMENT');
   } finally {
     await browser.close();
