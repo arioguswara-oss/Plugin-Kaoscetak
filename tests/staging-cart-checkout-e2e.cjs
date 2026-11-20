@@ -11,6 +11,8 @@
  *   SANRO_STAGING_CART_E2E=1 NODE_PATH=/path/to/isolated/node_modules node tests/staging-cart-checkout-e2e.cjs
  */
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const expectedHost = 'saddlebrown-peafowl-616656.hostingersite.com';
 const editor = new URL(process.env.SANRO_STAGING_EDITOR_URL ||
   'https://' + expectedHost + '/custom-2/?sanro_studio_editor=1&product_id=24');
@@ -26,6 +28,51 @@ if (!['undefined', '1', '0'].includes(String(process.env.SANRO_STAGING_CART_E2E)
   process.exit(2);
 }
 const write = process.env.SANRO_STAGING_CART_E2E === '1';
+const reuseRequested = process.env.SANRO_STAGING_CART_REUSE === '1';
+const stateDir = path.join(process.env.HOME || '/home/sanro', 'sanro-browser-qa');
+const stateFile = path.join(stateDir, 'staging-cart-e2e-private.json');
+// Only local, owner-readable QA credentials; never store in GitHub or logs.
+function privateDirectory() {
+  fs.mkdirSync(stateDir, {recursive:true,mode:0o700});
+  const stat = fs.lstatSync(stateDir);
+  assert(stat.isDirectory() && !stat.isSymbolicLink()
+    && (!process.getuid || stat.uid === process.getuid()),
+    'Unsafe private browser QA state directory');
+  if ((stat.mode & 0o077) !== 0) fs.chmodSync(stateDir,0o700);
+}
+function readPrivateDraft() {
+  if (!reuseRequested || !write) return null;
+  privateDirectory();
+  if (!fs.existsSync(stateFile)) {
+    throw new Error('No saved QA draft; run once without SANRO_STAGING_CART_REUSE.');
+  }
+  const stat = fs.lstatSync(stateFile);
+  assert(stat.isFile() && !stat.isSymbolicLink()
+    && (!process.getuid || stat.uid === process.getuid())
+    && (stat.mode & 0o077) === 0, 'Unsafe private QA state file');
+  const data = JSON.parse(fs.readFileSync(stateFile,'utf8'));
+  assert(data.host === expectedHost && data.product === 24
+    && /^[a-f0-9-]{36}$/i.test(data.id)
+    && /^[a-f0-9]{64}$/.test(data.token)
+    && Number.isFinite(data.createdAt)
+    && data.createdAt <= Date.now()
+    && Date.now() - data.createdAt < 6*86400000, 'Expired or invalid QA draft reference');
+  return data;
+}
+function savePrivateDraft(id, token) {
+  privateDirectory();
+  assert(/^[a-f0-9-]{36}$/i.test(id) && /^[a-f0-9]{64}$/.test(token),
+    'Invalid QA draft credentials');
+  const temp = stateFile+'.'+process.pid+'.tmp';
+  try {
+    fs.writeFileSync(temp,JSON.stringify({
+      host:expectedHost,product:24,id,token,createdAt:Date.now()
+    }),{flag:'wx',mode:0o600});
+    fs.renameSync(temp,stateFile);
+  } finally {
+    try {fs.unlinkSync(temp);} catch (_) {}
+  }
+}
 let chromium;
 try { ({chromium} = require('playwright')); }
 catch (_) {
@@ -54,6 +101,15 @@ function redact(message) {
     viewport:{width:390,height:844}, locale:'id-ID',
     acceptDownloads:false
   });
+  const priorDraft = readPrivateDraft();
+  if (priorDraft) {
+    await context.addInitScript(state => {
+      if (location.hostname === 'saddlebrown-peafowl-616656.hostingersite.com') {
+        sessionStorage.setItem('sanro-studio-draft:24',
+          JSON.stringify({id:state.id,token:state.token}));
+      }
+    }, priorDraft);
+  }
   const page = await context.newPage();
   const jsErrors = [];
   page.on('pageerror', error => {
@@ -88,33 +144,50 @@ function redact(message) {
       return;
     }
 
-    const front = page.locator('[data-side="front"]');
-    assert.equal(await front.count(), 1, 'Front print side unavailable');
-    await front.click();
-    await page.locator('#sanro-category').selectOption('A3+');
-    await page.locator('#sanro-font-size').evaluate(input => {
-      input.value = '10';
-      input.dispatchEvent(new Event('input', {bubbles:true}));
-    });
-    const marker = 'QA' + Date.now().toString(36).slice(-4);
-    await page.locator('#sanro-text-input').fill(marker);
-    await page.locator('#sanro-center-text').click();
-    await page.locator('input[data-size="M"]').fill('1');
-    await page.waitForFunction(() =>
-      /Pratinjau sesuai batas/.test(
-        document.querySelector('#sanro-validation')?.textContent || ''
-      ), null, {timeout:15000});
-    console.log('PASS DTF text geometry and size M quantity 1');
-
-    await page.locator('#sanro-save-draft').click();
-    await page.waitForFunction(() => {
-      const s = document.querySelector('#sanro-save-status')?.textContent || '';
-      return /Draft teks tersimpan|Penyimpanan gagal|Draft gagal|di luar area/i.test(s);
-    }, null, {timeout:30000});
-    const saveStatus = await page.locator('#sanro-save-status').innerText();
-    assert.match(saveStatus, /Draft teks tersimpan/,
-      'Draft save did not complete: ' + redact(saveStatus));
-    console.log('PASS one synthetic staging draft saved');
+    if (priorDraft) {
+      await page.waitForFunction(() =>
+        /Draft(?: teks)? berhasil dibuka kembali\./i.test(
+          document.querySelector('#sanro-save-status')?.textContent || ''),
+        null,{timeout:25000});
+      assert.equal(await page.locator('input[data-size="M"]').inputValue(),'1',
+        'Reused draft quantity M differs from synthetic fixture');
+      console.log('PASS existing private staging QA draft restored (no new draft)');
+    } else {
+      const front = page.locator('[data-side="front"]');
+      assert.equal(await front.count(), 1, 'Front print side unavailable');
+      await front.click();
+      await page.locator('#sanro-category').selectOption('A3+');
+      await page.locator('#sanro-font-size').evaluate(input => {
+        input.value = '10';
+        input.dispatchEvent(new Event('input', {bubbles:true}));
+      });
+      const marker = 'QA' + Date.now().toString(36).slice(-4);
+      await page.locator('#sanro-text-input').fill(marker);
+      await page.locator('#sanro-center-text').click();
+      await page.locator('input[data-size="M"]').fill('1');
+      await page.waitForFunction(() =>
+        /Pratinjau sesuai batas/.test(
+          document.querySelector('#sanro-validation')?.textContent || ''
+        ), null, {timeout:15000});
+      console.log('PASS DTF text geometry and size M quantity 1');
+  
+      await page.locator('#sanro-save-draft').click();
+      await page.waitForFunction(() => {
+        const s = document.querySelector('#sanro-save-status')?.textContent || '';
+        return /Draft teks tersimpan|Penyimpanan gagal|Draft gagal|di luar area/i.test(s);
+      }, null, {timeout:30000});
+      const saveStatus = await page.locator('#sanro-save-status').innerText();
+      assert.match(saveStatus, /Draft teks tersimpan/,
+        'Draft save did not complete: ' + redact(saveStatus));
+      console.log('PASS one synthetic staging draft saved');
+      const savedState = await page.evaluate(() =>
+        JSON.parse(sessionStorage.getItem('sanro-studio-draft:24') || 'null'));
+      assert(savedState && typeof savedState.id==='string'
+        && typeof savedState.token==='string',
+        'Draft owner reference missing after save');
+      savePrivateDraft(savedState.id,savedState.token);
+      console.log('PASS private QA draft reference saved in owner-only VPS file');
+    }
 
     // Read the quote inside the same browser session; return ONLY nonsensitive
     // numbers, never owner tokens, IDs or responses to the terminal.
