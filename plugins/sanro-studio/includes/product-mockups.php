@@ -66,6 +66,15 @@ function sanro_studio_product_mockup_fields() {
             . esc_attr($side) . '">Pilih mockup ' . esc_html($label) . '</button> ';
         echo '<button type="button" class="button sanro-clear-mockup" data-sanro-side="'
             . esc_attr($side) . '">Hapus pilihan</button></p>';
+        // Show the current, validated Media Library thumbnail after page reload.
+        // Use a scoped image slot for the picker without injecting HTML in JS.
+        $thumb = isset($mockups[$side]) ? wp_get_attachment_image_url($mockups[$side], 'thumbnail') : false;
+        $thumb_ok = is_string($thumb) && preg_match('~^https?://~i', $thumb);
+        echo '<p class="form-field"><img id="sanro-mockup-preview-' . esc_attr($side)
+            . '" class="sanro-mockup-thumbnail" alt="Pratinjau mockup ' . esc_attr($label)
+            . '" width="112" height="112" style="object-fit:contain;max-width:112px;border:1px solid #cbd5e1;border-radius:6px"'
+            . ($thumb_ok ? ' src="' . esc_url($thumb) . '"' : ' hidden')
+            . '></p>';
     }
     echo '</div>';
 }
