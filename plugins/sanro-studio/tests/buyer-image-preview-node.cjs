@@ -31,24 +31,18 @@ const env={
   shirtColor:{value:'#ffffff'},
   exportTextDraft:()=>({quantities:{M:1},shirt_color:'#ffffff',long_sleeve:false}),
   Image:ImageProbe,FileReader:FakeReader,
-  document:{createElement:()=>({width:0,height:0,getContext(){
-    return {
-      fillRect(){},drawImage(){drawCalls++;},fillText(){textCalls++;},
-      toBlob(cb){canvasWrites++;previewWidth=this.canvasWidth||previewWidth;
-        // Test resolution fallback: 640px is too large; 480px succeeds.
-        cb({size:previewWidth===640?70000:1200});}
+  document:{createElement:()=>{
+    const canvas={width:0,height:0};
+    canvas.getContext=()=>({
+      fillRect(){},drawImage(){drawCalls++;},fillText(){textCalls++;}
+    });
+    canvas.toBlob=cb=>{
+      canvasWrites++;previewWidth=canvas.width;
+      // A 640px result exceeds server preview cap; 480px fits.
+      cb({size:canvas.width===640?70000:1200});
     };
-  }})}
-};
-// Track current preview canvas width from the mock context itself.
-env.document.createElement=()=>{
- const canvas={width:0,height:0};
- canvas.getContext=()=>({
-   fillRect(){},drawImage(){drawCalls++;},fillText(){textCalls++;},
-   toBlob(cb){canvasWrites++;previewWidth=canvas.width;
-     cb({size:canvas.width===640?70000:1200});}
- });
- return canvas;
+    return canvas;
+  }}
 };
 const built=vm.runInNewContext(source.slice(start,end)+
   '\n({exportBoundDraft,makeDesignPreview})',env,{
