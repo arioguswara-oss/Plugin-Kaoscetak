@@ -143,6 +143,20 @@ $tamperedPrice->lines['line-0'] = $signed;
 $tamperedPrice->lines['line-0']['sanro_studio_unit_price'] = 1;
 sanro_studio_stage_reprice_signed_cart($tamperedPrice);
 check_adapter(count($tamperedPrice->lines) === 0, 'forged quote price removed');
+// A failed removal must abort processing instead of leaving a catalog-priced
+// item in the cart, even when WooCommerce returns false.
+$failedTamperRemoval = new SanroTransactionCart();
+$failedTamperRemoval->lines['line-0'] = $signed;
+$failedTamperRemoval->lines['line-0']['sanro_studio_unit_price'] = 1;
+$failedTamperRemoval->failRollback = true;
+$tamperAborted = false;
+try {
+    sanro_studio_stage_reprice_signed_cart($failedTamperRemoval);
+} catch (RuntimeException $error) {
+    $tamperAborted = strpos($error->getMessage(), 'unsafe cart item') !== false;
+}
+check_adapter($tamperAborted && isset($failedTamperRemoval->lines['line-0']),
+    'failed invalid-signature removal aborts cart processing');
 $tamperedQty = new SanroTransactionCart();
 $tamperedQty->lines['line-0'] = $signed;
 $tamperedQty->lines['line-0']['quantity'] = 3;
@@ -177,6 +191,17 @@ check_adapter(!isset($currencySwitched->lines['studio']),
     'non-IDR currency removes signed SANRO Studio line');
 check_adapter(isset($currencySwitched->lines['ordinary']),
     'non-IDR currency preserves ordinary WooCommerce line');
+$failedCurrencyRemoval = new SanroTransactionCart();
+$failedCurrencyRemoval->lines['studio'] = $signed;
+$failedCurrencyRemoval->failRollback = true;
+$currencyAborted = false;
+try {
+    sanro_studio_stage_reprice_signed_cart($failedCurrencyRemoval);
+} catch (RuntimeException $error) {
+    $currencyAborted = strpos($error->getMessage(), 'unsafe cart item') !== false;
+}
+check_adapter($currencyAborted && isset($failedCurrencyRemoval->lines['studio']),
+    'failed non-IDR removal aborts cart processing');
 check_adapter(count($GLOBALS['sanro_test_notices']) === 1
     && ($GLOBALS['sanro_test_notices'][0][1] ?? null) === 'error',
     'non-IDR Studio currency switch emits a blocking WooCommerce error notice');
@@ -324,4 +349,4 @@ $quantityResult = sanro_studio_stage_reauthorize_cart(
 check_adapter(($quantityResult['valid'] ?? null) === false
     && ($quantityResult['error'] ?? null) === 'cart_line_mismatch',
     'session reload quantity drift cannot authorize cart');
-echo "PASS: 72 staging cart adapter checks\n";
+echo "PASS: 74 staging cart adapter checks\n";
