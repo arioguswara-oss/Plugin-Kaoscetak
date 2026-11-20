@@ -28,6 +28,9 @@ function sanro_studio_public_editor_config($product_id) {
         'safe_areas' => $config['safe_areas'],
         'categories' => $config['categories'],
         'pricing_profile' => 'cotton_combed_24s',
+        // Public, verified Media Library image URLs only. Never private DTF masters.
+        'mockups' => function_exists('sanro_studio_product_mockup_urls')
+            ? sanro_studio_product_mockup_urls($product_id) : [],
     ];
 }
 
