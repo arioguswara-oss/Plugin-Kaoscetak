@@ -51,11 +51,13 @@ function sanro_studio_stage_reprice_signed_cart($cart) {
     // price if a currency switcher changes the store currency. Remove only
     // Studio lines; ordinary WooCommerce products are not SANRO's concern.
     if ($currency !== 'IDR') {
+        $has_studio_line = false;
         foreach ($items as $key => $line) {
             if (!is_array($line) || !array_key_exists('sanro_studio_design_id', $line)) continue;
+            $has_studio_line = true;
             try { $cart->remove_cart_item($key); } catch (Throwable $ignored) {}
         }
-        if (function_exists('wc_add_notice')) {
+        if ($has_studio_line && function_exists('wc_add_notice')) {
             wc_add_notice('SANRO Studio: harga desain hanya tersedia dalam IDR. Tambahkan ulang desain.', 'error');
         }
         return;
