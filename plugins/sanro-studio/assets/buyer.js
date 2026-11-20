@@ -669,21 +669,29 @@
   try{reopenDraft().catch(error=>{saveStatus.textContent=error.message})}catch(_error){}
   const cartButton=q('#sanro-add-to-cart'),cartStatus=q('#sanro-cart-status');
   if(cartButton&&cartStatus){
-   cartButton.addEventListener('click',async()=>{
+   // Delegate from the stable editor root. A layout/optimisation plugin may
+   // replace the Cart button DOM after buyer.js initialises; binding directly
+   // to the old node would leave a visible button without a click handler.
+   root.addEventListener('click',async event=>{
+    const target=event.target&&typeof event.target.closest==='function'
+     ?event.target.closest('#sanro-add-to-cart'):null;
+    if(!target||!root.contains(target))return;
+    const status=q('#sanro-cart-status');
+    if(!status)return;
     if(saving){
-     cartStatus.textContent='Tunggu sampai penyimpanan draft selesai sebelum membuka keranjang.';return;
+     status.textContent='Tunggu sampai penyimpanan draft selesai sebelum membuka keranjang.';return;
     }
     if(uploadingMaster){
-     cartStatus.textContent='Tunggu sampai upload master selesai sebelum membuka keranjang.';return;
+     status.textContent='Tunggu sampai upload master selesai sebelum membuka keranjang.';return;
     }
     if(!savedId||!ownerToken){
-     cartStatus.textContent='Draft belum tersedia pada sesi editor ini. Simpan desain sebelum membuka keranjang.';return;
+     status.textContent='Draft belum tersedia pada sesi editor ini. Simpan desain sebelum membuka keranjang.';return;
     }
     if(editRevision!==savedRevision){
-     cartStatus.textContent='Desain berubah setelah draft terakhir disimpan. Simpan ulang sebelum membuka keranjang.';return;
+     status.textContent='Desain berubah setelah draft terakhir disimpan. Simpan ulang sebelum membuka keranjang.';return;
     }
-    cartButton.disabled=true;
-    cartStatus.textContent='Memvalidasi draft dan harga server…';
+    target.disabled=true;
+    status.textContent='Memvalidasi draft dan harga server…';
     try{
      const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/cart',{
       method:'POST',credentials:'same-origin',cache:'no-store',
@@ -691,12 +699,12 @@
      });
      const result=await response.json();
      if(!response.ok||!result.valid)throw new Error('Keranjang belum siap ('+response.status+').');
-     cartStatus.textContent='Desain masuk keranjang. Lanjutkan melalui halaman keranjang untuk otorisasi checkout.';
+     status.textContent='Desain masuk keranjang. Lanjutkan melalui halaman keranjang untuk otorisasi checkout.';
      const safeCartUrl=typeof window.SanroStudioSafeCartUrl==='function'
       ?window.SanroStudioSafeCartUrl(result.cart_url,location.href):null;
-     if(safeCartUrl) location.assign(safeCartUrl);
-    }catch(error){cartStatus.textContent=error.message||'Gagal menambah ke keranjang.'}
-    finally{cartButton.disabled=false}
+     if(safeCartUrl)location.assign(safeCartUrl);
+    }catch(error){status.textContent=error.message||'Gagal menambah ke keranjang.'}
+    finally{target.disabled=false}
    });
   }
   saveButton.addEventListener('click',async()=>{
