@@ -3,6 +3,20 @@
 (function(){
   if (!window.wp || !wp.media) return;
   const sides = new Set(['front', 'back']);
+  function setPreview(side, rawUrl) {
+    const preview = document.getElementById('sanro-mockup-preview-' + side);
+    if (!preview) return;
+    if (!rawUrl) {
+      preview.removeAttribute('src');
+      preview.hidden = true;
+      return;
+    }
+    let url;
+    try { url = new URL(rawUrl, window.location.href); } catch (_) { return; }
+    if (!['https:', 'http:'].includes(url.protocol)) return;
+    preview.src = url.href;
+    preview.hidden = false;
+  }
   document.addEventListener('click', function(event){
     const choose = event.target.closest('.sanro-choose-mockup');
     const clear = event.target.closest('.sanro-clear-mockup');
@@ -13,6 +27,7 @@
     event.preventDefault();
     if (clear) {
       field.value = '';
+      setPreview(button.dataset.sanroSide, null);
       field.dispatchEvent(new Event('change', {bubbles:true}));
       return;
     }
@@ -29,6 +44,10 @@
       if (!image || !Number.isSafeInteger(image.id) || image.id <= 0 ||
           image.type !== 'image') return;
       field.value = String(image.id);
+      const sizes = image.sizes || {};
+      const thumbnail = (sizes.thumbnail && sizes.thumbnail.url) ||
+        (sizes.medium && sizes.medium.url) || image.url;
+      setPreview(button.dataset.sanroSide, thumbnail);
       field.dispatchEvent(new Event('change', {bubbles:true}));
     });
     frame.open();
