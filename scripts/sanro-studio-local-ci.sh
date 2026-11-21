@@ -160,6 +160,11 @@ run_check 'DTF admin staging-only plan patcher PHP syntax' 'No syntax errors det
 run_check 'DTF admin staging-only plan fixture PHP syntax' 'No syntax errors detected' php -l tests/staging-dtf-admin-bootstrap-plan-smoke.php
 run_check 'DTF admin staging-only plan preservation and OFF controls' 'PASS: 13 SANRO safe admin DTF staging preview assertions' php tests/staging-dtf-admin-bootstrap-plan-smoke.php
 run_check 'DTF admin staging SHA-pinned plan Bash syntax' '' bash -n ops/hostinger/sanro-studio-pr34-staging-plan.sh
+run_check 'Read-only DTF admin readiness module PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/dtf-admin-readiness.php
+run_check 'Read-only DTF readiness regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-admin-readiness-smoke.php
+run_check 'Read-only DTF admin order/draft readiness and privacy' 'PASS: 29 SANRO read-only admin DTF eligibility checks' php plugins/sanro-studio/tests/dtf-admin-readiness-smoke.php
+run_check 'Read-only DTF readiness default-OFF PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-admin-readiness-default-off.php
+run_check 'Read-only DTF readiness default-OFF no draft lookup' 'PASS: 5 SANRO DTF readiness default-OFF checks' php plugins/sanro-studio/tests/dtf-admin-readiness-default-off.php
 run_check 'DTF admin candidate generation module PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/dtf-admin-generate.php
 run_check 'DTF admin candidate generation regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-admin-generate-smoke.php
 run_check 'DTF admin candidate generation security and readback' 'PASS: 34 SANRO nonce-protected DTF admin candidate generation checks' php plugins/sanro-studio/tests/dtf-admin-generate-smoke.php
