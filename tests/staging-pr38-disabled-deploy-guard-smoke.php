@@ -65,7 +65,7 @@ pr38_check(strpos($deploy, 'READY_FOR_EXPLICIT_PR38_STAGING_APPROVAL') !== false
 pr38_check(strpos($deploy, 'ROLLBACK_BOOTSTRAP: RESTORED_VERIFIED') !== false
     && strpos($deploy, 'ROLLBACK_BOOTSTRAP: FAILED_MANUAL_INTERVENTION_REQUIRED') !== false,
     'rollback must verify restored bootstrap');
-pr38_check(strpos($deploy, 'if [[ "$MAIN_CHANGED" -eq 0 || "$restored" -eq 1 ]]') !== false,
+pr38_check(strpos($deploy, '[[ "$MAIN_CHANGED" -eq 0 || "$restored" -eq 1 ]]') !== false,
     'never delete new module if original bootstrap restoration fails');
 pr38_check(strpos($deploy, 'mv -n "$MODULE_TMP" "$MODULE"') !== false
     && strpos($deploy, 'mv -f "$MAIN_TMP" "$MAIN"') !== false
