@@ -74,6 +74,11 @@ run_check 'Drive production metadata smoke PHP syntax' 'No syntax errors detecte
 run_check 'Drive production metadata and admin links' 'private SANRO Drive folder metadata and admin link checks' php plugins/sanro-studio/tests/drive-production-smoke.php
 run_check 'Drive default-disabled regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/drive-production-default-off.php
 run_check 'Drive verification disabled by default' 'PASS: SANRO Drive remote verification defaults disabled' php plugins/sanro-studio/tests/drive-production-default-off.php
+run_check 'Drive auto-provision worker PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/drive-auto-provision.php
+run_check 'Drive auto-provision regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/drive-auto-provision-smoke.php
+run_check 'Drive auto-provision eligibility, duplicate and privacy' 'PASS: 23 SANRO Drive auto-provision regression checks' php plugins/sanro-studio/tests/drive-auto-provision-smoke.php
+run_check 'Drive auto default-disabled PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/drive-auto-default-off.php
+run_check 'Drive auto disabled by default' 'PASS: SANRO Drive automatic provisioning defaults disabled' php plugins/sanro-studio/tests/drive-auto-default-off.php
 run_check 'Buyer PHP asset-version syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/buyer.php
 run_check 'Buyer asset fingerprint regression syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/buyer-asset-version-smoke.php
 run_check 'Buyer asset fingerprint' 'PASS: 3 SANRO Studio buyer asset fingerprint assertions' php plugins/sanro-studio/tests/buyer-asset-version-smoke.php
