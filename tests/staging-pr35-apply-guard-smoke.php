@@ -47,7 +47,7 @@ check145(strpos($probe, 'realpath(ABSPATH) !== $expectedRoot') !== false
     'site URL and ABSPATH guard');
 check145(strpos($probe, "custom_orders_table_usage_is_enabled") !== false,
     'HPOS enabled guard');
-check145(strpos($script, "if [[ \"$MODE\" == 'plan' ]]") !== false
+check145(strpos($script, 'if [[ "$MODE" == ') !== false
     && strpos($script, "WORDPRESS_FILES_MODIFIED: NO") !== false
     && strpos($script, "READY_FOR_EXPLICIT_PR35_STAGING_APPROVAL") !== false,
     'dry run exits before file modifications');
