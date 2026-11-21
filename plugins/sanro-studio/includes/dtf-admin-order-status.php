@@ -42,9 +42,16 @@ function sanro_studio_dtf_admin_item_status($order, $item_id) {
     $item = $items[$item_id];
     if (!method_exists($item, 'get_id') || (int) $item->get_id() !== $item_id
         || !method_exists($item, 'get_order_id')
-        || (int) $item->get_order_id() !== $order_id) {
+        || (int) $item->get_order_id() !== $order_id
+        || !method_exists($item, 'get_meta')) {
         return ['valid' => false, 'error' => 'invalid_order_item'];
     }
+    $design_id = $item->get_meta('_sanro_studio_design_id', true);
+    if (!is_string($design_id)
+        || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id)) {
+        return ['valid' => false, 'error' => 'design_not_bound'];
+    }
+    $design_id = strtolower($design_id);
 
     // This existing internal API re-validates paid/ready order, locked design,
     // item binding, private folder mode, both PNG checksums and manifests.
@@ -73,6 +80,7 @@ function sanro_studio_dtf_admin_item_status($order, $item_id) {
             || ($value['private'] ?? null) !== true
             || ($value['order_id'] ?? null) !== $order_id
             || ($value['item_id'] ?? null) !== $item_id
+            || ($value['design_id'] ?? null) !== $design_id
             || ($value['side'] ?? null) !== $side
             || ($value['quality_approved'] ?? null) !== false
             || ($value['font_parity_approved'] ?? null) !== false
