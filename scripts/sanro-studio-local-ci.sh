@@ -69,6 +69,11 @@ run_check 'Checkout guards' '6 assertions PASS, 0 FAIL' php tests/test_sanro_che
 run_check 'Admin production-ready PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/production-ready-admin.php
 run_check 'Order production-ready regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/order-preview.php
 run_check 'WooCommerce admin production-ready eligibility + POST guards' 'PASS: already-ready order does not show duplicate action' php plugins/sanro-studio/tests/order-preview.php
+run_check 'Drive production verifier PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/drive-production.php
+run_check 'Drive production metadata smoke PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/drive-production-smoke.php
+run_check 'Drive production metadata and admin links' 'private SANRO Drive folder metadata and admin link checks' php plugins/sanro-studio/tests/drive-production-smoke.php
+run_check 'Drive default-disabled regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/drive-production-default-off.php
+run_check 'Drive verification disabled by default' 'PASS: SANRO Drive remote verification defaults disabled' php plugins/sanro-studio/tests/drive-production-default-off.php
 run_check 'Buyer PHP asset-version syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/buyer.php
 run_check 'Buyer asset fingerprint regression syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/buyer-asset-version-smoke.php
 run_check 'Buyer asset fingerprint' 'PASS: 3 SANRO Studio buyer asset fingerprint assertions' php plugins/sanro-studio/tests/buyer-asset-version-smoke.php
