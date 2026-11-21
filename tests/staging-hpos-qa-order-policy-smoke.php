@@ -67,6 +67,42 @@ s142_check(sanro_s142_valid_design_uuid('123e4567-e89b-42d3-a456-123456789012'),
     'valid version4 UUID accepted');
 s142_check(!sanro_s142_valid_design_uuid('not-a-uuid'),'malformed design id refused');
 s142_check(!sanro_s142_valid_design_uuid(''),'empty design id refused');
+// Checkout/editor flags are intentionally not part of the writer gate:
+$writers = [
+    'SANRO_STUDIO_ENABLE_DTF_IMAGE_RASTER' => false,
+    'SANRO_STUDIO_ENABLE_DTF_LAYER_RASTER' => false,
+    'SANRO_STUDIO_ENABLE_DTF_PRIVATE_ARTIFACTS' => false,
+    'SANRO_STUDIO_ENABLE_DTF_ORDER_BATCH' => false,
+    'SANRO_STUDIO_ENABLE_DRIVE_AUTO_PROVISION' => false,
+    'SANRO_STUDIO_ENABLE_VERIFIED_DRIVE_ATTACHMENT' => false,
+];
+s142_check(sanro_s142_writer_flags_safe($writers),
+    'checkout feature flags may be ON when all DTF/Drive writers OFF');
+$bad = $writers;
+$bad['SANRO_STUDIO_ENABLE_DTF_PRIVATE_ARTIFACTS'] = true;
+s142_check(!sanro_s142_writer_flags_safe($bad), 'private artifact writes blocked');
+$bad = $writers;
+$bad['SANRO_STUDIO_ENABLE_DRIVE_AUTO_PROVISION'] = true;
+s142_check(!sanro_s142_writer_flags_safe($bad), 'Drive auto provisioning blocked');
+$bad = $writers;
+$bad['SANRO_STUDIO_ENABLE_DTF_IMAGE_RASTER'] = true;
+s142_check(!sanro_s142_writer_flags_safe($bad), 'DTF raster blocked');
+$bad = $writers;
+unset($bad['SANRO_STUDIO_ENABLE_DTF_ORDER_BATCH']);
+s142_check(!sanro_s142_writer_flags_safe($bad), 'missing writer state fails closed');
+s142_check(!sanro_s142_writer_flags_safe(null), 'unknown writer state fails closed');
+s142_check(sanro_s142_checkout_not_invoked(true, 'GET', [0,0,0,0]),
+    'CLI CRUD without checkout actions is isolated');
+s142_check(!sanro_s142_checkout_not_invoked(true, 'POST', [0,0,0,0]),
+    'POST checkout context blocked');
+s142_check(!sanro_s142_checkout_not_invoked(false, 'GET', [0,0,0,0]),
+    'web context blocked');
+s142_check(!sanro_s142_checkout_not_invoked(true, 'GET', [0,1,0,0]),
+    'checkout hook invocation blocked');
+s142_check(!sanro_s142_checkout_not_invoked(true, 'GET', [0,0,0]),
+    'incomplete checkout action audit blocked');
+s142_check(!sanro_s142_checkout_not_invoked(true, 'GET', [0,0,0,'0']),
+    'untyped checkout action audit blocked');
 $order=new S142FakeOrder();
 s142_check(sanro_s142_fixture_is_safe($order),'one pending Rp0 productless order accepted');
 $order->marker='another-marker';
