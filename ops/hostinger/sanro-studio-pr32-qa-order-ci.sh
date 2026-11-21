@@ -76,6 +76,25 @@ if ! SANRO_STUDIO_QA_ENV=staging \
     "$QA/repo/ops/hostinger/sanro-studio-pr32-qa-order.php" \
     > "$QA/out.log" 2> "$QA/error.log"; then
   cat "$QA/out.log"
+  # Only disclose pre-approved generic error categories, never arbitrary
+  # WordPress/PHP stderr that could include customer data or secrets.
+  if grep -Fq 'BLOCKED: DTF or Google Drive production writer enabled' "$QA/error.log"; then
+    echo 'BLOCK_REASON: DTF_OR_DRIVE_WRITER_ON'
+  elif grep -Fq 'BLOCKED: checkout workflow already entered' "$QA/error.log"; then
+    echo 'BLOCK_REASON: CHECKOUT_ACTION_ALREADY_INVOKED'
+  elif grep -Fq 'BLOCKED: HPOS QA fixture lookup failed' "$QA/error.log"; then
+    echo 'BLOCK_REASON: HPOS_FIXTURE_LOOKUP'
+  elif grep -Fq 'BLOCKED: staging WooCommerce/HPOS/admin DTF integration guard failed' "$QA/error.log"; then
+    echo 'BLOCK_REASON: STAGING_RUNTIME_PREFLIGHT'
+  elif grep -Fq 'BLOCKED: existing marked order is not the approved QA fixture' "$QA/error.log"; then
+    echo 'BLOCK_REASON: UNSAFE_EXISTING_FIXTURE'
+  elif grep -Fq 'FAIL: QA order save/readback' "$QA/error.log"; then
+    echo 'BLOCK_REASON: POSTWRITE_READBACK_MISMATCH'
+  elif grep -Fq 'FAIL: Woo checkout hooks fired' "$QA/error.log"; then
+    echo 'BLOCK_REASON: UNEXPECTED_CHECKOUT_HOOK'
+  else
+    echo 'BLOCK_REASON: OTHER_REQUIRES_READ_ONLY_DIAGNOSIS'
+  fi
   echo 'STATUS: BLOCKED_OR_FAILED — do not retry automatically'
   exit 2
 fi
