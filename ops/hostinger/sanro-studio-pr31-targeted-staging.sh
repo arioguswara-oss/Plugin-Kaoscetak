@@ -42,7 +42,11 @@ for binary in php git sha256sum cmp mktemp stat install grep; do
 done
 if [[ ! -f "$PLUGIN_MAIN" || -L "$PLUGIN_MAIN"
     || ! -d "$PLUGIN_DIR" || -L "$PLUGIN_DIR"
-    || "$(realpath "$WP_ROOT")" != "$WP_ROOT" ]]; then
+    || ! -d "$PLUGIN_DIR/includes" || -L "$PLUGIN_DIR/includes"
+    || -L "$WP_ROOT/wp-content" || -L "$WP_ROOT/wp-content/plugins"
+    || "$(realpath "$WP_ROOT")" != "$WP_ROOT"
+    || "$(realpath "$PLUGIN_DIR")" != "$PLUGIN_DIR"
+    || "$(realpath "$PLUGIN_DIR/includes")" != "$PLUGIN_DIR/includes" ]]; then
     echo 'BLOCKED: exact staging WordPress plugin not found or unsafe symlink' >&2
     exit 2
 fi
