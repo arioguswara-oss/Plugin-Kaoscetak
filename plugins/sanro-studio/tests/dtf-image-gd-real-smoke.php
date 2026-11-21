@@ -78,8 +78,17 @@ verify134(hash_equals(hash('sha256', $render['bytes']), $render['sha256'])
     'output SHA matches bytes and source bytes remain private');
 
 $dir = getenv('SANRO_DTF_ARTIFACT_DIR');
-verify134($dir === '/out' && is_dir($dir) && is_writable($dir),
-    'dedicated private artifact mount required');
+// Accept the existing isolated container /out mount OR a mode-0700
+// user-owned temporary directory for non-root CLI testing on Hermes.
+// Never write rendered bytes inside the WordPress/Git web source tree.
+$real_dir = is_string($dir) && $dir !== '' ? realpath($dir) : false;
+$source_root = realpath(ABSPATH);
+$mode = $real_dir !== false ? (@fileperms($real_dir) & 0777) : 0;
+verify134($real_dir !== false && $real_dir === $dir && !is_link($dir)
+    && is_dir($dir) && is_writable($dir) && ($mode & 0077) === 0
+    && ($source_root === false || ($real_dir !== $source_root
+        && strpos($real_dir, $source_root . DIRECTORY_SEPARATOR) !== 0)),
+    'dedicated private non-web artifact directory required');
 $file = $dir . '/synthetic-dtf-5cm-300dpi-rgba.png';
 $manifest_path = $dir . '/synthetic-dtf-manifest.json';
 $written = @file_put_contents($file, $render['bytes'], LOCK_EX);
