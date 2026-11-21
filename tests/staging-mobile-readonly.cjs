@@ -168,15 +168,67 @@ catch (_) {
             b.left >= -2 && b.right <= size.width + 2,
             'Mobile touch target invalid: ' + b.selector);
         }
-        const back = page.locator('#sanro-studio-buyer button[data-side="back"]');
-        const front = page.locator('#sanro-studio-buyer button[data-side="front"]');
-        await back.tap();
-        await page.waitForFunction(() => document.querySelector(
-          '#sanro-studio-buyer button[data-side="back"]')?.getAttribute('aria-pressed') === 'true');
-        await front.tap();
-        await page.waitForFunction(() => document.querySelector(
-          '#sanro-studio-buyer button[data-side="front"]')?.getAttribute('aria-pressed') === 'true');
-        console.log('PASS TOUCH '+size.label+' '+size.width+'px: front/back taps');
+        // Compare read-only product REST metadata with real browser geometry.
+        // A button tap alone is not enough to verify side-specific overlays.
+        const configUrl='https://'+host+
+          '/wp-json/sanro-studio/v1/products/24/editor-config';
+        const configResponse=await page.request.get(configUrl,{timeout:15000});
+        assert.equal(configResponse.status(),200,'Editor-config REST unavailable');
+        const publicConfig=await configResponse.json();
+        assert.equal(publicConfig.valid,true,'Staging product not configured');
+        async function verifySide(name) {
+          await page.locator('#sanro-studio-buyer button[data-side="'+name+'"]').tap();
+          await page.waitForFunction(side => document.querySelector(
+            '#sanro-studio-buyer button[data-side="'+side+'"]')
+            ?.getAttribute('aria-pressed')==='true',name);
+          const actual=await page.evaluate(side => {
+            const safe=document.querySelector('#sanro-studio-buyer .sanro-safe');
+            const shirt=document.querySelector('#sanro-studio-buyer .sanro-shirt');
+            const safeBox=safe?.getBoundingClientRect();
+            const shirtBox=shirt?.getBoundingClientRect();
+            const cfg=window.SANRO_STUDIO_EDITOR_CONFIG||{};
+            return {
+              selected:document.querySelector(
+                '#sanro-studio-buyer button[data-side="'+side+'"]')
+                ?.getAttribute('aria-pressed'),
+              position:safe?{
+                x:parseFloat(safe.style.left),y:parseFloat(safe.style.top),
+                width:parseFloat(safe.style.width),height:parseFloat(safe.style.height)
+              }:null,
+              positive:!!(safeBox&&shirtBox&&safeBox.width>0&&safeBox.height>0),
+              inside:!!(safeBox&&shirtBox&&safeBox.left>=shirtBox.left-2
+                &&safeBox.top>=shirtBox.top-2&&safeBox.right<=shirtBox.right+2
+                &&safeBox.bottom<=shirtBox.bottom+2),
+              hasMockup:!!(shirt&&shirt.style.backgroundImage
+                &&shirt.style.backgroundImage!=='none'),
+              configuredZone:cfg.print_zones?.[side]||null,
+              configuredMockup:cfg.mockups?.[side]||null
+            };
+          },name);
+          const expected=publicConfig.print_zones?.[name]||
+            {x:27,y:22,width:46,height:54};
+          assert.equal(actual.selected,'true','Wrong selected side '+name);
+          assert(actual.positive&&actual.inside,
+            'Print-zone missing/outside mockup for '+name);
+          for(const key of ['x','y','width','height']) {
+            assert(Number.isFinite(actual.position?.[key])
+              &&Math.abs(actual.position[key]-expected[key])<0.01,
+              'Visual '+key+' differs from REST '+name);
+            assert.equal(actual.configuredZone?.[key],expected[key],
+              'Inline buyer configuration stale for '+name+'/'+key);
+          }
+          const expectedMockup=publicConfig.mockups?.[name]||null;
+          assert.equal(actual.configuredMockup,expectedMockup,
+            'Inline mockup differs from REST for '+name);
+          assert.equal(actual.hasMockup,!!expectedMockup,
+            'Wrong active mockup for '+name);
+          console.log('PASS PRINT-ZONE '+size.label+' '+name+
+            ': REST metadata, placement, bounds, mockup (read-only)');
+        }
+        await verifySide('back');
+        await verifySide('front');
+        console.log('PASS TOUCH '+size.label+' '+size.width+
+          'px: front/back taps and print-zone live geometry');
         assert(Number.isFinite(geometry.rootLeft) && geometry.rootLeft >= -2,
           'SANRO editor starts outside mobile viewport');
         assert(geometry.rootRight <= size.width + 2 &&
