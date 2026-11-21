@@ -1,6 +1,7 @@
 <?php
 define('ABSPATH', __DIR__);
 require dirname(__DIR__) . '/includes/order-preview.php';
+require dirname(__DIR__) . '/includes/production-ready-admin.php';
 function verify($ok, $name) {
     if (!$ok) { fwrite(STDERR, "FAIL: $name\n"); exit(1); }
     echo "PASS: $name\n";
@@ -203,3 +204,138 @@ verify(sanro_studio_attach_item_production_folder_id($folderOrder, 60, 'differen
 $pendingFolderOrder = new SanroProductionItemOrderFixture([60 => $folderItem], false);
 verify(sanro_studio_attach_item_production_folder_id($pendingFolderOrder, 60, $folderId)['error'] === 'production_not_ready',
     'unpaid and not-ready order rejects folder attachment');
+
+/** Sprint 128: real WooCommerce admin production-ready workflow tests. */
+class SanroAdminReadyOrderFixture extends SanroProductionReadyOrderFixture {
+    public $items = [];
+    public $status = 'on-hold';
+    public $paid = false;
+    public function get_status() { return $this->status; }
+    public function get_items($type) { return $type === 'line_item' ? $this->items : []; }
+    public function is_paid() { return $this->paid; }
+    public function get_edit_order_url() { return 'https://staging.example.test/wp-admin/post.php?post=99&action=edit'; }
+}
+$adminOrder = new SanroAdminReadyOrderFixture();
+$adminItem = new SanroMutablePreviewItem();
+$adminItem->meta['_sanro_studio_design_id'] = $id;
+$adminItem->meta['_sanro_studio_preview_front_ref'] = $ref;
+$adminOrder->items = [71 => $adminItem];
+$preflight = sanro_studio_production_ready_admin_preflight($adminOrder);
+verify($preflight['valid'] && $preflight['order_id'] === 99,
+    'unpaid on-hold order with bound preview can be marked ready');
+verify(sanro_studio_production_ready_admin_preflight(null)['error'] === 'invalid_order',
+    'admin readiness rejects missing order');
+$adminOrder->paid = true;
+verify(sanro_studio_production_ready_admin_preflight($adminOrder)['error'] === 'already_paid',
+    'already-paid orders do not receive manual approval button');
+$adminOrder->paid = false;
+foreach (['cancelled', 'refunded', 'failed', 'completed', 'processing'] as $status) {
+    $adminOrder->status = $status;
+    verify(sanro_studio_production_ready_admin_preflight($adminOrder)['error'] === 'order_status_not_allowed',
+        'disallowed order status ' . $status . ' cannot be manually reactivated');
+}
+$adminOrder->status = 'pending';
+verify(sanro_studio_production_ready_admin_preflight($adminOrder)['valid'],
+    'pending valid design can be approved without payment');
+$adminOrder->status = 'on-hold';
+$adminOrder->items = [71 => new SanroMutablePreviewItem()];
+verify(sanro_studio_production_ready_admin_preflight($adminOrder)['error'] === 'missing_design_preview',
+    'no Studio design or private preview blocks production readiness');
+$badItem = new SanroMutablePreviewItem();
+$badItem->meta['_sanro_studio_design_id'] = $otherId;
+$badItem->meta['_sanro_studio_preview_front_ref'] = $ref;
+$adminOrder->items = [71 => $badItem];
+verify(sanro_studio_production_ready_admin_preflight($adminOrder)['error'] === 'missing_design_preview',
+    'a preview belonging to another design cannot unlock production');
+$incompleteItem = new SanroMutablePreviewItem();
+$incompleteItem->meta['_sanro_studio_design_id'] = $id;
+$adminOrder->items = [71 => $adminItem, 72 => $incompleteItem];
+verify(sanro_studio_production_ready_admin_preflight($adminOrder)['error'] === 'missing_design_preview',
+    'order with two Studio designs cannot approve if one design lacks a preview');
+$ordinaryItem = new SanroMutablePreviewItem();
+$adminOrder->items = [71 => $adminItem, 72 => $ordinaryItem];
+verify(sanro_studio_production_ready_admin_preflight($adminOrder)['valid'],
+    'unrelated ordinary WooCommerce item does not block valid Studio approval');
+$adminOrder->items = [71 => $adminItem];
+
+function admin_url($path) { return 'https://staging.example.test/wp-admin/' . $path; }
+function esc_html($value) { return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8'); }
+function esc_attr($value) { return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8'); }
+function esc_url($value) { return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8'); }
+function wp_nonce_field($action) {
+    echo '<input name="_wpnonce" value="fixture" data-nonce-action="' . esc_attr($action) . '">';
+}
+$GLOBALS['admin_enabled'] = false;
+ob_start(); sanro_studio_admin_production_ready_action($adminOrder); $nonAdminHtml = ob_get_clean();
+verify($nonAdminHtml === '', 'non-admin never sees production ready form');
+$GLOBALS['admin_enabled'] = true;
+ob_start(); sanro_studio_admin_production_ready_action($adminOrder); $adminHtml = ob_get_clean();
+verify(strpos($adminHtml, 'form="sanro-studio-production-ready-form-99"') !== false
+    && strpos($adminHtml, '<form') === false,
+    'admin action targets separate form instead of nesting inside order edit');
+verify(sanro_studio_production_ready_form_order_id() === 99,
+    'ready order is queued for one footer POST form');
+verify(strpos($adminHtml, 'Google Drive') !== false
+    && strpos($adminHtml, 'Tandai Siap Produksi') !== false,
+    'admin clearly distinguishes approval from Drive folder creation');
+$adminOrder->status = 'cancelled';
+ob_start(); sanro_studio_admin_production_ready_action($adminOrder); $cancelHtml = ob_get_clean();
+verify($cancelHtml === '', 'cancelled orders do not show production approval');
+$adminOrder->status = 'on-hold';
+
+// Exercise fail-closed endpoint paths without ever reaching redirect/exit.
+function wp_die($message, $title = '', $options = []) {
+    throw new RuntimeException('HTTP_' . ($options['response'] ?? 500));
+}
+$GLOBALS['ready_post_order'] = $adminOrder;
+function wc_get_order($id) { return $id === 99 ? $GLOBALS['ready_post_order'] : false; }
+ob_start(); sanro_studio_admin_production_ready_footer_form(); $footerHtml = ob_get_clean();
+verify(strpos($footerHtml, '<form id="sanro-studio-production-ready-form-99" method="post"') !== false,
+    'independent nonce-protected POST form is emitted in wp-admin footer');
+verify(strpos($footerHtml, 'data-nonce-action="sanro_studio_mark_production_ready_99"') !== false,
+    'footer POST form uses order-scoped nonce');
+verify(strpos($footerHtml, 'name="order_id" value="99"') !== false
+    && strpos($footerHtml, 'sanro_studio_mark_production_ready') !== false,
+    'footer binds exact WooCommerce order and authenticated action');
+
+function check_admin_referer($action) {
+    if ($action !== 'sanro_studio_mark_production_ready_99'
+        || empty($GLOBALS['valid_production_nonce'])) {
+        throw new RuntimeException('invalid_nonce');
+    }
+}
+function ready_post_fails_with($status) {
+    try { sanro_studio_admin_mark_production_ready(); }
+    catch (RuntimeException $error) { return $error->getMessage() === 'HTTP_' . $status; }
+    return false;
+}
+$GLOBALS['admin_enabled'] = false;
+$_SERVER['REQUEST_METHOD'] = 'POST'; $_POST = ['order_id' => '99'];
+verify(ready_post_fails_with(403), 'admin-post requires WooCommerce capability');
+$GLOBALS['admin_enabled'] = true;
+$_SERVER['REQUEST_METHOD'] = 'GET';
+verify(ready_post_fails_with(405), 'GET cannot trigger production approval');
+$_SERVER['REQUEST_METHOD'] = 'POST';
+$_POST = ['order_id' => '../99'];
+verify(ready_post_fails_with(400), 'path-like order ID denied');
+$_POST = ['order_id' => '99'];
+$GLOBALS['valid_production_nonce'] = false;
+try { sanro_studio_admin_mark_production_ready(); $nonceRejected = false; }
+catch (RuntimeException $error) { $nonceRejected = $error->getMessage() === 'invalid_nonce'; }
+verify($nonceRejected, 'missing or invalid order nonce blocks admin POST');
+$GLOBALS['valid_production_nonce'] = true;
+$adminOrder->status = 'cancelled';
+verify(ready_post_fails_with(409), 'stale submitted form cannot mark a cancelled order');
+$adminOrder->status = 'on-hold';
+
+verify(sanro_studio_mark_order_production_ready($adminOrder)['valid']
+    && $adminOrder->get_meta('_sanro_studio_production_ready', true) === 'yes',
+    'approved admin workflow persists WooCommerce readiness metadata');
+verify(sanro_studio_order_production_file_status($adminOrder)['eligible']
+    && !sanro_studio_order_production_file_status($adminOrder)['drive_link_available']
+    && !$adminOrder->is_paid(),
+    'ready status unlocks eligibility without faking payment or Drive link');
+verify(sanro_studio_production_ready_admin_preflight($adminOrder)['error'] === 'already_ready',
+    'subsequent manual approval remains idempotently hidden');
+ob_start(); sanro_studio_admin_production_ready_action($adminOrder); $doneHtml = ob_get_clean();
+verify($doneHtml === '', 'already-ready order does not show duplicate action');
