@@ -86,7 +86,7 @@ function sanro_studio_locked_item_master_source($order, $item_id, $side) {
         return ['valid' => false, 'error' => 'master_integrity_failed'];
     }
     $checked = sanro_studio_validate_master_bytes($bytes);
-    $ext = $checked['mime'] === 'image/png' ? 'png'
+    $ext = ($checked['mime'] ?? null) === 'image/png' ? 'png'
         : (($checked['mime'] ?? null) === 'image/jpeg' ? 'jpg' : null);
     if (empty($checked['valid']) || $ext === null
         || !hash_equals(substr($file_id, strlen($prefix), 64), $checked['sha256'])
