@@ -198,6 +198,11 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
             'source_w' => $info[0], 'source_h' => $info[1],
             'sha256' => $source['sha256'], 'bytes' => $bytes,
         ];
+        if ($plan['image']['x'] < 0 || $plan['image']['y'] < 0
+            || $plan['image']['x'] + $target_w > $width_px
+            || $plan['image']['y'] + $target_h > $height_px) {
+            return ['valid' => false, 'error' => 'dtf_layer_pixel_overflow'];
+        }
     }
     if ($text !== null) {
         $value = $entry['text'];
@@ -221,6 +226,12 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
             'height' => $to_px((float) $text['height']),
             'text' => $value, 'color' => $entry['text_color'],
         ];
+        if ($plan['text_layer']['x'] < 0 || $plan['text_layer']['y'] < 0
+            || $plan['text_layer']['width'] < 2 || $plan['text_layer']['height'] < 2
+            || $plan['text_layer']['x'] + $plan['text_layer']['width'] > $width_px
+            || $plan['text_layer']['y'] + $plan['text_layer']['height'] > $height_px) {
+            return ['valid' => false, 'error' => 'dtf_layer_pixel_overflow'];
+        }
     }
     return $plan;
 }
