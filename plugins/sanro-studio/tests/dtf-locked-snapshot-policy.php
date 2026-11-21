@@ -22,10 +22,10 @@ function snap150($valid, $label) {
 }
 snap150(strpos($workflow, 'function sanro_studio_dtf_locked_order_item_fingerprint(') !== false,
     'private order/item fingerprint implementation exists');
-snap150(strpos($workflow, "($record['status'] ?? null) !== 'locked'") !== false
+snap150(strpos($workflow, "(\$record['status'] ?? null) !== 'locked'") !== false
     && strpos($workflow, 'sanro_studio_locked_record_has_item($record, $item_id)') !== false,
     'only locked correct order/product/item draft can be fingerprinted');
-snap150(strpos($workflow, "'sanro_studio_draft_' . $design_id") !== false
+snap150(strpos($workflow, "'sanro_studio_draft_' . \$design_id") !== false
     && strpos($workflow, 'JSON_PRESERVE_ZERO_FRACTION') !== false,
     'full immutable draft record including text and master metadata is covered');
 snap150(strpos($workflow, 'function sanro_studio_dtf_locked_snapshot_matches(') !== false
@@ -62,7 +62,7 @@ snap150(strpos($workflow, "'production_ready' => false") !== false
     && strpos($workflow, "'quality_approved' => false") !== false
     && strpos($workflow, "'font_parity_approved' => false") !== false,
     'candidate and status never claim approval');
-snap150(strpos($workflow, "['valid' => true, 'candidate_count' => $printable,") !== false
-    && strpos($workflow, "'sides' => $sides, 'quality_approved' => false") !== false,
+snap150(strpos($workflow, "['valid' => true, 'candidate_count' => \$printable,") !== false
+    && strpos($workflow, "'sides' => \$sides, 'quality_approved' => false") !== false,
     'public preflight returns only safe side states, never fingerprint');
 echo 'PASS: ' . $count150 . " SANRO locked DTF draft fingerprint policy checks\n";
