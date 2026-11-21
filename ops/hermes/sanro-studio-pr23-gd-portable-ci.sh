@@ -6,6 +6,21 @@ set -Eeuo pipefail
 umask 077
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+# Production and staging may both have GD enabled. This QA must explicitly
+# target staging; no guessing based on current SSH account or shell location.
+if [[ "${SANRO_STUDIO_QA_ENV:-}" != 'staging' ]]; then
+    printf 'BLOCKED: set SANRO_STUDIO_QA_ENV=staging for this isolated QA run\n' >&2
+    exit 2
+fi
+case "$ROOT" in
+    */public_html|*/public_html/*|*/htdocs|*/htdocs/*|*/www|*/www/*)
+        printf 'BLOCKED: source checkout is inside a possible web document root\n' >&2
+        exit 2 ;;
+esac
+if [[ -f "$ROOT/wp-config.php" || -d "$ROOT/wp-content/uploads" ]]; then
+    printf 'BLOCKED: appears to be a WordPress runtime, not an isolated QA checkout\n' >&2
+    exit 2
+fi
 if [[ "${EUID}" -eq 0 ]]; then
     printf 'BLOCKED: run as a non-root QA user\n' >&2
     exit 2
@@ -33,8 +48,8 @@ if [[ -n "${DOCUMENT_ROOT:-}" && -d "$DOCUMENT_ROOT" ]]; then
         exit 2
     fi
 fi
-if ! php -r 'exit(extension_loaded("gd") && function_exists("imageresolution") ? 0 : 2);'; then
-    printf 'BLOCKED: this QA host must ALREADY provide PHP GD; no installation will be attempted\n' >&2
+if ! php -r 'exit(extension_loaded("gd") && function_exists("imageresolution") && function_exists("imagecreatefromstring") && function_exists("imagepng") ? 0 : 2);'; then
+    printf 'BLOCKED: staging PHP CLI does not expose full GD raster support; hPanel web PHP alone is not proof\n' >&2
     exit 2
 fi
 php -l "$ROOT/plugins/sanro-studio/includes/dtf-image-render.php"
