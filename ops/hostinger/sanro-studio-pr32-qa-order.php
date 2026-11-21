@@ -58,7 +58,7 @@ if (!sanro_s142_staging_identity_ok($host, $user, $qaEnv,
     || !function_exists('wc_get_orders')
     || !function_exists('wp_generate_uuid4')
     || !class_exists('Automattic\\WooCommerce\\Utilities\\OrderUtil')
-    || !\\Automattic\\WooCommerce\\Utilities\\OrderUtil::custom_orders_table_usage_is_enabled()
+    || !call_user_func(['Automattic\\WooCommerce\\Utilities\\OrderUtil', 'custom_orders_table_usage_is_enabled'])
     || !function_exists('sanro_studio_dtf_admin_status_enabled')
     || !sanro_studio_dtf_admin_status_enabled()
     || !function_exists('has_action')
