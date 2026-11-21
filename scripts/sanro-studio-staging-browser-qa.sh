@@ -36,6 +36,25 @@ if [[ -z "${SANRO_CHROMIUM_EXECUTABLE:-}" ]]; then
   done
 fi
 
+# Sprint 139: WooCommerce order admin and DTF candidate panel browser QA.
+# Explicit staging session required. Unlike buyer E2E, this is GET/HEAD only.
+if [[ "${SANRO_STAGING_ORDER_ADMIN_QA:-0}" == "1" ]]; then
+  if [[ "${SANRO_STAGING_ADMIN_QA:-0}" == "1" ||
+        "${SANRO_STAGING_IMAGE_E2E:-0}" == "1" ||
+        "${SANRO_STAGING_CART_E2E:-0}" == "1" ||
+        "${SANRO_STAGING_MOBILE_QA:-0}" == "1" ]]; then
+    echo "BLOCKED: order admin browser QA cannot run with other modes." >&2
+    exit 2
+  fi
+  if [[ "${SANRO_STUDIO_QA_ENV:-}" != "staging" ]]; then
+    echo "BLOCKED: SANRO_STUDIO_QA_ENV must equal staging." >&2
+    exit 2
+  fi
+  echo "STAGING WOO ADMIN QA: GET/HEAD only, no order creation, file writes or payment."
+  node "$ROOT/tests/staging-admin-order-readonly.cjs"
+  exit $?
+fi
+
 # WordPress admin product preview: isolated and read-only.
 # Browser state must be staging-only and stored locally with 0600 permission.
 if [[ "${SANRO_STAGING_ADMIN_QA:-0}" == "1" ]]; then
