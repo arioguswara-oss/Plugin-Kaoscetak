@@ -34,6 +34,7 @@ if [[ "$minor" != '8.5' ]]; then
     exit 2
 fi
 package='php8.5-gd'
+runtime_package='libgd3'
 printf 'PREFLIGHT: checking existing APT metadata for %s\n' "$package"
 # Avoid early awk exit under pipefail (SIGPIPE exit 141), and report any APT
 # metadata error instead of silently terminating under set -e.
@@ -46,6 +47,16 @@ printf 'APT_CANDIDATE: %s\n' "${candidate:-NONE}"
 if [[ -z "$candidate" || "$candidate" == '(none)' ]]; then
     printf 'BLOCKED: %s not indexed in the VPS configured APT repositories.\n' "$package" >&2
     printf 'Do not add repos, install packages, or run sudo for this test.\n' >&2
+    exit 2
+fi
+if ! runtime_policy="$(apt-cache policy "$runtime_package" 2>&1)"; then
+    printf 'BLOCKED: APT metadata lookup for %s failed:\n%s\n' "$runtime_package" "$runtime_policy" >&2
+    exit 2
+fi
+runtime_candidate="$(awk '/^[[:space:]]*Candidate:/ {print $2}' <<< "$runtime_policy")"
+printf 'APT_RUNTIME_CANDIDATE: %s (%s)\n' "$runtime_package" "${runtime_candidate:-NONE}"
+if [[ -z "$runtime_candidate" || "$runtime_candidate" == '(none)' ]]; then
+    printf 'BLOCKED: %s is not indexed by existing trusted APT sources. No installation attempted.\n' "$runtime_package" >&2
     exit 2
 fi
 mkdir -p "$STATE"
@@ -124,19 +135,61 @@ if [[ -z "$module" || ! -s "$module" ]]; then
     printf 'FAIL: GD extension missing from extracted package\n' >&2
     exit 1
 fi
-# The extension MUST load into PHP's own ABI; all dependent shared libs must
-# already exist. Never install any missing dependency onto the host.
-if ! php -d "extension=$module" -r \
-    'if (!extension_loaded("gd") || !function_exists("imageresolution")) exit(1); echo "GD module loaded into running PHP ".PHP_VERSION."\\n";' \
+# The recorded Hermes failure named libgd.so.3. Download its exact Ubuntu
+# runtime package to a private directory; neither .deb is ever installed.
+mkdir -p "$scratch/runtime-download"
+printf 'PREFLIGHT: downloading %s to isolated user directory (NO INSTALL)\n' "$runtime_package"
+if ! (cd "$scratch/runtime-download" && apt-get download "$runtime_package") >> "$log" 2>&1; then
+    printf 'BLOCKED: could not download %s from existing APT sources\n' "$runtime_package" >&2
+    tail -n 18 "$log" >&2
+    exit 2
+fi
+shopt -s nullglob
+runtime_packages=("$scratch/runtime-download/"*.deb)
+shopt -u nullglob
+if [[ "${#runtime_packages[@]}" -ne 1 ]]; then
+    printf 'FAIL: exactly one runtime package archive expected\n' >&2
+    exit 1
+fi
+runtime_deb="${runtime_packages[0]}"
+if [[ "$(dpkg-deb -f "$runtime_deb" Package)" != "$runtime_package" ||
+      "$(dpkg-deb -f "$runtime_deb" Architecture)" != "$(dpkg --print-architecture)" ]]; then
+    printf 'FAIL: GD runtime package identity/architecture mismatch\n' >&2
+    exit 1
+fi
+dpkg-deb -x "$runtime_deb" "$scratch/extracted"
+libgd_link="$(find "$scratch/extracted" -type l -name libgd.so.3 -print -quit)"
+if [[ -z "$libgd_link" || ! -e "$libgd_link" ]]; then
+    libgd_link="$(find "$scratch/extracted" -type f -name libgd.so.3 -print -quit)"
+fi
+if [[ -z "$libgd_link" || ! -e "$libgd_link" ]]; then
+    printf 'BLOCKED: extracted %s does not contain usable libgd.so.3\n' "$runtime_package" >&2
+    exit 2
+fi
+libgd_dir="$(dirname "$libgd_link")"
+isolated_ld_path="$libgd_dir${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+printf 'PREFLIGHT: isolated libgd.so.3 found; checking transitive libraries\n'
+if command -v ldd >/dev/null 2>&1; then
+    LD_LIBRARY_PATH="$isolated_ld_path" ldd "$module" >> "$log" 2>&1 || true
+    if LD_LIBRARY_PATH="$isolated_ld_path" ldd "$module" 2>&1 | grep -q 'not found'; then
+        printf 'BLOCKED: more shared libraries are missing. No host changes attempted.\n' >&2
+        LD_LIBRARY_PATH="$isolated_ld_path" ldd "$module" 2>&1 | grep 'not found' >&2 || true
+        exit 2
+    fi
+fi
+# Fail closed on ABI/remaining shared-lib issues. GD is loaded for this CLI
+# invocation ONLY, with a private LD_LIBRARY_PATH, not global PHP configuration.
+if ! LD_LIBRARY_PATH="$isolated_ld_path" php -d "extension=$module" -r \
+    'if (!extension_loaded("gd") || !function_exists("imageresolution")) exit(1); echo "GD module loaded into PHP ".PHP_VERSION."\\n";' \
     >> "$log" 2>&1; then
-    printf 'BLOCKED: userspace GD binary cannot load (ABI or shared-library dependency).\n' >&2
-    printf 'No GD package was installed. Diagnostics:\n' >&2
-    tail -n 12 "$log" >&2
+    printf 'BLOCKED: temporary PHP GD and libgd3 cannot load (ABI or transitive dependency).\n' >&2
+    printf 'Neither package was installed. Last diagnostics:\n' >&2
+    tail -n 20 "$log" >&2
     exit 2
 fi
 
 set +e
-(cd "$worktree" && SANRO_DTF_ARTIFACT_DIR="$output" \
+(cd "$worktree" && SANRO_DTF_ARTIFACT_DIR="$output" LD_LIBRARY_PATH="$isolated_ld_path" \
     php -d "extension=$module" -d memory_limit=256M -d display_errors=1 \
     plugins/sanro-studio/tests/dtf-image-gd-real-smoke.php) >> "$log" 2>&1
 gd_exit=$?
