@@ -153,17 +153,26 @@ $single_status = sanro_studio_dtf_order_item_private_status($order, 71);
 check137(!empty($single_status['valid']) && $single_status['candidate_count'] === 1
     && $single_status['sides']['back']['state'] === 'blank',
     'read-only status preserves blank-side semantics');
-// No design on either side must not produce a "completed" order.
+// A completely empty locked design is rejected by the existing product
+// print-design validator as empty_design BEFORE artifact binding or batching.
+// Do not loosen that central gate merely to reach the downstream
+// artifact_no_printable_sides defense-in-depth check.
 $GLOBALS['record133']['design']['front']['objects'] = [];
+$validation = sanro_studio_validate_product_design(
+    42, $GLOBALS['record133']['design']);
+check137(empty($validation['valid']) && ($validation['error'] ?? null) === 'empty_design',
+    'central product validator rejects an order with two blank sides');
 $empty = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
-check137(empty($empty['valid']) && $empty['complete'] === false
-    && $empty['candidate_count'] === 0
-    && $empty['error'] === 'artifact_no_printable_sides',
-    'two empty sides never yield a completed batch');
+check137(empty($empty['valid']) && ($empty['complete'] ?? false) === false
+    && ($empty['error'] ?? null) === 'artifact_draft_binding_missing'
+    && !isset($empty['sides']['front']['sha256']),
+    'empty locked order fails at design binding; no completed batch or artwork');
 $empty_status = sanro_studio_dtf_order_item_private_status($order, 71);
 check137(empty($empty_status['valid'])
-    && ($empty_status['error'] ?? null) === 'artifact_no_printable_sides',
-    'read-only status never treats a blank order as complete');
+    && ($empty_status['complete'] ?? false) === false
+    && ($empty_status['error'] ?? null) === 'artifact_draft_binding_missing'
+    && !isset($empty_status['sides']['front']['sha256']),
+    'read-only status rejects empty design before verifying any private file');
 $GLOBALS['record133']['design']['front']['objects'] = [
     ['type'=>'image','x'=>2.0,'y'=>3.0,'width'=>0.1,'height'=>0.1],
 ];
