@@ -135,6 +135,19 @@ function sanro_studio_dtf_verify_private_artifact($order, $item_id, $side) {
         || !is_int($meta['width_px'] ?? null) || !is_int($meta['height_px'] ?? null)
         || $meta['width_px'] < 1 || $meta['height_px'] < 1
         || $meta['width_px'] > 4096 || $meta['height_px'] > 4096
+        || $meta['width_px'] * $meta['height_px'] > 6000000
+        || !is_numeric($meta['width_cm'] ?? null)
+        || !is_numeric($meta['height_cm'] ?? null)
+        || !is_numeric($meta['offset_x_cm'] ?? null)
+        || !is_numeric($meta['offset_y_cm'] ?? null)
+        || !is_finite((float) $meta['width_cm'])
+        || !is_finite((float) $meta['height_cm'])
+        || !is_finite((float) $meta['offset_x_cm'])
+        || !is_finite((float) $meta['offset_y_cm'])
+        || (float) $meta['width_cm'] <= 0 || (float) $meta['height_cm'] <= 0
+        || (float) $meta['offset_x_cm'] < 0 || (float) $meta['offset_y_cm'] < 0
+        || (int) round((float) $meta['width_cm'] * 300 / 2.54) !== $meta['width_px']
+        || (int) round((float) $meta['height_cm'] * 300 / 2.54) !== $meta['height_px']
         || !is_string($meta['sha256'] ?? null)
         || !preg_match('/^[a-f0-9]{64}$/D', $meta['sha256'])) {
         return ['valid' => false, 'error' => 'artifact_integrity_failed'];
@@ -160,6 +173,10 @@ function sanro_studio_dtf_verify_private_artifact($order, $item_id, $side) {
         'design_id' => $meta['design_id'], 'side' => $meta['side'],
         'sha256' => $meta['sha256'], 'bytes' => $png_size,
         'width_px' => $meta['width_px'], 'height_px' => $meta['height_px'],
+        'width_cm' => (float) $meta['width_cm'],
+        'height_cm' => (float) $meta['height_cm'],
+        'offset_x_cm' => (float) $meta['offset_x_cm'],
+        'offset_y_cm' => (float) $meta['offset_y_cm'],
         'dpi' => 300, 'kind' => $meta['kind'],
         'quality_approved' => false, 'font_parity_approved' => false,
     ];
@@ -211,6 +228,20 @@ function sanro_studio_dtf_commit_private_candidate($order, $item_id, $side, $can
         || $candidate['width_px'] < 1 || $candidate['height_px'] < 1
         || $candidate['width_px'] > 4096 || $candidate['height_px'] > 4096
         || $candidate['width_px'] * $candidate['height_px'] > 6000000
+        || !is_numeric($candidate['width_cm'] ?? null)
+        || !is_numeric($candidate['height_cm'] ?? null)
+        || !is_numeric($candidate['offset_x_cm'] ?? null)
+        || !is_numeric($candidate['offset_y_cm'] ?? null)
+        || !is_finite((float) $candidate['width_cm'])
+        || !is_finite((float) $candidate['height_cm'])
+        || !is_finite((float) $candidate['offset_x_cm'])
+        || !is_finite((float) $candidate['offset_y_cm'])
+        || (float) $candidate['width_cm'] <= 0
+        || (float) $candidate['height_cm'] <= 0
+        || (float) $candidate['offset_x_cm'] < 0
+        || (float) $candidate['offset_y_cm'] < 0
+        || (int) round((float) $candidate['width_cm'] * 300 / 2.54) !== $candidate['width_px']
+        || (int) round((float) $candidate['height_cm'] * 300 / 2.54) !== $candidate['height_px']
         || !is_string($bytes) || strlen($bytes) < 64 || strlen($bytes) > 33554432
         || !is_string($candidate['sha256'] ?? null)
         || !preg_match('/^[a-f0-9]{64}$/D', $candidate['sha256'])
@@ -261,6 +292,10 @@ function sanro_studio_dtf_commit_private_candidate($order, $item_id, $side, $can
             'mime' => 'image/png', 'dpi' => 300,
             'width_px' => $candidate['width_px'],
             'height_px' => $candidate['height_px'],
+            'width_cm' => (float) $candidate['width_cm'],
+            'height_cm' => (float) $candidate['height_cm'],
+            'offset_x_cm' => (float) $candidate['offset_x_cm'],
+            'offset_y_cm' => (float) $candidate['offset_y_cm'],
             'bytes' => strlen($bytes), 'sha256' => $candidate['sha256'],
         ];
         $json = json_encode($meta, JSON_UNESCAPED_SLASHES);
