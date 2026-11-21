@@ -42,9 +42,9 @@ const document={
   return fields[id]||null;
  },
  querySelector(selector){
-  let match=/^\\[data-sanro-printzone-side="(front|back)"\\]$/.exec(selector);
+  let match=/^\[data-sanro-printzone-side="(front|back)"\]$/.exec(selector);
   if(match)return stages[match[1]];
-  match=/^\\[data-sanro-zone-status="(front|back)"\\]$/.exec(selector);
+  match=/^\[data-sanro-zone-status="(front|back)"\]$/.exec(selector);
   return match?statuses[match[1]]:null;
  },
  addEventListener(event,fn){listeners[event]=fn}
