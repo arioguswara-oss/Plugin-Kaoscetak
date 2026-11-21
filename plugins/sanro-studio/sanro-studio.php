@@ -49,6 +49,8 @@ require_once __DIR__ . '/includes/dtf-layer-render.php';
 require_once __DIR__ . '/includes/dtf-private-artifacts.php';
 // Internal opt-in order-item batch coordinator; no routes, cron or public hooks.
 require_once __DIR__ . '/includes/dtf-order-workflow.php';
+// Read-only per-item admin candidate status; feature-gated, no file delivery.
+require_once __DIR__ . '/includes/dtf-admin-order-status.php';
 require_once __DIR__ . '/includes/production-ready-admin.php';
 require_once __DIR__ . '/includes/draft-rest.php';
 require_once __DIR__ . '/includes/admin.php';
@@ -109,6 +111,9 @@ add_action('admin_post_sanro_studio_order_preview', 'sanro_studio_admin_deliver_
 
 // Per-line-item admin previews; no buyer-facing file URL.
 add_action('woocommerce_after_order_itemmeta', 'sanro_studio_admin_item_preview_status', 10, 3);
+// Existing lightweight previews stay authoritative. Candidate status is additional
+// and reads private SHA-verified manifests only when admin feature is opted in.
+add_action('woocommerce_after_order_itemmeta', 'sanro_studio_admin_item_dtf_status', 20, 3);
 
  // Staging checkout validation is inert unless explicitly enabled.
 if (defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
