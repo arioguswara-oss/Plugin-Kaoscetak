@@ -6,6 +6,29 @@ defined('ABSPATH') || exit;
  * internal server worker primitive, never a buyer/admin download endpoint.
  * An original image is NOT a flattened, print-ready DTF composition.
  */
+/**
+ * The older manual/admin lock stores one item ID. Staging checkout may bind
+ * multiple size lines of a single design with an immutable list of item IDs.
+ * Never treat an empty/malformed list as unrestricted access.
+ */
+function sanro_studio_locked_record_has_item($record, $item_id) {
+    if (!is_array($record) || !is_int($item_id) || $item_id < 1) return false;
+    if (array_key_exists('order_item_ids', $record)) {
+        $ids = $record['order_item_ids'];
+        if (!is_array($ids) || !$ids || count($ids) > 8) return false;
+        $sorted = $ids;
+        sort($sorted, SORT_NUMERIC);
+        if ($sorted !== $ids || count(array_unique($ids)) !== count($ids)) return false;
+        foreach ($ids as $id) {
+            if (!is_int($id) || $id < 1) return false;
+        }
+        // Forbid ambiguous records carrying both single- and multi-item binding.
+        if (array_key_exists('order_item_id', $record)) return false;
+        return in_array($item_id, $ids, true);
+    }
+    return ($record['order_item_id'] ?? null) === $item_id;
+}
+
 function sanro_studio_locked_item_master_source($order, $item_id, $side) {
     if (!function_exists('sanro_studio_auto_drive_order_eligible')
         || !sanro_studio_auto_drive_order_eligible($order)
@@ -36,7 +59,7 @@ function sanro_studio_locked_item_master_source($order, $item_id, $side) {
     $record = get_option('sanro_studio_draft_' . $design_id, false);
     if (!is_array($record) || ($record['status'] ?? null) !== 'locked'
         || ($record['order_id'] ?? null) !== (int) $order->get_id()
-        || ($record['order_item_id'] ?? null) !== $item_id
+        || !sanro_studio_locked_record_has_item($record, $item_id)
         || !is_array($record['master_refs'] ?? null)
         || !is_array($record['design'] ?? null)) {
         return ['valid' => false, 'error' => 'draft_order_binding_missing'];

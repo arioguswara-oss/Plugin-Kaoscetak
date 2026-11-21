@@ -309,6 +309,22 @@ function sanro_studio_stage_checkout_process() {
         'design_id' => $id, 'product_id' => $product_id,
         'contract' => $contract, 'bound_sizes' => [],
     ];
+    // Request scope ONLY. Never persist this secret to WC or any cache.
+    // The checkout-created hook cannot safely guess owner authorization.
+    if (function_exists('sanro_studio_stage_checkout_batch_lock_enabled')
+        && sanro_studio_stage_checkout_batch_lock_enabled()) {
+        $draft = function_exists('sanro_studio_read_draft')
+            ? sanro_studio_read_draft($id, $token) : null;
+        if (!is_array($draft) || empty($draft['valid'])
+            || ($draft['status'] ?? null) !== 'draft'
+            || !is_string($draft['design_hash'] ?? null)) {
+            unset($GLOBALS['sanro_studio_checkout_verified']);
+            wc_add_notice('SANRO Studio: desain berubah sebelum checkout.', 'error');
+            return;
+        }
+        $GLOBALS['sanro_studio_checkout_verified']['lock_owner_token'] = $token;
+        $GLOBALS['sanro_studio_checkout_verified']['lock_design_hash'] = $draft['design_hash'];
+    }
 }
 
 /**

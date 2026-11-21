@@ -31,6 +31,7 @@ require_once __DIR__ . '/includes/quote.php';
 require_once __DIR__ . '/includes/cart-contract.php';
 require_once __DIR__ . '/includes/cart-adapter.php';
 require_once __DIR__ . '/includes/checkout-bridge.php';
+require_once __DIR__ . '/includes/checkout-batch-lock.php';
 require_once __DIR__ . '/includes/draft.php';
 require_once __DIR__ . '/includes/storage-policy.php';
 // Private master writer is inert until explicitly called by an authorized workflow.
@@ -125,4 +126,9 @@ if (defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
         'sanro_studio_stage_checkout_create_order_line_item', 10, 4);
     add_action('woocommerce_checkout_create_order',
         'sanro_studio_stage_checkout_verify_order_batch', 10, 2);
+    // Only staging, opt-in, classic checkout: persisted IDs are required.
+    if (sanro_studio_stage_checkout_batch_lock_enabled()) {
+        add_action('woocommerce_checkout_order_created',
+            'sanro_studio_stage_checkout_lock_created_order', 10, 1);
+    }
 }

@@ -85,6 +85,11 @@ run_check 'Drive original master export regression PHP syntax' 'No syntax errors
 run_check 'Locked original master Drive export and idempotency' 'PASS: 24 SANRO private master Drive export regression checks' php plugins/sanro-studio/tests/drive-master-export-smoke.php
 run_check 'Drive master default-disabled regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/drive-master-export-default-off.php
 run_check 'Drive master export disabled by default' 'PASS: SANRO private master Drive export defaults disabled' php plugins/sanro-studio/tests/drive-master-export-default-off.php
+run_check 'Checkout batch draft-lock module PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/checkout-batch-lock.php
+run_check 'Checkout batch lock synthetic regression syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/checkout-batch-lock-smoke.php
+run_check 'Multi-size checkout draft lock, CAS and ownership' 'PASS: 31 SANRO staging batch draft-lock checks' php plugins/sanro-studio/tests/checkout-batch-lock-smoke.php
+run_check 'Checkout batch lock default-deny regression syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/checkout-batch-lock-default-off.php
+run_check 'Checkout batch lock disabled by default' 'PASS: SANRO staging checkout batch lock defaults disabled' php plugins/sanro-studio/tests/checkout-batch-lock-default-off.php
 run_check 'Buyer PHP asset-version syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/buyer.php
 run_check 'Buyer asset fingerprint regression syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/buyer-asset-version-smoke.php
 run_check 'Buyer asset fingerprint' 'PASS: 3 SANRO Studio buyer asset fingerprint assertions' php plugins/sanro-studio/tests/buyer-asset-version-smoke.php
