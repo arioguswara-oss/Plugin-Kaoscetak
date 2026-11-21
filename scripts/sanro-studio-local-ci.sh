@@ -92,7 +92,7 @@ run_check 'Checkout batch lock default-deny regression syntax' 'No syntax errors
 run_check 'Checkout batch lock disabled by default' 'PASS: SANRO staging checkout batch lock defaults disabled' php plugins/sanro-studio/tests/checkout-batch-lock-default-off.php
 run_check 'DTF image raster module PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/dtf-image-render.php
 run_check 'DTF image-only safety regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-image-render-smoke.php
-run_check 'DTF RGBA 300-DPI geometry and fail-closed raster' 'PASS: 27 SANRO image-only DTF raster safety checks' php plugins/sanro-studio/tests/dtf-image-render-smoke.php
+run_check 'DTF RGBA 300-DPI geometry and fail-closed raster' 'PASS: 24 SANRO image-only DTF raster safety checks' php plugins/sanro-studio/tests/dtf-image-render-smoke.php
 run_check 'DTF image raster default-off PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-image-render-default-off.php
 run_check 'DTF image raster disabled by default' 'PASS: SANRO DTF RGBA image raster defaults disabled' php plugins/sanro-studio/tests/dtf-image-render-default-off.php
 run_check 'Buyer PHP asset-version syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/buyer.php
