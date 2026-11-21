@@ -36,6 +36,7 @@ require_once __DIR__ . '/includes/storage-policy.php';
 // Private master writer is inert until explicitly called by an authorized workflow.
 require_once __DIR__ . '/includes/master-storage.php';
 require_once __DIR__ . '/includes/order-preview.php';
+require_once __DIR__ . '/includes/drive-production.php';
 require_once __DIR__ . '/includes/production-ready-admin.php';
 require_once __DIR__ . '/includes/draft-rest.php';
 require_once __DIR__ . '/includes/admin.php';

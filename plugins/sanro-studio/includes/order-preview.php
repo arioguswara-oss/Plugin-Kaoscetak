@@ -438,6 +438,15 @@ function sanro_studio_attach_item_production_folder_id($order, $item_id, $folder
     if ($existing !== '' && $existing !== $folder_id) {
         return ['valid' => false, 'error' => 'folder_conflict'];
     }
+    // The feature flag alone cannot prove that a Drive folder belongs to this
+    // order. Even idempotent reattachments must re-check the remote metadata.
+    if (!function_exists('sanro_studio_verify_drive_item_folder')) {
+        return ['valid' => false, 'error' => 'drive_verification_unavailable'];
+    }
+    $verified = sanro_studio_verify_drive_item_folder($order, $item_id, $folder_id);
+    if (empty($verified['valid'])) {
+        return ['valid' => false, 'error' => $verified['error'] ?? 'drive_verification_failed'];
+    }
     if ($existing === $folder_id) return ['valid' => true, 'already_attached' => true];
     $item->update_meta_data('_sanro_studio_drive_folder_id', $folder_id);
     if ($item->save() === false) {
@@ -456,6 +465,7 @@ function sanro_studio_admin_production_status($order) {
     $items = $order->get_items('line_item');
     if (!is_array($items)) return;
     $rows = [];
+    $links = [];
     foreach ($items as $item_id => $item) {
         if (!is_object($item) || !method_exists($item, 'get_meta')
             || $item->get_meta('_sanro_studio_design_id', true) === '') continue;
@@ -464,15 +474,25 @@ function sanro_studio_admin_production_status($order) {
             $rows[] = 'Item ' . (int) $item_id . ': data produksi belum valid';
             continue;
         }
-        $rows[] = 'Item ' . (int) $item_id . ': '
+        $url = function_exists('sanro_studio_verified_order_item_drive_url')
+            ? sanro_studio_verified_order_item_drive_url($order, (int) $item_id) : null;
+        $rows[$item_id] = 'Item ' . (int) $item_id . ': '
             . (!empty($manifest['eligible']) ? 'boleh diproses' : 'menunggu pembayaran atau persetujuan produksi')
             . '; preview depan ' . (!empty($manifest['preview_front_available']) ? 'tersedia' : 'belum tersedia')
             . '; belakang ' . (!empty($manifest['preview_back_available']) ? 'tersedia' : 'belum tersedia')
-            . '; Google Drive belum terhubung';
+            . '; Google Drive ' . (is_string($url) ? 'terverifikasi' : 'belum terhubung');
+        if (is_string($url)) $links[$item_id] = $url;
     }
     if (!$rows) return;
     echo '<div class="sanro-studio-production-status"><h3>'
         . esc_html('SANRO Studio — Status produksi') . '</h3>';
-    foreach ($rows as $row) echo '<p>' . esc_html($row) . '</p>';
+    foreach ($rows as $item_id => $row) {
+        echo '<p>' . esc_html($row);
+        if (isset($links[$item_id])) {
+            echo ' <a target="_blank" rel="noopener noreferrer" href="'
+                . esc_url($links[$item_id]) . '">' . esc_html('Buka folder produksi') . '</a>';
+        }
+        echo '</p>';
+    }
     echo '</div>';
 }
