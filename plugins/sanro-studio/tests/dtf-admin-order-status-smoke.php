@@ -103,6 +103,11 @@ check138(strpos($disabled_html, 'File DTF belum tersedia') !== false
 check138($GLOBALS['readCalls138'] === 0,
     'displaying placeholder must not probe any private files');
 $GLOBALS['private138'] = true;
+$item->design_id = '';
+ob_start(); sanro_studio_admin_item_dtf_status(71, $item, null);
+$unrelated_html = ob_get_clean();
+check138($unrelated_html === '', 'normal WooCommerce line without SANRO design stays untouched');
+$item->design_id = $candidate['design_id'];
 
 check138(sanro_studio_dtf_admin_item_status($order, 0)['error'] === 'invalid_order_item',
     'zero item cannot access private files');
