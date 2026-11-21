@@ -33,16 +33,29 @@ function sanro_studio_production_ready_admin_preflight($order) {
     if (!is_array($items) || !$items) {
         return ['valid' => false, 'error' => 'missing_design_preview'];
     }
+    $studio_count = 0;
     foreach ($items as $item_id => $item) {
-        if (!is_int($item_id) || $item_id < 1) continue;
+        if (!is_int($item_id) || $item_id < 1 || !is_object($item)
+            || !method_exists($item, 'get_meta')) {
+            return ['valid' => false, 'error' => 'invalid_order_item'];
+        }
+        $design_id = $item->get_meta('_sanro_studio_design_id', true);
+        $front_ref = $item->get_meta('_sanro_studio_preview_front_ref', true);
+        $back_ref = $item->get_meta('_sanro_studio_preview_back_ref', true);
+        // Ordinary WooCommerce items without SANRO metadata are unrelated.
+        // A SANRO order is ready only if EVERY affected design line is valid.
+        if ($design_id === '' && $front_ref === '' && $back_ref === '') continue;
+        $studio_count++;
         $manifest = sanro_studio_order_item_production_manifest($order, $item_id);
-        if (!empty($manifest['valid'])
-            && (!empty($manifest['preview_front_available'])
-                || !empty($manifest['preview_back_available']))) {
-            return ['valid' => true, 'order_id' => (int) $order->get_id()];
+        if (empty($manifest['valid'])
+            || (empty($manifest['preview_front_available'])
+                && empty($manifest['preview_back_available']))) {
+            return ['valid' => false, 'error' => 'missing_design_preview'];
         }
     }
-    return ['valid' => false, 'error' => 'missing_design_preview'];
+    return $studio_count > 0
+        ? ['valid' => true, 'order_id' => (int) $order->get_id()]
+        : ['valid' => false, 'error' => 'missing_design_preview'];
 }
 
 /**
