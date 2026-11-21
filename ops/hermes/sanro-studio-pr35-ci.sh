@@ -76,7 +76,7 @@ summary="$(grep -E '^SUMMARY: [0-9]+ checks PASS, [0-9]+ checks FAIL$' "$log" | 
 status='FAIL'
 if [[ "$test_exit" -eq 0 && "$summary" =~ ^SUMMARY:\ ([0-9]+)\ checks\ PASS,\ 0\ checks\ FAIL$ ]]; then
     # Reject a shortened QA script that silently skips the expected gates.
-    if [[ "${BASH_REMATCH[1]}" -ge 156 ]]; then
+    if [[ "${BASH_REMATCH[1]}" -ge 158 ]]; then
         status='PASS'
     fi
 fi
