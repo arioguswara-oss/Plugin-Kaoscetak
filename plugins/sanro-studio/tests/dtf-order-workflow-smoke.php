@@ -109,7 +109,7 @@ check137(!empty($repeat['valid'])
     'rerunning same render is idempotent on both sides');
 $GLOBALS['renderVariant137'] = true;
 $conflict = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
-check137(empty($conflict['valid']) && $conflict['complete'] !== true
+check137(empty($conflict['valid']) && ($conflict['complete'] ?? false) !== true
     && ($conflict['error'] ?? '') === 'artifact_conflict'
     && ($conflict['failed_side'] ?? '') === 'front'
     && $conflict['partial'] === false,
@@ -153,6 +153,20 @@ $single_status = sanro_studio_dtf_order_item_private_status($order, 71);
 check137(!empty($single_status['valid']) && $single_status['candidate_count'] === 1
     && $single_status['sides']['back']['state'] === 'blank',
     'read-only status preserves blank-side semantics');
+// No design on either side must not produce a "completed" order.
+$GLOBALS['record133']['design']['front']['objects'] = [];
+$empty = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
+check137(empty($empty['valid']) && $empty['complete'] === false
+    && $empty['candidate_count'] === 0
+    && $empty['error'] === 'artifact_no_printable_sides',
+    'two empty sides never yield a completed batch');
+$empty_status = sanro_studio_dtf_order_item_private_status($order, 71);
+check137(empty($empty_status['valid'])
+    && ($empty_status['error'] ?? null) === 'artifact_no_printable_sides',
+    'read-only status never treats a blank order as complete');
+$GLOBALS['record133']['design']['front']['objects'] = [
+    ['type'=>'image','x'=>2.0,'y'=>3.0,'width'=>0.1,'height'=>0.1],
+];
 $GLOBALS['record133']['design']['back'] = [
     'category' => 'A5', 'objects' => [
         ['type'=>'image','x'=>3.0,'y'=>4.0,'width'=>0.1,'height'=>0.1],
