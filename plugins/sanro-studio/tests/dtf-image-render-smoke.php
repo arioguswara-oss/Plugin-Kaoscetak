@@ -172,10 +172,12 @@ if (function_exists('imagecreatefromstring') && function_exists('imageresolution
         'render output is RGBA PNG with exact physical pixel dimensions');
     check133(hash_equals(hash('sha256',$result['bytes']),$result['sha256'])
         && !isset($result['source_bytes']), 'render digest valid, raw source not in output metadata');
+    echo "PHP_GD_RASTER: PASS (actual PNG decoded and verified)\n";
 } else {
     check133(($result['error']??null)==='dtf_gd_unavailable',
         'missing PHP GD refuses rasterization without producing a false output');
     check133(!isset($result['bytes']), 'no fabricated artwork when renderer unavailable');
     check133(!isset($result['sha256']), 'no fabricated image hash when renderer unavailable');
+    echo "PHP_GD_RASTER: NOT_TESTED (GD extension unavailable; fail-closed verified)\n";
 }
 echo "PASS: {$checks} SANRO image-only DTF raster safety checks\n";
