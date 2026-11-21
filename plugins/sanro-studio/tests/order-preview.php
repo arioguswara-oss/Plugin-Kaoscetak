@@ -261,13 +261,11 @@ ob_start(); sanro_studio_admin_production_ready_action($adminOrder); $nonAdminHt
 verify($nonAdminHtml === '', 'non-admin never sees production ready form');
 $GLOBALS['admin_enabled'] = true;
 ob_start(); sanro_studio_admin_production_ready_action($adminOrder); $adminHtml = ob_get_clean();
-verify(strpos($adminHtml, 'method="post"') !== false
-    && strpos($adminHtml, 'sanro_studio_mark_production_ready') !== false,
-    'admin production approval is explicit POST only');
-verify(strpos($adminHtml, 'data-nonce-action="sanro_studio_mark_production_ready_99"') !== false,
-    'admin production form uses order-scoped nonce');
-verify(strpos($adminHtml, 'name="order_id" value="99"') !== false,
-    'approval form binds exact WooCommerce order ID');
+verify(strpos($adminHtml, 'form="sanro-studio-production-ready-form-99"') !== false
+    && strpos($adminHtml, '<form') === false,
+    'admin action targets separate form instead of nesting inside order edit');
+verify(sanro_studio_production_ready_form_order_id() === 99,
+    'ready order is queued for one footer POST form');
 verify(strpos($adminHtml, 'Google Drive') !== false
     && strpos($adminHtml, 'Tandai Siap Produksi') !== false,
     'admin clearly distinguishes approval from Drive folder creation');
@@ -282,6 +280,15 @@ function wp_die($message, $title = '', $options = []) {
 }
 $GLOBALS['ready_post_order'] = $adminOrder;
 function wc_get_order($id) { return $id === 99 ? $GLOBALS['ready_post_order'] : false; }
+ob_start(); sanro_studio_admin_production_ready_footer_form(); $footerHtml = ob_get_clean();
+verify(strpos($footerHtml, '<form id="sanro-studio-production-ready-form-99" method="post"') !== false,
+    'independent nonce-protected POST form is emitted in wp-admin footer');
+verify(strpos($footerHtml, 'data-nonce-action="sanro_studio_mark_production_ready_99"') !== false,
+    'footer POST form uses order-scoped nonce');
+verify(strpos($footerHtml, 'name="order_id" value="99"') !== false
+    && strpos($footerHtml, 'sanro_studio_mark_production_ready') !== false,
+    'footer binds exact WooCommerce order and authenticated action');
+
 function check_admin_referer($action) {
     if ($action !== 'sanro_studio_mark_production_ready_99'
         || empty($GLOBALS['valid_production_nonce'])) {
