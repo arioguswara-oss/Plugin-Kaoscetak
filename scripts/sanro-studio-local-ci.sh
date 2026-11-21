@@ -150,6 +150,10 @@ run_check 'Short REST master readback PHP test syntax' 'No syntax errors detecte
 run_check 'Short REST master readback auth and integrity' 'PASS: 20 short-route private DTF read security checks' php plugins/sanro-studio/tests/master-read-route-smoke.php
 run_check 'Mobile touch staging QA JS syntax' '' node --check tests/staging-mobile-readonly.cjs
 run_check 'Authenticated staging admin visual QA JS syntax' '' node --check tests/staging-admin-print-zones-readonly.cjs
+run_check 'DTF admin staging-only plan patcher PHP syntax' 'No syntax errors detected' php -l ops/hostinger/sanro-studio-pr34-bootstrap-plan.php
+run_check 'DTF admin staging-only plan fixture PHP syntax' 'No syntax errors detected' php -l tests/staging-dtf-admin-bootstrap-plan-smoke.php
+run_check 'DTF admin staging-only plan preservation and OFF controls' 'PASS: 13 SANRO safe admin DTF staging preview assertions' php tests/staging-dtf-admin-bootstrap-plan-smoke.php
+run_check 'DTF admin staging SHA-pinned plan Bash syntax' '' bash -n ops/hostinger/sanro-studio-pr34-staging-plan.sh
 run_check 'DTF admin candidate generation module PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/dtf-admin-generate.php
 run_check 'DTF admin candidate generation regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-admin-generate-smoke.php
 run_check 'DTF admin candidate generation security and readback' 'PASS: 34 SANRO nonce-protected DTF admin candidate generation checks' php plugins/sanro-studio/tests/dtf-admin-generate-smoke.php
