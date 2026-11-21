@@ -100,10 +100,30 @@ if ($font_ready && function_exists('imagettfbbox') && function_exists('imagecrea
     check135($render['quality_approved'] === false && $render['font_parity_approved'] === false
         && isset($render['sha256']) && !isset($render['image']),
         'render remains unapproved and excludes raw master');
+    // The image finishes before the text starts, so an opaque pixel in the
+    // text rectangle proves FreeType actually painted a second layer.
+    $decoded = imagecreatefromstring($render['bytes']);
+    $layer = $plan['text_layer'];
+    $painted = false;
+    for ($y = $layer['y']; $y < $layer['y'] + $layer['height']; $y++) {
+        for ($x = $layer['x']; $x < $layer['x'] + $layer['width']; $x++) {
+            $rgba = imagecolorsforindex($decoded, imagecolorat($decoded, $x, $y));
+            if ($rgba['alpha'] < 100 && $rgba['red'] <= 50
+                && $rgba['green'] <= 50 && $rgba['blue'] <= 50) {
+                $painted = true; break 2;
+            }
+        }
+    }
+    imagedestroy($decoded);
+    check135($painted, 'actual private font glyphs painted over transparent pixels');
+    echo "DTF_LAYER_REAL: PASS (both image and text pixels rasterized)\n";
 } else {
     $render = sanro_studio_dtf_render_layer_side($order,71,'front');
     check135(($render['error']??null) === ($font_ready ? 'dtf_gd_unavailable' : 'dtf_private_font_required'),
         'no trusted font/GD cannot fabricate final artwork');
     check135(!isset($render['bytes']), 'invalid render has no output PNG');
+    check135(($render['error'] ?? null) === ($font_ready ? 'dtf_gd_unavailable' : 'dtf_private_font_required'),
+        'fallback explicitly names unavailable rendering prerequisite');
+    echo "DTF_LAYER_REAL: NOT_TESTED (trusted private font or GD missing)\n";
 }
 echo "PASS: {$checks135} SANRO layered DTF composition checks\n";
