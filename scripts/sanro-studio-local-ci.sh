@@ -87,6 +87,7 @@ run_check 'Private DTF front/back owner-authorized storage roundtrip' 'PASS: 15 
 run_check 'Short REST master readback PHP test syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/master-read-route-smoke.php
 run_check 'Short REST master readback auth and integrity' 'PASS: 20 short-route private DTF read security checks' php plugins/sanro-studio/tests/master-read-route-smoke.php
 run_check 'Mobile touch staging QA JS syntax' '' node --check tests/staging-mobile-readonly.cjs
+run_check 'Authenticated staging admin visual QA JS syntax' '' node --check tests/staging-admin-print-zones-readonly.cjs
 run_check 'Buyer mobile viewport PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/buyer.php
 run_check 'Scoped buyer viewport regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/mobile-viewport-smoke.php
 run_check 'Scoped buyer viewport registration' 'PASS: 10 SANRO buyer viewport/CSS checks' php plugins/sanro-studio/tests/mobile-viewport-smoke.php
@@ -107,7 +108,12 @@ run_check 'WooCommerce mockup chooser/preview behavior' '15 SANRO product mockup
 run_check 'Per-product mockup print-zone module PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/product-print-zones.php
 run_check 'Per-product mockup print-zone regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/print-zone-smoke.php
 run_check 'Per-product print-zone validation and controls' 'PASS: SANRO per-product print overlay, security and admin controls' php plugins/sanro-studio/tests/print-zone-smoke.php
+run_check 'Admin print-zone JS syntax' '' node --check plugins/sanro-studio/assets/admin-print-zones.js
+run_check 'Admin print-zone preview regression JS syntax' '' node --check plugins/sanro-studio/tests/admin-print-zones-node.cjs
+run_check 'Admin print-zone live guide and mockup update' 'SANRO live admin print-zone preview checks' node plugins/sanro-studio/tests/admin-print-zones-node.cjs
 run_check 'Buyer print-zone JS syntax' '' node --check plugins/sanro-studio/assets/buyer.js
+run_check 'Side-specific draft geometry JS syntax' '' node --check plugins/sanro-studio/tests/buyer-print-zone-draft-node.cjs
+run_check 'Side-specific text/image draft geometry' 'side-specific print-zone draft geometry checks' node plugins/sanro-studio/tests/buyer-print-zone-draft-node.cjs
 
 printf '\nSUMMARY: %s checks PASS, %s checks FAIL\n' "$passed" "$failed"
 if [[ $failed -gt 0 ]]; then

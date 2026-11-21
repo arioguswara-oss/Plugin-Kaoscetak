@@ -44,7 +44,10 @@ check_zone(['front'=>$front,'back'=>$back],sanro_studio_product_print_zones(17),
 $GLOBALS['zones']=['front'=>$front,'back'=>['x'=>80,'y'=>20,'width'=>30,'height'=>60]];
 check_zone($base,sanro_studio_product_print_zones(17)['back'],'invalid stored back zone fail-safe fallback');
 $GLOBALS['zones']=['front'=>$front,'back'=>$back];
-ob_start();sanro_studio_product_print_zone_fields();ob_end_clean();
+ob_start();sanro_studio_product_print_zone_fields();$zone_html=ob_get_clean();
+check_zone(true,strpos($zone_html,'data-sanro-printzone-side="front"')!==false,'front visual guide rendered');
+check_zone(true,strpos($zone_html,'data-sanro-printzone-side="back"')!==false,'back visual guide rendered');
+check_zone(true,strpos($zone_html,'data-sanro-zone-status="front"')!==false,'front validation status rendered');
 check_zone(8,count($GLOBALS['fields']),'8 WooCommerce product field controls rendered');
 check_zone('_sanro_studio_zone_front_x',$GLOBALS['fields'][0]['id'],'front X field present');
 check_zone('_sanro_studio_zone_back_height',$GLOBALS['fields'][7]['id'],'back height field present');

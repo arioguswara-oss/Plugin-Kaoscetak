@@ -36,6 +36,20 @@ if [[ -z "${SANRO_CHROMIUM_EXECUTABLE:-}" ]]; then
   done
 fi
 
+# WordPress admin product preview: isolated and read-only.
+# Browser state must be staging-only and stored locally with 0600 permission.
+if [[ "${SANRO_STAGING_ADMIN_QA:-0}" == "1" ]]; then
+  if [[ "${SANRO_STAGING_IMAGE_E2E:-0}" == "1" ||
+        "${SANRO_STAGING_CART_E2E:-0}" == "1" ||
+        "${SANRO_STAGING_MOBILE_QA:-0}" == "1" ]]; then
+    echo "BLOCKED: Admin QA cannot combine with staging write or mobile modes." >&2
+    exit 2
+  fi
+  echo "STAGING ADMIN QA: read-only product 24 preview; no Update, draft, cart, order or payment."
+  node "$ROOT/tests/staging-admin-print-zones-readonly.cjs"
+  exit $?
+fi
+
 # Explicitly opt into the full synthetic DTF front/back image flow.
 # The test creates only a staging private draft and staging Cart item, then
 # stops on the Checkout page before any order/payment submission.

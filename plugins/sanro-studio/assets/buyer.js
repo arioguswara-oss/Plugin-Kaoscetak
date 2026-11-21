@@ -43,6 +43,33 @@
  qtyInputs.forEach(input=>input.addEventListener('input',()=>{editRevision++;updateQty()}));
  q('#sanro-sleeve').addEventListener('change',()=>{editRevision++;updateEstimate()});
  updateQty();
+
+ // A visual print zone is independent for each product side. All physical
+ // limits are supplied by server-owned safe_areas (cm), not these percentages.
+ function visualPrintZone(name){
+  const zone=config.print_zones&&config.print_zones[name];
+  const valid=zone&&['x','y','width','height'].every(key=>
+   typeof zone[key]==='number'&&Number.isFinite(zone[key]))
+   &&zone.x>=0&&zone.y>=0&&zone.width>0&&zone.height>0
+   &&zone.x+zone.width<=100&&zone.y+zone.height<=100;
+  return valid?zone:{x:27,y:22,width:46,height:54};
+ }
+ // Measure an inactive side using its own visual geometry, then restore the
+ // currently displayed side before the browser can paint another frame.
+ function withPrintZone(name,measure){
+  const previous={left:safe.style.left,top:safe.style.top,width:safe.style.width,height:safe.style.height};
+  const zone=visualPrintZone(name);
+  safe.style.left=zone.x+'%';
+  safe.style.top=zone.y+'%';
+  safe.style.width=zone.width+'%';
+  safe.style.height=zone.height+'%';
+  try{return measure();}finally{
+   safe.style.left=previous.left;
+   safe.style.top=previous.top;
+   safe.style.width=previous.width;
+   safe.style.height=previous.height;
+  }
+ }
  function render(){
   // Rendering is not itself a user edit; revision changes only in input handlers.
   const d=sides[side];
@@ -56,12 +83,7 @@
   // Merchant-controlled visual overlay; authoritative geometry uses
   // independent centimeter bounds from the server. An unsafe zone falls back
   // to the existing 27/22/46/54 layout without modifying the saved design.
-  const zone=config.print_zones && config.print_zones[side];
-  const validZone=zone && ['x','y','width','height'].every(key=>
-    typeof zone[key]==='number' && Number.isFinite(zone[key]))
-    && zone.x>=0 && zone.y>=0 && zone.width>0 && zone.height>0
-    && zone.x+zone.width<=100 && zone.y+zone.height<=100;
-  const placement=validZone?zone:{x:27,y:22,width:46,height:54};
+  const placement=visualPrintZone(side);
   safe.style.left=placement.x+'%';
   safe.style.top=placement.y+'%';
   safe.style.width=placement.width+'%';
@@ -380,12 +402,17 @@
    if((d.url||d.pending)&&!ignoreImages)throw new Error('Gambar belum dapat disimpan. Upload master privat terlebih dahulu.');
    if(!d.text.trim())continue;
    // Measure the other side without switching editor state or touching inputs.
-   const previous={content:text.textContent,font:text.style.fontSize,left:text.style.left,top:text.style.top,hidden:text.hidden};
-   text.hidden=false;text.textContent=d.text;text.style.fontSize=d.fontSize+'px';
-   text.style.left=d.textX+'%';text.style.top=d.textY+'%';
-   const rect=safe.getBoundingClientRect(),box=text.getBoundingClientRect();
-   text.textContent=previous.content;text.style.fontSize=previous.font;
-   text.style.left=previous.left;text.style.top=previous.top;text.hidden=previous.hidden;
+   const {rect,box}=withPrintZone(name,()=>{
+    const previous={content:text.textContent,font:text.style.fontSize,left:text.style.left,top:text.style.top,hidden:text.hidden};
+    try{
+     text.hidden=false;text.textContent=d.text;text.style.fontSize=d.fontSize+'px';
+     text.style.left=d.textX+'%';text.style.top=d.textY+'%';
+     return {rect:safe.getBoundingClientRect(),box:text.getBoundingClientRect()};
+    }finally{
+     text.textContent=previous.content;text.style.fontSize=previous.font;
+     text.style.left=previous.left;text.style.top=previous.top;text.hidden=previous.hidden;
+    }
+   });
    if(!rect.width||!rect.height||!box.width||!box.height)throw new Error('Ukuran pratinjau belum siap.');
    const object={type:'text',x:d.textX*area.width/100,y:d.textY*area.height/100,
     width:box.width*area.width/rect.width,height:box.height*area.height/rect.height};
@@ -421,7 +448,7 @@
     probe.onerror=()=>reject(new Error('Gambar '+name+' tidak dapat dibaca.'));
     probe.src=d.url;
    });
-   const rect=safe.getBoundingClientRect();
+   const rect=withPrintZone(name,()=>safe.getBoundingClientRect());
    if(!rect.width||!rect.height||!dimensions[0]||!dimensions[1])
     throw new Error('Area gambar belum siap.');
    const width=d.imageSize*area.width/100;
@@ -445,7 +472,7 @@
   if(!area||(!d.url&&!d.text.trim()))return null;
   if(d.pending||d.file||(d.url&&!boundMasterRefs[name]))
    throw new Error('Unggah dan simpan master '+name+' sebelum membuat preview.');
-  const bounds=safe.getBoundingClientRect();
+  const bounds=withPrintZone(name,()=>safe.getBoundingClientRect());
   if(!bounds.width||!bounds.height)throw new Error('Area preview belum siap.');
   let imagePreview=null;
   if(d.url){

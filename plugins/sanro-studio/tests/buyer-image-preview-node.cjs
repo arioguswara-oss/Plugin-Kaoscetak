@@ -6,9 +6,12 @@ const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 const source=fs.readFileSync(path.join(__dirname,'../assets/buyer.js'),'utf8');
+const zoneStart=source.indexOf(' function visualPrintZone(name){');
+const zoneEnd=source.indexOf(' function render(){',zoneStart);
 const start=source.indexOf(' async function exportBoundDraft(){');
 const end=source.indexOf(' if(saveButton&&config.draft_api){',start);
-assert(start>=0&&end>start,'SANRO buyer image functions missing');
+assert(zoneStart>=0&&zoneEnd>zoneStart&&start>=0&&end>start,
+ 'SANRO buyer image and print-zone helper functions missing');
 let drawCalls=0,textCalls=0,previewWidth=0,canvasWrites=0;
 const d={
   url:'blob:owner-bound',file:null,pending:null,text:'',textColor:'#171717',
@@ -27,7 +30,8 @@ const env={
   sides:{front:d,back:{url:null,text:''}},
   config:{safe_areas:{front:{width:30,height:40}}},
   boundMasterRefs:refs,
-  safe:{getBoundingClientRect:()=>({width:200,height:200})},
+  safe:{style:{left:'27%',top:'22%',width:'46%',height:'54%'},
+   getBoundingClientRect:()=>({width:200,height:200})},
   shirtColor:{value:'#ffffff'},
   exportTextDraft:()=>({quantities:{M:1},shirt_color:'#ffffff',long_sleeve:false}),
   Image:ImageProbe,FileReader:FakeReader,
@@ -44,7 +48,7 @@ const env={
     return canvas;
   }}
 };
-const built=vm.runInNewContext(source.slice(start,end)+
+const built=vm.runInNewContext(source.slice(zoneStart,zoneEnd)+source.slice(start,end)+
   '\n({exportBoundDraft,makeDesignPreview})',env,{
     timeout:2000,filename:'sanro-buyer-image-preview.js'
   });
