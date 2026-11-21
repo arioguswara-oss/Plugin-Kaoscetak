@@ -52,6 +52,7 @@ require_once __DIR__ . '/includes/dtf-order-workflow.php';
 // Read-only per-item admin candidate status; feature-gated, no file delivery.
 require_once __DIR__ . '/includes/dtf-admin-order-status.php';
 require_once __DIR__ . '/includes/dtf-admin-generate.php';
+require_once __DIR__ . '/includes/dtf-admin-readiness.php';
 require_once __DIR__ . '/includes/production-ready-admin.php';
 require_once __DIR__ . '/includes/draft-rest.php';
 require_once __DIR__ . '/includes/admin.php';
@@ -115,6 +116,8 @@ add_action('woocommerce_after_order_itemmeta', 'sanro_studio_admin_item_preview_
 // Existing lightweight previews stay authoritative. Candidate status is additional
 // and reads private SHA-verified manifests only when admin feature is opted in.
 add_action('woocommerce_after_order_itemmeta', 'sanro_studio_admin_item_dtf_status', 20, 3);
+// Separate opt-in diagnostics; never renders or writes candidate files.
+add_action('woocommerce_after_order_itemmeta', 'sanro_studio_admin_item_dtf_readiness', 23, 3);
 
 // Separate explicit admin-only POST action: inert unless the private raster,
 // batch and additional SANRO_STUDIO_ENABLE_DTF_ADMIN_GENERATE gate are all ON.
