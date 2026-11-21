@@ -226,4 +226,21 @@ sanro_studio_stage_checkout_lock_created_order($order);
 check132(($GLOBALS['draft132']['status']??null)==='locked'
     && !isset($GLOBALS['sanro_studio_checkout_verified']['lock_owner_token']),
     'post-create hook locks and drops transient owner token');
+// The staging hook must not interfere with an ordinary WooCommerce order.
+unset($GLOBALS['sanro_studio_checkout_verified']);
+$ordinary = new Order132();
+$ordinary->items = [71 => new Item132(71, 'M', 2, 100000, '')];
+sanro_studio_stage_checkout_lock_created_order($ordinary);
+check132(true, 'ordinary WooCommerce checkout bypasses SANRO lock safely');
+// But a SANRO order with missing request authorization must never bypass it.
+$unauthorized = reset132();
+unset($GLOBALS['sanro_studio_checkout_verified']);
+try {
+    sanro_studio_stage_checkout_lock_created_order($unauthorized);
+    fwrite(STDERR, "FAIL: unauthorized SANRO order not rejected\n");
+    exit(1);
+} catch (RuntimeException $e) {
+    check132(strpos($e->getMessage(), 'missing') !== false,
+        'SANRO order with no verified checkout session rejected');
+}
 echo "PASS: {$checks} SANRO staging batch draft-lock checks\n";
