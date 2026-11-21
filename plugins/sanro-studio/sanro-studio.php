@@ -41,6 +41,8 @@ require_once __DIR__ . '/includes/drive-production.php';
 require_once __DIR__ . '/includes/drive-auto-provision.php';
 require_once __DIR__ . '/includes/order-master-source.php';
 require_once __DIR__ . '/includes/drive-master-export.php';
+// Internal, default-off in-memory image-only DTF raster candidate (no HTTP route).
+require_once __DIR__ . '/includes/dtf-image-render.php';
 require_once __DIR__ . '/includes/production-ready-admin.php';
 require_once __DIR__ . '/includes/draft-rest.php';
 require_once __DIR__ . '/includes/admin.php';
