@@ -133,9 +133,14 @@ function sanro_studio_admin_item_dtf_status($item_id, $item, $product) {
         || !sanro_studio_dtf_admin_status_enabled()
         || !is_object($item) || !method_exists($item, 'get_order_id')
         || !method_exists($item, 'get_id')
+        || !method_exists($item, 'get_meta')
         || !function_exists('wc_get_order')
         || !function_exists('esc_html')) return;
 
+    // Only SANRO Studio line items, never unrelated ordinary WooCommerce sales.
+    $design = $item->get_meta('_sanro_studio_design_id', true);
+    if (!is_string($design)
+        || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design)) return;
     $id = (int) $item_id;
     $order_id = (int) $item->get_order_id();
     if ($id < 1 || $order_id < 1 || (int) $item->get_id() !== $id) return;
