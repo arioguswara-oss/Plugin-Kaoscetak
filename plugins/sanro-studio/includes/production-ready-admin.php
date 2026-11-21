@@ -49,22 +49,44 @@ function sanro_studio_production_ready_admin_preflight($order) {
  * Render a real, explicit, nonce-protected WooCommerce admin action.
  * Nothing is written until the administrator submits this POST form.
  */
+function sanro_studio_production_ready_form_order_id($set = null) {
+    static $order_id = 0;
+    if ($set !== null) $order_id = is_int($set) && $set > 0 ? $set : 0;
+    return $order_id;
+}
+
 function sanro_studio_admin_production_ready_action($order) {
-    if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')
-        || !function_exists('admin_url') || !function_exists('wp_nonce_field')) return;
+    if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) return;
     $allowed = sanro_studio_production_ready_admin_preflight($order);
     if (empty($allowed['valid'])) return;
     $order_id = $allowed['order_id'];
+    // WooCommerce order edit is itself inside a WordPress form. Nesting forms
+    // would cause the browser to submit the wrong endpoint. The button below
+    // explicitly targets a separate form rendered later in admin_footer.
+    sanro_studio_production_ready_form_order_id($order_id);
     echo '<div class="sanro-studio-production-ready-admin">';
     echo '<h3>' . esc_html('SANRO Studio — Persetujuan produksi') . '</h3>';
     echo '<p>' . esc_html('Tindakan ini menandai pesanan Siap Produksi tanpa mengubah status pembayaran atau membuat folder Google Drive.') . '</p>';
-    echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+    echo '<button type="submit" form="sanro-studio-production-ready-form-' . esc_attr((string) $order_id)
+        . '" class="button button-primary">' . esc_html('Tandai Siap Produksi') . '</button>';
+    echo '</div>';
+}
+
+/** Separate footer form avoids invalid nested forms on the WooCommerce order page. */
+function sanro_studio_admin_production_ready_footer_form() {
+    if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')
+        || !function_exists('admin_url') || !function_exists('wp_nonce_field')) return;
+    $order_id = sanro_studio_production_ready_form_order_id();
+    if ($order_id < 1 || !function_exists('wc_get_order')) return;
+    $order = wc_get_order($order_id);
+    $allowed = sanro_studio_production_ready_admin_preflight($order);
+    if (empty($allowed['valid'])) return;
+    echo '<form id="sanro-studio-production-ready-form-' . esc_attr((string) $order_id)
+        . '" method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
     echo '<input type="hidden" name="action" value="sanro_studio_mark_production_ready">';
     echo '<input type="hidden" name="order_id" value="' . esc_attr((string) $order_id) . '">';
     wp_nonce_field('sanro_studio_mark_production_ready_' . $order_id);
-    echo '<button type="submit" class="button button-primary">'
-        . esc_html('Tandai Siap Produksi') . '</button>';
-    echo '</form></div>';
+    echo '</form>';
 }
 
 /**
@@ -94,12 +116,12 @@ function sanro_studio_admin_mark_production_ready() {
     if (!function_exists('sanro_studio_mark_order_production_ready')) {
         wp_die('Modul produksi belum tersedia.', '', ['response' => 500]);
     }
+    if (!method_exists($order, 'get_edit_order_url')) {
+        wp_die('Halaman admin pesanan tidak tersedia.', '', ['response' => 500]);
+    }
     $marked = sanro_studio_mark_order_production_ready($order);
     if (empty($marked['valid'])) {
         wp_die('Status siap produksi gagal disimpan.', '', ['response' => 500]);
-    }
-    if (!method_exists($order, 'get_edit_order_url')) {
-        wp_die('Halaman admin pesanan tidak tersedia.', '', ['response' => 500]);
     }
     wp_safe_redirect($order->get_edit_order_url(), 303);
     exit;
