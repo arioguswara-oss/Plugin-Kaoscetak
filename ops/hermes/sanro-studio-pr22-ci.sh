@@ -54,6 +54,20 @@ if [[ ! -f "$worktree/scripts/sanro-studio-local-ci.sh" ]]; then
 fi
 
 printf 'SANRO Studio Hermes CI\nPR: #22\nBranch: %s\nSHA: %s\n' "$BRANCH" "$sha" > "$log"
+# Fail fast on the exact renderer test instead of running 100 gates before
+# discovering a PHP fatal. Preserve the full diagnostic in the private log.
+set +e
+(cd "$worktree" && bash scripts/sanro-studio-dtf-targeted-ci.sh) >> "$log" 2>&1
+target_exit=$?
+set -e
+if [[ "$target_exit" -ne 0 ]]; then
+    printf 'PR: #22\nHEAD: %s\nTARGETED_STATUS: FAIL\nTARGETED_EXIT: %s\nLOG: %s\n' \
+        "$sha" "$target_exit" "$log" >&2
+    printf '\nDTF diagnostics:\n' >&2
+    tail -n 50 "$log" >&2
+    exit 1
+fi
+printf 'TARGETED_STATUS: PASS\n'
 set +e
 (cd "$worktree" && bash scripts/sanro-studio-local-ci.sh) >> "$log" 2>&1
 test_exit=$?
