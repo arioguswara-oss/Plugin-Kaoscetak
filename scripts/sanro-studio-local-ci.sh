@@ -77,6 +77,9 @@ run_check 'Staging preflight regression JS syntax' '' node --check tests/sanro-s
 run_check 'Staging preflight read-only regression' 'PASS: 9 staging preflight regression groups' node tests/sanro-studio-staging-preflight-node.cjs
 run_check 'Staging buyer Cart/Checkout E2E JS syntax' '' node --check tests/staging-cart-checkout-e2e.cjs
 run_check 'Staging DTF front/back image E2E JS syntax' '' node --check tests/staging-image-checkout-e2e.cjs
+run_check 'Private DTF image QA reuse helper JS syntax' '' node --check tests/staging-image-private-draft.cjs
+run_check 'Private DTF image QA reuse regression JS syntax' '' node --check tests/staging-image-private-draft-node.cjs
+run_check 'Owner-private DTF image QA reuse safety' 'PASS: 15 owner-private DTF QA reuse and permission checks' node tests/staging-image-private-draft-node.cjs
 run_check 'Private DTF image previews and master binding' 'PASS: 7 private DTF image-preview and master-binding checks' node plugins/sanro-studio/tests/buyer-image-preview-node.cjs
 run_check 'Private DTF master PHP module syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/master-storage.php
 run_check 'Private DTF front/back storage regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/master-storage-roundtrip.php
