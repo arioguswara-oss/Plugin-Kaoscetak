@@ -150,6 +150,12 @@ run_check 'Short REST master readback PHP test syntax' 'No syntax errors detecte
 run_check 'Short REST master readback auth and integrity' 'PASS: 20 short-route private DTF read security checks' php plugins/sanro-studio/tests/master-read-route-smoke.php
 run_check 'Mobile touch staging QA JS syntax' '' node --check tests/staging-mobile-readonly.cjs
 run_check 'Authenticated staging admin visual QA JS syntax' '' node --check tests/staging-admin-print-zones-readonly.cjs
+run_check 'Staging runtime output regression PHP syntax' 'No syntax errors detected' php -l tests/staging-pr35-runtime-output-smoke.php
+run_check 'Staging runtime exact-line and safe diagnostics' 'PASS: 8 SANRO staging runtime probe newline and fail-closed checks' php tests/staging-pr35-runtime-output-smoke.php
+run_check 'Staging generator disabled-mode runtime probe PHP syntax' 'No syntax errors detected' php -l ops/hostinger/sanro-studio-pr35-runtime-probe.php
+run_check 'Staging generator guarded deploy Bash syntax' '' bash -n ops/hostinger/sanro-studio-pr35-disabled-generator-stage.sh
+run_check 'Staging generator deploy safety fixture PHP syntax' 'No syntax errors detected' php -l tests/staging-pr35-apply-guard-smoke.php
+run_check 'Staging generator apply approval and rollback safety contract' 'PASS: 19 SANRO staging generator deployment guard assertions' php tests/staging-pr35-apply-guard-smoke.php
 run_check 'DTF admin staging-only plan patcher PHP syntax' 'No syntax errors detected' php -l ops/hostinger/sanro-studio-pr34-bootstrap-plan.php
 run_check 'DTF admin staging-only plan fixture PHP syntax' 'No syntax errors detected' php -l tests/staging-dtf-admin-bootstrap-plan-smoke.php
 run_check 'DTF admin staging-only plan preservation and OFF controls' 'PASS: 13 SANRO safe admin DTF staging preview assertions' php tests/staging-dtf-admin-bootstrap-plan-smoke.php
