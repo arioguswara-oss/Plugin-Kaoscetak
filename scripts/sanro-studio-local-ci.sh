@@ -79,6 +79,12 @@ run_check 'Drive auto-provision regression PHP syntax' 'No syntax errors detecte
 run_check 'Drive auto-provision eligibility, duplicate and privacy' 'PASS: 23 SANRO Drive auto-provision regression checks' php plugins/sanro-studio/tests/drive-auto-provision-smoke.php
 run_check 'Drive auto default-disabled PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/drive-auto-default-off.php
 run_check 'Drive auto disabled by default' 'PASS: SANRO Drive automatic provisioning defaults disabled' php plugins/sanro-studio/tests/drive-auto-default-off.php
+run_check 'Order-bound private master source PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/order-master-source.php
+run_check 'Drive original master exporter PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/drive-master-export.php
+run_check 'Drive original master export regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/drive-master-export-smoke.php
+run_check 'Locked original master Drive export and idempotency' 'PASS: 24 SANRO private master Drive export regression checks' php plugins/sanro-studio/tests/drive-master-export-smoke.php
+run_check 'Drive master default-disabled regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/drive-master-export-default-off.php
+run_check 'Drive master export disabled by default' 'PASS: SANRO private master Drive export defaults disabled' php plugins/sanro-studio/tests/drive-master-export-default-off.php
 run_check 'Buyer PHP asset-version syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/buyer.php
 run_check 'Buyer asset fingerprint regression syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/buyer-asset-version-smoke.php
 run_check 'Buyer asset fingerprint' 'PASS: 3 SANRO Studio buyer asset fingerprint assertions' php plugins/sanro-studio/tests/buyer-asset-version-smoke.php
