@@ -41,6 +41,9 @@ function candidate136($side) {
         'design_id' => '123e4567-e89b-42d3-a456-123456789012',
         'side' => $side, 'dpi' => 300,
         'width_px' => 12, 'height_px' => 12, 'mime' => 'image/png',
+        'width_cm' => 0.1, 'height_cm' => 0.1,
+        'offset_x_cm' => $side === 'front' ? 2.0 : 3.0,
+        'offset_y_cm' => $side === 'front' ? 3.0 : 4.0,
         'bytes' => $png, 'sha256' => hash('sha256', $png),
     ];
 }
@@ -126,7 +129,9 @@ $meta = json_decode(file_get_contents($base . '.json'), true);
 check136(is_array($meta) && $meta['side'] === 'front'
     && $meta['order_id'] === 100 && $meta['item_id'] === 71
     && $meta['design_id'] === $front['design_id']
-    && $meta['sha256'] === $front['sha256'],
+    && $meta['sha256'] === $front['sha256']
+    && $meta['width_cm'] === 0.1 && $meta['height_cm'] === 0.1
+    && $meta['offset_x_cm'] === 2 && $meta['offset_y_cm'] === 3,
     'manifest binds order, item, design, side and digest');
 @chmod($dir136, 0755);
 clearstatcache(true);
