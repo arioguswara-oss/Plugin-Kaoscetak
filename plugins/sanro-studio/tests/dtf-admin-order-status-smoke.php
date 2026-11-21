@@ -90,6 +90,18 @@ $GLOBALS['private138'] = false;
 check138(sanro_studio_dtf_admin_item_status($order, 71)['error'] === 'admin_status_disabled',
     'requires existing private storage flag');
 check138($GLOBALS['readCalls138'] === 0, 'disabled private storage not accessed');
+check138(sanro_studio_dtf_admin_status_enabled(),
+    'read-only admin panel remains opted in without raster engine');
+ob_start();
+sanro_studio_admin_item_dtf_status(71, $item, null);
+$disabled_html = ob_get_clean();
+check138(strpos($disabled_html, 'File DTF belum tersedia') !== false
+    && strpos($disabled_html, 'Belum disetujui untuk cetak') !== false
+    && strpos($disabled_html, '<a ') === false
+    && strpos($disabled_html, '<img') === false,
+    'staging-only placeholder visible with no candidate and no file link');
+check138($GLOBALS['readCalls138'] === 0,
+    'displaying placeholder must not probe any private files');
 $GLOBALS['private138'] = true;
 
 check138(sanro_studio_dtf_admin_item_status($order, 0)['error'] === 'invalid_order_item',
