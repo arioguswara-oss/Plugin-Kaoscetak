@@ -18,18 +18,25 @@ for bin in git php node flock mktemp sha256sum; do
         exit 2
     }
 done
+# Prefer a genuinely accessible engine, not just an installed executable.
+# Docker can be present yet inaccessible to sanro; rootless Podman may work.
 ENGINE=''
-if command -v docker >/dev/null 2>&1; then
+if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
     ENGINE=docker
-elif command -v podman >/dev/null 2>&1; then
+elif command -v podman >/dev/null 2>&1 && podman info >/dev/null 2>&1; then
     ENGINE=podman
 fi
 if [[ -z "$ENGINE" ]]; then
-    printf 'BLOCKED: Docker or Podman is not installed. No system changes were made.\n' >&2
-    exit 2
-fi
-if ! "$ENGINE" info >/dev/null 2>&1; then
-    printf 'BLOCKED: %s not accessible to user sanro. No sudo or host installation attempted.\n' "$ENGINE" >&2
+    printf 'BLOCKED: No accessible Docker or rootless Podman for user sanro.\n' >&2
+    for candidate in docker podman; do
+        if ! command -v "$candidate" >/dev/null 2>&1; then
+            printf 'ENGINE_%s: NOT_INSTALLED\n' "$candidate" >&2
+        else
+            printf 'ENGINE_%s: PRESENT_BUT_INACCESSIBLE\n' "$candidate" >&2
+        fi
+    done
+    printf 'Do NOT run sudo, join docker group or change host services for this QA.\n' >&2
+    printf 'Run the separate read-only runtime preflight to find a safe alternative.\n' >&2
     exit 2
 fi
 if [[ ! -d "$REPO/.git" ]] && ! git -C "$REPO" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
