@@ -149,6 +149,8 @@ install -m 0600 "$PLUGIN_MAIN" "$ROLLBACK_MAIN"
 added_modules=()
 mu_created=0
 main_updated=0
+apply_started=0
+apply_succeeded=0
 rollback(){
     if [[ "$main_updated" -eq 1 ]]; then
         install -m 0644 "$ROLLBACK_MAIN" "$ROOT_TMP/restore-main.php"
@@ -159,7 +161,16 @@ rollback(){
         rm -f -- "$PLUGIN_DIR/includes/$module" || true
     done
 }
-trap 'rollback; cleanup' ERR
+on_exit(){
+    local rc=$?
+    if [[ "$apply_started" -eq 1 && "$apply_succeeded" -ne 1 ]]; then
+        rollback
+    fi
+    cleanup
+    return "$rc"
+}
+trap on_exit EXIT
+apply_started=1
 
 # Load modules first. Existing preview hook remains unchanged until main
 # bootstrap is atomically switched to the linted additive candidate.
@@ -197,7 +208,7 @@ for expected_line in \
         exit 1
     fi
 done
-trap cleanup EXIT
+apply_succeeded=1
 echo 'STATUS: DEPLOYED_STAGING_ONLY'
 echo 'CURRENT_ADMIN_HOOK: REGISTERED'
 echo 'DTF_ADMIN_STATUS_FLAG: YES'
