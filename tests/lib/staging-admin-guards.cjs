@@ -36,13 +36,15 @@ function assertSafeStorageState(statePath) {
 function safeStagingUrl(value) {
   try {
     const url = new URL(value);
-    return url.origin === ORIGIN &&
-      (url.pathname === '/wp-admin/' ||
-        url.pathname.startsWith('/wp-admin/') ||
-        url.pathname.startsWith('/wp-content/') ||
-        url.pathname.startsWith('/wp-includes/')) &&
-      !(/(?:^|[?&])action=(?:delete|trash|untrash|approve|mark|save|update|activate|deactivate)(?:&|$)/i.test(url.search)) &&
-      !url.pathname.endsWith('/admin-post.php');
+    if (url.origin !== ORIGIN ||
+        url.pathname.endsWith('/admin-post.php') ||
+        url.pathname.endsWith('/admin-ajax.php')) return false;
+    // GET actions can mutate WordPress too: admit only edit/view or no action.
+    for (const field of ['action','action2','doaction','doaction2']) {
+      const action = url.searchParams.get(field);
+      if (action !== null && !['edit','view'].includes(action)) return false;
+    }
+    return true;
   } catch (_) { return false; }
 }
 function requestAllowed(method, value) {
