@@ -113,9 +113,14 @@ run_check 'DTF order batch disabled by default' 'PASS: SANRO DTF order batch def
 run_check 'DTF two-side real GD staging smoke PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-order-workflow-real-smoke.php
 run_check 'DTF Woo admin candidate status module PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/dtf-admin-order-status.php
 run_check 'DTF Woo admin candidate status regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-admin-order-status-smoke.php
-run_check 'DTF Woo admin role item binding and no-leak metadata' 'PASS: 28 SANRO WooCommerce admin DTF status access checks' php plugins/sanro-studio/tests/dtf-admin-order-status-smoke.php
+run_check 'DTF Woo admin role item binding and no-leak metadata' 'PASS: 32 SANRO WooCommerce admin DTF status access checks' php plugins/sanro-studio/tests/dtf-admin-order-status-smoke.php
 run_check 'DTF Woo admin candidate status default-OFF PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-admin-order-status-default-off.php
 run_check 'DTF Woo admin candidate status remains disabled by default' 'PASS: SANRO WooCommerce admin DTF candidate status defaults disabled' php plugins/sanro-studio/tests/dtf-admin-order-status-default-off.php
+run_check 'Staging DTF admin additive bootstrap PHP syntax' 'No syntax errors detected' php -l ops/hostinger/sanro-studio-pr31-bootstrap-preview.php
+run_check 'Staging DTF admin target bootstrap fixture PHP syntax' 'No syntax errors detected' php -l tests/staging-targeted-bootstrap-smoke.php
+run_check 'Staging DTF admin bootstrap preserves legacy preview' 'PASS: 14 SANRO staging targeted bootstrap patch checks' php tests/staging-targeted-bootstrap-smoke.php
+run_check 'Staging DTF admin must-use flag PHP syntax' 'No syntax errors detected' php -l ops/hostinger/mu-plugins/sanro-studio-dtf-admin-staging.php
+run_check 'Staging DTF targeted deployment shell safety syntax' '' bash -n ops/hostinger/sanro-studio-pr31-targeted-staging.sh
 run_check 'Hostinger real WordPress runtime preflight PHP syntax' 'No syntax errors detected' php -l ops/hostinger/sanro-studio-pr28-wp-runtime-readonly.php
 run_check 'Hostinger runtime preflight shell syntax' '' bash -n ops/hostinger/sanro-studio-pr28-wp-runtime-ci.sh
 run_check 'Buyer PHP asset-version syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/buyer.php
