@@ -80,6 +80,11 @@ function sanro_studio_dtf_order_item_private_status($order, $item_id) {
         $sides[$side] = $safe;
         $stored++;
     }
+    if ($stored === 0) {
+        return ['valid' => false, 'complete' => false,
+            'error' => 'artifact_no_printable_sides', 'partial' => false,
+            'candidate_count' => 0, 'sides' => $sides];
+    }
     return ['valid' => true, 'complete' => true,
         'candidate_count' => $stored, 'sides' => $sides,
         'quality_approved' => false, 'production_ready' => false];
@@ -128,6 +133,11 @@ function sanro_studio_dtf_prepare_order_item_candidates($order, $item_id) {
         $safe['idempotent'] = !empty($written['idempotent']);
         $sides[$side] = $safe;
         $stored++;
+    }
+    if ($stored === 0) {
+        return ['valid' => false, 'complete' => false,
+            'error' => 'artifact_no_printable_sides', 'partial' => false,
+            'candidate_count' => 0, 'sides' => $sides];
     }
     return ['valid' => true, 'complete' => true,
         'candidate_count' => $stored, 'sides' => $sides,
