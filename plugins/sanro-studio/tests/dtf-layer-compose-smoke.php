@@ -1,5 +1,6 @@
 <?php
 /** Sprint 135 fail-closed compositor regression, no WP, WC or network. */
+define('SANRO_STUDIO_ENABLE_DTF_LAYER_RASTER', true);
 $font135 = getenv('SANRO_STUDIO_TEST_FONT');
 define('SANRO_STUDIO_DTF_FONT_PATH',
     is_string($font135) && $font135 !== '' ? $font135 : '/nonexistent/sanro-qa-font.ttf');
@@ -68,7 +69,7 @@ check135(sanro_studio_dtf_layer_plan($order,71,'front')['error']
 $GLOBALS['record133']['design']['front']['text'] = 'HELLO';
 $GLOBALS['record133']['design']['front']['text_color'] = '#BAD';
 check135(sanro_studio_dtf_layer_plan($order,71,'front')['error']
-    === 'invalid_print_geometry', 'bad color rejected by original design validation');
+    === 'dtf_text_layout_unsupported', 'invalid text color rejected');
 $GLOBALS['record133']['design']['front']['text_color'] = '#171717';
 $GLOBALS['record133']['design']['front']['objects'][] = [
     'type'=>'text','x'=>4.0,'y'=>4.0,'width'=>1.0,'height'=>0.5
@@ -78,8 +79,9 @@ check135(sanro_studio_dtf_layer_plan($order,71,'front')['error']
 $GLOBALS['record133']['design']['front']['objects'] = [[
     'type'=>'text','x'=>3.0,'y'=>3.1,'width'=>1.0,'height'=>0.5
 ]];
-check135(sanro_studio_dtf_layer_plan($order,71,'front')['error']
-    === ($font_ready ? null : 'dtf_private_font_required'),
+$text_only = sanro_studio_dtf_layer_plan($order,71,'front');
+check135($font_ready ? !empty($text_only['valid'])
+    : (($text_only['error']??null)==='dtf_private_font_required'),
     'text-only checks font availability');
 $GLOBALS['record133']['design']['front']['objects'][] = [
     'type'=>'image','x'=>2.0,'y'=>3.0,'width'=>0.5,'height'=>0.5
