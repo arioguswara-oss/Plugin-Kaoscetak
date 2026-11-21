@@ -108,6 +108,8 @@ run_check 'Per-product mockup print-zone module PHP syntax' 'No syntax errors de
 run_check 'Per-product mockup print-zone regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/print-zone-smoke.php
 run_check 'Per-product print-zone validation and controls' 'PASS: SANRO per-product print overlay, security and admin controls' php plugins/sanro-studio/tests/print-zone-smoke.php
 run_check 'Buyer print-zone JS syntax' '' node --check plugins/sanro-studio/assets/buyer.js
+run_check 'Side-specific draft geometry JS syntax' '' node --check plugins/sanro-studio/tests/buyer-print-zone-draft-node.cjs
+run_check 'Side-specific text/image draft geometry' 'side-specific print-zone draft geometry checks' node plugins/sanro-studio/tests/buyer-print-zone-draft-node.cjs
 
 printf '\nSUMMARY: %s checks PASS, %s checks FAIL\n' "$passed" "$failed"
 if [[ $failed -gt 0 ]]; then
