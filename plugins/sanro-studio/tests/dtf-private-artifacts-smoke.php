@@ -69,10 +69,16 @@ $repeated = sanro_studio_dtf_commit_private_candidate($order, 71, 'front', $fron
 check136(!empty($repeated['valid']) && ($repeated['idempotent'] ?? null) === true,
     'repeated matching writes are idempotent');
 $conflict = $front;
-$conflict['bytes'] = str_replace("\xff\x00\x00\x00", "\x00\xff\x00\x00", $front['bytes']);
+// Change only the physical-density metadata, recomputing pHYs CRC. This is a
+// different, still-valid ~300 DPI PNG, and MUST NOT replace an existing file.
+$conflict['bytes'] = str_replace(
+    chunk133('pHYs', pack('NNC', 11811, 11811, 1)),
+    chunk133('pHYs', pack('NNC', 11812, 11811, 1)),
+    $front['bytes']
+);
 $conflict['sha256'] = hash('sha256', $conflict['bytes']);
 check136(sanro_studio_dtf_commit_private_candidate($order, 71, 'front', $conflict)['error']
-    === 'artifact_candidate_invalid', 'invalid PNG chunk tampering rejected');
+    === 'artifact_conflict', 'different valid render cannot overwrite locked candidate');
 $bad = $front; $bad['sha256'] = str_repeat('f', 64);
 check136(sanro_studio_dtf_commit_private_candidate($order, 71, 'front', $bad)['error']
     === 'artifact_candidate_invalid', 'mismatched candidate SHA rejected');
