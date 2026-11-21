@@ -6,7 +6,23 @@
 define('ABSPATH', dirname(__DIR__, 3) . '/');
 define('SANRO_STUDIO_ENABLE_DTF_IMAGE_RASTER', true);
 require dirname(__DIR__) . '/includes/print-area.php';
-require dirname(__DIR__) . '/includes/order-master-source.php';
+// The real private-master source is tested by Sprint 131's dedicated
+// regression. This raster test mocks that dependency without loading a second
+// definition of sanro_studio_locked_item_master_source().
+function sanro_studio_locked_record_has_item($record, $item_id) {
+    if (!is_array($record) || !is_int($item_id) || $item_id < 1
+        || !is_array($record['order_item_ids'] ?? null)
+        || !$record['order_item_ids']) return false;
+    $ids = $record['order_item_ids'];
+    $sorted = $ids;
+    sort($sorted, SORT_NUMERIC);
+    if ($sorted !== $ids || count(array_unique($ids)) !== count($ids)
+        || array_key_exists('order_item_id', $record)) return false;
+    foreach ($ids as $id) {
+        if (!is_int($id) || $id < 1) return false;
+    }
+    return in_array($item_id, $ids, true);
+}
 require dirname(__DIR__) . '/includes/dtf-image-render.php';
 
 $checks = 0;
