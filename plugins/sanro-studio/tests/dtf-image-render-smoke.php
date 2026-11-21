@@ -153,8 +153,10 @@ check133(sanro_studio_dtf_image_plan($order,71,'front')['error']==='dtf_source_i
 $order=fixture133();$GLOBALS['record133']['design']['front']['objects'][0]['width']=80.0;
 check133(sanro_studio_dtf_image_plan($order,71,'front')['error']==='invalid_print_geometry',
     'oversized geometry refused by product safe zone');
-$order=fixture133();$GLOBALS['record133']['design']['front']['objects'][0]['width']=18.0;
-$GLOBALS['record133']['design']['front']['objects'][0]['height']=18.0;
+$order=fixture133();
+$GLOBALS['record133']['design']['front']['category']='A3';
+$GLOBALS['record133']['design']['front']['objects'][0]=
+    ['type'=>'image','x'=>0.0,'y'=>0.0,'width'=>20.0,'height'=>25.0];
 check133(sanro_studio_dtf_image_plan($order,71,'front')['error']==='dtf_canvas_limit',
     'high-memory giant canvas refused pre-render');
 $order=fixture133();
