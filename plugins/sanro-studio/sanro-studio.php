@@ -47,6 +47,8 @@ require_once __DIR__ . '/includes/dtf-image-render.php';
 require_once __DIR__ . '/includes/dtf-layer-render.php';
 // Order-bound private PNG candidate store: internal only, opt-in, no upload hooks.
 require_once __DIR__ . '/includes/dtf-private-artifacts.php';
+// Internal opt-in order-item batch coordinator; no routes, cron or public hooks.
+require_once __DIR__ . '/includes/dtf-order-workflow.php';
 require_once __DIR__ . '/includes/production-ready-admin.php';
 require_once __DIR__ . '/includes/draft-rest.php';
 require_once __DIR__ . '/includes/admin.php';
