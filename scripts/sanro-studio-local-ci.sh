@@ -140,6 +140,12 @@ run_check 'Short REST master readback PHP test syntax' 'No syntax errors detecte
 run_check 'Short REST master readback auth and integrity' 'PASS: 20 short-route private DTF read security checks' php plugins/sanro-studio/tests/master-read-route-smoke.php
 run_check 'Mobile touch staging QA JS syntax' '' node --check tests/staging-mobile-readonly.cjs
 run_check 'Authenticated staging admin visual QA JS syntax' '' node --check tests/staging-admin-print-zones-readonly.cjs
+run_check 'Staging Woo admin URL/auth guard JS syntax' '' node --check tests/lib/staging-admin-guards.cjs
+run_check 'Staging Woo admin browser test JS syntax' '' node --check tests/staging-admin-order-readonly.cjs
+run_check 'Staging Woo admin offline guard regression syntax' '' node --check tests/staging-admin-guards-node.cjs
+run_check 'Staging Woo admin read-only browser security regression' 'PASS: 30 SANRO staging admin Playwright offline security guards' node tests/staging-admin-guards-node.cjs
+run_check 'Hermes staging Woo admin Playwright runner Bash syntax' '' bash -n ops/hermes/sanro-studio-pr29-browser-qa.sh
+
 run_check 'Buyer mobile viewport PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/buyer.php
 run_check 'Scoped buyer viewport regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/mobile-viewport-smoke.php
 run_check 'Scoped buyer viewport registration' 'PASS: 10 SANRO buyer viewport/CSS checks' php plugins/sanro-studio/tests/mobile-viewport-smoke.php
