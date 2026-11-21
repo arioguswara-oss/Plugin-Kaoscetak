@@ -30,6 +30,8 @@ $GLOBALS['preflightWrongSide137'] = '';
 $GLOBALS['preflightWrongSkip137'] = '';
 $GLOBALS['preflightApprove137'] = '';
 $GLOBALS['renderCalls137'] = 0;
+$GLOBALS['mutatePlan137'] = '';
+$GLOBALS['mutateRender137'] = '';
 // Simulates the real layer planner's private-master/font/geometry checks but
 // never generates PNG or writes any files. The renderer remains a distinct stub.
 function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
@@ -52,10 +54,18 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
     ];
     if ($GLOBALS['preflightWrongSide137'] === $side) $result['side'] = 'other';
     if ($GLOBALS['preflightApprove137'] === $side) $result['quality_approved'] = true;
+    if ($GLOBALS['mutatePlan137'] === $side) {
+        // Emulate a concurrent buyer-draft mutation DURING side preflight.
+        $GLOBALS['record133']['design']['front']['objects'][0]['x'] += 0.01;
+    }
     return $result;
 }
 function sanro_studio_dtf_render_layer_side($order, $item_id, $side) {
     $GLOBALS['renderCalls137']++;
+    if ($GLOBALS['mutateRender137'] === $side) {
+        // A draft edit during the slow GD phase must never be persisted.
+        $GLOBALS['record133']['design']['back']['objects'][0]['x'] += 0.01;
+    }
     if ($GLOBALS['renderFail137'] === $side) {
         return ['valid' => false, 'error' => 'synthetic_renderer_unavailable'];
     }
@@ -150,6 +160,49 @@ check137(empty($fakeApproval['valid'])
     && $GLOBALS['renderCalls137'] === 0,
     'preflight cannot claim artwork print quality approved');
 $GLOBALS['preflightApprove137'] = '';
+$fixedFingerprint = sanro_studio_dtf_locked_order_item_fingerprint($order, 71);
+check137(is_string($fixedFingerprint) && strlen($fixedFingerprint) === 64
+    && sanro_studio_dtf_locked_snapshot_matches($order, 71, $fixedFingerprint),
+    'private SHA256 fingerprint captures paid locked order/item design');
+check137(!isset($plan['fingerprint']) && !isset($plan['snapshot'])
+    && !isset($plan['sides']['front']['fingerprint']),
+    'preflight never returns the private draft fingerprint');
+$GLOBALS['mutatePlan137'] = 'back';
+$changedDuringPlan = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
+check137(empty($changedDuringPlan['valid'])
+    && $changedDuringPlan['error'] === 'artifact_snapshot_changed'
+    && $changedDuringPlan['partial'] === false
+    && $GLOBALS['renderCalls137'] === 0
+    && count(glob($dir137 . '/*.png') ?: []) === 0,
+    'draft mutation during back preflight rejects before PNG rendering');
+$GLOBALS['mutatePlan137'] = '';
+$GLOBALS['record133']['design']['front']['objects'][0]['x'] -= 0.01;
+$GLOBALS['mutateRender137'] = 'front';
+$changedDuringFront = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
+check137(empty($changedDuringFront['valid'])
+    && $changedDuringFront['error'] === 'artifact_snapshot_changed'
+    && $changedDuringFront['failed_side'] === 'front'
+    && $changedDuringFront['partial'] === false
+    && count(glob($dir137 . '/*.png') ?: []) === 0,
+    'front renderer draft change rejected before first private commit');
+$GLOBALS['mutateRender137'] = '';
+$GLOBALS['record133']['design']['back']['objects'][0]['x'] -= 0.01;
+$GLOBALS['mutateRender137'] = 'back';
+$changedDuringBack = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
+check137(empty($changedDuringBack['valid'])
+    && $changedDuringBack['error'] === 'artifact_snapshot_changed'
+    && $changedDuringBack['failed_side'] === 'back'
+    && $changedDuringBack['partial'] === true
+    && count(glob($dir137 . '/*.png') ?: []) === 1,
+    'after verified front side, back-draft mutation fails partial, never complete');
+$GLOBALS['mutateRender137'] = '';
+$GLOBALS['record133']['design']['back']['objects'][0]['x'] -= 0.01;
+foreach (glob($dir137 . '/*') ?: [] as $file) {
+    if (is_file($file) || is_link($file)) @unlink($file);
+}
+check137(count(glob($dir137 . '/*') ?: []) === 0
+    && sanro_studio_dtf_locked_snapshot_matches($order, 71, $fixedFingerprint),
+    'QA mutation fixtures restored and removed without affecting clean baseline');
 $first = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
 check137(!empty($first['valid']) && $first['complete'] === true
     && $first['candidate_count'] === 2 && $first['production_ready'] === false,
