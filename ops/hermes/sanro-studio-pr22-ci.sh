@@ -66,8 +66,9 @@ if [[ "$test_exit" -eq 0 && "$summary" =~ ^SUMMARY:\ ([0-9]+)\ checks\ PASS,\ 0\
         status='PASS'
     fi
 fi
-printf 'PR: #22\nHEAD: %s\nSTATUS: %s\nTEST_EXIT: %s\n%s\nLOG: %s\n' \
-    "$sha" "$status" "$test_exit" "${summary:-SUMMARY: unavailable}" "$log"
+gd_runtime="$(php -r 'echo function_exists("imagecreatefromstring") && function_exists("imageresolution") ? "AVAILABLE" : "UNAVAILABLE";')"
+printf 'PR: #22\nHEAD: %s\nSTATUS: %s\nTEST_EXIT: %s\nPHP_GD: %s\n%s\nLOG: %s\n' \
+    "$sha" "$status" "$test_exit" "$gd_runtime" "${summary:-SUMMARY: unavailable}" "$log"
 if [[ "$status" == 'FAIL' ]]; then
     printf '\nLast 25 log lines:\n' >&2
     tail -n 25 "$log" >&2
