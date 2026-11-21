@@ -116,6 +116,8 @@ run_check 'DTF Woo admin candidate status regression PHP syntax' 'No syntax erro
 run_check 'DTF Woo admin role item binding and no-leak metadata' 'PASS: 28 SANRO WooCommerce admin DTF status access checks' php plugins/sanro-studio/tests/dtf-admin-order-status-smoke.php
 run_check 'DTF Woo admin candidate status default-OFF PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-admin-order-status-default-off.php
 run_check 'DTF Woo admin candidate status remains disabled by default' 'PASS: SANRO WooCommerce admin DTF candidate status defaults disabled' php plugins/sanro-studio/tests/dtf-admin-order-status-default-off.php
+run_check 'Hostinger real WordPress runtime preflight PHP syntax' 'No syntax errors detected' php -l ops/hostinger/sanro-studio-pr28-wp-runtime-readonly.php
+run_check 'Hostinger runtime preflight shell syntax' '' bash -n ops/hostinger/sanro-studio-pr28-wp-runtime-ci.sh
 run_check 'Buyer PHP asset-version syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/buyer.php
 run_check 'Buyer asset fingerprint regression syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/buyer-asset-version-smoke.php
 run_check 'Buyer asset fingerprint' 'PASS: 3 SANRO Studio buyer asset fingerprint assertions' php plugins/sanro-studio/tests/buyer-asset-version-smoke.php
