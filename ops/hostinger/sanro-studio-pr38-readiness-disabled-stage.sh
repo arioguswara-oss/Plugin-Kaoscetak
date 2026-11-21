@@ -16,7 +16,7 @@ PLUGIN="$WP_ROOT/wp-content/plugins/sanro-studio"
 MAIN="$PLUGIN/sanro-studio.php"
 MODULE="$PLUGIN/includes/dtf-admin-readiness.php"
 
-# The two digests are evidenced by approved PR34 PLAN on Hostinger 20:12 WIB.
+# Hashes independently verified by PR37 Hostinger PLAN 22 Nov 2026 00:53 WIB.
 BASE_SHA='5dfb26a784882356dac82b19d6d4f5883cecbce473d74ae2d7da4daaecacdf35'
 PREVIEW_SHA='fb9d36d5c196e0681799f214259075eaf2f6ea3e3f6076cc8ee935204d3fb25d'
 
@@ -52,7 +52,7 @@ if [[ ! -f "$MAIN" || -L "$MAIN" || -e "$MODULE" || -L "$MODULE"
     exit 2
 fi
 
-# Cross-process lock outside website; prevents overlapping deploy attempts.
+# Hostinger-specific lock outside website; prevents concurrent PR38 runs.
 STATE="$HOME/.local/state/sanro-studio-staging-deploy"
 mkdir -p -m 700 "$STATE"
 if [[ -L "$STATE" || ! -d "$STATE"
@@ -72,20 +72,31 @@ ROLLBACK=''
 on_exit() {
     local rc=$?
     trap - EXIT
-    if [[ "$MAIN_CHANGED" -eq 1 && "$SUCCEEDED" -eq 0 && -f "$ROLLBACK" ]]; then
-        local rescue
-        rescue="$(mktemp -p "$PLUGIN" .sanro-pr38-rollback.XXXXXXXX.tmp)" || true
-        if [[ -n "${rescue:-}" ]]; then
-            if install -m 0600 "$ROLLBACK" "$rescue" && mv -f "$rescue" "$MAIN"; then
+    local restored=0
+    if [[ "$MAIN_CHANGED" -eq 1 && "$SUCCEEDED" -eq 0 ]]; then
+        if [[ -f "$ROLLBACK" && ! -L "$ROLLBACK" ]]; then
+            local rescue=''
+            rescue="$(mktemp -p "$PLUGIN" .sanro-pr38-rollback.XXXXXXXX.tmp)" || true
+            if [[ -n "$rescue" ]] && install -m 0600 "$ROLLBACK" "$rescue" \
+                && mv -f "$rescue" "$MAIN" \
+                && [[ "$(sha256sum "$MAIN" | cut -d' ' -f1)" == "$BASE_SHA" ]]; then
                 chmod 0644 "$MAIN" || true
-                echo 'ROLLBACK_BOOTSTRAP: RESTORED'
+                restored=1
+                echo 'ROLLBACK_BOOTSTRAP: RESTORED_VERIFIED'
             else
                 echo 'ROLLBACK_BOOTSTRAP: FAILED_MANUAL_INTERVENTION_REQUIRED' >&2
             fi
+            [[ -z "$rescue" ]] || rm -f -- "$rescue" || true
+        else
+            echo 'ROLLBACK_BOOTSTRAP: MISSING_MANUAL_INTERVENTION_REQUIRED' >&2
         fi
     fi
-    if [[ "$MODULE_ADDED" -eq 1 && "$SUCCEEDED" -eq 0 ]]; then
+    # If main was never changed, module can be safely removed. If main
+    # was modified, NEVER remove it unless original bootstrap is restored.
+    if [[ "$MODULE_ADDED" -eq 1 && "$SUCCEEDED" -eq 0 ]] \
+        && [[ "$MAIN_CHANGED" -eq 0 || "$restored" -eq 1 ]]; then
         rm -f -- "$MODULE" || true
+        echo 'ROLLBACK_READINESS_MODULE: REMOVED'
     fi
     [[ -z "$MAIN_TMP" ]] || rm -f -- "$MAIN_TMP" || true
     [[ -z "$MODULE_TMP" ]] || rm -f -- "$MODULE_TMP" || true
@@ -122,12 +133,14 @@ SANRO_STUDIO_QA_ENV=staging SANRO_STUDIO_PR38_PROBE_PHASE=before \
 }
 for requirement in \
     'PROBE_STATUS: PASS' \
-    'SANRO_STAGING_RUNTIME: VERIFIED' \
-    'WOOCOMMERCE_HPOS: ENABLED' \
-    'LEGACY_ITEM_PREVIEW_HOOK: REGISTERED' \
-    'DTF_READONLY_ADMIN_PANEL: REGISTERED' \
+    'PR38_WP_RUNTIME: VERIFIED' \
+    'HPOS_RUNTIME: ENABLED' \
+    'LEGACY_PREVIEW_STATUS_GENERATOR_HOOKS: REGISTERED' \
     'READINESS_HOOK: ABSENT' \
-    'READINESS_ENABLED: NO'; do
+    'READINESS_ENABLED: NO' \
+    'GENERATOR_ENABLED: NO' \
+    'DTF_RASTER_PRIVATE_BATCH: OFF' \
+    'DRIVE_WRITERS: OFF'; do
     if ! grep -Fqx "$requirement" "$QA/before.log"; then
         echo "BLOCKED: staging runtime probe line missing ($requirement)" >&2
         exit 2
@@ -144,13 +157,14 @@ if [[ "$(sha256sum "$MAIN" | cut -d' ' -f1)" != "$BASE_SHA" || -e "$MODULE" ]]; 
     echo 'BLOCKED: live files drifted since preflight' >&2; exit 2
 fi
 
-printf 'PR: #35\nHEAD: %s\nTARGET: HOSTINGER_SANRO_STAGING_ONLY\nMODE: %s\n' "$HEAD_SHA" "$MODE"
+printf 'PR: #38\nHEAD: %s\nTARGET: HOSTINGER_SANRO_STAGING_ONLY\nMODE: %s\n' "$HEAD_SHA" "$MODE"
 echo 'PREVIOUS_BOOTSTRAP_SHA256: '"$BASE_SHA"
 echo 'PATCHED_BOOTSTRAP_SHA256: '"$PREVIEW_SHA"
 echo 'MODULE_dtf-admin-readiness.php: ADD'
 echo 'READINESS_FLAG: OFF'
-echo 'DTF_PRIVATE_ARTIFACTS: OFF'
-echo 'DTF_ORDER_BATCH: OFF'
+echo 'GENERATOR_FLAG: OFF'
+echo 'DTF_RASTER_PRIVATE_BATCH: OFF'
+echo 'DRIVE_WRITERS: OFF'
 if [[ "$MODE" == 'plan' ]]; then
     echo 'WORDPRESS_FILES_MODIFIED: NO'
     echo 'WOOCOMMERCE_ORDERS_MODIFIED: NO'
@@ -210,12 +224,8 @@ for requirement in \
     'READINESS_ENABLED: NO' \
     'GENERATOR_ENABLED: NO' \
     'DTF_RASTER_PRIVATE_BATCH: OFF' \
-    'DTF_PRIVATE_ARTIFACTS: OFF' \
-    'DTF_ORDER_BATCH: OFF' \
     'DRIVE_WRITERS: OFF' \
-    'LEGACY_PREVIEW_STATUS_GENERATOR_HOOKS: REGISTERED' \
-    'LEGACY_ITEM_PREVIEW_HOOK: REGISTERED' \
-    'DTF_READONLY_ADMIN_PANEL: REGISTERED'; do
+    'LEGACY_PREVIEW_STATUS_GENERATOR_HOOKS: REGISTERED'; do
     if ! grep -Fqx "$requirement" "$QA/after.log"; then
         echo 'FAIL: postflight security gate failed; rolling back' >&2
         exit 1
@@ -228,8 +238,9 @@ fi
 SUCCEEDED=1
 echo 'STAGING_READINESS_HOOK: REGISTERED'
 echo 'STAGING_READINESS_ENABLED: NO'
-echo 'DTF_PRIVATE_ARTIFACTS: OFF'
-echo 'DTF_ORDER_BATCH: OFF'
+echo 'STAGING_GENERATOR_ENABLED: NO'
+echo 'DTF_RASTER_PRIVATE_BATCH: OFF'
+echo 'DRIVE_WRITERS: OFF'
 echo 'WOOCOMMERCE_ORDERS_MODIFIED: NO'
 echo 'PRODUCTION_MODIFIED: NO'
 echo 'STATUS: DEPLOYED_STAGING_ONLY_READINESS_DISABLED'
