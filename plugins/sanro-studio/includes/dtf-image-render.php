@@ -144,6 +144,31 @@ function sanro_studio_dtf_image_plan($order, $item_id, $side) {
 }
 
 /**
+ * PNG pHYs records pixels per meter. A 300 DPI request corresponds to
+ * approximately 11,811 px/m, with integer rounding of the physical unit.
+ */
+function sanro_studio_dtf_png_has_300dpi($png) {
+    if (!is_string($png) || substr($png, 0, 8) !== "\x89PNG\r\n\x1a\n") return false;
+    $offset = 8;
+    $total = strlen($png);
+    while ($offset + 12 <= $total && $offset < 8192) {
+        $length = unpack('N', substr($png, $offset, 4))[1];
+        if ($length > 8192 || $offset + 12 + $length > $total) return false;
+        $type = substr($png, $offset + 4, 4);
+        if ($type === 'pHYs') {
+            if ($length !== 9) return false;
+            $x = unpack('N', substr($png, $offset + 8, 4))[1];
+            $y = unpack('N', substr($png, $offset + 12, 4))[1];
+            $unit = ord($png[$offset + 16]);
+            return $unit === 1 && abs($x - 11811) <= 2 && abs($y - 11811) <= 2;
+        }
+        if ($type === 'IDAT' || $type === 'IEND') return false;
+        $offset += 12 + $length;
+    }
+    return false;
+}
+
+/**
  * Rasterize actual pixels at physical 300 DPI, keeping the PNG alpha channel.
  * Requires the PHP GD extension and imageresolution() (no shell execution).
  * Returned bytes are private; the caller must NEVER print them to an HTTP
@@ -190,7 +215,8 @@ function sanro_studio_dtf_render_image_side($order, $item_id, $side) {
         if (!is_array($check) || $check[0] !== $plan['width_px']
             || $check[1] !== $plan['height_px']
             || ($check['mime'] ?? null) !== 'image/png'
-            || ord($png[25]) !== 6) {
+            || ord($png[25]) !== 6
+            || !sanro_studio_dtf_png_has_300dpi($png)) {
             return ['valid' => false, 'error' => 'dtf_output_integrity_failed'];
         }
         $metadata = $plan;
