@@ -45,6 +45,8 @@ require_once __DIR__ . '/includes/drive-master-export.php';
 require_once __DIR__ . '/includes/dtf-image-render.php';
 // Experimental image+text candidate; double opt-in, no public route.
 require_once __DIR__ . '/includes/dtf-layer-render.php';
+// Order-bound private PNG candidate store: internal only, opt-in, no upload hooks.
+require_once __DIR__ . '/includes/dtf-private-artifacts.php';
 require_once __DIR__ . '/includes/production-ready-admin.php';
 require_once __DIR__ . '/includes/draft-rest.php';
 require_once __DIR__ . '/includes/admin.php';
