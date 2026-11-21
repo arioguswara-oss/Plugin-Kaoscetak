@@ -81,6 +81,35 @@ check137real(empty($badBack['valid']) && $badBack['partial'] === false
     && count(glob($dir137real . '/*.png') ?: []) === 0,
     'unsupported back text fails BEFORE any real front GD PNG is written');
 $GLOBALS['record133']['design']['back']['text'] = 'BACK';
+$lockedSHA = sanro_studio_dtf_locked_order_item_fingerprint($order, 71);
+check137real(is_string($lockedSHA) && strlen($lockedSHA) === 64
+    && sanro_studio_dtf_locked_snapshot_matches($order, 71, $lockedSHA),
+    'real GD candidate workflow captures one private locked-draft version');
+$GLOBALS['sourceReadCounter133'] = 0;
+$GLOBALS['sourceReadHook133'] = static function ($order, $item_id, $side) {
+    if ($side !== 'front') return;
+    $GLOBALS['sourceReadCounter133']++;
+    if ($GLOBALS['sourceReadCounter133'] === 2) {
+        // 1st image read: two-sided preflight; 2nd: actual front GD render.
+        // Change text only (geometry remains unchanged); result must fail.
+        $GLOBALS['record133']['design']['back']['text'] = 'CHANGED AFTER PREFLIGHT';
+    }
+};
+$drift = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
+check137real(empty($drift['valid'])
+    && ($drift['error'] ?? null) === 'artifact_snapshot_changed'
+    && ($drift['failed_side'] ?? null) === 'front'
+    && ($drift['partial'] ?? null) === false
+    && count(glob($dir137real . '/*.png') ?: []) === 0,
+    'real GD source read sees text-only locked change and refuses first PNG');
+check137real($GLOBALS['sourceReadCounter133'] >= 2
+    && !sanro_studio_dtf_locked_snapshot_matches($order, 71, $lockedSHA),
+    'test actually mutates source during GD render instead of only preflight');
+unset($GLOBALS['sourceReadHook133'], $GLOBALS['sourceReadCounter133']);
+$GLOBALS['record133']['design']['back']['text'] = 'BACK';
+check137real(sanro_studio_dtf_locked_snapshot_matches($order, 71, $lockedSHA)
+    && count(glob($dir137real . '/*.png') ?: []) === 0,
+    'synthetic draft restored with zero candidate files before normal run');
 $batch = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
 check137real(!empty($batch['valid']) && $batch['complete'] === true
     && $batch['candidate_count'] === 2 && $batch['production_ready'] === false,
