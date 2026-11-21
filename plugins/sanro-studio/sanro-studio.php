@@ -82,6 +82,7 @@ add_action('woocommerce_admin_order_data_after_order_details',
 // Only authenticated wp-admin POST; never register a nopriv action.
 add_action('admin_post_sanro_studio_mark_production_ready',
     'sanro_studio_admin_mark_production_ready');
+add_action('admin_footer', 'sanro_studio_admin_production_ready_footer_form');
 
 // Authenticated admin-post route; never register a nopriv counterpart.
 add_action('admin_post_sanro_studio_order_preview', 'sanro_studio_admin_deliver_order_preview');
