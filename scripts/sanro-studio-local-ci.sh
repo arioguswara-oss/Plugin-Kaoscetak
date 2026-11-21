@@ -81,6 +81,8 @@ run_check 'Private DTF image previews and master binding' 'PASS: 7 private DTF i
 run_check 'Private DTF master PHP module syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/master-storage.php
 run_check 'Private DTF front/back storage regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/master-storage-roundtrip.php
 run_check 'Private DTF front/back owner-authorized storage roundtrip' 'PASS: 15 isolated private-master front/back roundtrip checks' php plugins/sanro-studio/tests/master-storage-roundtrip.php
+run_check 'Short REST master readback PHP test syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/master-read-route-smoke.php
+run_check 'Short REST master readback auth and integrity' 'PASS: 20 short-route private DTF read security checks' php plugins/sanro-studio/tests/master-read-route-smoke.php
 run_check 'Mobile touch staging QA JS syntax' '' node --check tests/staging-mobile-readonly.cjs
 run_check 'Buyer mobile viewport PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/buyer.php
 run_check 'Scoped buyer viewport regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/mobile-viewport-smoke.php
