@@ -37,6 +37,7 @@ require_once __DIR__ . '/includes/storage-policy.php';
 require_once __DIR__ . '/includes/master-storage.php';
 require_once __DIR__ . '/includes/order-preview.php';
 require_once __DIR__ . '/includes/drive-production.php';
+require_once __DIR__ . '/includes/drive-auto-provision.php';
 require_once __DIR__ . '/includes/production-ready-admin.php';
 require_once __DIR__ . '/includes/draft-rest.php';
 require_once __DIR__ . '/includes/admin.php';
@@ -84,6 +85,13 @@ add_action('woocommerce_admin_order_data_after_order_details',
 add_action('admin_post_sanro_studio_mark_production_ready',
     'sanro_studio_admin_mark_production_ready');
 add_action('admin_footer', 'sanro_studio_admin_production_ready_footer_form');
+
+// Private, opt-in Drive provisioning. All callbacks validate eligibility again.
+// Jobs run asynchronously through Action Scheduler (or WP-Cron fallback).
+add_action('woocommerce_payment_complete', 'sanro_studio_schedule_drive_production', 20, 1);
+add_action('woocommerce_order_status_changed', 'sanro_studio_schedule_drive_production', 20, 1);
+add_action('sanro_studio_production_ready_marked', 'sanro_studio_schedule_drive_production', 10, 1);
+add_action('sanro_studio_drive_provision_order', 'sanro_studio_run_drive_production', 10, 1);
 
 // Authenticated admin-post route; never register a nopriv counterpart.
 add_action('admin_post_sanro_studio_order_preview', 'sanro_studio_admin_deliver_order_preview');

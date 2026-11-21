@@ -402,6 +402,11 @@ function sanro_studio_mark_order_production_ready($order) {
     if ($order->save() === false) {
         return ['valid' => false, 'error' => 'production_ready_save_failed'];
     }
+    // Dispatch only AFTER the admin-authorized order update is persisted.
+    // The queued Drive worker is separately gated and never blocks this POST.
+    if (function_exists('do_action')) {
+        do_action('sanro_studio_production_ready_marked', (int) $order->get_id());
+    }
     return ['valid' => true, 'already_ready' => false];
 }
 
