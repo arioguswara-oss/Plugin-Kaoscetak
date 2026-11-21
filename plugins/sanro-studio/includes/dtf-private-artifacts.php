@@ -247,9 +247,14 @@ function sanro_studio_dtf_artifact_write_exclusive($path, $bytes) {
  * Low-level internal candidate commit, intended ONLY after trusted rendering.
  * Rechecks the paid/ready, locked order binding; never trusts a buyer filename.
  */
-function sanro_studio_dtf_commit_private_candidate($order, $item_id, $side, $candidate) {
+function sanro_studio_dtf_commit_private_candidate($order, $item_id, $side, $candidate, $expected_snapshot = null) {
     $binding = sanro_studio_dtf_artifact_binding($order, $item_id, $side);
     if (empty($binding['valid']) || !empty($binding['skipped'])) return $binding;
+    if ($expected_snapshot !== null
+        && (!function_exists('sanro_studio_dtf_locked_snapshot_matches')
+            || !sanro_studio_dtf_locked_snapshot_matches($order, $item_id, $expected_snapshot))) {
+        return ['valid' => false, 'error' => 'artifact_snapshot_changed'];
+    }
     $dir = sanro_studio_dtf_artifact_directory();
     if (!$dir) return ['valid' => false, 'error' => 'artifact_directory_unsafe'];
     $bytes = is_array($candidate) ? ($candidate['bytes'] ?? null) : null;
@@ -315,6 +320,12 @@ function sanro_studio_dtf_commit_private_candidate($order, $item_id, $side, $can
         if (!@flock($lock, LOCK_EX | LOCK_NB)) {
             return ['valid' => false, 'error' => 'artifact_busy'];
         }
+        // Repeat the snapshot check WITH the private per-side lock acquired,
+        // immediately before any idempotent readback or candidate write.
+        if ($expected_snapshot !== null
+            && !sanro_studio_dtf_locked_snapshot_matches($order, $item_id, $expected_snapshot)) {
+            return ['valid' => false, 'error' => 'artifact_snapshot_changed'];
+        }
         if (file_exists($png_file) || file_exists($meta_file)
             || is_link($png_file) || is_link($meta_file)) {
             $existing = sanro_studio_dtf_verify_private_artifact($order, $item_id, $side);
@@ -344,6 +355,10 @@ function sanro_studio_dtf_commit_private_candidate($order, $item_id, $side, $can
         if (!is_string($json) || strlen($json) > 4096) {
             return ['valid' => false, 'error' => 'artifact_manifest_invalid'];
         }
+        if ($expected_snapshot !== null
+            && !sanro_studio_dtf_locked_snapshot_matches($order, $item_id, $expected_snapshot)) {
+            return ['valid' => false, 'error' => 'artifact_snapshot_changed'];
+        }
         if (!sanro_studio_dtf_artifact_write_exclusive($png_file, $bytes)) {
             return ['valid' => false, 'error' => 'artifact_write_failed'];
         }
@@ -363,13 +378,25 @@ function sanro_studio_dtf_commit_private_candidate($order, $item_id, $side, $can
 }
 
 /** No registered hooks: a future authorized worker must invoke explicitly. */
-function sanro_studio_dtf_persist_order_item_side($order, $item_id, $side) {
+function sanro_studio_dtf_persist_order_item_side($order, $item_id, $side, $expected_snapshot = null) {
     $binding = sanro_studio_dtf_artifact_binding($order, $item_id, $side);
     if (empty($binding['valid']) || !empty($binding['skipped'])) return $binding;
+    if ($expected_snapshot !== null
+        && (!function_exists('sanro_studio_dtf_locked_snapshot_matches')
+            || !sanro_studio_dtf_locked_snapshot_matches($order, $item_id, $expected_snapshot))) {
+        return ['valid' => false, 'error' => 'artifact_snapshot_changed'];
+    }
     if (!function_exists('sanro_studio_dtf_render_layer_side')) {
         return ['valid' => false, 'error' => 'artifact_renderer_unavailable'];
     }
     $candidate = sanro_studio_dtf_render_layer_side($order, $item_id, $side);
     if (empty($candidate['valid']) || !empty($candidate['skipped'])) return $candidate;
-    return sanro_studio_dtf_commit_private_candidate($order, $item_id, $side, $candidate);
+    // Renderer rereads draft and may be slow; prohibit committing a candidate
+    // from a different locked-design version even if geometry still matches.
+    if ($expected_snapshot !== null
+        && !sanro_studio_dtf_locked_snapshot_matches($order, $item_id, $expected_snapshot)) {
+        return ['valid' => false, 'error' => 'artifact_snapshot_changed'];
+    }
+    return sanro_studio_dtf_commit_private_candidate(
+        $order, $item_id, $side, $candidate, $expected_snapshot);
 }
