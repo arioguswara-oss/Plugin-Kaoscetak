@@ -429,15 +429,6 @@ function sanro_studio_attach_item_production_folder_id($order, $item_id, $folder
     if (empty($manifest['ready_for_drive_integration'])) {
         return ['valid' => false, 'error' => 'production_not_ready'];
     }
-    // The feature flag alone cannot prove that a Drive folder belongs to this
-    // order. Require a fresh remote Drive API check before any WooCommerce write.
-    if (!function_exists('sanro_studio_verify_drive_item_folder')) {
-        return ['valid' => false, 'error' => 'drive_verification_unavailable'];
-    }
-    $verified = sanro_studio_verify_drive_item_folder($order, $item_id, $folder_id);
-    if (empty($verified['valid'])) {
-        return ['valid' => false, 'error' => $verified['error'] ?? 'drive_verification_failed'];
-    }
     $items = $order->get_items('line_item');
     $item = $items[$item_id];
     if (!method_exists($item, 'update_meta_data') || !method_exists($item, 'save')) {
@@ -446,6 +437,15 @@ function sanro_studio_attach_item_production_folder_id($order, $item_id, $folder
     $existing = $item->get_meta('_sanro_studio_drive_folder_id', true);
     if ($existing !== '' && $existing !== $folder_id) {
         return ['valid' => false, 'error' => 'folder_conflict'];
+    }
+    // The feature flag alone cannot prove that a Drive folder belongs to this
+    // order. Even idempotent reattachments must re-check the remote metadata.
+    if (!function_exists('sanro_studio_verify_drive_item_folder')) {
+        return ['valid' => false, 'error' => 'drive_verification_unavailable'];
+    }
+    $verified = sanro_studio_verify_drive_item_folder($order, $item_id, $folder_id);
+    if (empty($verified['valid'])) {
+        return ['valid' => false, 'error' => $verified['error'] ?? 'drive_verification_failed'];
     }
     if ($existing === $folder_id) return ['valid' => true, 'already_attached' => true];
     $item->update_meta_data('_sanro_studio_drive_folder_id', $folder_id);
