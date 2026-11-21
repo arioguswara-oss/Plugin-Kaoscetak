@@ -27,11 +27,23 @@ function patch_check($condition, $message) {
     $count++;
 }
 try {
-    $argv = [__DIR__ . '/../ops/hostinger/sanro-studio-pr31-bootstrap-preview.php',
-        $in, $out];
-    ob_start();
-    require __DIR__ . '/../ops/hostinger/sanro-studio-pr31-bootstrap-preview.php';
-    $message = ob_get_clean();
+    // Include the CLI patcher inside a local function scope: it uses its own
+    // $count for preg_replace_callback, which must not mutate the fixture's
+    // global $count assertion tally. All 14 assertions are independent.
+    $message = (static function (string $input, string $candidate): string {
+        $argv = [
+            __DIR__ . '/../ops/hostinger/sanro-studio-pr31-bootstrap-preview.php',
+            $input, $candidate,
+        ];
+        ob_start();
+        try {
+            require __DIR__ . '/../ops/hostinger/sanro-studio-pr31-bootstrap-preview.php';
+            return (string) ob_get_clean();
+        } catch (Throwable $error) {
+            ob_end_clean();
+            throw $error;
+        }
+    })($in, $out);
     $next = file_get_contents($out);
     patch_check(strpos($message, 'BOOTSTRAP_PATCH: PREPARED') !== false,
         'prepared candidate acknowledgement');
