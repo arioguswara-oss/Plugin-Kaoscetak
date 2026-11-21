@@ -5,6 +5,35 @@ defined('ABSPATH') || exit;
  * Frontend entrypoint is opt-in and inert until SANRO Studio is explicitly
  * enabled on a staging site. No existing WooCommerce purchase flow is replaced.
  */
+/**
+ * Content-based cache busting for the buyer runtime. Dev assets may change
+ * without a plugin version bump; a static ver=0.1.1-dev can leave browsers
+ * running a stale Cart handler after an approved staging update.
+ * Failure to hash falls back to the ordinary plugin version.
+ */
+function sanro_studio_buyer_script_version() {
+    $path = __DIR__ . '/../assets/buyer.js';
+    if (!is_file($path) || !is_readable($path)) return SANRO_STUDIO_VERSION;
+    $hash = hash_file('sha256', $path);
+    return is_string($hash) && preg_match('/^[a-f0-9]{64}$/D', $hash)
+        ? SANRO_STUDIO_VERSION . '-' . substr($hash, 0, 12)
+        : SANRO_STUDIO_VERSION;
+}
+
+/**
+ * Cache-bust the buyer stylesheet as well as buyer.js: plugin staging builds
+ * retain the same development version, while theme/CDN caches can keep an
+ * older 35px mobile button stylesheet after a ZIP overwrite.
+ */
+function sanro_studio_buyer_style_version() {
+    $path = __DIR__ . '/../assets/buyer.css';
+    if (!is_file($path) || !is_readable($path)) return SANRO_STUDIO_VERSION;
+    $hash = hash_file('sha256', $path);
+    return is_string($hash) && preg_match('/^[a-f0-9]{64}$/D', $hash)
+        ? SANRO_STUDIO_VERSION . '-' . substr($hash, 0, 12)
+        : SANRO_STUDIO_VERSION;
+}
+
 function sanro_studio_frontend_enabled() {
     return defined('SANRO_STUDIO_ENABLE_BUYER_EDITOR') && SANRO_STUDIO_ENABLE_BUYER_EDITOR === true;
 }
@@ -60,6 +89,21 @@ function sanro_studio_render_product_picker($page_url) {
     echo '<script>document.addEventListener("DOMContentLoaded",function(){var input=document.getElementById("sanro-product-search"),cards=[].slice.call(document.querySelectorAll(".sanro-product-card")),empty=document.getElementById("sanro-product-empty");if(!input)return;input.addEventListener("input",function(){var q=input.value.toLocaleLowerCase().trim(),count=0;cards.forEach(function(card){var match=card.dataset.name.includes(q);card.hidden=!match;if(match)count++});if(empty)empty.hidden=count>0||cards.length===0})});</script>';
 }
 
+/**
+ * The active theme owns the document <head>. Some staging themes omit
+ * the mobile viewport meta tag, causing Chromium on a 320px phone to use
+ * its legacy 980px layout viewport and bypass SANRO's responsive CSS.
+ * Register only for the opted-in SANRO product picker/editor routes.
+ */
+function sanro_studio_print_buyer_viewport_meta() {
+    echo '<meta name="viewport" content="width=device-width, initial-scale=1">' . "\n";
+}
+function sanro_studio_register_buyer_viewport_meta() {
+    if (!has_action('wp_head', 'sanro_studio_print_buyer_viewport_meta')) {
+        add_action('wp_head', 'sanro_studio_print_buyer_viewport_meta', 1);
+    }
+}
+
 /** Dedicated buyer editor view, not wp-admin or Edit Post. */
 function sanro_studio_render_buyer_editor() {
     if (!sanro_studio_frontend_enabled()) return;
@@ -72,7 +116,8 @@ function sanro_studio_render_buyer_editor() {
     // Never hijack unrelated pages or product URLs.
     if ($on_selected_page && !isset($_GET['product_id']) && !isset($_GET['sanro_studio_editor'])) {
         $asset = plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/';
-        wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], SANRO_STUDIO_VERSION);
+        wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], sanro_studio_buyer_style_version());
+        sanro_studio_register_buyer_viewport_meta();
         get_header();
         sanro_studio_render_product_picker(get_permalink($editor_page_id));
         get_footer();
@@ -98,10 +143,10 @@ function sanro_studio_render_buyer_editor() {
     $config['product_id'] = $product_id;
     // Render as a dedicated view: no WooCommerce add-to-cart form is included.
     $asset = plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/';
-    wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], SANRO_STUDIO_VERSION);
+    wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], sanro_studio_buyer_style_version());
     wp_enqueue_script('sanro-studio-estimate', $asset . 'estimate.js', [], SANRO_STUDIO_VERSION, true);
     wp_enqueue_script('sanro-studio-cart-redirect', $asset . 'cart-redirect.js', [], SANRO_STUDIO_VERSION, true);
-    wp_enqueue_script('sanro-studio-buyer', $asset . 'buyer.js', ['sanro-studio-estimate', 'sanro-studio-cart-redirect'], SANRO_STUDIO_VERSION, true);
+    wp_enqueue_script('sanro-studio-buyer', $asset . 'buyer.js', ['sanro-studio-estimate', 'sanro-studio-cart-redirect'], sanro_studio_buyer_script_version(), true);
     // Supply API bootstrap only on explicitly enabled staging; no owner token
     // is ever included in page HTML or a shared JavaScript configuration.
     if (function_exists('sanro_studio_draft_rest_enabled') && sanro_studio_draft_rest_enabled()) {
@@ -125,6 +170,7 @@ function sanro_studio_render_buyer_editor() {
 
     // WordPress may have a canonical redirect for product query arguments.
     // This view is selected only after product identity and visibility checks.
+    sanro_studio_register_buyer_viewport_meta();
     get_header();
     echo '<main id="sanro-studio-buyer" class="sanro-buyer" aria-label="SANRO Studio">';
     echo '<header><h1>' . esc_html($studio_label) . '</h1><p>Editor kaos — pratinjau saja, belum dapat checkout</p>';

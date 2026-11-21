@@ -26,8 +26,14 @@ function sanro_studio_public_editor_config($product_id) {
         'product_id' => $product_id,
         'unit' => $config['unit'],
         'safe_areas' => $config['safe_areas'],
+        // Visual overlay placement only; centimeter limits remain server-owned.
+        'print_zones' => function_exists('sanro_studio_product_print_zones')
+            ? sanro_studio_product_print_zones($product_id) : [],
         'categories' => $config['categories'],
         'pricing_profile' => 'cotton_combed_24s',
+        // Public, verified Media Library image URLs only. Never private DTF masters.
+        'mockups' => function_exists('sanro_studio_product_mockup_urls')
+            ? sanro_studio_product_mockup_urls($product_id) : [],
     ];
 }
 
@@ -36,7 +42,12 @@ function sanro_studio_register_editor_config_route() {
         'methods' => 'GET',
         'callback' => 'sanro_studio_rest_editor_config',
         'permission_callback' => '__return_true',
-        'args' => ['id' => ['required' => true, 'validate_callback' => 'is_numeric']],
+        'args' => ['id' => [
+            'required' => true,
+            'validate_callback' => static function ($value, $request, $param) {
+                return is_scalar($value) && ctype_digit((string) $value) && (int) $value > 0;
+            },
+        ]],
     ]);
 }
 

@@ -12,10 +12,18 @@
 defined('ABSPATH') || exit;
 
 define('SANRO_STUDIO_VERSION', '0.1.1-dev');
+require_once __DIR__ . '/includes/private-master-setup.php';
+// Activation provisions a private sibling directory when the hosting layout permits.
+// Existing sites that update the plugin receive the same safe setup on init,
+// but upload remains disabled unless BOTH buyer + draft gates are explicitly on.
+register_activation_hook(__FILE__, 'sanro_studio_provision_private_master_storage');
+add_action('init', 'sanro_studio_initialize_auto_private_master_storage', 0);
 require_once __DIR__ . '/includes/core.php';
 require_once __DIR__ . '/includes/print-area.php';
 require_once __DIR__ . '/includes/product-area.php';
+require_once __DIR__ . '/includes/product-print-zones.php';
 require_once __DIR__ . '/includes/product-pricing.php';
+require_once __DIR__ . '/includes/product-mockups.php';
 require_once __DIR__ . '/includes/editor-config.php';
 require_once __DIR__ . '/includes/buyer.php';
 require_once __DIR__ . '/includes/pricing.php';
@@ -44,9 +52,14 @@ add_action('admin_post_sanro_studio_save', 'sanro_studio_save_settings');
 add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_area_fields');
 add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_readiness_notice', 30);
 add_action('woocommerce_admin_process_product_object', 'sanro_studio_save_product_areas');
+add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_print_zone_fields');
+add_action('woocommerce_admin_process_product_object', 'sanro_studio_save_product_print_zones');
 
 add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_pricing_fields');
 add_action('woocommerce_admin_process_product_object', 'sanro_studio_save_product_pricing');
+add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_mockup_fields');
+add_action('woocommerce_admin_process_product_object', 'sanro_studio_save_product_mockups');
+add_action('admin_enqueue_scripts', 'sanro_studio_enqueue_product_mockup_admin');
 
 // Public read-only configuration only. No draft, upload or checkout endpoints.
 add_action('rest_api_init', 'sanro_studio_register_editor_config_route');
@@ -73,6 +86,17 @@ add_action('woocommerce_after_order_itemmeta', 'sanro_studio_admin_item_preview_
  // Staging checkout validation is inert unless explicitly enabled.
 if (defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
     && SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK === true) {
+    // Cart session restoration must never silently replace the signed Studio
+    // unit quote with WooCommerce's ordinary product catalog price.
+    if (defined('SANRO_STUDIO_ENABLE_STAGING_CART')
+        && SANRO_STUDIO_ENABLE_STAGING_CART === true
+        && defined('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT')
+        && SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT === true) {
+        add_action('woocommerce_before_calculate_totals',
+            'sanro_studio_stage_reprice_signed_cart', 999, 1);
+        add_filter('woocommerce_get_item_data',
+            'sanro_studio_stage_cart_item_display', 20, 2);
+    }
     add_action('wp_enqueue_scripts', 'sanro_studio_stage_enqueue_checkout_authorization', 30);
     add_action('woocommerce_review_order_before_submit',
         'sanro_studio_stage_checkout_credential_field', 5);

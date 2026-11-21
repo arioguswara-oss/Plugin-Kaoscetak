@@ -73,6 +73,20 @@ function sanro_studio_render_settings() {
         'Draft API' => sanro_studio_draft_rest_enabled() ? 'Aktif melalui konfigurasi server' : 'Nonaktif (default)',
         'Checkout' => 'Belum tersedia',
     ];
+    // Expose only operational state, never the private absolute filesystem path.
+    $private_path = defined('SANRO_STUDIO_PRIVATE_MASTER_DIR')
+        ? SANRO_STUDIO_PRIVATE_MASTER_DIR
+        : get_option('sanro_studio_auto_private_master_dir', '');
+    $private_ready = function_exists('sanro_studio_private_master_path_safe')
+        && sanro_studio_private_master_path_safe($private_path);
+    $upload_ready = defined('SANRO_STUDIO_ENABLE_MASTER_UPLOAD')
+        && SANRO_STUDIO_ENABLE_MASTER_UPLOAD === true
+        && defined('SANRO_STUDIO_ENABLE_PRIVATE_MASTERS')
+        && SANRO_STUDIO_ENABLE_PRIVATE_MASTERS === true;
+    $rows['Master DTF privat'] = !$private_ready
+        ? 'Belum tersedia: hosting tidak mengizinkan folder privat aman di luar webroot'
+        : ($upload_ready ? 'Siap: folder privat aman dan upload aktif' : 'Folder aman; menunggu aktivasi buyer dan draft');
+
     $runtime_labels = [
         'native_default' => 'SANRO native aktif sebagai fondasi; bootstrap editor lama tidak dijalankan',
         'waiting' => 'Menunggu inisialisasi',

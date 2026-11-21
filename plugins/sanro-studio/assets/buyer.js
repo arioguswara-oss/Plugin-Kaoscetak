@@ -45,7 +45,28 @@
  updateQty();
  function render(){
   // Rendering is not itself a user edit; revision changes only in input handlers.
-  const d=sides[side];q('#sanro-text-input').value=d.text;
+  const d=sides[side];
+  // Merchant-selected WooCommerce Media Library mockup; presentation only.
+  // Design geometry, authoritative area and DTF master bindings are unchanged.
+  const mockup = config.mockups && Object.prototype.hasOwnProperty.call(config.mockups,side)
+    ? config.mockups[side] : null;
+  const shirt=q('.sanro-shirt');
+  shirt.style.backgroundImage=(typeof mockup==='string' && /^https?:\/\//i.test(mockup))
+    ? 'url('+JSON.stringify(mockup)+')' : '';
+  // Merchant-controlled visual overlay; authoritative geometry uses
+  // independent centimeter bounds from the server. An unsafe zone falls back
+  // to the existing 27/22/46/54 layout without modifying the saved design.
+  const zone=config.print_zones && config.print_zones[side];
+  const validZone=zone && ['x','y','width','height'].every(key=>
+    typeof zone[key]==='number' && Number.isFinite(zone[key]))
+    && zone.x>=0 && zone.y>=0 && zone.width>0 && zone.height>0
+    && zone.x+zone.width<=100 && zone.y+zone.height<=100;
+  const placement=validZone?zone:{x:27,y:22,width:46,height:54};
+  safe.style.left=placement.x+'%';
+  safe.style.top=placement.y+'%';
+  safe.style.width=placement.width+'%';
+  safe.style.height=placement.height+'%';
+  q('#sanro-text-input').value=d.text;
   q('#sanro-image-size').min=String(Math.min(10,d.imageSize));
   q('#sanro-image-size').value=d.imageSize;
   q('#sanro-font-size').value=d.fontSize;q('#sanro-text-color').value=d.textColor;q('#sanro-category').value=d.category;
@@ -223,7 +244,7 @@
    ||!fileId.startsWith(id.toLowerCase()+'-'+name+'-'))
    throw new Error('Referensi master '+name+' tidak valid.');
   const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(id)
-   +'/masters/'+name+'/'+encodeURIComponent(fileId),{
+   +'/master-read/'+name,{
    method:'GET',credentials:'same-origin',cache:'no-store',
    headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':token}
   });
@@ -389,8 +410,9 @@
   for(const name of ['front','back']){
    const d=sides[name],area=config.safe_areas[name];
    if(!area||!d.url)continue;
-   if(d.pending||d.file&&!boundMasterRefs[name])
-    throw new Error('Upload master privat '+name+' sebelum menyimpan.');
+   // Never accept a locally replaced image with the prior bound master ID.
+   if(d.pending||d.file)
+    throw new Error('Unggah gambar baru '+name+' sebelum menyimpan.');
    if(!boundMasterRefs[name])
     throw new Error('Master privat '+name+' belum terikat.');
    const dimensions=await new Promise((resolve,reject)=>{
@@ -416,37 +438,60 @@
   if(!design.front&&!design.back)throw new Error('Tambahkan desain terlebih dahulu.');
   return design;
  }
- // Lightweight, text-only snapshot. Never persist source artwork in a preview.
- async function makeTextPreview(name){
+ // Derived private JPEG preview, not original print-resolution artwork.
+ // Require the owner-bound master before previewing an uploaded image.
+ async function makeDesignPreview(name){
   const d=sides[name],area=config.safe_areas[name];
-  if(!area||d.url||d.pending||!d.text.trim())return null;
-  const canvas=document.createElement('canvas');
-  canvas.width=640;canvas.height=640;
-  const ctx=canvas.getContext('2d');
-  if(!ctx)throw new Error('Canvas tidak tersedia.');
-  ctx.fillStyle=shirtColor.value;ctx.fillRect(0,0,640,640);
-  const width=safe.clientWidth,height=safe.clientHeight;
-  if(width<=0||height<=0)throw new Error('Area preview belum siap.');
-  const scale=640/width;
-  const fontPx=Math.max(10,Math.round(d.fontSize*scale));
-  const x=d.textX/100*640,y=d.textY/100*height*scale;
-  ctx.fillStyle=d.textColor;
-  ctx.font=fontPx+'px sans-serif';
-  ctx.textBaseline='top';
-  const lines=d.text.split('\n');
-  lines.forEach((line,i)=>ctx.fillText(line,x,y+i*fontPx*1.2,Math.max(0,640-x)));
-  for(const quality of [0.75,0.55,0.35,0.2]){
-   const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
-   if(blob&&blob.size>=100&&blob.size<=51200){
-    return await new Promise((resolve,reject)=>{
-     const reader=new FileReader();
-     reader.onload=()=>resolve(String(reader.result).split(',')[1]);
-     reader.onerror=()=>reject(new Error('Preview gagal dibaca.'));
-     reader.readAsDataURL(blob);
-    });
+  if(!area||(!d.url&&!d.text.trim()))return null;
+  if(d.pending||d.file||(d.url&&!boundMasterRefs[name]))
+   throw new Error('Unggah dan simpan master '+name+' sebelum membuat preview.');
+  const bounds=safe.getBoundingClientRect();
+  if(!bounds.width||!bounds.height)throw new Error('Area preview belum siap.');
+  let imagePreview=null;
+  if(d.url){
+   imagePreview=await new Promise((resolve,reject)=>{
+    const probe=new Image();
+    probe.onload=()=>probe.naturalWidth>0&&probe.naturalHeight>0
+     ?resolve(probe):reject(new Error('Gambar preview tidak valid.'));
+    probe.onerror=()=>reject(new Error('Gambar preview gagal dibaca.'));
+    probe.src=d.url;
+   });
+  }
+  // Fit the private 50 KiB server cap by reducing resolution, then quality.
+  // Source/master image bytes are never serialized into this preview payload.
+  for(const size of [640,480,360,256]){
+   const canvas=document.createElement('canvas');
+   canvas.width=size;canvas.height=size;
+   const ctx=canvas.getContext('2d');
+   if(!ctx)throw new Error('Canvas tidak tersedia.');
+   ctx.fillStyle=shirtColor.value;ctx.fillRect(0,0,size,size);
+   if(imagePreview){
+    const width=d.imageSize/100*size;
+    const height=width*bounds.width/bounds.height
+     *imagePreview.naturalHeight/imagePreview.naturalWidth;
+    ctx.drawImage(imagePreview,d.imageX/100*size,d.imageY/100*size,width,height);
+   }
+   if(d.text.trim()){
+    const fontPx=Math.max(8,Math.round(d.fontSize*size/bounds.width));
+    const x=d.textX/100*size,y=d.textY/100*size;
+    ctx.fillStyle=d.textColor;
+    ctx.font=fontPx+'px sans-serif';ctx.textBaseline='top';
+    d.text.split('\n').forEach((line,i)=>
+     ctx.fillText(line,x,y+i*fontPx*1.2,Math.max(0,size-x)));
+   }
+   for(const quality of [0.75,0.55,0.35,0.2]){
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
+    if(blob&&blob.size>=100&&blob.size<=51200){
+     return await new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(String(reader.result).split(',')[1]);
+      reader.onerror=()=>reject(new Error('Preview gagal dibaca.'));
+      reader.readAsDataURL(blob);
+     });
+    }
    }
   }
-  throw new Error('Preview melebihi 50 KB.');
+  throw new Error('Preview melebihi batas 50 KB.');
  }
  if(saveButton&&config.draft_api){
   const masterButton=q('#sanro-upload-master'),masterStatus=q('#sanro-master-upload-status');
@@ -513,7 +558,7 @@
        throw new Error('Upload master '+name+' gagal ('+response.status+').');
       // Verify owner-bound readback and byte-for-byte integrity before success.
       const readback=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)
-       +'/masters/'+name+'/'+encodeURIComponent(result.file_id),{
+       +'/master-read/'+name,{
        method:'GET',credentials:'same-origin',cache:'no-store',
        headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken}
       });
@@ -596,7 +641,7 @@
     try{
      const completed=[];
      for(const name of ['front','back']){
-      const encoded=await makeTextPreview(name);
+      const encoded=await makeDesignPreview(name);
       if(!encoded)continue;
       if(editRevision!==revisionAtStart)throw new Error('Desain berubah. Simpan ulang sebelum upload.');
       const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/previews/'+name,{
@@ -625,7 +670,7 @@
      }
      uploadStatus.textContent=completed.length
       ?'Preview privat tersimpan: '+completed.join(', ')+'. Belum terhubung ke checkout.'
-      :'Tidak ada teks untuk dipratinjau. Gambar sumber belum didukung.';
+      :'Tidak ada desain yang dapat dipratinjau.';
     }catch(error){uploadStatus.textContent=error.message||'Upload preview gagal.'}
     finally{uploadButton.disabled=false}
    });
@@ -668,13 +713,34 @@
   });
   try{reopenDraft().catch(error=>{saveStatus.textContent=error.message})}catch(_error){}
   const cartButton=q('#sanro-add-to-cart'),cartStatus=q('#sanro-cart-status');
+  // Prevent a second Cart POST while the first is pending, even if a DOM
+  // optimiser replaces the disabled button before the response arrives.
+  let cartPending=false;
   if(cartButton&&cartStatus){
-   cartButton.addEventListener('click',async()=>{
-    if(saving||uploadingMaster||!savedId||!ownerToken||editRevision!==savedRevision){
-     cartStatus.textContent='Simpan seluruh perubahan desain sebelum menambah ke keranjang.';return;
+   // Delegate from the stable editor root. A layout/optimisation plugin may
+   // replace the Cart button DOM after buyer.js initialises; binding directly
+   // to the old node would leave a visible button without a click handler.
+   root.addEventListener('click',async event=>{
+    const target=event.target&&typeof event.target.closest==='function'
+     ?event.target.closest('#sanro-add-to-cart'):null;
+    if(!target||!root.contains(target)||cartPending)return;
+    const status=q('#sanro-cart-status');
+    if(!status)return;
+    if(saving){
+     status.textContent='Tunggu sampai penyimpanan draft selesai sebelum membuka keranjang.';return;
     }
-    cartButton.disabled=true;
-    cartStatus.textContent='Memvalidasi draft dan harga server…';
+    if(uploadingMaster){
+     status.textContent='Tunggu sampai upload master selesai sebelum membuka keranjang.';return;
+    }
+    if(!savedId||!ownerToken){
+     status.textContent='Draft belum tersedia pada sesi editor ini. Simpan desain sebelum membuka keranjang.';return;
+    }
+    if(editRevision!==savedRevision){
+     status.textContent='Desain berubah setelah draft terakhir disimpan. Simpan ulang sebelum membuka keranjang.';return;
+    }
+    cartPending=true;
+    target.disabled=true;
+    status.textContent='Memvalidasi draft dan harga server…';
     try{
      const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/cart',{
       method:'POST',credentials:'same-origin',cache:'no-store',
@@ -682,12 +748,12 @@
      });
      const result=await response.json();
      if(!response.ok||!result.valid)throw new Error('Keranjang belum siap ('+response.status+').');
-     cartStatus.textContent='Desain masuk keranjang. Lanjutkan melalui halaman keranjang untuk otorisasi checkout.';
+     status.textContent='Desain masuk keranjang. Lanjutkan melalui halaman keranjang untuk otorisasi checkout.';
      const safeCartUrl=typeof window.SanroStudioSafeCartUrl==='function'
       ?window.SanroStudioSafeCartUrl(result.cart_url,location.href):null;
-     if(safeCartUrl) location.assign(safeCartUrl);
-    }catch(error){cartStatus.textContent=error.message||'Gagal menambah ke keranjang.'}
-    finally{cartButton.disabled=false}
+     if(safeCartUrl)location.assign(safeCartUrl);
+    }catch(error){status.textContent=error.message||'Gagal menambah ke keranjang.'}
+    finally{cartPending=false;target.disabled=false}
    });
   }
   saveButton.addEventListener('click',async()=>{

@@ -1,4 +1,4 @@
-.sanro-buyer{max-width:1180px;margin:auto;padding:18px;font-family:system-ui,sans-serif}.sanro-buyer *{box-sizing:border-box}.sanro-buyer header{margin-bottom:16px}.sanro-layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px}.sanro-preview,.sanro-controls{padding:16px;background:#f5f7fb;border-radius:14px}.sanro-preview nav{display:flex;gap:8px}.sanro-preview button[aria-pressed=true]{background:#183c66;color:#fff}.sanro-shirt{position:relative;margin:18px auto 0;width:min(100%,390px);height:420px;background:#e7ebf1;border-radius:30% 30% 8% 8%;display:grid;place-items:center}.sanro-safe{position:absolute;left:27%;top:22%;width:46%;height:54%;border:2px dashed #3468a1;overflow:hidden}.sanro-safe img,.sanro-text{position:absolute;touch-action:none;user-select:none;max-width:none}.sanro-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.15}.sanro-controls{display:grid;align-content:start;gap:12px}.sanro-controls label{display:grid;gap:5px}.sanro-controls input,.sanro-controls textarea,.sanro-controls select{width:100%;min-width:0}.sanro-hint{font-size:13px}.sanro-buyer button{padding:9px 14px;border:1px solid #cbd5e1;border-radius:8px}@media(max-width:750px){.sanro-layout{grid-template-columns:1fr}.sanro-shirt{height:350px;width:min(100%,320px)}}
+.sanro-buyer{max-width:1180px;margin:auto;padding:18px;font-family:system-ui,sans-serif}.sanro-buyer,.sanro-buyer *{box-sizing:border-box}.sanro-buyer header{margin-bottom:16px}.sanro-layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px}.sanro-preview,.sanro-controls{padding:16px;background:#f5f7fb;border-radius:14px}.sanro-preview nav{display:flex;gap:8px}.sanro-preview button[aria-pressed=true]{background:#183c66;color:#fff}.sanro-shirt{position:relative;margin:18px auto 0;width:min(100%,390px);height:420px;background:#e7ebf1;border-radius:30% 30% 8% 8%;display:grid;place-items:center}.sanro-safe{position:absolute;left:27%;top:22%;width:46%;height:54%;border:2px dashed #3468a1;overflow:hidden}.sanro-safe img,.sanro-text{position:absolute;touch-action:none;user-select:none;max-width:none}.sanro-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.15}.sanro-controls{display:grid;align-content:start;gap:12px}.sanro-controls label{display:grid;gap:5px}.sanro-controls input,.sanro-controls textarea,.sanro-controls select{width:100%;min-width:0}.sanro-hint{font-size:13px}.sanro-buyer button{padding:9px 14px;border:1px solid #cbd5e1;border-radius:8px}@media(max-width:750px){.sanro-layout{grid-template-columns:1fr}.sanro-shirt{height:350px;width:min(100%,320px)}}
 .sanro-size-qty{border:1px solid #cbd5e1;border-radius:10px;padding:10px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.sanro-size-qty legend{font-weight:600;padding:0 5px}.sanro-size-qty label{font-size:13px}.sanro-size-qty input{padding:7px;max-width:100%}.sanro-shirt{transition:background-color .15s ease}
 
 /* Mobile-first buyer workspace: touch targets, readable forms, no horizontal overflow. */
@@ -71,4 +71,17 @@
  .sanro-buyer .sanro-controls{width:100%;gap:10px}
  .sanro-buyer .sanro-shirt{width:min(100%,330px)}
  .sanro-buyer .sanro-size-qty{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* SANRO buyer theme-resistant touch targets. Theme button rules can override
+   default min-height; this applies ONLY inside the SANRO editor container. */
+#sanro-studio-buyer button{min-height:44px!important}
+#sanro-studio-buyer .sanro-preview nav button[data-side]{min-height:48px!important}
+
+/* Optional merchant-controlled product mockup, behind the print-safe overlay.
+   Fallback remains the existing colored shirt when no mockup is configured. */
+#sanro-studio-buyer .sanro-shirt{
+ background-position:center;
+ background-size:contain;
+ background-repeat:no-repeat;
 }

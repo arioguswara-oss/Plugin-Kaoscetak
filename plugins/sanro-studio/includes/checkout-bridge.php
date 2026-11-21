@@ -77,7 +77,7 @@ function sanro_studio_validate_size_order_item($candidate, $order_item) {
     // would allow a coupon or third-party hook to silently undercharge.
     $total = $order_item->get_total();
     if ((!is_string($total) && !is_int($total) && !is_float($total))
-        || !preg_match('/^(?:0|[1-9][0-9]*)(?:\\.[0-9]{1,2})?$/D', (string) $total)) {
+        || !preg_match('/^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,2})?$/D', (string) $total)) {
         return ['valid' => false, 'error' => 'size_order_total_invalid'];
     }
     $total_parts = explode('.', (string) $total, 2);
@@ -435,7 +435,7 @@ function sanro_studio_validate_order_grand_total($contract, $total) {
         return ['valid' => false, 'error' => 'order_grand_total_contract_invalid'];
     }
     if ((!is_string($total) && !is_int($total) && !is_float($total))
-        || !preg_match('/^(?:0|[1-9][0-9]*)(?:\\.[0-9]{1,2})?$/D', (string) $total)) {
+        || !preg_match('/^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,2})?$/D', (string) $total)) {
         return ['valid' => false, 'error' => 'order_grand_total_invalid'];
     }
     $whole = explode('.', (string) $total, 2)[0];
