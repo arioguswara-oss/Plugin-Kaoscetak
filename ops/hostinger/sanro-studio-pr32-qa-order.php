@@ -68,24 +68,42 @@ if (!sanro_s142_staging_identity_ok($host, $user, $qaEnv,
     exit(2);
 }
 
-// Only the display panel may be active, never candidate raster, production
-// folder creation or checkout-side effects for this synthetic order.
-$forbidden = [
+// Core print/production/Drive writers must stay OFF. Existing staging
+// buyer checkout flags may stay ON; this standalone CLI never calls WC_Checkout
+// and does not dispatch any checkout hook, even during WC_Order::save().
+$writerNames = [
     'SANRO_STUDIO_ENABLE_DTF_IMAGE_RASTER',
     'SANRO_STUDIO_ENABLE_DTF_LAYER_RASTER',
     'SANRO_STUDIO_ENABLE_DTF_PRIVATE_ARTIFACTS',
     'SANRO_STUDIO_ENABLE_DTF_ORDER_BATCH',
     'SANRO_STUDIO_ENABLE_DRIVE_AUTO_PROVISION',
     'SANRO_STUDIO_ENABLE_VERIFIED_DRIVE_ATTACHMENT',
-    'SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK',
-    'SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT',
 ];
-foreach ($forbidden as $name) {
-    if (defined($name) && constant($name) === true) {
-        fwrite(STDERR, "BLOCKED: staging production/checkout guard not disabled\n");
-        exit(2);
-    }
+$writerFlags = [];
+foreach ($writerNames as $name) {
+    $writerFlags[$name] = defined($name) && constant($name) === true;
 }
+if (!sanro_s142_writer_flags_safe($writerFlags)) {
+    fwrite(STDERR, "BLOCKED: DTF or Google Drive production writer enabled\\n");
+    exit(2);
+}
+$checkoutHooks = [
+    'woocommerce_checkout_process',
+    'woocommerce_checkout_create_order_line_item',
+    'woocommerce_checkout_create_order',
+    'woocommerce_checkout_order_created',
+];
+$checkoutActionsFired = [];
+foreach ($checkoutHooks as $hook) {
+    $checkoutActionsFired[] = function_exists('did_action')
+        ? (int) did_action($hook) : -1;
+}
+if (!sanro_s142_checkout_not_invoked(PHP_SAPI === 'cli',
+        $_SERVER['REQUEST_METHOD'] ?? null, $checkoutActionsFired)) {
+    fwrite(STDERR, "BLOCKED: checkout workflow already entered in QA CLI\\n");
+    exit(2);
+}
+
 if (function_exists('wp_get_environment_type')
     && wp_get_environment_type() === 'production') {
     echo "WARNING: WP_ENVIRONMENT reports production; exact staging host/root/site and approval were independently checked\n";
@@ -201,6 +219,17 @@ try {
     $item->add_meta_data('_sanro_studio_design_id', $uuid, true);
     $order->add_item($item);
     $newId = (int) $order->save();
+    // Recheck no WooCommerce checkout flow was dispatched by CRUD save.
+    // A failed post-write guard is a hard stop: NEVER automatically retry.
+    $checkoutActionsAfter = [];
+    foreach ($checkoutHooks as $hook) {
+        $checkoutActionsAfter[] = (int) did_action($hook);
+    }
+    if (!sanro_s142_checkout_not_invoked(true, 'GET', $checkoutActionsAfter)) {
+        fwrite(STDERR,
+            "FAIL: Woo checkout hooks fired during synthetic fixture; do not retry\\n");
+        exit(1);
+    }
     $readback = $newId > 0 ? wc_get_order($newId) : false;
     if (!sanro_s142_fixture_is_safe($readback)) {
         fwrite(STDERR,
