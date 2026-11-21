@@ -168,8 +168,21 @@ function sanro_studio_lock_checkout_order_draft($order, $contract, $owner_token,
 function sanro_studio_stage_checkout_lock_created_order($order) {
     if (!sanro_studio_stage_checkout_batch_lock_enabled()) return;
     $verified = $GLOBALS['sanro_studio_checkout_verified'] ?? null;
-    if (!is_array($verified) || empty($verified['contract']['valid'])
-        || !isset($verified['lock_owner_token'], $verified['lock_design_hash'])) {
+    if (!is_array($verified) || empty($verified['contract']['valid'])) {
+        // Ordinary WooCommerce orders must be unaffected by this staging-only
+        // hook. An order with SANRO metadata must never bypass authorization.
+        if (!is_object($order) || !method_exists($order, 'get_items')) return;
+        $items = $order->get_items('line_item');
+        if (!is_array($items)) return;
+        foreach ($items as $item) {
+            if (is_object($item) && method_exists($item, 'get_meta')
+                && $item->get_meta('_sanro_studio_design_id', true) !== '') {
+                throw new RuntimeException('SANRO Studio: verified checkout lock is missing.');
+            }
+        }
+        return;
+    }
+    if (!isset($verified['lock_owner_token'], $verified['lock_design_hash'])) {
         throw new RuntimeException('SANRO Studio: verified checkout lock is missing.');
     }
     $result = sanro_studio_lock_checkout_order_draft(
