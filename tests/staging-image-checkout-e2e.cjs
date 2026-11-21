@@ -182,9 +182,14 @@ catch (_) {
         try { url=new URL(response.url()); } catch (_) { return; }
         if (url.hostname!==host) return;
         const match=url.pathname.match(
-          /\/wp-json\/sanro-studio\/v1\/drafts\/[a-f0-9-]{36}\/masters\/(front|back)(?:\/[^/]+)?$/i);
+          /\/wp-json\/sanro-studio\/v1\/drafts\/[a-f0-9-]{36}\/(?:masters\/(front|back)(?:\/[^/]+)?|master-read\/(front|back))$/i);
         if(!match) return;
-        const row={side:match[1],method:request.method(),http:response.status(),code:'ok'};
+        const contentType=response.headers()['content-type']||'';
+        const kind=/\bjson\b/i.test(contentType)?'json'
+          :/\bhtml\b/i.test(contentType)?'html'
+          :/\btext\b/i.test(contentType)?'text':'other';
+        const row={side:match[1]||match[2],method:request.method(),
+          http:response.status(),contentType:kind,code:'ok'};
         masterHttp.push(row);
         masterReads.push((async()=>{
           if(response.ok())return;
@@ -209,7 +214,7 @@ catch (_) {
         .test(masterStatus)?masterStatus.slice(0,160):'other';
       console.log('DTF MASTER PHASE: '+JSON.stringify({ui:safeUiStatus,
         responses:masterHttp.map(row=>({side:row.side,method:row.method,
-          http:row.http,code:row.code}))}));
+          http:row.http,contentType:row.contentType,code:row.code}))}));
       assert.match(masterStatus,/Master dan posisi gambar terverifikasi untuk front, back/,
         'Private front/back master upload or binding failed; see DTF MASTER PHASE');
       console.log('PASS: both private DTF masters uploaded and bound to same draft');
