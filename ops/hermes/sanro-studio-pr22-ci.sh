@@ -67,11 +67,15 @@ if [[ "$test_exit" -eq 0 && "$summary" =~ ^SUMMARY:\ ([0-9]+)\ checks\ PASS,\ 0\
     fi
 fi
 gd_runtime="$(php -r 'echo function_exists("imagecreatefromstring") && function_exists("imageresolution") ? "AVAILABLE" : "UNAVAILABLE";')"
+raster_evidence="$(grep '^PHP_GD_RASTER:' "$log" | tail -n 1 || true)"
+printf '%s\n' "${raster_evidence:-PHP_GD_RASTER: NOT_TESTED (no raster evidence found)}"
 printf 'PR: #22\nHEAD: %s\nSTATUS: %s\nTEST_EXIT: %s\nPHP_GD: %s\n%s\nLOG: %s\n' \
     "$sha" "$status" "$test_exit" "$gd_runtime" "${summary:-SUMMARY: unavailable}" "$log"
 if [[ "$status" == 'FAIL' ]]; then
     printf '\nLast 25 log lines:\n' >&2
     tail -n 25 "$log" >&2
+    printf '\nAll failed gates:\n' >&2
+    grep -n -E '^FAIL:' "$log" >&2 || true
     exit 1
 fi
 exit 0
