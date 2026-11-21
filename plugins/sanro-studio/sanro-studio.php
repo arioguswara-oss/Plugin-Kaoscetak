@@ -36,6 +36,7 @@ require_once __DIR__ . '/includes/storage-policy.php';
 // Private master writer is inert until explicitly called by an authorized workflow.
 require_once __DIR__ . '/includes/master-storage.php';
 require_once __DIR__ . '/includes/order-preview.php';
+require_once __DIR__ . '/includes/production-ready-admin.php';
 require_once __DIR__ . '/includes/draft-rest.php';
 require_once __DIR__ . '/includes/admin.php';
 
@@ -76,6 +77,11 @@ add_action('template_redirect', 'sanro_studio_render_buyer_editor', 20);
 // Admin-only, read-only order preview status; no public file delivery.
 add_action('woocommerce_admin_order_data_after_order_details', 'sanro_studio_admin_order_preview_status');
 add_action('woocommerce_admin_order_data_after_order_details', 'sanro_studio_admin_production_status', 15);
+add_action('woocommerce_admin_order_data_after_order_details',
+    'sanro_studio_admin_production_ready_action', 20);
+// Only authenticated wp-admin POST; never register a nopriv action.
+add_action('admin_post_sanro_studio_mark_production_ready',
+    'sanro_studio_admin_mark_production_ready');
 
 // Authenticated admin-post route; never register a nopriv counterpart.
 add_action('admin_post_sanro_studio_order_preview', 'sanro_studio_admin_deliver_order_preview');
