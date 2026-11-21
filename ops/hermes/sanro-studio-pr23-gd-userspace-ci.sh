@@ -167,7 +167,9 @@ if [[ -z "$libgd_link" || ! -e "$libgd_link" ]]; then
     exit 2
 fi
 libgd_dir="$(dirname "$libgd_link")"
-isolated_ld_path="$libgd_dir${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+# Use ONLY the freshly extracted trusted libgd3 directory plus the
+# system loader's normal defaults; never inherit arbitrary LD_LIBRARY_PATH.
+isolated_ld_path="$libgd_dir"
 printf 'PREFLIGHT: isolated libgd.so.3 found; checking transitive libraries\n'
 if command -v ldd >/dev/null 2>&1; then
     LD_LIBRARY_PATH="$isolated_ld_path" ldd "$module" >> "$log" 2>&1 || true
