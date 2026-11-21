@@ -74,6 +74,7 @@ function sanro_studio_run_drive_production($order_id) {
     }
     if (!$targets) return ['valid' => false, 'error' => 'no_studio_designs'];
     $created = 0; $reused = 0;
+    $masters_exported = 0; $masters_reused = 0; $masters_skipped = 0;
     foreach ($targets as $item_id) {
         $result = sanro_studio_auto_drive_provision_item($order, $item_id);
         if (empty($result['valid'])) return ['valid' => false,
@@ -81,8 +82,30 @@ function sanro_studio_run_drive_production($order_id) {
             'created' => $created, 'reused' => $reused];
         if (!empty($result['created'])) $created++;
         else $reused++;
+        // A folder being ready does NOT mean that a final DTF composition is
+        // ready. Export only explicitly bound, locked ORIGINAL image assets.
+        if (function_exists('sanro_studio_drive_master_export_enabled')
+            && sanro_studio_drive_master_export_enabled()) {
+            foreach (['front', 'back'] as $side) {
+                $export = sanro_studio_drive_upload_locked_item_master(
+                    $order, $item_id, $result['folder_id'], $side
+                );
+                if (empty($export['valid'])) {
+                    return ['valid' => false,
+                        'error' => $export['error'] ?? 'drive_master_export_failed',
+                        'created' => $created, 'reused' => $reused,
+                        'masters_exported' => $masters_exported,
+                        'masters_reused' => $masters_reused];
+                }
+                if (!empty($export['skipped'])) $masters_skipped++;
+                elseif (!empty($export['created'])) $masters_exported++;
+                else $masters_reused++;
+            }
+        }
     }
-    return ['valid' => true, 'created' => $created, 'reused' => $reused];
+    return ['valid' => true, 'created' => $created, 'reused' => $reused,
+        'masters_exported' => $masters_exported,
+        'masters_reused' => $masters_reused, 'masters_skipped' => $masters_skipped];
 }
 
 /** Per-item exclusive DB lock plus Google search: safe across repeated hooks. */
