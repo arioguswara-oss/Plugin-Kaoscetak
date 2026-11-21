@@ -91,6 +91,75 @@ function sanro_studio_dtf_order_item_private_status($order, $item_id) {
 }
 
 /**
+ * Sprint 149 — read-only two-sided raster/source preflight BEFORE first write.
+ * The layer planner validates the actual locked design, image-master digest,
+ * source resolution/aspect and trusted font with no PNG output or file writes.
+ * Never return the planner itself: it may contain private master bytes/text.
+ * This worker is already gated by the parent DTF batch flag, OFF in staging.
+ */
+function sanro_studio_dtf_preflight_order_item_candidates($order, $item_id) {
+    if (!sanro_studio_dtf_order_batch_enabled()) {
+        return ['valid' => false, 'error' => 'order_batch_disabled'];
+    }
+    if (!function_exists('sanro_studio_dtf_artifact_binding')
+        || !function_exists('sanro_studio_dtf_artifact_directory')
+        || !function_exists('sanro_studio_dtf_layer_plan')) {
+        return ['valid' => false, 'error' => 'artifact_preflight_unavailable'];
+    }
+    if (!sanro_studio_dtf_artifact_directory()) {
+        return ['valid' => false, 'error' => 'artifact_directory_unsafe',
+            'partial' => false];
+    }
+    $sides = []; $printable = 0;
+    foreach (['front', 'back'] as $side) {
+        $binding = sanro_studio_dtf_artifact_binding($order, $item_id, $side);
+        if (!is_array($binding) || empty($binding['valid'])) {
+            return ['valid' => false,
+                'error' => $binding['error'] ?? 'artifact_binding_failed',
+                'failed_side' => $side, 'partial' => false];
+        }
+        // Planner may load a private PNG master, but it performs no rendering
+        // or persistence. Only fixed safe status codes leave this scope.
+        $plan = sanro_studio_dtf_layer_plan($order, $item_id, $side);
+        if (!is_array($plan) || empty($plan['valid'])
+            || !empty($binding['skipped']) !== !empty($plan['skipped'])) {
+            return ['valid' => false, 'error' => 'artifact_preflight_failed',
+                'failed_side' => $side, 'partial' => false];
+        }
+        if (!empty($binding['skipped'])) {
+            $sides[$side] = ['state' => 'blank'];
+            continue;
+        }
+        if (($plan['order_id'] ?? null) !== $binding['order_id']
+            || ($plan['item_id'] ?? null) !== $binding['item_id']
+            || ($plan['side'] ?? null) !== $side
+            || !is_string($plan['design_id'] ?? null)
+            || !hash_equals($binding['design_id'], strtolower($plan['design_id']))
+            || ($plan['kind'] ?? null) !== 'layered_dtf_raster_candidate'
+            || ($plan['quality_approved'] ?? null) !== false
+            || ($plan['font_parity_approved'] ?? null) !== false
+            || ($plan['dpi'] ?? null) !== 300
+            || !is_int($plan['width_px'] ?? null)
+            || !is_int($plan['height_px'] ?? null)
+            || $plan['width_px'] < 1 || $plan['height_px'] < 1
+            || $plan['width_px'] > 4096 || $plan['height_px'] > 4096
+            || $plan['width_px'] * $plan['height_px'] > 6000000) {
+            return ['valid' => false, 'error' => 'artifact_preflight_mismatch',
+                'failed_side' => $side, 'partial' => false];
+        }
+        $sides[$side] = ['state' => 'planned'];
+        $printable++;
+    }
+    if ($printable === 0) {
+        return ['valid' => false, 'error' => 'artifact_no_printable_sides',
+            'candidate_count' => 0, 'partial' => false];
+    }
+    return ['valid' => true, 'candidate_count' => $printable,
+        'sides' => $sides, 'quality_approved' => false,
+        'production_ready' => false];
+}
+
+/**
  * Explicit internal batch worker: render -> immutable persist -> SHA readback.
  * The two side writes cannot be a single filesystem transaction. If the
  * second fails, return partial=true, keep the already verified first side,
@@ -105,6 +174,10 @@ function sanro_studio_dtf_prepare_order_item_candidates($order, $item_id) {
         || !function_exists('sanro_studio_dtf_verify_private_artifact')) {
         return ['valid' => false, 'error' => 'artifact_worker_unavailable'];
     }
+    // Precheck BOTH locked sides before creating a single candidate file.
+    // A known-bad back master/text/geometry must not leave a front-side PNG.
+    $preflight = sanro_studio_dtf_preflight_order_item_candidates($order, $item_id);
+    if (empty($preflight['valid'])) return $preflight;
     $sides = []; $stored = 0;
     foreach (['front', 'back'] as $side) {
         $binding = sanro_studio_dtf_artifact_binding($order, $item_id, $side);

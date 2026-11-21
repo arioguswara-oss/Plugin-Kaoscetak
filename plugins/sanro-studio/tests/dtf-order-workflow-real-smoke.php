@@ -62,6 +62,25 @@ $GLOBALS['record133']['design']['back'] = [
 check137real(sanro_studio_dtf_order_batch_enabled()
     && sanro_studio_dtf_artifact_directory() === $dir137real,
     'staging-only private batch feature enabled');
+// Real layer planner scans BOTH master/fonts before first GD composition.
+$planned = sanro_studio_dtf_preflight_order_item_candidates($order, 71);
+check137real(!empty($planned['valid'])
+    && $planned['candidate_count'] === 2
+    && $planned['sides']['front']['state'] === 'planned'
+    && $planned['sides']['back']['state'] === 'planned',
+    'real two-sided source/font/locked-draft planning succeeds read-only');
+check137real(!isset($planned['sides']['front']['image'])
+    && !isset($planned['sides']['front']['bytes'])
+    && count(glob($dir137real . '/*.png') ?: []) === 0,
+    'real preflight does not reveal image master or write output PNG');
+$GLOBALS['record133']['design']['back']['text'] = "BACK 😀";
+$badBack = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
+check137real(empty($badBack['valid']) && $badBack['partial'] === false
+    && $badBack['failed_side'] === 'back'
+    && $badBack['error'] === 'artifact_preflight_failed'
+    && count(glob($dir137real . '/*.png') ?: []) === 0,
+    'unsupported back text fails BEFORE any real front GD PNG is written');
+$GLOBALS['record133']['design']['back']['text'] = 'BACK';
 $batch = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
 check137real(!empty($batch['valid']) && $batch['complete'] === true
     && $batch['candidate_count'] === 2 && $batch['production_ready'] === false,
