@@ -28,6 +28,40 @@ function sanro_s142_valid_design_uuid($value)
         && preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD',
             $value) === 1;
 }
+/**
+ * True ONLY for production/print/Drive features whose activation makes a
+ * synthetic order riskier. Checkout/editor feature flags are allowed: this
+ * CLI creates a WC_Order directly, never enters the WC_Checkout workflow.
+ */
+function sanro_s142_writer_flags_safe($flags)
+{
+    if (!is_array($flags)) return false;
+    $writers = [
+        'SANRO_STUDIO_ENABLE_DTF_IMAGE_RASTER',
+        'SANRO_STUDIO_ENABLE_DTF_LAYER_RASTER',
+        'SANRO_STUDIO_ENABLE_DTF_PRIVATE_ARTIFACTS',
+        'SANRO_STUDIO_ENABLE_DTF_ORDER_BATCH',
+        'SANRO_STUDIO_ENABLE_DRIVE_AUTO_PROVISION',
+        'SANRO_STUDIO_ENABLE_VERIFIED_DRIVE_ATTACHMENT',
+    ];
+    foreach ($writers as $name) {
+        if (!array_key_exists($name, $flags)
+            || $flags[$name] !== false) return false;
+    }
+    return true;
+}
+
+/** WordPress checkout callbacks must not have run in this isolated PHP CLI. */
+function sanro_s142_checkout_not_invoked($isCli, $requestMethod, $actionsFired)
+{
+    if ($isCli !== true || $requestMethod !== 'GET'
+        || !is_array($actionsFired)) return false;
+    foreach ($actionsFired as $count) {
+        if (!is_int($count) || $count !== 0) return false;
+    }
+    return count($actionsFired) === 4;
+}
+
 function sanro_s142_fixture_is_safe($order)
 {
     if (!is_object($order)
