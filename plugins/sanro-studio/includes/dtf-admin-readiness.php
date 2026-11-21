@@ -78,7 +78,8 @@ function sanro_studio_dtf_admin_readiness_report($order, $item_id) {
     $sides = [];
     $printable = 0;
     foreach (['front', 'back'] as $side) {
-        $objects = $record['design'][$side]['objects'] ?? null;
+        $entry = $record['design'][$side] ?? ['objects' => []];
+        $objects = is_array($entry) ? ($entry['objects'] ?? null) : null;
         if (!is_array($objects) || count($objects) > 2) {
             return ['valid' => false, 'stage' => 'design', 'code' => 'design_geometry_invalid'];
         }
