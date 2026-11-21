@@ -119,7 +119,7 @@ run_check 'DTF Woo admin candidate status remains disabled by default' 'PASS: SA
 run_check 'Hostinger one synthetic HPOS order policy PHP syntax' 'No syntax errors detected' php -l ops/hostinger/sanro-studio-pr32-qa-order-policy.php
 run_check 'Hostinger one synthetic HPOS order CLI PHP syntax' 'No syntax errors detected' php -l ops/hostinger/sanro-studio-pr32-qa-order.php
 run_check 'Single zero-value HPOS order safety fixture PHP syntax' 'No syntax errors detected' php -l tests/staging-hpos-qa-order-policy-smoke.php
-run_check 'One QA order fixture never binds stock/payment/production' 'PASS: 28 SANRO HPOS staging synthetic zero-order safety checks' php tests/staging-hpos-qa-order-policy-smoke.php
+run_check 'One QA order fixture never binds stock/payment/production' 'PASS: 40 SANRO HPOS staging synthetic zero-order safety checks' php tests/staging-hpos-qa-order-policy-smoke.php
 run_check 'Hostinger SHA-pinned one QA order shell syntax' '' bash -n ops/hostinger/sanro-studio-pr32-qa-order-ci.sh
 run_check 'Staging DTF admin additive bootstrap PHP syntax' 'No syntax errors detected' php -l ops/hostinger/sanro-studio-pr31-bootstrap-preview.php
 run_check 'Staging DTF admin target bootstrap fixture PHP syntax' 'No syntax errors detected' php -l tests/staging-targeted-bootstrap-smoke.php
