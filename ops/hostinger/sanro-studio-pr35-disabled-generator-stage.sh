@@ -33,7 +33,7 @@ if [[ "$MODE" == 'apply' && "$APPROVAL" != 'PR35_STAGING_MODULE_ONLY_APPROVED' ]
     echo 'BLOCKED: no explicit PR35 staging-only deployment approval' >&2
     exit 2
 fi
-for bin in php git realpath sha256sum grep mktemp install mv cmp chmod flock; do
+for bin in php git realpath sha256sum grep mktemp install mv cmp chmod flock stat cut; do
     command -v "$bin" >/dev/null || {
         echo "BLOCKED: prerequisite missing ($bin)" >&2
         exit 2
@@ -173,8 +173,8 @@ if [[ -e "$MODULE" || -L "$MODULE"
     echo 'BLOCKED: staging files changed concurrently' >&2; exit 2
 fi
 mv -n "$MODULE_TMP" "$MODULE"
-if [[ ! -f "$MODULE" || ! -f "$MODULE_TMP" && ! cmp -s \
-     "$MODULE" "$SOURCE/plugins/sanro-studio/includes/dtf-admin-generate.php" ]]; then
+if [[ -e "$MODULE_TMP" || ! -f "$MODULE" ]] \
+    || ! cmp -s "$MODULE" "$SOURCE/plugins/sanro-studio/includes/dtf-admin-generate.php"; then
     echo 'FAIL: module atomic rename/readback invalid' >&2; exit 1
 fi
 MODULE_ADDED=1
