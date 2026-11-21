@@ -173,12 +173,14 @@ if [[ -e "$MODULE" || -L "$MODULE"
     echo 'BLOCKED: staging files changed concurrently' >&2; exit 2
 fi
 mv -n "$MODULE_TMP" "$MODULE"
-if [[ -e "$MODULE_TMP" || ! -f "$MODULE" ]] \
-    || ! cmp -s "$MODULE" "$SOURCE/plugins/sanro-studio/includes/dtf-admin-generate.php"; then
-    echo 'FAIL: module atomic rename/readback invalid' >&2; exit 1
+if [[ -e "$MODULE_TMP" || ! -f "$MODULE" ]]; then
+    echo 'FAIL: module atomic rename did not take effect' >&2; exit 1
 fi
 MODULE_ADDED=1
 MODULE_TMP=''
+if ! cmp -s "$MODULE" "$SOURCE/plugins/sanro-studio/includes/dtf-admin-generate.php"; then
+    echo 'FAIL: installed module differs from source; rolling back' >&2; exit 1
+fi
 chmod 0644 "$MODULE"
 mv -f "$MAIN_TMP" "$MAIN"
 MAIN_TMP=''
