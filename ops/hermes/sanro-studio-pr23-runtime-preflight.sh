@@ -7,6 +7,7 @@ printf 'SANRO DTF GD runtime preflight (read-only)\n'
 printf 'USER: %s\n' "$(id -un)"
 printf 'UID: %s\n' "$(id -u)"
 printf 'GROUPS: %s\n' "$(id -nG)"
+accessible=0
 for engine in docker podman; do
   if ! command -v "$engine" >/dev/null 2>&1; then
     printf 'ENGINE_%s: NOT_INSTALLED\n' "$(printf '%s' "$engine" | tr '[:lower:]' '[:upper:]')"
@@ -14,6 +15,7 @@ for engine in docker podman; do
   fi
   if "$engine" info >/dev/null 2>&1; then
     printf 'ENGINE_%s: ACCESSIBLE\n' "$(printf '%s' "$engine" | tr '[:lower:]' '[:upper:]')"
+    accessible=1
   else
     printf 'ENGINE_%s: PRESENT_BUT_INACCESSIBLE\n' "$(printf '%s' "$engine" | tr '[:lower:]' '[:upper:]')"
   fi
@@ -41,3 +43,8 @@ for executable in php php8.1 php8.2 php8.3 php8.4 php8.5; do
   printf 'PHP_CLI: %s version=%s GD=%s\n' "$candidate" "$version" "${gd:-ERROR}"
 done
 printf 'DIAGNOSTIC_DONE: no host configuration modified\n'
+if [[ "$accessible" -eq 0 ]]; then
+    printf 'CONTAINER_TEST: BLOCKED (no accessible engine; no changes attempted)\n'
+    exit 2
+fi
+printf 'CONTAINER_TEST: READY (an accessible engine exists)\n'
