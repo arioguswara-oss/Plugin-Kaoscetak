@@ -84,7 +84,7 @@ foreach ($writerNames as $name) {
     $writerFlags[$name] = defined($name) && constant($name) === true;
 }
 if (!sanro_s142_writer_flags_safe($writerFlags)) {
-    fwrite(STDERR, "BLOCKED: DTF or Google Drive production writer enabled\\n");
+    fwrite(STDERR, "BLOCKED: DTF or Google Drive production writer enabled\n");
     exit(2);
 }
 $checkoutHooks = [
@@ -100,7 +100,7 @@ foreach ($checkoutHooks as $hook) {
 }
 if (!sanro_s142_checkout_not_invoked(PHP_SAPI === 'cli',
         $_SERVER['REQUEST_METHOD'] ?? null, $checkoutActionsFired)) {
-    fwrite(STDERR, "BLOCKED: checkout workflow already entered in QA CLI\\n");
+    fwrite(STDERR, "BLOCKED: checkout workflow already entered in QA CLI\n");
     exit(2);
 }
 
@@ -227,7 +227,7 @@ try {
     }
     if (!sanro_s142_checkout_not_invoked(true, 'GET', $checkoutActionsAfter)) {
         fwrite(STDERR,
-            "FAIL: Woo checkout hooks fired during synthetic fixture; do not retry\\n");
+            "FAIL: Woo checkout hooks fired during synthetic fixture; do not retry\n");
         exit(1);
     }
     $readback = $newId > 0 ? wc_get_order($newId) : false;
