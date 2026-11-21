@@ -109,6 +109,7 @@ run_check 'DTF order batch coordinator PHP syntax' 'No syntax errors detected' p
 run_check 'DTF order batch synthetic regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-order-workflow-smoke.php
 run_check 'Real GD two-side preflight fixture PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-order-workflow-real-smoke.php
 run_check 'Hostinger real two-side preflight E2E Bash syntax' '' bash -n ops/hostinger/sanro-studio-pr39-real-preflight-ci.sh
+run_check 'Hostinger real GD locked snapshot E2E Bash syntax' '' bash -n ops/hostinger/sanro-studio-pr40-real-snapshot-ci.sh
 run_check 'DTF two-side preflight contract PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-order-preflight-policy.php
 run_check 'DTF two-side source/master preflight before any write' 'PASS: 12 SANRO two-side no-write preflight policy checks' php plugins/sanro-studio/tests/dtf-order-preflight-policy.php
 run_check 'DTF locked snapshot policy PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-locked-snapshot-policy.php
