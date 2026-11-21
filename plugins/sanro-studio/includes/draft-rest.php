@@ -146,16 +146,22 @@ function sanro_studio_rest_read_master($request) {
     }
     $id = $request->get_param('id');
     $side = $request->get_param('side');
-    $file_id = $request->get_param('file_id');
+    // The short read route resolves the current owner-bound reference on
+    // the server. No content hash or filename is needed in the request URL.
+    // Legacy filename URLs remain supported, but are checked against the
+    // same bound reference so old links cannot read an unbound master.
+    $requested_file_id = $request->get_param('file_id');
     $token = $request->get_header('X-Sanro-Owner-Token');
     $draft = sanro_studio_read_draft($id, $token);
     if (empty($draft['valid'])) return sanro_studio_rest_draft_response($draft);
-    // Only expose the currently bound reference, not arbitrary historical files.
-    if (!isset($draft['master_refs'][$side])
-        || !is_string($draft['master_refs'][$side])
-        || !hash_equals($draft['master_refs'][$side], $file_id)) {
+    $bound_file_id = $draft['master_refs'][$side] ?? null;
+    if (!is_string($bound_file_id)
+        || ($requested_file_id !== null
+            && (!is_string($requested_file_id)
+                || !hash_equals($bound_file_id, $requested_file_id)))) {
         return new WP_Error('sanro_master_not_bound', 'Master unavailable.', ['status' => 404]);
     }
+    $file_id = $bound_file_id;
     $read = sanro_studio_read_owned_draft_master($id, $token, $side, $file_id);
     if (empty($read['valid'])) return sanro_studio_rest_draft_response($read);
     if (function_exists('nocache_headers')) nocache_headers();
@@ -174,6 +180,14 @@ function sanro_studio_register_master_upload_route() {
         || !defined('SANRO_STUDIO_ENABLE_PRIVATE_MASTERS')
         || SANRO_STUDIO_ENABLE_PRIVATE_MASTERS !== true
         || !sanro_studio_draft_rest_enabled()) return;
+    // Short owner-authorized read route avoids passing long content-hash
+    // filenames through proxies. It still requires both nonce and draft token.
+    register_rest_route('sanro-studio/v1',
+        '/drafts/(?P<id>[a-fA-F0-9-]{36})/master-read/(?P<side>front|back)', [
+            'methods' => 'GET',
+            'callback' => 'sanro_studio_rest_read_master',
+            'permission_callback' => 'sanro_studio_rest_draft_nonce',
+        ]);
     register_rest_route('sanro-studio/v1',
         '/drafts/(?P<id>[a-fA-F0-9-]{36})/masters/(?P<side>front|back)/(?P<file_id>[a-zA-Z0-9._-]+)', [
             'methods' => 'GET',
