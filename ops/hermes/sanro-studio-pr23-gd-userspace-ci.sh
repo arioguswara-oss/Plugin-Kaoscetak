@@ -6,6 +6,9 @@
 # APT repository configuration; never accepts arbitrary external package URLs.
 set -Eeuo pipefail
 umask 077
+# A failure before log initialization must still be visible to the owner.
+trap 'rc=$?; printf "FAIL: userspace GD runner exited %s at line %s (%s)\\n" "$rc" "$LINENO" "$BASH_COMMAND" >&2' ERR
+printf 'RUNNER: SANRO Studio Sprint 134 userspace GD preflight\n'
 
 BRANCH='manual/sanro-studio-dtf-gd-isolated-20261121'
 REPO="${SANRO_STUDIO_REPO:-/home/sanro/Plugin-Kaoscetak}"
@@ -31,7 +34,15 @@ if [[ "$minor" != '8.5' ]]; then
     exit 2
 fi
 package='php8.5-gd'
-candidate="$(apt-cache policy "$package" | awk '/Candidate:/ {print $2;exit}')"
+printf 'PREFLIGHT: checking existing APT metadata for %s\n' "$package"
+# Avoid early awk exit under pipefail (SIGPIPE exit 141), and report any APT
+# metadata error instead of silently terminating under set -e.
+if ! policy_output="$(apt-cache policy "$package" 2>&1)"; then
+    printf 'BLOCKED: apt-cache policy failed. Output:\n%s\n' "$policy_output" >&2
+    exit 2
+fi
+candidate="$(awk '/^[[:space:]]*Candidate:/ {print $2}' <<< "$policy_output")"
+printf 'APT_CANDIDATE: %s\n' "${candidate:-NONE}"
 if [[ -z "$candidate" || "$candidate" == '(none)' ]]; then
     printf 'BLOCKED: %s not indexed in the VPS configured APT repositories.\n' "$package" >&2
     printf 'Do not add repos, install packages, or run sudo for this test.\n' >&2
