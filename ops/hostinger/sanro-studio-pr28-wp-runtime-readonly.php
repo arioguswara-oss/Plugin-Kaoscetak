@@ -23,7 +23,8 @@ if (getenv('SANRO_STUDIO_QA_ENV') !== 'staging'
 $root = realpath(getenv('SANRO_STUDIO_STAGING_WP_ROOT') ?: $expectedRoot);
 if (!$root || $root !== realpath($expectedRoot)
     || !is_file($root . '/wp-load.php')
-    || !is_file($root . '/wp-config.php')) {
+    || (!is_file($root . '/wp-config.php')
+        && !is_file(dirname($root) . '/wp-config.php'))) {
     fwrite(STDERR, "BLOCKED: exact staging WordPress root not found\n");
     exit(2);
 }
