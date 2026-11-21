@@ -133,6 +133,19 @@ check136(is_array($meta) && $meta['side'] === 'front'
     && $meta['width_cm'] === 0.1 && $meta['height_cm'] === 0.1
     && $meta['offset_x_cm'] === 2 && $meta['offset_y_cm'] === 3,
     'manifest binds order, item, design, side and digest');
+$back_binding = sanro_studio_dtf_artifact_binding($order, 71, 'back');
+$back_base = $dir136 . '/' . sanro_studio_dtf_artifact_basename($back_binding);
+$back_json_original = file_get_contents($back_base . '.json');
+$back_meta = json_decode($back_json_original, true);
+$back_meta['offset_x_cm'] = 9.0;
+file_put_contents($back_base . '.json', json_encode($back_meta));
+clearstatcache(true);
+check136(sanro_studio_dtf_verify_private_artifact($order, 71, 'back')['error']
+    === 'artifact_integrity_failed', 'edited manifest position is rejected against locked design');
+file_put_contents($back_base . '.json', $back_json_original);
+clearstatcache(true);
+check136(!empty(sanro_studio_dtf_verify_private_artifact($order, 71, 'back')['valid']),
+    'restored manifest agrees with immutable back-side geometry');
 @chmod($dir136, 0755);
 clearstatcache(true);
 check136(sanro_studio_dtf_verify_private_artifact($order, 71, 'front')['error']
