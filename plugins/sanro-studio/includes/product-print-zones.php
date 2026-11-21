@@ -52,6 +52,22 @@ function sanro_studio_product_print_zone_fields() {
                 'description'=>'Total posisi dan ukuran tidak boleh melewati 100%.',
             ]);
         }
+        // Read-only live reference: numeric values are submitted through the
+        // existing WooCommerce product form and still validated on the server.
+        // The overlay represents visual placement only, NOT centimeters.
+        echo '<div class="sanro-printzone-stage" data-sanro-printzone-side="' . $side
+            . '" style="position:relative;width:100%;max-width:320px;aspect-ratio:390/420;'
+            . 'background:#e7ebf1;border:1px solid #cbd5e1;border-radius:12px;'
+            . 'overflow:hidden;margin:10px 0">';
+        echo '<img class="sanro-printzone-image" alt="" hidden'
+            . ' style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">';
+        echo '<div class="sanro-printzone-guide" hidden aria-hidden="true"'
+            . ' style="position:absolute;border:2px dashed #1d4ed8;'
+            . 'background:rgba(37,99,235,.09);box-sizing:border-box;pointer-events:none"></div>';
+        echo '</div>';
+        echo '<p class="sanro-printzone-feedback" data-sanro-zone-status="' . $side
+            . '" role="status" aria-live="polite">'
+            . 'Preview posisi area cetak ' . $label . ' (visual, bukan cm).</p>';
     }
     echo '</div>';
 }
