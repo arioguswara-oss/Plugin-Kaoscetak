@@ -1,5 +1,11 @@
 <?php
 define('ABSPATH', __DIR__);
+// Isolated fixture: real Google API checks run in drive-production-smoke.php.
+function sanro_studio_verify_drive_item_folder($order, $item_id, $folder_id) {
+    return $folder_id === 'driveFolder_0123456789'
+        ? ['valid' => true, 'folder_id' => $folder_id]
+        : ['valid' => false, 'error' => 'drive_folder_binding_mismatch'];
+}
 require dirname(__DIR__) . '/includes/order-preview.php';
 require dirname(__DIR__) . '/includes/production-ready-admin.php';
 function verify($ok, $name) {
@@ -204,6 +210,10 @@ verify(sanro_studio_attach_item_production_folder_id($folderOrder, 60, 'differen
 $pendingFolderOrder = new SanroProductionItemOrderFixture([60 => $folderItem], false);
 verify(sanro_studio_attach_item_production_folder_id($pendingFolderOrder, 60, $folderId)['error'] === 'production_not_ready',
     'unpaid and not-ready order rejects folder attachment');
+verify(sanro_studio_attach_item_production_folder_id($folderOrder, 60, 'unverifiedFolder_12345')['error']
+    === 'drive_folder_binding_mismatch', 'wrong Drive folder identity cannot be attached');
+verify($folderItem->get_meta('_sanro_studio_drive_folder_id') === $folderId,
+    'rejected remote folder identity leaves verified WooCommerce metadata unchanged');
 
 /** Sprint 128: real WooCommerce admin production-ready workflow tests. */
 class SanroAdminReadyOrderFixture extends SanroProductionReadyOrderFixture {
