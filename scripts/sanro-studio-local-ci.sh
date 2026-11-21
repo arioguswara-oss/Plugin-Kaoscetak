@@ -150,6 +150,11 @@ run_check 'Short REST master readback PHP test syntax' 'No syntax errors detecte
 run_check 'Short REST master readback auth and integrity' 'PASS: 20 short-route private DTF read security checks' php plugins/sanro-studio/tests/master-read-route-smoke.php
 run_check 'Mobile touch staging QA JS syntax' '' node --check tests/staging-mobile-readonly.cjs
 run_check 'Authenticated staging admin visual QA JS syntax' '' node --check tests/staging-admin-print-zones-readonly.cjs
+run_check 'DTF admin candidate generation module PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/dtf-admin-generate.php
+run_check 'DTF admin candidate generation regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-admin-generate-smoke.php
+run_check 'DTF admin candidate generation security and readback' 'PASS: 34 SANRO nonce-protected DTF admin candidate generation checks' php plugins/sanro-studio/tests/dtf-admin-generate-smoke.php
+run_check 'DTF admin generation default-OFF PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-admin-generate-default-off.php
+run_check 'DTF admin generation default-OFF and no-POST' 'PASS: 6 SANRO admin DTF generation default-OFF checks' php plugins/sanro-studio/tests/dtf-admin-generate-default-off.php
 run_check 'Staging Woo admin URL/auth guard JS syntax' '' node --check tests/lib/staging-admin-guards.cjs
 run_check 'Staging Woo admin browser test JS syntax' '' node --check tests/staging-admin-order-readonly.cjs
 run_check 'Staging Woo admin offline guard regression syntax' '' node --check tests/staging-admin-guards-node.cjs
