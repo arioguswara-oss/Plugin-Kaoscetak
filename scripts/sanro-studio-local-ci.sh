@@ -160,6 +160,10 @@ run_check 'DTF admin staging-only plan patcher PHP syntax' 'No syntax errors det
 run_check 'DTF admin staging-only plan fixture PHP syntax' 'No syntax errors detected' php -l tests/staging-dtf-admin-bootstrap-plan-smoke.php
 run_check 'DTF admin staging-only plan preservation and OFF controls' 'PASS: 13 SANRO safe admin DTF staging preview assertions' php tests/staging-dtf-admin-bootstrap-plan-smoke.php
 run_check 'DTF admin staging SHA-pinned plan Bash syntax' '' bash -n ops/hostinger/sanro-studio-pr34-staging-plan.sh
+run_check 'Readiness staging APPLY runtime probe PHP syntax' 'No syntax errors detected' php -l ops/hostinger/sanro-studio-pr38-runtime-probe.php
+run_check 'Readiness staging PLAN/APPLY installer Bash syntax' '' bash -n ops/hostinger/sanro-studio-pr38-readiness-disabled-stage.sh
+run_check 'Readiness staging APPLY policy smoke PHP syntax' 'No syntax errors detected' php -l tests/staging-pr38-disabled-deploy-guard-smoke.php
+run_check 'Readiness staging explicit approval and rollback security' 'PASS: 22 SANRO staging DTF readiness guarded deployment checks' php tests/staging-pr38-disabled-deploy-guard-smoke.php
 run_check 'Staging readiness bootstrap preview PHP syntax' 'No syntax errors detected' php -l ops/hostinger/sanro-studio-pr37-readiness-bootstrap-plan.php
 run_check 'Staging readiness WP read-only preflight PHP syntax' 'No syntax errors detected' php -l ops/hostinger/sanro-studio-pr37-readiness-runtime-preflight.php
 run_check 'Staging readiness PLAN regression PHP syntax' 'No syntax errors detected' php -l tests/staging-pr37-readiness-preview-smoke.php
