@@ -244,7 +244,7 @@
    ||!fileId.startsWith(id.toLowerCase()+'-'+name+'-'))
    throw new Error('Referensi master '+name+' tidak valid.');
   const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(id)
-   +'/masters/'+name+'/'+encodeURIComponent(fileId),{
+   +'/master-read/'+name,{
    method:'GET',credentials:'same-origin',cache:'no-store',
    headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':token}
   });
@@ -558,7 +558,7 @@
        throw new Error('Upload master '+name+' gagal ('+response.status+').');
       // Verify owner-bound readback and byte-for-byte integrity before success.
       const readback=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)
-       +'/masters/'+name+'/'+encodeURIComponent(result.file_id),{
+       +'/master-read/'+name,{
        method:'GET',credentials:'same-origin',cache:'no-store',
        headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken}
       });
