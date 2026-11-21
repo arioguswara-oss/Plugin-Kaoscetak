@@ -8,10 +8,11 @@ defined('ABSPATH') || exit;
  * There is no hook which creates, renders, alters or uploads production files.
  */
 function sanro_studio_dtf_admin_status_enabled() {
+    // Read-only ADMIN UI is an independent opt-in. Merely displaying
+    // "candidate not available" must never activate raster, private writes,
+    // Google Drive or order creation on staging.
     return defined('SANRO_STUDIO_ENABLE_DTF_ADMIN_STATUS')
-        && SANRO_STUDIO_ENABLE_DTF_ADMIN_STATUS === true
-        && function_exists('sanro_studio_dtf_artifacts_enabled')
-        && sanro_studio_dtf_artifacts_enabled();
+        && SANRO_STUDIO_ENABLE_DTF_ADMIN_STATUS === true;
 }
 
 /**
@@ -24,6 +25,8 @@ function sanro_studio_dtf_admin_item_status($order, $item_id) {
         return ['valid' => false, 'error' => 'forbidden'];
     }
     if (!sanro_studio_dtf_admin_status_enabled()
+        || !function_exists('sanro_studio_dtf_artifacts_enabled')
+        || !sanro_studio_dtf_artifacts_enabled()
         || !function_exists('sanro_studio_dtf_order_item_private_status')) {
         return ['valid' => false, 'error' => 'admin_status_disabled'];
     }
