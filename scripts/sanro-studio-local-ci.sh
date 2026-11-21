@@ -95,6 +95,11 @@ run_check 'DTF image-only safety regression PHP syntax' 'No syntax errors detect
 run_check 'DTF RGBA 300-DPI geometry and fail-closed raster' 'PASS: 24 SANRO image-only DTF raster safety checks' php plugins/sanro-studio/tests/dtf-image-render-smoke.php
 run_check 'DTF image raster default-off PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-image-render-default-off.php
 run_check 'DTF image raster disabled by default' 'PASS: SANRO DTF RGBA image raster defaults disabled' php plugins/sanro-studio/tests/dtf-image-render-default-off.php
+run_check 'DTF layered compositor PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/dtf-layer-render.php
+run_check 'DTF layered compositor regression syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-layer-compose-smoke.php
+run_check 'DTF image/text bound layer and fail-closed font policy' 'PASS: 19 SANRO layered DTF composition checks' php plugins/sanro-studio/tests/dtf-layer-compose-smoke.php
+run_check 'DTF layered default-disabled regression syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-layer-default-off.php
+run_check 'DTF layered compositor disabled by default' 'PASS: SANRO layered DTF raster defaults disabled' php plugins/sanro-studio/tests/dtf-layer-default-off.php
 run_check 'Buyer PHP asset-version syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/buyer.php
 run_check 'Buyer asset fingerprint regression syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/buyer-asset-version-smoke.php
 run_check 'Buyer asset fingerprint' 'PASS: 3 SANRO Studio buyer asset fingerprint assertions' php plugins/sanro-studio/tests/buyer-asset-version-smoke.php
