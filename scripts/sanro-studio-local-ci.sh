@@ -97,7 +97,7 @@ run_check 'DTF image raster default-off PHP syntax' 'No syntax errors detected' 
 run_check 'DTF image raster disabled by default' 'PASS: SANRO DTF RGBA image raster defaults disabled' php plugins/sanro-studio/tests/dtf-image-render-default-off.php
 run_check 'DTF layered compositor PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/dtf-layer-render.php
 run_check 'DTF layered compositor regression syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-layer-compose-smoke.php
-run_check 'DTF image/text bound layer and fail-closed font policy' 'PASS: 19 SANRO layered DTF composition checks' php plugins/sanro-studio/tests/dtf-layer-compose-smoke.php
+run_check 'DTF image/text bound layer and fail-closed font policy' 'PASS: 18 SANRO layered DTF composition checks' php plugins/sanro-studio/tests/dtf-layer-compose-smoke.php
 run_check 'DTF layered default-disabled regression syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-layer-default-off.php
 run_check 'DTF layered compositor disabled by default' 'PASS: SANRO layered DTF raster defaults disabled' php plugins/sanro-studio/tests/dtf-layer-default-off.php
 run_check 'Buyer PHP asset-version syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/buyer.php
