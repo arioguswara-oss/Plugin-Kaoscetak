@@ -27,12 +27,17 @@ $GLOBALS['renderFail137'] = '';
 $GLOBALS['renderVariant137'] = false;
 $GLOBALS['preflightFail137'] = '';
 $GLOBALS['preflightWrongSide137'] = '';
+$GLOBALS['preflightWrongSkip137'] = '';
+$GLOBALS['preflightApprove137'] = '';
 $GLOBALS['renderCalls137'] = 0;
 // Simulates the real layer planner's private-master/font/geometry checks but
 // never generates PNG or writes any files. The renderer remains a distinct stub.
 function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
     if ($GLOBALS['preflightFail137'] === $side) {
         return ['valid' => false, 'error' => 'synthetic_master_or_font_unavailable'];
+    }
+    if ($GLOBALS['preflightWrongSkip137'] === $side) {
+        return ['valid' => true, 'skipped' => true, 'reason' => 'fake_blank'];
     }
     $binding = sanro_studio_dtf_artifact_binding($order, $item_id, $side);
     if (empty($binding['valid']) || !empty($binding['skipped'])) return $binding;
@@ -46,6 +51,7 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
         'owner_token' => 'SECRET_DO_NOT_RETURN',
     ];
     if ($GLOBALS['preflightWrongSide137'] === $side) $result['side'] = 'other';
+    if ($GLOBALS['preflightApprove137'] === $side) $result['quality_approved'] = true;
     return $result;
 }
 function sanro_studio_dtf_render_layer_side($order, $item_id, $side) {
@@ -128,6 +134,22 @@ check137(empty($wrongSide['valid'])
     && $GLOBALS['renderCalls137'] === 0,
     'wrong-side planner result refused before private writes');
 $GLOBALS['preflightWrongSide137'] = '';
+$GLOBALS['preflightWrongSkip137'] = 'back';
+$fakeBlank = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
+check137(empty($fakeBlank['valid'])
+    && $fakeBlank['error'] === 'artifact_preflight_failed'
+    && $fakeBlank['failed_side'] === 'back'
+    && $GLOBALS['renderCalls137'] === 0,
+    'planner cannot silently drop a locked printable back side');
+$GLOBALS['preflightWrongSkip137'] = '';
+$GLOBALS['preflightApprove137'] = 'front';
+$fakeApproval = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
+check137(empty($fakeApproval['valid'])
+    && $fakeApproval['error'] === 'artifact_preflight_mismatch'
+    && $fakeApproval['failed_side'] === 'front'
+    && $GLOBALS['renderCalls137'] === 0,
+    'preflight cannot claim artwork print quality approved');
+$GLOBALS['preflightApprove137'] = '';
 $first = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
 check137(!empty($first['valid']) && $first['complete'] === true
     && $first['candidate_count'] === 2 && $first['production_ready'] === false,
