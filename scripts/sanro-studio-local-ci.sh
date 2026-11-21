@@ -145,6 +145,12 @@ run_check 'Staging Woo admin browser test JS syntax' '' node --check tests/stagi
 run_check 'Staging Woo admin offline guard regression syntax' '' node --check tests/staging-admin-guards-node.cjs
 run_check 'Staging Woo admin read-only browser security regression' 'PASS: 30 SANRO staging admin Playwright offline security guards' node tests/staging-admin-guards-node.cjs
 run_check 'Hermes staging Woo admin Playwright runner Bash syntax' '' bash -n ops/hermes/sanro-studio-pr29-browser-qa.sh
+run_check 'Staging admin login capture policy JS syntax' '' node --check tests/lib/staging-session-capture-policy.cjs
+run_check 'Staging admin login CLI JS syntax' '' node --check ops/hermes/sanro-studio-pr30-capture-staging-login.cjs
+run_check 'Staging admin login security test JS syntax' '' node --check tests/staging-session-capture-node.cjs
+run_check 'Staging admin private session safety regression' 'PASS: 32 SANRO secure staging login session policy checks' node tests/staging-session-capture-node.cjs
+run_check 'Hermes one-time staging admin login runner Bash syntax' '' bash -n ops/hermes/sanro-studio-pr30-session-qa.sh
+
 
 run_check 'Buyer mobile viewport PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/buyer.php
 run_check 'Scoped buyer viewport regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/mobile-viewport-smoke.php
