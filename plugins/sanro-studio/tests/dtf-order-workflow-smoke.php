@@ -25,7 +25,31 @@ $_SERVER['DOCUMENT_ROOT'] = realpath(ABSPATH);
 function sanro_studio_dtf_layer_enabled() { return true; }
 $GLOBALS['renderFail137'] = '';
 $GLOBALS['renderVariant137'] = false;
+$GLOBALS['preflightFail137'] = '';
+$GLOBALS['preflightWrongSide137'] = '';
+$GLOBALS['renderCalls137'] = 0;
+// Simulates the real layer planner's private-master/font/geometry checks but
+// never generates PNG or writes any files. The renderer remains a distinct stub.
+function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
+    if ($GLOBALS['preflightFail137'] === $side) {
+        return ['valid' => false, 'error' => 'synthetic_master_or_font_unavailable'];
+    }
+    $binding = sanro_studio_dtf_artifact_binding($order, $item_id, $side);
+    if (empty($binding['valid']) || !empty($binding['skipped'])) return $binding;
+    $g = sanro_studio_dtf_artifact_locked_geometry($binding);
+    if (!$g) return ['valid' => false, 'error' => 'synthetic_geometry_invalid'];
+    $result = $binding + [
+        'kind' => 'layered_dtf_raster_candidate',
+        'quality_approved' => false, 'font_parity_approved' => false,
+        'dpi' => 300, 'width_px' => 12, 'height_px' => 12,
+        'private_master_bytes' => 'PRIVATE_DO_NOT_RETURN',
+        'owner_token' => 'SECRET_DO_NOT_RETURN',
+    ];
+    if ($GLOBALS['preflightWrongSide137'] === $side) $result['side'] = 'other';
+    return $result;
+}
 function sanro_studio_dtf_render_layer_side($order, $item_id, $side) {
+    $GLOBALS['renderCalls137']++;
     if ($GLOBALS['renderFail137'] === $side) {
         return ['valid' => false, 'error' => 'synthetic_renderer_unavailable'];
     }
@@ -69,6 +93,41 @@ $missing = sanro_studio_dtf_order_item_private_status($order, 71);
 check137(empty($missing['valid']) && ($missing['failed_side'] ?? null) === 'front'
     && ($missing['error'] ?? null) === 'artifact_missing_or_incomplete',
     'not-yet-rendered order status cannot claim ready');
+$plan = sanro_studio_dtf_preflight_order_item_candidates($order, 71);
+check137(!empty($plan['valid']) && $plan['candidate_count'] === 2
+    && $plan['sides']['front']['state'] === 'planned'
+    && $plan['sides']['back']['state'] === 'planned',
+    'both locked sides planned safely before any render');
+check137(!isset($plan['private_master_bytes']) && !isset($plan['owner_token'])
+    && !isset($plan['sides']['front']['owner_token'])
+    && !isset($plan['sides']['back']['private_master_bytes']),
+    'preflight discards private master content and draft credentials');
+check137($GLOBALS['renderCalls137'] === 0
+    && count(glob($dir137 . '/*.png') ?: []) === 0,
+    'read-only two-sided preflight creates no PNG and performs no render');
+$GLOBALS['preflightFail137'] = 'back';
+$blocked = sanro_studio_dtf_preflight_order_item_candidates($order, 71);
+check137(empty($blocked['valid'])
+    && $blocked['error'] === 'artifact_preflight_failed'
+    && $blocked['failed_side'] === 'back'
+    && $blocked['partial'] === false,
+    'missing back master/font fails preflight without partial result');
+$blockedBatch = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
+check137(empty($blockedBatch['valid']) && $blockedBatch['partial'] === false
+    && $blockedBatch['failed_side'] === 'back'
+    && $GLOBALS['renderCalls137'] === 0
+    && count(glob($dir137 . '/*.png') ?: []) === 0,
+    'back preflight failure prevents even valid front-side file creation');
+$GLOBALS['preflightFail137'] = '';
+$GLOBALS['preflightWrongSide137'] = 'back';
+$wrongSide = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
+check137(empty($wrongSide['valid'])
+    && $wrongSide['error'] === 'artifact_preflight_mismatch'
+    && $wrongSide['failed_side'] === 'back'
+    && $wrongSide['partial'] === false
+    && $GLOBALS['renderCalls137'] === 0,
+    'wrong-side planner result refused before private writes');
+$GLOBALS['preflightWrongSide137'] = '';
 $first = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
 check137(!empty($first['valid']) && $first['complete'] === true
     && $first['candidate_count'] === 2 && $first['production_ready'] === false,
@@ -145,6 +204,11 @@ check137((sanro_studio_dtf_prepare_order_item_candidates($order, 71)['error'] ??
 $order = fixture133();
 check137(!empty(sanro_studio_dtf_artifact_binding($order, 71, 'back')['skipped']),
     'blank back is recognized as skipped');
+$singlePlan = sanro_studio_dtf_preflight_order_item_candidates($order, 71);
+check137(!empty($singlePlan['valid']) && $singlePlan['candidate_count'] === 1
+    && $singlePlan['sides']['back']['state'] === 'blank'
+    && $singlePlan['sides']['front']['state'] === 'planned',
+    'blank back remains blank during preflight, never becomes a fake candidate');
 $single = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
 check137(!empty($single['valid']) && $single['candidate_count'] === 1
     && $single['sides']['back']['state'] === 'blank',
