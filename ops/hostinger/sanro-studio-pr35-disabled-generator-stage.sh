@@ -120,9 +120,19 @@ SANRO_STUDIO_QA_ENV=staging SANRO_STUDIO_PR35_PROBE_PHASE=before \
     echo 'BLOCKED: WordPress staging live preflight failed; no changes' >&2
     exit 2
 }
-grep -Fqx 'PROBE_STATUS: PASS' "$QA/before.log"
-grep -Fqx 'DTF_GENERATOR_HOOKS: ABSENT' "$QA/before.log"
-grep -Fqx 'DTF_ADMIN_GENERATE: OFF' "$QA/before.log"
+for requirement in \
+    'PROBE_STATUS: PASS' \
+    'SANRO_STAGING_RUNTIME: VERIFIED' \
+    'WOOCOMMERCE_HPOS: ENABLED' \
+    'LEGACY_ITEM_PREVIEW_HOOK: REGISTERED' \
+    'DTF_READONLY_ADMIN_PANEL: REGISTERED' \
+    'DTF_GENERATOR_HOOKS: ABSENT' \
+    'DTF_ADMIN_GENERATE: OFF'; do
+    if ! grep -Fqx "$requirement" "$QA/before.log"; then
+        echo "BLOCKED: staging runtime probe line missing ($requirement)" >&2
+        exit 2
+    fi
+done
 
 php "$SOURCE/ops/hostinger/sanro-studio-pr34-bootstrap-plan.php" \
     "$MAIN" "$QA/main-ready.php" > "$QA/patch.log"
