@@ -88,6 +88,46 @@ function sanro_studio_dtf_artifact_binding($order, $item_id, $side) {
     ];
 }
 
+/**
+ * Immutable locked-draft union geometry. Recomputing this at readback avoids
+ * trusting an editable JSON manifest as the source of physical coordinates.
+ */
+function sanro_studio_dtf_artifact_locked_geometry($binding) {
+    if (!function_exists('get_option')) return false;
+    $record = get_option('sanro_studio_draft_' . $binding['design_id'], false);
+    $objects = is_array($record) && is_array($record['design'] ?? null)
+        ? ($record['design'][$binding['side']]['objects'] ?? null) : null;
+    if (!is_array($objects) || !$objects || count($objects) > 2) return false;
+    $min_x = $min_y = INF; $max_x = $max_y = -INF;
+    foreach ($objects as $obj) {
+        if (!is_array($obj)) return false;
+        foreach (['x', 'y', 'width', 'height'] as $key) {
+            if (!isset($obj[$key]) || !is_numeric($obj[$key])
+                || !is_finite((float) $obj[$key])) return false;
+        }
+        $x = (float) $obj['x']; $y = (float) $obj['y'];
+        $w = (float) $obj['width']; $h = (float) $obj['height'];
+        if ($x < 0 || $y < 0 || $w <= 0 || $h <= 0) return false;
+        $min_x = min($min_x, $x); $min_y = min($min_y, $y);
+        $max_x = max($max_x, $x + $w); $max_y = max($max_y, $y + $h);
+    }
+    return [
+        'width_cm' => $max_x - $min_x, 'height_cm' => $max_y - $min_y,
+        'offset_x_cm' => $min_x, 'offset_y_cm' => $min_y,
+    ];
+}
+
+function sanro_studio_dtf_artifact_geometry_matches($metadata, $binding) {
+    $expected = sanro_studio_dtf_artifact_locked_geometry($binding);
+    if (!is_array($expected) || !is_array($metadata)) return false;
+    foreach ($expected as $key => $value) {
+        if (!isset($metadata[$key]) || !is_numeric($metadata[$key])
+            || !is_finite((float) $metadata[$key])
+            || abs((float) $metadata[$key] - $value) > 0.000001) return false;
+    }
+    return true;
+}
+
 /** Fixed name, not derived from a buyer-controlled file path or URL. */
 function sanro_studio_dtf_artifact_basename($binding) {
     return 'order-' . $binding['order_id'] . '-item-' . $binding['item_id']
@@ -148,6 +188,7 @@ function sanro_studio_dtf_verify_private_artifact($order, $item_id, $side) {
         || (float) $meta['offset_x_cm'] < 0 || (float) $meta['offset_y_cm'] < 0
         || (int) round((float) $meta['width_cm'] * 300 / 2.54) !== $meta['width_px']
         || (int) round((float) $meta['height_cm'] * 300 / 2.54) !== $meta['height_px']
+        || !sanro_studio_dtf_artifact_geometry_matches($meta, $binding)
         || !is_string($meta['sha256'] ?? null)
         || !preg_match('/^[a-f0-9]{64}$/D', $meta['sha256'])) {
         return ['valid' => false, 'error' => 'artifact_integrity_failed'];
@@ -242,6 +283,7 @@ function sanro_studio_dtf_commit_private_candidate($order, $item_id, $side, $can
         || (float) $candidate['offset_y_cm'] < 0
         || (int) round((float) $candidate['width_cm'] * 300 / 2.54) !== $candidate['width_px']
         || (int) round((float) $candidate['height_cm'] * 300 / 2.54) !== $candidate['height_px']
+        || !sanro_studio_dtf_artifact_geometry_matches($candidate, $binding)
         || !is_string($bytes) || strlen($bytes) < 64 || strlen($bytes) > 33554432
         || !is_string($candidate['sha256'] ?? null)
         || !preg_match('/^[a-f0-9]{64}$/D', $candidate['sha256'])
