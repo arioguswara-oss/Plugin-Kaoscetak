@@ -210,7 +210,8 @@ $order=reset132();
 $GLOBALS['sanro_studio_checkout_verified'] = ['contract'=>$GLOBALS['contract132']];
 try {
     sanro_studio_stage_checkout_lock_created_order($order);
-    check132(false,'missing request credential must throw');
+    fwrite(STDERR, "FAIL: missing request credential did not abort checkout\n");
+    exit(1);
 } catch (RuntimeException $exception) {
     check132(strpos($exception->getMessage(),'missing')!==false,
         'missing transient checkout credential rejects payment handoff');
