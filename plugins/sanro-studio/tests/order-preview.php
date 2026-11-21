@@ -247,6 +247,15 @@ $badItem->meta['_sanro_studio_preview_front_ref'] = $ref;
 $adminOrder->items = [71 => $badItem];
 verify(sanro_studio_production_ready_admin_preflight($adminOrder)['error'] === 'missing_design_preview',
     'a preview belonging to another design cannot unlock production');
+$incompleteItem = new SanroMutablePreviewItem();
+$incompleteItem->meta['_sanro_studio_design_id'] = $id;
+$adminOrder->items = [71 => $adminItem, 72 => $incompleteItem];
+verify(sanro_studio_production_ready_admin_preflight($adminOrder)['error'] === 'missing_design_preview',
+    'order with two Studio designs cannot approve if one design lacks a preview');
+$ordinaryItem = new SanroMutablePreviewItem();
+$adminOrder->items = [71 => $adminItem, 72 => $ordinaryItem];
+verify(sanro_studio_production_ready_admin_preflight($adminOrder)['valid'],
+    'unrelated ordinary WooCommerce item does not block valid Studio approval');
 $adminOrder->items = [71 => $adminItem];
 
 function admin_url($path) { return 'https://staging.example.test/wp-admin/' . $path; }
