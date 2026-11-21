@@ -14,8 +14,11 @@ function sanro_studio_read_draft($id, $token) {
     if ($token !== str_repeat('a', 64)) return ['valid' => false, 'error' => 'not_found'];
     return ['valid' => true, 'status' => 'draft'];
 }
+$master_checks = 0;
 function master_assert($condition, $label) {
-    if (!$condition) { fwrite(STDERR, "FAIL: {$label}\n"); exit(1); }
+    global $master_checks;
+    if (!$condition) { throw new RuntimeException("FAIL: {$label}"); }
+    $master_checks++;
 }
 $id = '00000000-0000-4000-8000-000000000000';
 $token = str_repeat('a', 64);
@@ -33,7 +36,18 @@ try {
     $again = sanro_studio_store_owned_draft_master($id, $token, 'front', $bytes);
     master_assert(!empty($again['valid']) && $again['file_id'] === $saved['file_id'], 'idempotent write');
     $read = sanro_studio_read_owned_draft_master($id, $token, 'front', $saved['file_id']);
-    master_assert(!empty($read['valid']) && hash_equals($bytes, $read['bytes']), 'authorized roundtrip');
+    master_assert(!empty($read['valid']) && hash_equals($bytes, $read['bytes']), 'authorized front roundtrip');
+    // Both independent print sides must be backed by distinct private files
+    // even when the synthetic source image happens to be identical.
+    $back_saved = sanro_studio_store_owned_draft_master($id, $token, 'back', $bytes);
+    master_assert(!empty($back_saved['valid']), 'authorized back write');
+    master_assert($back_saved['file_id'] !== $saved['file_id'], 'front/back storage references independent');
+    master_assert(count(glob($directory . '/*')) === 2, 'exactly two private files');
+    $back_read = sanro_studio_read_owned_draft_master($id, $token, 'back', $back_saved['file_id']);
+    master_assert(!empty($back_read['valid']) && hash_equals($bytes, $back_read['bytes']),
+        'authorized back roundtrip');
+    master_assert((fileperms($directory . '/' . $back_saved['file_id']) & 0777) === 0600,
+        'back file mode 0600');
     $other = sanro_studio_read_owned_draft_master($id, $token, 'back', $saved['file_id']);
     master_assert(empty($other['valid']), 'cross-side read rejected');
     $other = sanro_studio_read_owned_draft_master($id, str_repeat('b', 64), 'front', $saved['file_id']);
@@ -41,7 +55,7 @@ try {
     file_put_contents($directory . '/' . $saved['file_id'], 'tampered');
     $tampered = sanro_studio_read_owned_draft_master($id, $token, 'front', $saved['file_id']);
     master_assert(empty($tampered['valid']), 'tampered file rejected');
-    echo "PASS: 9 isolated private-master roundtrip checks\n";
+    echo "PASS: {$master_checks} isolated private-master front/back roundtrip checks\n";
 } finally {
     foreach (glob($directory . '/*') ?: [] as $file) { if (is_file($file) && !is_link($file)) unlink($file); }
     rmdir($directory);
