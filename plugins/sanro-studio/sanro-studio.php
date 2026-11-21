@@ -38,6 +38,8 @@ require_once __DIR__ . '/includes/master-storage.php';
 require_once __DIR__ . '/includes/order-preview.php';
 require_once __DIR__ . '/includes/drive-production.php';
 require_once __DIR__ . '/includes/drive-auto-provision.php';
+require_once __DIR__ . '/includes/order-master-source.php';
+require_once __DIR__ . '/includes/drive-master-export.php';
 require_once __DIR__ . '/includes/production-ready-admin.php';
 require_once __DIR__ . '/includes/draft-rest.php';
 require_once __DIR__ . '/includes/admin.php';
