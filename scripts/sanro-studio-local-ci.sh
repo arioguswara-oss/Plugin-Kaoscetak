@@ -78,6 +78,9 @@ run_check 'Staging preflight read-only regression' 'PASS: 9 staging preflight re
 run_check 'Staging buyer Cart/Checkout E2E JS syntax' '' node --check tests/staging-cart-checkout-e2e.cjs
 run_check 'Staging DTF front/back image E2E JS syntax' '' node --check tests/staging-image-checkout-e2e.cjs
 run_check 'Private DTF image previews and master binding' 'PASS: 7 private DTF image-preview and master-binding checks' node plugins/sanro-studio/tests/buyer-image-preview-node.cjs
+run_check 'Private DTF master PHP module syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/master-storage.php
+run_check 'Private DTF front/back storage regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/master-storage-roundtrip.php
+run_check 'Private DTF front/back owner-authorized storage roundtrip' 'PASS: 15 isolated private-master front/back roundtrip checks' php plugins/sanro-studio/tests/master-storage-roundtrip.php
 run_check 'Mobile touch staging QA JS syntax' '' node --check tests/staging-mobile-readonly.cjs
 run_check 'Buyer mobile viewport PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/buyer.php
 run_check 'Scoped buyer viewport regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/mobile-viewport-smoke.php
