@@ -10,6 +10,7 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const {readPrivateDraft,savePrivateDraft} = require('./staging-image-private-draft.cjs');
 
 if (process.env.SANRO_STAGING_IMAGE_E2E !== '1') {
   console.error('BLOCKED: set SANRO_STAGING_IMAGE_E2E=1 to authorize one synthetic staging image flow.');
@@ -18,6 +19,12 @@ if (process.env.SANRO_STAGING_IMAGE_E2E !== '1') {
 if (process.env.SANRO_STAGING_CART_E2E === '1' ||
     process.env.SANRO_STAGING_MOBILE_QA === '1') {
   console.error('BLOCKED: image E2E must not be combined with other write/read-only QA modes.');
+  process.exit(2);
+}
+const reuseRequested=process.env.SANRO_STAGING_IMAGE_REUSE==='1';
+if (process.env.SANRO_STAGING_IMAGE_REUSE &&
+    !['0','1'].includes(process.env.SANRO_STAGING_IMAGE_REUSE)) {
+  console.error('BLOCKED: SANRO_STAGING_IMAGE_REUSE must be 1 or unset.');
   process.exit(2);
 }
 const host = 'saddlebrown-peafowl-616656.hostingersite.com';
@@ -40,6 +47,17 @@ catch (_) {
     const context=await browser.newContext({
       viewport:{width:390,height:844},acceptDownloads:false,locale:'id-ID'
     });
+    if(reuseRequested){
+      // Credentials remain in owner-only Hermes file and browser session.
+      // This mode does not issue POST /drafts, preserving the guest rate limit.
+      const saved=readPrivateDraft();
+      await context.addInitScript(credentials=>{
+        if(location.hostname==='saddlebrown-peafowl-616656.hostingersite.com'){
+          sessionStorage.setItem('sanro-studio-draft:24',
+            JSON.stringify({id:credentials.id,token:credentials.token}));
+        }
+      },saved);
+    }
     try {
       const page=await context.newPage();
       // Prevent accidental external navigation; the expected flow only visits
@@ -90,6 +108,13 @@ catch (_) {
       assert.equal(crypto.createHash('sha256').update(Buffer.from(servedJs)).digest('hex'),
         sourceHash,'Staging buyer asset differs from image QA source');
       console.log('PASS: staging image E2E source asset verified');
+      if(reuseRequested){
+        await page.waitForFunction(()=>
+          (document.querySelector('#sanro-save-status')?.textContent||'')
+            .includes('Draft berhasil dibuka kembali.'),
+          null,{timeout:45000});
+        console.log('PASS: owner-bound private DTF QA draft reopened (no new draft POST)');
+      }
 
       // Generate synthetic, non-customer artwork directly inside the isolated
       // browser. No personal artwork, local uploads or order data are used.
@@ -125,6 +150,7 @@ catch (_) {
 
       // Collect only HTTP status and the allowlisted public WP error code.
       // Never print response bodies, draft identifiers, owner tokens or nonces.
+      if(!reuseRequested) {
       const draftCreates=[];
       const draftReads=[];
       const onDraftCreateResponse=response=>{
@@ -170,7 +196,17 @@ catch (_) {
       }
       assert.match(draftStatus,/Draft teks tersimpan/,
         'Image bootstrap draft creation failed; see DTF DRAFT PHASE');
+      // Save only the owner-bound QA draft credentials to a local, owner-only
+      // file. It enables a subsequent explicit reuse without more draft POSTs.
+      // Never print credentials, JSON, draft URLs or identifiers.
+      const privateCredentials=await page.evaluate(()=>{
+        try {return JSON.parse(sessionStorage.getItem('sanro-studio-draft:24')||'null')}
+        catch (_) {return null}
+      });
+      savePrivateDraft(privateCredentials||{});
       console.log('PASS: owner-bound private image-only bootstrap draft');
+      console.log('PASS: private staging DTF QA draft saved in 0600 Hermes file');
+      } // End optional new-draft path; reuse skips creation entirely.
 
       // Capture only HTTP status, side, method and allowlisted WP error codes.
       // Do NOT record request headers, draft IDs, tokens, image bytes or REST bodies.
