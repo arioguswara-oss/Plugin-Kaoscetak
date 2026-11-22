@@ -560,13 +560,18 @@ function sanro_studio_checkout_bind_existing_item_previews($order, $design_id, $
         || strpos($directory, $webroot . DIRECTORY_SEPARATOR) === 0) {
         return ['valid' => false, 'error' => 'unsafe_preview_directory'];
     }
+    // The draft's explicit current references are authoritative. Never
+    // select an older upload by scanning the private directory.
+    $record = get_option('sanro_studio_draft_' . $design_id, false);
+    if (!is_array($record) || !is_array($record['preview_refs'] ?? null)
+        || !isset($record['token_hash']) || !is_string($record['token_hash'])
+        || !hash_equals($record['token_hash'], hash('sha256', $owner_token))) {
+        return ['valid' => true, 'bound' => 0];
+    }
     $refs = [];
     foreach (['front', 'back'] as $side) {
-        $pattern = $directory . DIRECTORY_SEPARATOR . strtolower($design_id)
-            . '-' . $side . '-*';
-        $matches = glob($pattern, GLOB_NOSORT);
-        if (!is_array($matches) || count($matches) !== 1) continue;
-        $ref = basename($matches[0]);
+        $ref = $record['preview_refs'][$side] ?? null;
+        if (!is_string($ref) || $ref === '') continue;
         $checked = sanro_studio_read_owned_draft_preview(
             $design_id, $owner_token, $side, $ref
         );
