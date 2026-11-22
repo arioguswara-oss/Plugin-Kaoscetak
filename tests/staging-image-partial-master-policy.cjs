@@ -37,6 +37,11 @@ rejected(()=>verifiedExistingFrontUpload(stored,id,'YWJj'),
   'non-PNG expected content rejected');
 check(script.includes("const resumePartial=process.env.SANRO_STAGING_IMAGE_RESUME_PARTIAL==='1'"),
   'partial recovery requires explicit opt-in');
+check(script.includes('const safeSource=await page.evaluate(async(resumePartial)=>')&&
+  script.includes('},resumePartial);'),
+  'partial recovery flag explicitly crosses Playwright page.evaluate context boundary');
+check(!script.includes('const safeSource=await page.evaluate(async()=>'),
+  'browser callback cannot accidentally capture Node-local resumePartial');
 check(script.includes("if(resumePartial && (!textQaReuseRequested ||"),
   'partial recovery requires existing text QA draft and staging');
 check(script.includes("if(resumePartial &&")&&
