@@ -154,6 +154,58 @@ catch (_) {
           });
           assert(safeSource,'Text QA draft is not a clean owner-bound text-only staging draft; no mutation performed.');
           console.log('PASS: existing text-only QA draft validated before image mutations');
+
+          // Synchronize the *existing* owner-authorized text draft before
+          // selecting any local images. The editor computes text geometry
+          // from its actual viewport; reopening an older QA draft may produce
+          // different floating-point text bounds. Its master-upload guard
+          // compares exact serialized text metadata, not just a design hash.
+          // Save after selecting images would be rejected as unbound artwork.
+          // This update is NOT POST /drafts (creation), never changes rate limits.
+          const reusedId=await page.evaluate(()=>{
+            try {return JSON.parse(sessionStorage.getItem('sanro-studio-draft:24')||'null')?.id}
+            catch(_){return null}
+          });
+          assert(typeof reusedId==='string' &&
+            /^[a-f0-9-]{36}$/i.test(reusedId),'Missing valid QA draft reference');
+          const updateRequests=[];
+          const onSyncRequest=request=>{
+            if(request.method()!=='POST')return;
+            let url;
+            try {url=new URL(request.url())} catch(_){return}
+            if(url.hostname!==host)return;
+            const rest=url.searchParams.get('rest_route')||url.pathname;
+            if(/\\/sanro-studio\\/v1\\/drafts(?:\\/|$)/.test(rest))
+              updateRequests.push(rest.endsWith('/'+reusedId)?'update':'other');
+          };
+          page.on('request',onSyncRequest);
+          try {
+            const updateResponse=page.waitForResponse(response=>{
+              if(response.request().method()!=='POST')return false;
+              try {
+                const url=new URL(response.url());
+                const route=url.searchParams.get('rest_route')||url.pathname;
+                return url.hostname===host &&
+                  route.endsWith('/sanro-studio/v1/drafts/'+reusedId);
+              } catch(_){return false}
+            },{timeout:30000});
+            await page.locator('#sanro-save-draft').click();
+            const result=await updateResponse;
+            assert(result.status()===200,
+              'Owner-bound existing QA draft sync rejected (HTTP '+result.status()+')');
+            await page.waitForFunction(()=>{
+              const text=document.querySelector('#sanro-save-status')?.textContent||'';
+              return /^Draft teks tersimpan\\./.test(text)
+                || /^Penyimpanan gagal/.test(text);
+            },null,{timeout:30000});
+            assert.match(await page.locator('#sanro-save-status').innerText(),
+              /^Draft teks tersimpan\\./,'Existing QA text metadata sync failed');
+            assert.deepEqual(updateRequests,['update'],
+              'Image QA reuse must issue exactly one existing-draft update and no draft creation');
+          } finally {
+            page.off('request',onSyncRequest);
+          }
+          console.log('PASS: owner-bound existing QA text metadata synchronized (one update, zero creates)');
         }
       }
 
