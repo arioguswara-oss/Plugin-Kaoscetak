@@ -572,7 +572,7 @@ function sanro_studio_checkout_bind_existing_item_previews($order, $design_id, $
             hash('sha256', maybe_serialize($record['design'])),
             $record['preview_design_hash']
         )) {
-        return ['valid' => true, 'bound' => 0];
+        return ['valid' => false, 'error' => 'preview_revision_mismatch'];
     }
     $refs = [];
     foreach (['front', 'back'] as $side) {
