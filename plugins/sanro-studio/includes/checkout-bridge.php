@@ -108,7 +108,10 @@ function sanro_studio_prepare_size_checkout_order_item($candidate, $order_item) 
         || ($candidate['sanro_studio_quote_currency'] ?? null) !== 'IDR') {
         return ['valid' => false, 'error' => 'invalid_size_checkout_contract'];
     }
-    foreach (['_sanro_studio_design_id', '_sanro_studio_size'] as $key) {
+    // Persist the verified DTF quote alongside the design/size binding.
+    // Never persist buyer-supplied prices, owner credentials or artwork.
+    foreach (['_sanro_studio_design_id', '_sanro_studio_size',
+        '_sanro_studio_unit_price', '_sanro_studio_quote_currency'] as $key) {
         $existing = $order_item->get_meta($key, true);
         if ($existing !== '' && $existing !== null) {
             return ['valid' => false, 'error' => 'size_order_already_bound'];
@@ -116,6 +119,8 @@ function sanro_studio_prepare_size_checkout_order_item($candidate, $order_item) 
     }
     $order_item->update_meta_data('_sanro_studio_design_id', $verified['design_id']);
     $order_item->update_meta_data('_sanro_studio_size', $verified['size']);
+    $order_item->update_meta_data('_sanro_studio_unit_price', $candidate['sanro_studio_unit_price']);
+    $order_item->update_meta_data('_sanro_studio_quote_currency', 'IDR');
     return ['valid' => true, 'design_id' => $verified['design_id'],
         'size' => $verified['size'], 'requires_item_save' => true,
         'checkout_enabled' => false];
@@ -531,6 +536,14 @@ function sanro_studio_stage_checkout_verify_order_batch($order, $data) {
         if (!is_string($size) || !isset($sizes[$size]) || isset($seen[$size])
             || $design !== $verified['contract']['design_id']) {
             throw new RuntimeException('SANRO Studio: order metadata mismatch.');
+        }
+        // Verify persisted quote metadata before WooCommerce saves the order.
+        // The amount itself must also match the WC line subtotal and total.
+        $stored_price = $item->get_meta('_sanro_studio_unit_price', true);
+        $stored_currency = $item->get_meta('_sanro_studio_quote_currency', true);
+        if ((string) $stored_price !== (string) $candidates[$size]['sanro_studio_unit_price']
+            || $stored_currency !== 'IDR') {
+            throw new RuntimeException('SANRO Studio: order quote metadata mismatch.');
         }
         $amount = sanro_studio_validate_size_order_item($candidates[$size], $item);
         if (empty($amount['valid'])) {
