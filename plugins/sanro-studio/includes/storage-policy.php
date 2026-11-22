@@ -158,6 +158,7 @@ function sanro_studio_store_owned_draft_preview($design_id, $owner_token, $side,
             $after['preview_refs'] = [];
         }
         $after['preview_refs'][$side] = $stored['file_id'];
+        $after['preview_design_hash'] = hash('sha256', maybe_serialize($before['design']));
         if ($before === $after) return $stored;
         $changed = $wpdb->query($wpdb->prepare(
             "UPDATE `{$wpdb->options}` SET option_value = %s WHERE option_name = %s AND BINARY option_value = BINARY %s",
