@@ -48,4 +48,7 @@ if (!function_exists('sanro_studio_bootstrap_admin_menu')) {
         );
     }
 }
+// Buyer template is loaded for integration, but frontend hooks stay disabled until
+// product configuration and draft dependencies are present and tested.
+require_once __DIR__ . '/includes/buyer.php';
 add_action('admin_menu', 'sanro_studio_bootstrap_admin_menu');
