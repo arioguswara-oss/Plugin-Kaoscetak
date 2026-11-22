@@ -69,7 +69,15 @@ function sanro_studio_checkout_batch_lock_preflight($order, $contract) {
             || $design_id !== ($contract['design_id'] ?? null)) {
             return ['valid' => false, 'error' => 'order_design_mismatch'];
         }
-        $checked = sanro_studio_validate_size_order_item($expected_by_size[$size], $item);
+        // Persisted metadata must agree with the server-authorized DTF quote.
+        // Checking WC totals alone cannot detect a modified quote label.
+        $quote = $expected_by_size[$size];
+        if ($item->get_meta('_sanro_studio_quote_currency', true) !== 'IDR'
+            || (string) $item->get_meta('_sanro_studio_unit_price', true)
+                !== (string) $quote['sanro_studio_unit_price']) {
+            return ['valid' => false, 'error' => 'order_quote_metadata_mismatch'];
+        }
+        $checked = sanro_studio_validate_size_order_item($quote, $item);
         if (empty($checked['valid'])) {
             return ['valid' => false, 'error' => 'order_quote_mismatch'];
         }
