@@ -141,10 +141,38 @@ function redact(message) {
     });
     assert(opened && opened.ok(), 'Editor HTTP response is not 2xx');
     verifyHost(page);
+    // PHP normally renders the text control before DOMContentLoaded. If it is
+    // missing, report only allowlisted booleans; never dump HTML, URL queries,
+    // cookies or WordPress nonces. No staging writes occur in this diagnostic.
+    const editorControl=page.locator('#sanro-studio-buyer #sanro-text-input');
+    if (await editorControl.count() !== 1 ||
+        !await editorControl.isVisible().catch(()=>false)) {
+      const route=await page.evaluate(()=>{
+        const target=new URL(location.href);
+        const buyer=document.getElementById('sanro-studio-buyer');
+        return {
+          expectedPath:target.pathname==='/custom-2/',
+          editorQuery:target.searchParams.get('sanro_studio_editor')==='1',
+          productQuery:target.searchParams.get('product_id')==='24',
+          buyerRoot:!!buyer,
+          productPicker:!!buyer?.classList.contains('sanro-product-picker'),
+          textControl:!!document.getElementById('sanro-text-input'),
+          loginForm:!!document.querySelector('#loginform, input[name="log"]'),
+          wordpress404:document.body?.classList.contains('error404')===true,
+          buyerJsTag:[...document.scripts].some(script=>{
+            try {return new URL(script.src).pathname===
+              '/wp-content/plugins/sanro-studio/assets/buyer.js';}
+            catch (_) {return false;}
+          })
+        };
+      });
+      console.log('BUYER_EDITOR_ROUTE_DIAG: '+JSON.stringify({
+        http:opened.status(),...route,jsErrors:jsErrors.length
+      }));
+      throw Error('Staging page is not a visible SANRO buyer editor; check staging editor page, enabled buyer flag and product 24 readiness.');
+    }
     // Check editor markup before blaming the served asset. A missing script
     // tag must report a bootstrap issue, not a source SHA mismatch.
-    await page.locator('#sanro-studio-buyer #sanro-text-input')
-      .waitFor({timeout:15000});
     const loadedScriptUrls = await page.locator('script[src]').evaluateAll(
       (elements, expected) => elements.map(node => node.src).filter(value => {
         try {
