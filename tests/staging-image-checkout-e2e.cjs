@@ -167,7 +167,7 @@ catch (_) {
           null,{timeout:45000});
         console.log('PASS: owner-bound staging QA draft reopened (no new draft POST)');
         if(textQaReuseRequested){
-          const safeSource=await page.evaluate(async()=>{
+          const safeSource=await page.evaluate(async(resumePartial)=>{
             const cfg=window.SANRO_STUDIO_EDITOR_CONFIG;
             let state;
             try {state=JSON.parse(sessionStorage.getItem('sanro-studio-draft:24')||'null')}
@@ -191,7 +191,7 @@ catch (_) {
               && sides.every(side=>!(d.design?.[side]?.objects||[])
                 .some(obj=>obj.type==='image'))
               && Number(d.design?.quantities?.M)===1;
-          });
+          },resumePartial);
           assert(safeSource,'Text QA draft is not a clean owner-bound text-only staging draft; no mutation performed.');
           console.log('PASS: existing text-only QA draft validated before image mutations');
 
