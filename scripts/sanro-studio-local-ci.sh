@@ -225,6 +225,10 @@ run_check 'Buyer print-zone JS syntax' '' node --check plugins/sanro-studio/asse
 run_check 'Side-specific draft geometry JS syntax' '' node --check plugins/sanro-studio/tests/buyer-print-zone-draft-node.cjs
 run_check 'Side-specific text/image draft geometry' 'side-specific print-zone draft geometry checks' node plugins/sanro-studio/tests/buyer-print-zone-draft-node.cjs
 
+run_check 'PR41 Hostinger staging two-file PLAN Bash syntax' '' bash -n ops/hostinger/sanro-studio-pr41-twofile-readonly-plan.sh
+run_check 'PR41 staging PLAN security test PHP syntax' 'No syntax errors detected' php -l tests/staging-pr41-twofile-plan-policy.php
+run_check 'PR41 staging PLAN-only source contract' 'PASS: 20 SANRO PR41 two-file staging PLAN safety checks' php tests/staging-pr41-twofile-plan-policy.php
+
 printf '\nSUMMARY: %s checks PASS, %s checks FAIL\n' "$passed" "$failed"
 if [[ $failed -gt 0 ]]; then
   exit 1
