@@ -48,7 +48,7 @@ check(source.includes("await context.route('**/*',route=>")&&
 check(source.includes("const updateResponse=page.waitForResponse(")&&
   source.includes("const reusedId=await page.evaluate("),
   'synchronization waits for exact owner-bound update response');
-check(source.includes("assert.deepEqual(updateRequests,['update'])")&&
+check(source.includes("assert.deepEqual(updateRequests,['update'],")&&
   source.includes("result.status()===200"),
   'exactly one successful existing-draft update, zero create POSTs');
 check(source.includes("const updateRequests=[];")&&
