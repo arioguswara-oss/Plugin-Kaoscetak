@@ -308,6 +308,37 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
     }
     echo '<div class="sanro-studio-item-preview"><strong>' .
         esc_html('SANRO Studio — Preview item') . '</strong>';
+    // Admin-only order summary, based on saved WooCommerce item data.
+    // Missing or mismatched quote metadata must not appear as a valid DTF price.
+    if ($design_id !== '' && method_exists($item, 'get_meta')
+        && method_exists($item, 'get_quantity')
+        && method_exists($item, 'get_subtotal')
+        && method_exists($item, 'get_total')) {
+        $size = $item->get_meta('_sanro_studio_size', true);
+        $price = $item->get_meta('_sanro_studio_unit_price', true);
+        $currency = $item->get_meta('_sanro_studio_quote_currency', true);
+        $qty = $item->get_quantity();
+        $subtotal = $item->get_subtotal();
+        $total = $item->get_total();
+        $price_valid = is_string($size)
+            && in_array($size, ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'], true)
+            && is_numeric($qty) && (int) $qty > 0
+            && (string) (int) $qty === (string) $qty
+            && (is_int($price) || (is_string($price) && preg_match('/^[1-9][0-9]*$/D', $price)))
+            && (int) $price > 0 && $currency === 'IDR'
+            && is_numeric($subtotal) && is_numeric($total)
+            && (float) $subtotal === (float) ((int) $price * (int) $qty)
+            && (float) $total === (float) ((int) $price * (int) $qty);
+        echo '<p>' . esc_html('Design ID: ' . $design_id) . '</p>';
+        if ($price_valid) {
+            echo '<p>' . esc_html('Ukuran: ' . $size . ' | Jumlah: ' . (int) $qty
+                . ' | Harga DTF: Rp ' . number_format((int) $price, 0, ',', '.')
+                . ' / pcs | Subtotal: Rp ' .
+                number_format((int) $price * (int) $qty, 0, ',', '.')) . '</p>';
+        } else {
+            echo '<p>' . esc_html('Harga DTF / ukuran: belum terverifikasi pada item pesanan') . '</p>';
+        }
+    }
     foreach (['front' => 'Depan', 'back' => 'Belakang'] as $side => $label) {
         if (empty($inventory[$side])) {
             echo '<p>' . esc_html($label . ': Belum tersedia') . '</p>';
