@@ -61,7 +61,7 @@ if [[ "$HEAD_SHA" != "$EXPECTED" ]]; then
     exit 2
 fi
 
-# Fetch the *exact* PR31 baseline used to install these modules on staging.
+# Fetch the *exact* PR31 baseline previously applied on staging.
 GIT_TERMINAL_PROMPT=0 git -C "$SOURCE" fetch -q --depth 1 --no-tags origin \
     "+refs/heads/$BASE_BRANCH:refs/remotes/origin/$BASE_BRANCH"
 got_base="$(git -C "$SOURCE" rev-parse "refs/remotes/origin/$BASE_BRANCH^{commit}")"
