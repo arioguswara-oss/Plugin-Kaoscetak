@@ -11,6 +11,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const {readPrivateDraft,readTextQaDraft,savePrivateDraft} = require('./staging-image-private-draft.cjs');
+const {verifiedExistingFrontUpload} = require('./staging-image-partial-master-helper.cjs');
 
 if (process.env.SANRO_STAGING_IMAGE_E2E !== '1') {
   console.error('BLOCKED: set SANRO_STAGING_IMAGE_E2E=1 to authorize one synthetic staging image flow.');
@@ -360,6 +361,56 @@ catch (_) {
       console.log('PASS: private staging DTF QA draft saved in 0600 Hermes file');
       } // End optional new-draft path; reuse skips creation entirely.
 
+      // In partial recovery, front was already persisted and owner-readback
+      // verified in a prior browser run. Recheck the exact synthetic PNG bytes
+      // against live server data; do NOT re-upload the same front master.
+      // Only the missing back side may perform a real server upload later,
+      // after the server's per-draft hourly quota has naturally expired.
+      let frontReuseCount=0;
+      if(resumePartial){
+        const frontRef=await page.evaluate(async()=>{
+          const cfg=window.SANRO_STUDIO_EDITOR_CONFIG;
+          let credentials;
+          try {credentials=JSON.parse(sessionStorage.getItem('sanro-studio-draft:24')||'null')}
+          catch(_){return {valid:false}}
+          if(!cfg?.draft_api?.url||!credentials?.id||!credentials?.token)return {valid:false};
+          const response=await fetch(cfg.draft_api.url+'/'+encodeURIComponent(credentials.id)
+            +'/master-read/front',{
+            method:'GET',credentials:'same-origin',cache:'no-store',
+            headers:{'X-Sanro-Draft-Nonce':cfg.draft_api.nonce,
+              'X-Sanro-Owner-Token':credentials.token}
+          });
+          if(!response.ok)return {valid:false,http:response.status};
+          return response.json();
+        });
+        const expectedId=await page.evaluate(()=>{
+          try {return JSON.parse(sessionStorage.getItem('sanro-studio-draft:24')||'null')?.id}
+          catch(_){return null}
+        });
+        const fixture=images.find(item=>item.side==='front');
+        assert(fixture&&typeof fixture.base64==='string','Synthetic front PNG unavailable');
+        const reuseResponse=verifiedExistingFrontUpload(frontRef,expectedId,fixture.base64);
+        console.log('PASS: existing front master server GET verified byte-for-byte; no new front upload');
+        const replayPath='/wp-json/sanro-studio/v1/drafts/'+expectedId+'/masters/front';
+        await page.route('**/wp-json/sanro-studio/v1/drafts/*/masters/front',route=>{
+          const request=route.request();
+          let u;
+          try {u=new URL(request.url())}catch(_){return route.abort()}
+          if(request.method()!=='POST'||u.hostname!==host||u.pathname!==replayPath)
+            return route.abort('blockedbyclient');
+          frontReuseCount++;
+          if(frontReuseCount!==1)return route.abort('blockedbyclient');
+          // This response is reused only from a real, owner-verified prior
+          // upload. The browser itself still checks live master-read/front.
+          // No response to an upload of new bytes may be fabricated.
+          return route.fulfill({
+            status:200,contentType:'application/json; charset=UTF-8',
+            headers:{'Cache-Control':'private, no-store'},
+            body:JSON.stringify(reuseResponse)
+          });
+        });
+      }
+
       // Capture only HTTP status, side, method and allowlisted WP error codes.
       // Do NOT record request headers, draft IDs, tokens, image bytes or REST bodies.
       const masterHttp = [];
@@ -405,7 +456,17 @@ catch (_) {
           http:row.http,contentType:row.contentType,code:row.code}))}));
       assert.match(masterStatus,/Master dan posisi gambar terverifikasi untuk front, back/,
         'Private front/back master upload or binding failed; see DTF MASTER PHASE');
-      console.log('PASS: both private DTF masters uploaded and bound to same draft');
+      if(resumePartial){
+        assert.equal(frontReuseCount,1,
+          'Previously verified front master must be reused exactly once');
+        const backUploads=masterHttp.filter(item=>item.side==='back' &&
+          item.method==='POST'&&item.http===200);
+        assert.equal(backUploads.length,1,
+          'Missing back master must be uploaded and verified by the real server');
+        console.log('PASS: previously verified front master reused; back master uploaded, both bound');
+      } else {
+        console.log('PASS: both private DTF masters uploaded and bound to same draft');
+      }
 
       const metadata=await page.evaluate(async ()=>{
         const cfg=window.SANRO_STUDIO_EDITOR_CONFIG;
