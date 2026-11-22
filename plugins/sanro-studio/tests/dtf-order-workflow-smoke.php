@@ -160,6 +160,9 @@ check137(empty($fakeApproval['valid'])
     && $GLOBALS['renderCalls137'] === 0,
     'preflight cannot claim artwork print quality approved');
 $GLOBALS['preflightApprove137'] = '';
+// Retain the exact original JSON-serializable draft: floating-point
+// increment/decrement is not a lossless rollback for SHA-256 fingerprints.
+$baselineDraft137 = $GLOBALS['record133'];
 $fixedFingerprint = sanro_studio_dtf_locked_order_item_fingerprint($order, 71);
 check137(is_string($fixedFingerprint) && strlen($fixedFingerprint) === 64
     && sanro_studio_dtf_locked_snapshot_matches($order, 71, $fixedFingerprint),
@@ -176,7 +179,7 @@ check137(empty($changedDuringPlan['valid'])
     && count(glob($dir137 . '/*.png') ?: []) === 0,
     'draft mutation during back preflight rejects before PNG rendering');
 $GLOBALS['mutatePlan137'] = '';
-$GLOBALS['record133']['design']['front']['objects'][0]['x'] -= 0.01;
+$GLOBALS['record133'] = $baselineDraft137;
 $GLOBALS['mutateRender137'] = 'front';
 $changedDuringFront = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
 check137(empty($changedDuringFront['valid'])
@@ -186,7 +189,7 @@ check137(empty($changedDuringFront['valid'])
     && count(glob($dir137 . '/*.png') ?: []) === 0,
     'front renderer draft change rejected before first private commit');
 $GLOBALS['mutateRender137'] = '';
-$GLOBALS['record133']['design']['back']['objects'][0]['x'] -= 0.01;
+$GLOBALS['record133'] = $baselineDraft137;
 $GLOBALS['mutateRender137'] = 'back';
 $changedDuringBack = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
 check137(empty($changedDuringBack['valid'])
@@ -196,7 +199,7 @@ check137(empty($changedDuringBack['valid'])
     && count(glob($dir137 . '/*.png') ?: []) === 1,
     'after verified front side, back-draft mutation fails partial, never complete');
 $GLOBALS['mutateRender137'] = '';
-$GLOBALS['record133']['design']['back']['objects'][0]['x'] -= 0.01;
+$GLOBALS['record133'] = $baselineDraft137;
 foreach (glob($dir137 . '/*') ?: [] as $file) {
     if (is_file($file) || is_link($file)) @unlink($file);
 }
