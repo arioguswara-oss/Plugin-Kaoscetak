@@ -117,13 +117,20 @@ function redact(message) {
   const expectedBuyerJs = crypto.createHash('sha256').update(
     fs.readFileSync(path.join(__dirname, '../plugins/sanro-studio/assets/buyer.js'))
   ).digest('hex');
-  const buyerResponsePromise = page.waitForResponse(response => {
+  // Observe the browser's real script request first. Browser caching or a
+  // different script loader can otherwise yield an absent Playwright response,
+  // which is NOT evidence of differing bytes.
+  const buyerAssetPath = '/wp-content/plugins/sanro-studio/assets/buyer.js';
+  let buyerAssetResponse = null;
+  page.on('response', response => {
     try {
       const url = new URL(response.url());
-      return url.hostname === expectedHost
-        && url.pathname.endsWith('/sanro-studio/assets/buyer.js');
-    } catch (_) { return false; }
-  }, {timeout:30000}).catch(() => null);
+      if (url.origin === editor.origin && url.pathname === buyerAssetPath &&
+          response.request().method() === 'GET') {
+        buyerAssetResponse = response;
+      }
+    } catch (_) { /* Ignore unrelated responses. */ }
+  });
   const jsErrors = [];
   page.on('pageerror', error => {
     if (jsErrors.length < 5) jsErrors.push(redact(error.name));
@@ -134,17 +141,49 @@ function redact(message) {
     });
     assert(opened && opened.ok(), 'Editor HTTP response is not 2xx');
     verifyHost(page);
-    const buyerResponse = await buyerResponsePromise;
-    const buyerBytes = buyerResponse ? await buyerResponse.body().catch(() => null) : null;
-    const browserBuyerJs = buyerBytes
-      ? crypto.createHash('sha256').update(buyerBytes).digest('hex') : null;
-    console.log('BUYER JS browser_sha256=' + (browserBuyerJs || 'missing')
-      + ' expected_sha256=' + expectedBuyerJs
-      + ' http=' + (buyerResponse?.status() ?? 'none'));
-    assert(browserBuyerJs === expectedBuyerJs,
-      'Staging browser buyer.js differs from PR source; update STAGING asset first.');
+    // Check editor markup before blaming the served asset. A missing script
+    // tag must report a bootstrap issue, not a source SHA mismatch.
     await page.locator('#sanro-studio-buyer #sanro-text-input')
       .waitFor({timeout:15000});
+    const loadedScriptUrls = await page.locator('script[src]').evaluateAll(
+      (elements, expected) => elements.map(node => node.src).filter(value => {
+        try {
+          const u = new URL(value);
+          return u.origin === expected.origin && u.pathname === expected.pathname;
+        } catch (_) { return false; }
+      }), {origin:editor.origin, pathname:buyerAssetPath});
+    assert.equal(loadedScriptUrls.length, 1,
+      'Staging editor buyer.js script not enqueued exactly once');
+
+    let buyerBytes = buyerAssetResponse
+      ? await buyerAssetResponse.body().catch(() => null) : null;
+    let buyerHttp = buyerAssetResponse?.status() ?? 0;
+    let buyerAssetMode = buyerBytes ? 'browser_response' : 'same_origin_get';
+
+    if (!buyerBytes) {
+      // Same-origin read-only fallback uses the exact enqueued script URL,
+      // including its WordPress cache-busting version. Never POST/write.
+      const result = await page.evaluate(async url => {
+        try {
+          const r = await fetch(url, {method:'GET',credentials:'same-origin',
+            cache:'no-store',redirect:'error'});
+          return {http:r.status, bytes:r.ok ?
+            [...new Uint8Array(await r.arrayBuffer())] : null};
+        } catch (_) { return {http:0,bytes:null}; }
+      }, loadedScriptUrls[0]);
+      buyerHttp = result.http;
+      buyerBytes = result.bytes ? Buffer.from(result.bytes) : null;
+    }
+    const browserBuyerJs = buyerBytes
+      ? crypto.createHash('sha256').update(buyerBytes).digest('hex') : null;
+    console.log('BUYER JS probe=' + buyerAssetMode
+      + ' browser_sha256=' + (browserBuyerJs || 'missing')
+      + ' expected_sha256=' + expectedBuyerJs
+      + ' http=' + buyerHttp);
+    assert(buyerHttp === 200 && browserBuyerJs !== null,
+      'Staging buyer.js missing or unavailable over same-origin GET');
+    assert.equal(browserBuyerJs, expectedBuyerJs,
+      'Staging buyer.js bytes differ from pinned Git source; staging asset update required.');
     const capabilities = await page.evaluate(() => {
       const cfg = window.SANRO_STUDIO_EDITOR_CONFIG || {};
       return {
