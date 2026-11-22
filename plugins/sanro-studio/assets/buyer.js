@@ -557,7 +557,25 @@
       serverTextDesign[name].objects=serverTextDesign[name].objects.filter(item=>item.type!=='image');
       if(!serverTextDesign[name].objects.length)delete serverTextDesign[name];
      }
-     if(JSON.stringify(localTextDesign)!==JSON.stringify(serverTextDesign))
+     // A reopened text position may differ by <=1e-6 due to IEEE-754
+     // reconstruction. Normalize ONLY matching text x/y for comparison;
+     // do not modify the draft, hash, binding, or other metadata.
+     const comparableTextDesign=JSON.parse(JSON.stringify(localTextDesign));
+     for(const name of ['front','back']){
+      const local=comparableTextDesign[name],server=serverTextDesign[name];
+      if(!local||!server||!Array.isArray(local.objects)
+       ||!Array.isArray(server.objects))continue;
+      for(let i=0;i<local.objects.length;i++){
+       const a=local.objects[i],b=server.objects[i];
+       if(!a||!b||a.type!=='text'||b.type!=='text')continue;
+       for(const key of ['x','y']){
+        if(typeof a[key]==='number'&&Number.isFinite(a[key])
+         &&typeof b[key]==='number'&&Number.isFinite(b[key])
+         &&Math.abs(a[key]-b[key])<=0.000001)a[key]=b[key];
+       }
+      }
+     }
+     if(JSON.stringify(comparableTextDesign)!==JSON.stringify(serverTextDesign))
       throw new Error('Metadata teks, jumlah, atau warna berubah. Simpan draft teks sebelum upload master.');
      const designHash=currentDraft.design_hash;
      const completed=[];
