@@ -35,7 +35,11 @@ check152(strpos($source, 'SANRO_STUDIO_EXPECTED_SHA:-') !== false
     && strpos($source, '"$HEAD" != "$SHA"') !== false,
     'exact candidate commit pin required');
 check152(strpos($source, 'manual/sanro-studio-pr42-twofile-guarded-staging-20261122') !== false
-    && strpos($source, 'git clone -q --depth 1 --single-branch') !== false,
+    && strpos($source, 'clone -q --single-branch') !== false
+    && strpos($source, 'fetch -q --no-tags origin') !== false
+    && strpos($source, 'maintenance.auto=false') !== false
+    && strpos($source, '--depth') === false
+    && strpos($source, '--deepen') === false,
     'isolated candidate checkout');
 check152(strpos($source, 'manual/sanro-studio-dtf-admin-staging-targeted-20261121') !== false
     && strpos($source, '31deb5e8e65a212e1e883b745187db1b685236e1') !== false,
