@@ -532,3 +532,66 @@ function sanro_studio_admin_production_status($order) {
     }
     echo '</div>';
 }
+
+/**
+ * Bind existing lightweight preview files to persisted Studio order items.
+ * Called ONLY by the verified checkout draft-lock workflow, never via HTTP.
+ * An ambiguous side (multiple different uploads) is deliberately left unbound.
+ * No public links, token persistence, DTF rendering, or Drive writes.
+ */
+function sanro_studio_checkout_bind_existing_item_previews($order, $design_id, $owner_token, $item_ids) {
+    if (!is_object($order) || !method_exists($order, 'get_items')
+        || !is_array($item_ids) || !$item_ids
+        || !is_string($design_id) || !is_string($owner_token)
+        || !function_exists('sanro_studio_read_owned_draft_preview')
+        || !defined('SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS')
+        || SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS !== true
+        || !defined('SANRO_STUDIO_PRIVATE_PREVIEW_DIR')
+        || !is_string(SANRO_STUDIO_PRIVATE_PREVIEW_DIR)) {
+        return ['valid' => false, 'error' => 'preview_unavailable'];
+    }
+    $directory = realpath(SANRO_STUDIO_PRIVATE_PREVIEW_DIR);
+    $root = defined('ABSPATH') ? realpath(ABSPATH) : false;
+    $webroot = isset($_SERVER['DOCUMENT_ROOT']) && is_string($_SERVER['DOCUMENT_ROOT'])
+        ? realpath($_SERVER['DOCUMENT_ROOT']) : false;
+    if (!$directory || is_link(SANRO_STUDIO_PRIVATE_PREVIEW_DIR)
+        || !$root || !$webroot || $directory === $root || $directory === $webroot
+        || strpos($directory, $root . DIRECTORY_SEPARATOR) === 0
+        || strpos($directory, $webroot . DIRECTORY_SEPARATOR) === 0) {
+        return ['valid' => false, 'error' => 'unsafe_preview_directory'];
+    }
+    $refs = [];
+    foreach (['front', 'back'] as $side) {
+        $pattern = $directory . DIRECTORY_SEPARATOR . strtolower($design_id)
+            . '-' . $side . '-*';
+        $matches = glob($pattern, GLOB_NOSORT);
+        if (!is_array($matches) || count($matches) !== 1) continue;
+        $ref = basename($matches[0]);
+        $checked = sanro_studio_read_owned_draft_preview(
+            $design_id, $owner_token, $side, $ref
+        );
+        if (!empty($checked['valid'])) $refs[$side] = $ref;
+    }
+    if (!$refs) return ['valid' => true, 'bound' => 0];
+    $items = $order->get_items('line_item');
+    $bound = 0;
+    foreach ($item_ids as $item_id) {
+        if (!is_int($item_id) || $item_id < 1 || !isset($items[$item_id])
+            || !is_object($items[$item_id])) continue;
+        $item = $items[$item_id];
+        if (!method_exists($item, 'get_meta') || !method_exists($item, 'save')
+            || !method_exists($item, 'update_meta_data')
+            || $item->get_meta('_sanro_studio_design_id', true) !== $design_id) continue;
+        $changed = false;
+        foreach ($refs as $side => $ref) {
+            $key = '_sanro_studio_preview_' . $side . '_ref';
+            $existing = $item->get_meta($key, true);
+            if ($existing === '') {
+                $item->update_meta_data($key, $ref);
+                $changed = true;
+            }
+        }
+        if ($changed && $item->save() !== false) $bound++;
+    }
+    return ['valid' => true, 'bound' => $bound];
+}
