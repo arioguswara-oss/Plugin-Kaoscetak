@@ -115,9 +115,13 @@ function sanro_studio_rest_upload_preview($request) {
     if (!is_string($bytes) || strlen($bytes) > 51200) {
         return new WP_Error('sanro_invalid_preview', 'Invalid preview payload.', ['status' => 400]);
     }
+    $expected_hash = $request->get_param('expected_design_hash');
+    if (!is_string($expected_hash) || !preg_match('/^[a-f0-9]{64}$/D', $expected_hash)) {
+        return new WP_Error('sanro_draft_conflict', 'Saved design revision required.', ['status' => 409]);
+    }
     $result = sanro_studio_store_owned_draft_preview(
         $request->get_param('id'), $request->get_header('X-Sanro-Owner-Token'),
-        $request->get_param('side'), $bytes
+        $request->get_param('side'), $bytes, $expected_hash
     );
     if (empty($result['valid'])) {
         $error = $result['error'] ?? 'invalid_preview';
