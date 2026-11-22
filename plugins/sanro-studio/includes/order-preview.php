@@ -565,7 +565,13 @@ function sanro_studio_checkout_bind_existing_item_previews($order, $design_id, $
     $record = get_option('sanro_studio_draft_' . $design_id, false);
     if (!is_array($record) || !is_array($record['preview_refs'] ?? null)
         || !isset($record['token_hash']) || !is_string($record['token_hash'])
-        || !hash_equals($record['token_hash'], hash('sha256', $owner_token))) {
+        || !hash_equals($record['token_hash'], hash('sha256', $owner_token))
+        || !is_array($record['design'] ?? null)
+        || !is_string($record['preview_design_hash'] ?? null)
+        || !hash_equals(
+            hash('sha256', maybe_serialize($record['design'])),
+            $record['preview_design_hash']
+        )) {
         return ['valid' => true, 'bound' => 0];
     }
     $refs = [];
