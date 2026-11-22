@@ -14,6 +14,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const crypto = require('node:crypto');
 const path = require('node:path');
+const {assertSafeStorageState} = require('./lib/staging-admin-guards.cjs');
 const expectedHost = 'saddlebrown-peafowl-616656.hostingersite.com';
 const editor = new URL(process.env.SANRO_STAGING_EDITOR_URL ||
   'https://' + expectedHost + '/custom-2/?sanro_studio_editor=1&product_id=24');
@@ -30,6 +31,22 @@ if (!['undefined', '1', '0'].includes(String(process.env.SANRO_STAGING_CART_E2E)
 }
 const write = process.env.SANRO_STAGING_CART_E2E === '1';
 const reuseRequested = process.env.SANRO_STAGING_CART_REUSE === '1';
+// Opt-in for Hostinger's Coming Soon gate. Reuse only an existing Hermes
+// owner-private authenticated WP staging session; never capture or log it.
+const authStatePath = process.env.SANRO_STAGING_BUYER_AUTH_STATE;
+let validatedAuthState;
+if (authStatePath !== undefined) {
+  if (process.env.SANRO_STUDIO_QA_ENV !== 'staging') {
+    console.error('BLOCKED: authenticated buyer QA requires exact staging mode.');
+    process.exit(2);
+  }
+  try {
+    validatedAuthState = assertSafeStorageState(authStatePath);
+  } catch (_) {
+    console.error('BLOCKED: missing or unsafe private staging browser session.');
+    process.exit(2);
+  }
+}
 const stateDir = path.join(process.env.HOME || '/home/sanro', 'sanro-browser-qa');
 const stateFile = path.join(stateDir, 'staging-cart-e2e-private.json');
 // Only local, owner-readable QA credentials; never store in GitHub or logs.
@@ -99,6 +116,7 @@ function redact(message) {
   }
   const browser = await chromium.launch(launch);
   const context = await browser.newContext({
+    ...(validatedAuthState ? {storageState:validatedAuthState} : {}),
     viewport:{width:390,height:844}, locale:'id-ID',
     acceptDownloads:false
   });
@@ -141,6 +159,8 @@ function redact(message) {
     });
     assert(opened && opened.ok(), 'Editor HTTP response is not 2xx');
     verifyHost(page);
+    console.log('BUYER_STAGING_SESSION_MODE: ' +
+      (validatedAuthState ? 'EXISTING_AUTHENTICATED' : 'GUEST'));
     // PHP normally renders the text control before DOMContentLoaded. If it is
     // missing, report only allowlisted booleans; never dump HTML, URL queries,
     // cookies or WordPress nonces. No staging writes occur in this diagnostic.
