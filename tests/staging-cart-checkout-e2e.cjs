@@ -505,6 +505,38 @@ function redact(message) {
       && checkout.includes(quote.shortId) && checkout.includes(shownPrice),
       'Checkout lacks signed design details or server price');
     console.log('PASS checkout summary contains size, design and same IDR quote');
+    // Optional order preflight: observe checkout capabilities without submitting
+    // a form, contacting a gateway, or writing an order. Payment methods are
+    // reported as identifiers only, never billing details or credentials.
+    if (process.env.SANRO_STAGING_ORDER_PREFLIGHT === '1') {
+      assert(process.env.SANRO_STUDIO_QA_ENV === 'staging',
+        'Order preflight is restricted to staging');
+      const preflight = await page.evaluate(() => {
+        const form = document.querySelector('form.checkout');
+        const button = document.querySelector('#place_order');
+        const methods = [...document.querySelectorAll(
+          'input[name="payment_method"]')].map(input => ({
+            id:input.value, enabled:!input.disabled,
+            checked:input.checked
+          }));
+        const shipping = [...document.querySelectorAll(
+          'input[name^="shipping_method"]')].map(input => ({
+            id:input.value, checked:input.checked
+          }));
+        return {
+          classicForm:!!form,
+          placeOrderButton:!!button,
+          buttonDisabled:button?.disabled ?? true,
+          paymentMethods:methods,
+          shippingMethods:shipping,
+          checkoutNonce:!!form?.querySelector('input[name="woocommerce-process-checkout-nonce"]'),
+          studioTokenField:!!form?.querySelector('input[name="sanro_studio_checkout_token"]'),
+          studioNonceField:!!form?.querySelector('input[name="sanro_studio_checkout_nonce"]')
+        };
+      });
+      console.log('STAGING_ORDER_PREFLIGHT: '+JSON.stringify(preflight));
+      console.log('STATUS: ORDER_PREFLIGHT_READ_ONLY_COMPLETE');
+    }
     console.log('PASS E2E staging editor -> Draft -> Cart -> Checkout (NO ORDER)');
     if (jsErrors.length) console.log('WARN browser JS exceptions (types): '+jsErrors.join(','));
   } finally {
