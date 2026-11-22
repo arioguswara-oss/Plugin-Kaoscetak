@@ -10,7 +10,8 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
-const {readPrivateDraft,savePrivateDraft} = require('./staging-image-private-draft.cjs');
+const {readPrivateDraft,readTextQaDraft,savePrivateDraft} = require('./staging-image-private-draft.cjs');
+const {verifiedExistingFrontUpload} = require('./staging-image-partial-master-helper.cjs');
 
 if (process.env.SANRO_STAGING_IMAGE_E2E !== '1') {
   console.error('BLOCKED: set SANRO_STAGING_IMAGE_E2E=1 to authorize one synthetic staging image flow.');
@@ -22,6 +23,34 @@ if (process.env.SANRO_STAGING_CART_E2E === '1' ||
   process.exit(2);
 }
 const reuseRequested=process.env.SANRO_STAGING_IMAGE_REUSE==='1';
+const textQaReuseRequested=process.env.SANRO_STAGING_IMAGE_REUSE_TEXT_QA==='1';
+// Partial resume reuses a previously uploaded, server-verified FRONT master.
+// It must never create a new draft or re-upload the existing front bytes.
+const resumePartial=process.env.SANRO_STAGING_IMAGE_RESUME_PARTIAL==='1';
+if(process.env.SANRO_STAGING_IMAGE_RESUME_PARTIAL &&
+  !['0','1'].includes(process.env.SANRO_STAGING_IMAGE_RESUME_PARTIAL)){
+  console.error('BLOCKED: SANRO_STAGING_IMAGE_RESUME_PARTIAL must be 1 or unset.');
+  process.exit(2);
+}
+if(resumePartial && (!textQaReuseRequested ||
+  process.env.SANRO_STUDIO_QA_ENV!=='staging')){
+  console.error('BLOCKED: partial master resume requires staging and owner-bound text QA reuse.');
+  process.exit(2);
+}
+const usingSavedDraft=reuseRequested||textQaReuseRequested;
+if(process.env.SANRO_STAGING_IMAGE_REUSE_TEXT_QA &&
+  !['0','1'].includes(process.env.SANRO_STAGING_IMAGE_REUSE_TEXT_QA)){
+  console.error('BLOCKED: SANRO_STAGING_IMAGE_REUSE_TEXT_QA must be 1 or unset.');
+  process.exit(2);
+}
+if(reuseRequested && textQaReuseRequested){
+  console.error('BLOCKED: choose exactly one owner-bound QA draft source.');
+  process.exit(2);
+}
+if(textQaReuseRequested && process.env.SANRO_STUDIO_QA_ENV!=='staging'){
+  console.error('BLOCKED: reuse of text QA draft requires staging environment.');
+  process.exit(2);
+}
 if (process.env.SANRO_STAGING_IMAGE_REUSE &&
     !['0','1'].includes(process.env.SANRO_STAGING_IMAGE_REUSE)) {
   console.error('BLOCKED: SANRO_STAGING_IMAGE_REUSE must be 1 or unset.');
@@ -47,16 +76,39 @@ catch (_) {
     const context=await browser.newContext({
       viewport:{width:390,height:844},acceptDownloads:false,locale:'id-ID'
     });
-    if(reuseRequested){
-      // Credentials remain in owner-only Hermes file and browser session.
-      // This mode does not issue POST /drafts, preserving the guest rate limit.
-      const saved=readPrivateDraft();
+    if(usingSavedDraft){
+      // Credentials remain owner-only on Hermes. No POST /drafts is made.
+      // Synthetic text QA provenance is checked against the live server
+      // BEFORE allowing any image or private-master mutation.
+      const saved=textQaReuseRequested?readTextQaDraft():readPrivateDraft();
       await context.addInitScript(credentials=>{
         if(location.hostname==='saddlebrown-peafowl-616656.hostingersite.com'){
           sessionStorage.setItem('sanro-studio-draft:24',
             JSON.stringify({id:credentials.id,token:credentials.token}));
         }
       },saved);
+    }
+    if(textQaReuseRequested){
+      // Fail closed: a reused text QA draft must NEVER create a new draft,
+      // even if the editor unexpectedly tries POST /drafts.
+      await context.route('**/*',route=>{
+        const req=route.request();
+        if(req.method()!=='POST')return route.continue();
+        let url;
+        try {url=new URL(req.url())} catch(_){return route.abort()}
+        if(url.hostname!==host)return route.abort();
+        const routePath=url.searchParams.get('rest_route')||url.pathname;
+        if(url.pathname.replace(/\/$/,'')==='/wp-json/sanro-studio/v1/drafts'
+          || url.searchParams.get('rest_route')==='/sanro-studio/v1/drafts')
+          return route.abort('blockedbyclient');
+        // A previously persisted and owner-readback-verified front master
+        // must NEVER be sent to the server again in partial resume mode.
+        // The page-scoped test-only response handler reuses that exact file.
+        if(resumePartial &&
+          /\/sanro-studio\/v1\/drafts\/[a-f0-9-]{36}\/masters\/front$/i.test(routePath))
+          return route.abort('blockedbyclient');
+        return route.continue();
+      });
     }
     try {
       const page=await context.newPage();
@@ -108,12 +160,100 @@ catch (_) {
       assert.equal(crypto.createHash('sha256').update(Buffer.from(servedJs)).digest('hex'),
         sourceHash,'Staging buyer asset differs from image QA source');
       console.log('PASS: staging image E2E source asset verified');
-      if(reuseRequested){
+      if(usingSavedDraft){
         await page.waitForFunction(()=>
           (document.querySelector('#sanro-save-status')?.textContent||'')
             .includes('Draft berhasil dibuka kembali.'),
           null,{timeout:45000});
-        console.log('PASS: owner-bound private DTF QA draft reopened (no new draft POST)');
+        console.log('PASS: owner-bound staging QA draft reopened (no new draft POST)');
+        if(textQaReuseRequested){
+          const safeSource=await page.evaluate(async(resumePartial)=>{
+            const cfg=window.SANRO_STUDIO_EDITOR_CONFIG;
+            let state;
+            try {state=JSON.parse(sessionStorage.getItem('sanro-studio-draft:24')||'null')}
+            catch(_){return false}
+            if(!state||!cfg?.draft_api?.url)return false;
+            const response=await fetch(cfg.draft_api.url+'/'+encodeURIComponent(state.id),{
+              method:'GET',credentials:'same-origin',cache:'no-store',
+              headers:{'X-Sanro-Draft-Nonce':cfg.draft_api.nonce,
+                'X-Sanro-Owner-Token':state.token}
+            });
+            if(!response.ok)return false;
+            const d=await response.json();
+            const sides=['front','back'];
+            return d.valid===true && d.status==='draft'
+              && Number(d.product_id)===24
+              && (resumePartial
+                ? (Object.keys(d.master_refs||{}).length===1
+                   && typeof d.master_refs.front==='string'
+                   && !d.master_refs.back)
+                : !Object.keys(d.master_refs||{}).length)
+              && sides.every(side=>!(d.design?.[side]?.objects||[])
+                .some(obj=>obj.type==='image'))
+              && Number(d.design?.quantities?.M)===1;
+          },resumePartial);
+          assert(safeSource,'Text QA draft is not a clean owner-bound text-only staging draft; no mutation performed.');
+          console.log('PASS: existing text-only QA draft validated before image mutations');
+
+          if(!resumePartial){
+          // Synchronize the *existing* owner-authorized text draft before
+          // selecting any local images. The editor computes text geometry
+          // from its actual viewport; reopening an older QA draft may produce
+          // different floating-point text bounds. Its master-upload guard
+          // compares exact serialized text metadata, not just a design hash.
+          // Save after selecting images would be rejected as unbound artwork.
+          // This update is NOT POST /drafts (creation), never changes rate limits.
+          const reusedId=await page.evaluate(()=>{
+            try {return JSON.parse(sessionStorage.getItem('sanro-studio-draft:24')||'null')?.id}
+            catch(_){return null}
+          });
+          assert(typeof reusedId==='string' &&
+            /^[a-f0-9-]{36}$/i.test(reusedId),'Missing valid QA draft reference');
+          const updateRequests=[];
+          const onSyncRequest=request=>{
+            if(request.method()!=='POST')return;
+            let url;
+            try {url=new URL(request.url())} catch(_){return}
+            if(url.hostname!==host)return;
+            const rest=url.searchParams.get('rest_route')||url.pathname;
+            if(/\/sanro-studio\/v1\/drafts(?:\/|$)/.test(rest))
+              updateRequests.push(rest.endsWith('/'+reusedId)?'update':'other');
+          };
+          page.on('request',onSyncRequest);
+          try {
+            const updateResponse=page.waitForResponse(response=>{
+              if(response.request().method()!=='POST')return false;
+              try {
+                const url=new URL(response.url());
+                const route=url.searchParams.get('rest_route')||url.pathname;
+                return url.hostname===host &&
+                  route.endsWith('/sanro-studio/v1/drafts/'+reusedId);
+              } catch(_){return false}
+            },{timeout:30000});
+            await page.locator('#sanro-save-draft').click();
+            const result=await updateResponse;
+            assert(result.status()===200,
+              'Owner-bound existing QA draft sync rejected (HTTP '+result.status()+')');
+            await page.waitForFunction(()=>{
+              const text=document.querySelector('#sanro-save-status')?.textContent||'';
+              return /^Draft teks tersimpan\./.test(text)
+                || /^Penyimpanan gagal/.test(text);
+            },null,{timeout:30000});
+            assert.match(await page.locator('#sanro-save-status').innerText(),
+              /^Draft teks tersimpan\./,'Existing QA text metadata sync failed');
+            assert.deepEqual(updateRequests,['update'],
+              'Image QA reuse must issue exactly one existing-draft update and no draft creation');
+          } finally {
+            page.off('request',onSyncRequest);
+          }
+          console.log('PASS: owner-bound existing QA text metadata synchronized (one update, zero creates)');
+          } else {
+            // A successful front master upload is already bound on the server.
+            // Do not update plain-text metadata now: a changed text-only save
+            // could legitimately revoke the existing master binding.
+            console.log('PASS: partial front master preserved without draft rewrite');
+          }
+        }
       }
 
       // Generate synthetic, non-customer artwork directly inside the isolated
@@ -130,10 +270,23 @@ catch (_) {
           return {side,base64:canvas.toDataURL('image/png').split(',')[1]};
         });
       });
-      await page.locator('input[data-size="M"]').fill('1');
+      if(resumePartial){
+        assert.equal(await page.locator('input[data-size="M"]').inputValue(),'1',
+          'Stored QA draft M quantity changed; do not mutate partial master.');
+      } else {
+        await page.locator('input[data-size="M"]').fill('1');
+      }
       for (const {side,base64} of images) {
         await page.locator('#sanro-studio-buyer button[data-side="'+side+'"]').click();
-        await page.locator('#sanro-category').selectOption('A3+');
+        // A resumed text QA draft may only have saved text on the front side.
+        // Keep the saved category wherever text exists (server metadata CAS);
+        // an EMPTY side has no saved text category and may use A3+ for a
+        // synthetic image without mutating saved text-only metadata.
+        const hasSavedText=(await page.locator('#sanro-text-input').inputValue())
+          .trim().length>0;
+        if(!usingSavedDraft || !hasSavedText){
+          await page.locator('#sanro-category').selectOption('A3+');
+        }
         await page.locator('#sanro-image').setInputFiles({
           name:'sanro-qa-'+side+'.png',mimeType:'image/png',
           buffer:Buffer.from(base64,'base64')
@@ -150,7 +303,7 @@ catch (_) {
 
       // Collect only HTTP status and the allowlisted public WP error code.
       // Never print response bodies, draft identifiers, owner tokens or nonces.
-      if(!reuseRequested) {
+      if(!usingSavedDraft) {
       const draftCreates=[];
       const draftReads=[];
       const onDraftCreateResponse=response=>{
@@ -208,6 +361,56 @@ catch (_) {
       console.log('PASS: private staging DTF QA draft saved in 0600 Hermes file');
       } // End optional new-draft path; reuse skips creation entirely.
 
+      // In partial recovery, front was already persisted and owner-readback
+      // verified in a prior browser run. Recheck the exact synthetic PNG bytes
+      // against live server data; do NOT re-upload the same front master.
+      // Only the missing back side may perform a real server upload later,
+      // after the server's per-draft hourly quota has naturally expired.
+      let frontReuseCount=0;
+      if(resumePartial){
+        const frontRef=await page.evaluate(async()=>{
+          const cfg=window.SANRO_STUDIO_EDITOR_CONFIG;
+          let credentials;
+          try {credentials=JSON.parse(sessionStorage.getItem('sanro-studio-draft:24')||'null')}
+          catch(_){return {valid:false}}
+          if(!cfg?.draft_api?.url||!credentials?.id||!credentials?.token)return {valid:false};
+          const response=await fetch(cfg.draft_api.url+'/'+encodeURIComponent(credentials.id)
+            +'/master-read/front',{
+            method:'GET',credentials:'same-origin',cache:'no-store',
+            headers:{'X-Sanro-Draft-Nonce':cfg.draft_api.nonce,
+              'X-Sanro-Owner-Token':credentials.token}
+          });
+          if(!response.ok)return {valid:false,http:response.status};
+          return response.json();
+        });
+        const expectedId=await page.evaluate(()=>{
+          try {return JSON.parse(sessionStorage.getItem('sanro-studio-draft:24')||'null')?.id}
+          catch(_){return null}
+        });
+        const fixture=images.find(item=>item.side==='front');
+        assert(fixture&&typeof fixture.base64==='string','Synthetic front PNG unavailable');
+        const reuseResponse=verifiedExistingFrontUpload(frontRef,expectedId,fixture.base64);
+        console.log('PASS: existing front master server GET verified byte-for-byte; no new front upload');
+        const replayPath='/wp-json/sanro-studio/v1/drafts/'+expectedId+'/masters/front';
+        await page.route('**/wp-json/sanro-studio/v1/drafts/*/masters/front',route=>{
+          const request=route.request();
+          let u;
+          try {u=new URL(request.url())}catch(_){return route.abort()}
+          if(request.method()!=='POST'||u.hostname!==host||u.pathname!==replayPath)
+            return route.abort('blockedbyclient');
+          frontReuseCount++;
+          if(frontReuseCount!==1)return route.abort('blockedbyclient');
+          // This response is reused only from a real, owner-verified prior
+          // upload. The browser itself still checks live master-read/front.
+          // No response to an upload of new bytes may be fabricated.
+          return route.fulfill({
+            status:200,contentType:'application/json; charset=UTF-8',
+            headers:{'Cache-Control':'private, no-store'},
+            body:JSON.stringify(reuseResponse)
+          });
+        });
+      }
+
       // Capture only HTTP status, side, method and allowlisted WP error codes.
       // Do NOT record request headers, draft IDs, tokens, image bytes or REST bodies.
       const masterHttp = [];
@@ -225,7 +428,9 @@ catch (_) {
           :/\bhtml\b/i.test(contentType)?'html'
           :/\btext\b/i.test(contentType)?'text':'other';
         const row={side:match[1]||match[2],method:request.method(),
-          http:response.status(),contentType:kind,code:'ok'};
+          http:response.status(),contentType:kind,code:'ok',
+          source:resumePartial&&match[1]==='front'&&request.method()==='POST'
+            ?'verified_previous_upload':'live_server'};
         masterHttp.push(row);
         masterReads.push((async()=>{
           if(response.ok())return;
@@ -250,10 +455,27 @@ catch (_) {
         .test(masterStatus)?masterStatus.slice(0,160):'other';
       console.log('DTF MASTER PHASE: '+JSON.stringify({ui:safeUiStatus,
         responses:masterHttp.map(row=>({side:row.side,method:row.method,
-          http:row.http,contentType:row.contentType,code:row.code}))}));
+          http:row.http,contentType:row.contentType,code:row.code,
+          source:row.source}))}));
+      if(masterHttp.some(row=>row.http===429&&row.code==='sanro_master_rate_limited')){
+        console.error('BLOCKED: per-draft master upload limit reached. The stored front '+
+          'remains owner-bound; do not retry POSTs until natural quota expiration.');
+        process.exitCode=2;
+        return;
+      }
       assert.match(masterStatus,/Master dan posisi gambar terverifikasi untuk front, back/,
         'Private front/back master upload or binding failed; see DTF MASTER PHASE');
-      console.log('PASS: both private DTF masters uploaded and bound to same draft');
+      if(resumePartial){
+        assert.equal(frontReuseCount,1,
+          'Previously verified front master must be reused exactly once');
+        const backUploads=masterHttp.filter(item=>item.side==='back' &&
+          item.method==='POST'&&item.http===200);
+        assert.equal(backUploads.length,1,
+          'Missing back master must be uploaded and verified by the real server');
+        console.log('PASS: previously verified front master reused; back master uploaded, both bound');
+      } else {
+        console.log('PASS: both private DTF masters uploaded and bound to same draft');
+      }
 
       const metadata=await page.evaluate(async ()=>{
         const cfg=window.SANRO_STUDIO_EDITOR_CONFIG;
