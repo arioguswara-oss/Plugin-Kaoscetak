@@ -74,6 +74,21 @@ catch (_) {
         }
       },saved);
     }
+    if(textQaReuseRequested){
+      // Fail closed: a reused text QA draft must NEVER create a new draft,
+      // even if the editor unexpectedly tries POST /drafts.
+      await context.route('**/*',route=>{
+        const req=route.request();
+        if(req.method()!=='POST')return route.continue();
+        let url;
+        try {url=new URL(req.url())} catch(_){return route.abort()}
+        if(url.hostname!==host)return route.abort();
+        if(url.pathname.replace(/\/$/,'')==='/wp-json/sanro-studio/v1/drafts'
+          || url.searchParams.get('rest_route')==='/sanro-studio/v1/drafts')
+          return route.abort('blockedbyclient');
+        return route.continue();
+      });
+    }
     try {
       const page=await context.newPage();
       // Prevent accidental external navigation; the expected flow only visits
