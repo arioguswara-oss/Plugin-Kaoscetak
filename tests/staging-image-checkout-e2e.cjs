@@ -175,7 +175,7 @@ catch (_) {
             try {url=new URL(request.url())} catch(_){return}
             if(url.hostname!==host)return;
             const rest=url.searchParams.get('rest_route')||url.pathname;
-            if(/\\/sanro-studio\\/v1\\/drafts(?:\\/|$)/.test(rest))
+            if(/\/sanro-studio\/v1\/drafts(?:\/|$)/.test(rest))
               updateRequests.push(rest.endsWith('/'+reusedId)?'update':'other');
           };
           page.on('request',onSyncRequest);
@@ -195,11 +195,11 @@ catch (_) {
               'Owner-bound existing QA draft sync rejected (HTTP '+result.status()+')');
             await page.waitForFunction(()=>{
               const text=document.querySelector('#sanro-save-status')?.textContent||'';
-              return /^Draft teks tersimpan\\./.test(text)
+              return /^Draft teks tersimpan\./.test(text)
                 || /^Penyimpanan gagal/.test(text);
             },null,{timeout:30000});
             assert.match(await page.locator('#sanro-save-status').innerText(),
-              /^Draft teks tersimpan\\./,'Existing QA text metadata sync failed');
+              /^Draft teks tersimpan\./,'Existing QA text metadata sync failed');
             assert.deepEqual(updateRequests,['update'],
               'Image QA reuse must issue exactly one existing-draft update and no draft creation');
           } finally {
