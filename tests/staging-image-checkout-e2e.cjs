@@ -23,6 +23,19 @@ if (process.env.SANRO_STAGING_CART_E2E === '1' ||
 }
 const reuseRequested=process.env.SANRO_STAGING_IMAGE_REUSE==='1';
 const textQaReuseRequested=process.env.SANRO_STAGING_IMAGE_REUSE_TEXT_QA==='1';
+// Partial resume reuses a previously uploaded, server-verified FRONT master.
+// It must never create a new draft or re-upload the existing front bytes.
+const resumePartial=process.env.SANRO_STAGING_IMAGE_RESUME_PARTIAL==='1';
+if(process.env.SANRO_STAGING_IMAGE_RESUME_PARTIAL &&
+  !['0','1'].includes(process.env.SANRO_STAGING_IMAGE_RESUME_PARTIAL)){
+  console.error('BLOCKED: SANRO_STAGING_IMAGE_RESUME_PARTIAL must be 1 or unset.');
+  process.exit(2);
+}
+if(resumePartial && (!textQaReuseRequested ||
+  process.env.SANRO_STUDIO_QA_ENV!=='staging')){
+  console.error('BLOCKED: partial master resume requires staging and owner-bound text QA reuse.');
+  process.exit(2);
+}
 const usingSavedDraft=reuseRequested||textQaReuseRequested;
 if(process.env.SANRO_STAGING_IMAGE_REUSE_TEXT_QA &&
   !['0','1'].includes(process.env.SANRO_STAGING_IMAGE_REUSE_TEXT_QA)){
@@ -83,8 +96,15 @@ catch (_) {
         let url;
         try {url=new URL(req.url())} catch(_){return route.abort()}
         if(url.hostname!==host)return route.abort();
+        const routePath=url.searchParams.get('rest_route')||url.pathname;
         if(url.pathname.replace(/\/$/,'')==='/wp-json/sanro-studio/v1/drafts'
           || url.searchParams.get('rest_route')==='/sanro-studio/v1/drafts')
+          return route.abort('blockedbyclient');
+        // A previously persisted and owner-readback-verified front master
+        // must NEVER be sent to the server again in partial resume mode.
+        // The page-scoped test-only response handler reuses that exact file.
+        if(resumePartial &&
+          /\/sanro-studio\/v1\/drafts\/[a-f0-9-]{36}\/masters\/front$/i.test(routePath))
           return route.abort('blockedbyclient');
         return route.continue();
       });
@@ -162,7 +182,11 @@ catch (_) {
             const sides=['front','back'];
             return d.valid===true && d.status==='draft'
               && Number(d.product_id)===24
-              && !Object.keys(d.master_refs||{}).length
+              && (resumePartial
+                ? (Object.keys(d.master_refs||{}).length===1
+                   && typeof d.master_refs.front==='string'
+                   && !d.master_refs.back)
+                : !Object.keys(d.master_refs||{}).length)
               && sides.every(side=>!(d.design?.[side]?.objects||[])
                 .some(obj=>obj.type==='image'))
               && Number(d.design?.quantities?.M)===1;
@@ -170,6 +194,7 @@ catch (_) {
           assert(safeSource,'Text QA draft is not a clean owner-bound text-only staging draft; no mutation performed.');
           console.log('PASS: existing text-only QA draft validated before image mutations');
 
+          if(!resumePartial){
           // Synchronize the *existing* owner-authorized text draft before
           // selecting any local images. The editor computes text geometry
           // from its actual viewport; reopening an older QA draft may produce
@@ -221,6 +246,12 @@ catch (_) {
             page.off('request',onSyncRequest);
           }
           console.log('PASS: owner-bound existing QA text metadata synchronized (one update, zero creates)');
+          } else {
+            // A successful front master upload is already bound on the server.
+            // Do not update plain-text metadata now: a changed text-only save
+            // could legitimately revoke the existing master binding.
+            console.log('PASS: partial front master preserved without draft rewrite');
+          }
         }
       }
 
@@ -238,7 +269,12 @@ catch (_) {
           return {side,base64:canvas.toDataURL('image/png').split(',')[1]};
         });
       });
-      await page.locator('input[data-size="M"]').fill('1');
+      if(resumePartial){
+        assert.equal(await page.locator('input[data-size="M"]').inputValue(),'1',
+          'Stored QA draft M quantity changed; do not mutate partial master.');
+      } else {
+        await page.locator('input[data-size="M"]').fill('1');
+      }
       for (const {side,base64} of images) {
         await page.locator('#sanro-studio-buyer button[data-side="'+side+'"]').click();
         // A resumed text QA draft may only have saved text on the front side.
