@@ -303,6 +303,15 @@ function sanro_studio_stage_checkout_process() {
         wc_add_notice('SANRO Studio: design or pricing validation failed.', 'error');
         return;
     }
+    // Private artwork must be bound to persisted order items. Do not permit
+    // checkout when that binding/locking integration is disabled.
+    if (defined('SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS')
+        && SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS === true
+        && (!function_exists('sanro_studio_stage_checkout_batch_lock_enabled')
+            || !sanro_studio_stage_checkout_batch_lock_enabled())) {
+        wc_add_notice('SANRO Studio: integrasi preview pesanan belum diaktifkan.', 'error');
+        return;
+    }
     // Authorization is request-scoped: never put the owner token in cart,
     // order metadata, or a WooCommerce session.
     $contract = sanro_studio_prepare_cart_design_contract($id, $token, $product_id);
