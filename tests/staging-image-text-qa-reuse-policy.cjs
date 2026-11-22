@@ -58,6 +58,8 @@ try{
   fs.chmodSync(file,0o600);
   fs.writeFileSync(file,JSON.stringify({...sample,host:'kaoscetak.id'}));
   rejects('production host rejected');
+  fs.writeFileSync(file,JSON.stringify({...sample,product:25}));
+  rejects('wrong product rejected');
   fs.writeFileSync(file,JSON.stringify({...sample,createdAt:Date.now()-7*86400000}));
   rejects('expired reference rejected');
   fs.writeFileSync(file,JSON.stringify(sample));
