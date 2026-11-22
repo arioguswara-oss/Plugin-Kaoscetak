@@ -21,8 +21,13 @@ check(source.includes('const saved=textQaReuseRequested?readTextQaDraft():readPr
   'owner-only text QA state sourced locally');
 check(source.includes("if(!usingSavedDraft) {\n      const draftCreates=[];"),
   'reusing text QA cannot issue new draft POST');
-check(source.includes('if(!usingSavedDraft)await page.locator'),
-  'existing text QA print category preserved for metadata CAS');
+check(source.includes("const hasSavedText=(await page.locator('#sanro-text-input').inputValue())")&&
+  source.includes("if(!usingSavedDraft || !hasSavedText)")&&
+  source.includes("await page.locator('#sanro-category').selectOption('A3+')"),
+  'existing text category preserved; empty side selects A3+ for image QA');
+check(source.includes(".trim().length>0")&&
+  source.indexOf("const hasSavedText=")>source.indexOf("button[data-side"),
+  'empty-side category selection uses trimmed text after switching side');
 const guard=source.indexOf('assert(safeSource,');
 const master=source.indexOf("await page.locator('#sanro-upload-master').click()");
 const draftCreate=source.indexOf("await page.locator('#sanro-save-draft').click()");
