@@ -34,7 +34,7 @@ check149($pre !== false && $batch !== false && $pre < $batch,
     'two-side preflight defined before batch worker');
 $workerBody = substr($source, $batch);
 $checkPoint = strpos($workerBody, '$preflight = sanro_studio_dtf_preflight_order_item_candidates(');
-$commit = strpos($workerBody, 'sanro_studio_dtf_persist_order_item_side($order, $item_id, $side)');
+$commit = strpos($workerBody, 'sanro_studio_dtf_persist_order_item_side($order, $item_id, $side, $snapshot)');
 check149($checkPoint !== false && $commit !== false && $checkPoint < $commit,
     'batch MUST preflight both sides before first PNG persistence');
 $preflightBody = substr($source, $pre, $batch - $pre);

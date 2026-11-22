@@ -81,6 +81,11 @@ function get_option($key, $default=false) {
         ? $GLOBALS['record133'] : $default;
 }
 function sanro_studio_locked_item_master_source($order, $item_id, $side) {
+    // Optional test-only seam for a draft change DURING GD layer planning.
+    // Unset by default; never included in production plugin source.
+    if (isset($GLOBALS['sourceReadHook133']) && is_callable($GLOBALS['sourceReadHook133'])) {
+        call_user_func($GLOBALS['sourceReadHook133'], $order, $item_id, $side);
+    }
     if ($order->get_id() !== 100 || $item_id !== 71 || $side !== 'front') {
         return ['valid'=>false,'error'=>'source_unavailable'];
     }

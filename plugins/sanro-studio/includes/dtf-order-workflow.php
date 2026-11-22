@@ -14,6 +14,58 @@ function sanro_studio_dtf_order_batch_enabled() {
         && sanro_studio_dtf_artifacts_enabled();
 }
 
+/**
+ * Sprint 150: internal fingerprint of the ENTIRE locked draft record plus the
+ * live Woo order/item/product/Design ID binding. Hash never enters metadata,
+ * HTML, manifest, browser, or the outward preflight result. This detects
+ * changes that keep the same physical geometry (e.g. text, color or master).
+ *
+ * Fail closed on missing order/record, malformed JSON, an unpaid order or an
+ * unlocked/cross-item draft. No database writes and no private master reads.
+ */
+function sanro_studio_dtf_locked_order_item_fingerprint($order, $item_id) {
+    if (!sanro_studio_dtf_order_batch_enabled()
+        || !is_object($order) || !method_exists($order, 'get_id')
+        || !method_exists($order, 'get_items')
+        || !is_int($item_id) || $item_id < 1
+        || !function_exists('sanro_studio_auto_drive_order_eligible')
+        || !sanro_studio_auto_drive_order_eligible($order)
+        || !function_exists('sanro_studio_locked_record_has_item')
+        || !function_exists('get_option')) return false;
+    $order_id = $order->get_id();
+    $items = $order->get_items('line_item');
+    if (!is_int($order_id) || $order_id < 1
+        || !is_array($items) || !isset($items[$item_id])
+        || !is_object($items[$item_id])
+        || !method_exists($items[$item_id], 'get_meta')
+        || !method_exists($items[$item_id], 'get_product_id')) return false;
+    $item = $items[$item_id];
+    $design_id = $item->get_meta('_sanro_studio_design_id', true);
+    $product_id = $item->get_product_id();
+    if (!is_string($design_id)
+        || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id)
+        || !is_int($product_id) || $product_id < 1) return false;
+    $record = get_option('sanro_studio_draft_' . $design_id, false);
+    if (!is_array($record) || ($record['status'] ?? null) !== 'locked'
+        || ($record['order_id'] ?? null) !== $order_id
+        || ($record['product_id'] ?? null) !== $product_id
+        || !sanro_studio_locked_record_has_item($record, $item_id)
+        || !is_array($record['design'] ?? null)) return false;
+    // Full record rather than geometry alone: buyer image/text/color/master
+    // references and locking metadata must remain identical across phases.
+    $json = json_encode([1, $order_id, $item_id, $product_id,
+        strtolower($design_id), $record],
+        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION);
+    if (!is_string($json) || strlen($json) > 1048576) return false;
+    return hash('sha256', $json);
+}
+
+function sanro_studio_dtf_locked_snapshot_matches($order, $item_id, $expected) {
+    if (!is_string($expected) || !preg_match('/^[a-f0-9]{64}$/D', $expected)) return false;
+    $current = sanro_studio_dtf_locked_order_item_fingerprint($order, $item_id);
+    return is_string($current) && hash_equals($expected, $current);
+}
+
 /** Permitlisted metadata. No private path, raw PNG, credentials, or download URL. */
 function sanro_studio_dtf_order_side_metadata($result) {
     if (!is_array($result) || empty($result['valid'])
@@ -110,7 +162,7 @@ function sanro_studio_dtf_preflight_order_item_candidates($order, $item_id) {
         return ['valid' => false, 'error' => 'artifact_directory_unsafe',
             'partial' => false];
     }
-    $sides = []; $printable = 0;
+    $sides = []; $printable = 0; $snapshot = null;
     foreach (['front', 'back'] as $side) {
         $binding = sanro_studio_dtf_artifact_binding($order, $item_id, $side);
         if (!is_array($binding) || empty($binding['valid'])) {
@@ -118,12 +170,23 @@ function sanro_studio_dtf_preflight_order_item_candidates($order, $item_id) {
                 'error' => $binding['error'] ?? 'artifact_binding_failed',
                 'failed_side' => $side, 'partial' => false];
         }
+        $observed = sanro_studio_dtf_locked_order_item_fingerprint($order, $item_id);
+        if (!is_string($observed) || ($snapshot !== null
+            && !hash_equals($snapshot, $observed))) {
+            return ['valid' => false, 'error' => 'artifact_snapshot_changed',
+                'failed_side' => $side, 'partial' => false];
+        }
+        if ($snapshot === null) $snapshot = $observed;
         // Planner may load a private PNG master, but it performs no rendering
         // or persistence. Only fixed safe status codes leave this scope.
         $plan = sanro_studio_dtf_layer_plan($order, $item_id, $side);
         if (!is_array($plan) || empty($plan['valid'])
             || !empty($binding['skipped']) !== !empty($plan['skipped'])) {
             return ['valid' => false, 'error' => 'artifact_preflight_failed',
+                'failed_side' => $side, 'partial' => false];
+        }
+        if (!sanro_studio_dtf_locked_snapshot_matches($order, $item_id, $snapshot)) {
+            return ['valid' => false, 'error' => 'artifact_snapshot_changed',
                 'failed_side' => $side, 'partial' => false];
         }
         if (!empty($binding['skipped'])) {
@@ -174,10 +237,16 @@ function sanro_studio_dtf_prepare_order_item_candidates($order, $item_id) {
         || !function_exists('sanro_studio_dtf_verify_private_artifact')) {
         return ['valid' => false, 'error' => 'artifact_worker_unavailable'];
     }
-    // Precheck BOTH locked sides before creating a single candidate file.
-    // A known-bad back master/text/geometry must not leave a front-side PNG.
+    // Freeze a private digest BEFORE the two-side preflight. The real worker
+    // re-reads the locked draft for rendering and committing, so every phase
+    // must compare against this exact draft version before writing.
+    $snapshot = sanro_studio_dtf_locked_order_item_fingerprint($order, $item_id);
     $preflight = sanro_studio_dtf_preflight_order_item_candidates($order, $item_id);
     if (empty($preflight['valid'])) return $preflight;
+    if (!sanro_studio_dtf_locked_snapshot_matches($order, $item_id, $snapshot)) {
+        return ['valid' => false, 'error' => 'artifact_snapshot_changed',
+            'partial' => false];
+    }
     $sides = []; $stored = 0;
     foreach (['front', 'back'] as $side) {
         $binding = sanro_studio_dtf_artifact_binding($order, $item_id, $side);
@@ -185,11 +254,15 @@ function sanro_studio_dtf_prepare_order_item_candidates($order, $item_id) {
             return ['valid' => false, 'error' => $binding['error'] ?? 'artifact_binding_failed',
                 'failed_side' => $side, 'partial' => $stored > 0, 'sides' => $sides];
         }
+        if (!sanro_studio_dtf_locked_snapshot_matches($order, $item_id, $snapshot)) {
+            return ['valid' => false, 'error' => 'artifact_snapshot_changed',
+                'failed_side' => $side, 'partial' => $stored > 0, 'sides' => $sides];
+        }
         if (!empty($binding['skipped'])) {
             $sides[$side] = ['state' => 'blank', 'reason' => 'blank_side'];
             continue;
         }
-        $written = sanro_studio_dtf_persist_order_item_side($order, $item_id, $side);
+        $written = sanro_studio_dtf_persist_order_item_side($order, $item_id, $side, $snapshot);
         if (empty($written['valid']) || !empty($written['skipped'])) {
             return ['valid' => false, 'error' => $written['error'] ?? 'artifact_write_failed',
                 'failed_side' => $side, 'partial' => $stored > 0, 'sides' => $sides];
@@ -203,9 +276,17 @@ function sanro_studio_dtf_prepare_order_item_candidates($order, $item_id) {
             return ['valid' => false, 'error' => 'artifact_readback_failed',
                 'failed_side' => $side, 'partial' => $stored > 0, 'sides' => $sides];
         }
+        if (!sanro_studio_dtf_locked_snapshot_matches($order, $item_id, $snapshot)) {
+            return ['valid' => false, 'error' => 'artifact_snapshot_changed',
+                'failed_side' => $side, 'partial' => true, 'sides' => $sides];
+        }
         $safe['idempotent'] = !empty($written['idempotent']);
         $sides[$side] = $safe;
         $stored++;
+    }
+    if (!sanro_studio_dtf_locked_snapshot_matches($order, $item_id, $snapshot)) {
+        return ['valid' => false, 'error' => 'artifact_snapshot_changed',
+            'partial' => $stored > 0, 'sides' => $sides];
     }
     if ($stored === 0) {
         return ['valid' => false, 'complete' => false,
