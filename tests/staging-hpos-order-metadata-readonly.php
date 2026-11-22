@@ -33,7 +33,7 @@ if (!function_exists('wc_get_order') || !class_exists('WooCommerce')) {
     sanro_hpos_qa_fail('WOOCOMMERCE_NOT_LOADED');
 }
 if (!class_exists('Automattic\\WooCommerce\\Utilities\\OrderUtil') ||
-    !\\Automattic\\WooCommerce\\Utilities\\OrderUtil::custom_orders_table_usage_is_enabled()) {
+    !\Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled()) {
     sanro_hpos_qa_fail('HPOS_NOT_ENABLED');
 }
 $order = wc_get_order(52);
