@@ -119,7 +119,7 @@ function sanro_studio_store_private_preview($design_id, $side, $bytes) {
  * The owner token is only checked against the draft store, never persisted
  * alongside preview bytes or returned in a preview reference.
  */
-function sanro_studio_store_owned_draft_preview($design_id, $owner_token, $side, $bytes) {
+function sanro_studio_store_owned_draft_preview($design_id, $owner_token, $side, $bytes, $expected_design_hash = null) {
     if (!function_exists('sanro_studio_read_draft')) {
         return ['valid' => false, 'error' => 'draft_store_unavailable'];
     }
@@ -130,6 +130,12 @@ function sanro_studio_store_owned_draft_preview($design_id, $owner_token, $side,
     }
     if (!in_array($side, ['front', 'back'], true)) {
         return ['valid' => false, 'error' => 'invalid_preview_target'];
+    }
+    if (!is_string($expected_design_hash)
+        || !preg_match('/^[a-f0-9]{64}$/D', $expected_design_hash)
+        || !is_string($draft['design_hash'] ?? null)
+        || !hash_equals($expected_design_hash, $draft['design_hash'])) {
+        return ['valid' => false, 'error' => 'draft_conflict'];
     }
     $stored = sanro_studio_store_private_preview($design_id, $side, $bytes);
     if (empty($stored['valid'])) return $stored;
@@ -151,6 +157,10 @@ function sanro_studio_store_owned_draft_preview($design_id, $owner_token, $side,
             || !is_string($before['token_hash'])
             || !hash_equals($before['token_hash'], hash('sha256', $owner_token))
             || !is_int($before['expires_at']) || $before['expires_at'] <= time()) {
+            return ['valid' => false, 'error' => 'draft_conflict'];
+        }
+        if (!is_array($before['design'] ?? null)
+            || !hash_equals($expected_design_hash, hash('sha256', maybe_serialize($before['design'])))) {
             return ['valid' => false, 'error' => 'draft_conflict'];
         }
         $after = $before;
