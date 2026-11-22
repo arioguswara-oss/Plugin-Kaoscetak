@@ -41,6 +41,25 @@ check(source.includes("!Object.keys(d.master_refs||{}).length")&&
 check(source.includes('if(draftCreates.some(item=>item.http===429')&&
   source.includes("sanro_rate_limited"),
   'guest rate-limit remains fail-closed');
+check(source.includes("await context.route('**/*',route=>")&&
+  source.includes("return route.abort('blockedbyclient')")&&
+  source.includes("'/wp-json/sanro-studio/v1/drafts'"),
+  'guest draft creation route blocked in reuse mode');
+check(source.includes("const updateResponse=page.waitForResponse(")&&
+  source.includes("const reusedId=await page.evaluate("),
+  'synchronization waits for exact owner-bound update response');
+check(source.includes("assert.deepEqual(updateRequests,['update'])")&&
+  source.includes("result.status()===200"),
+  'exactly one successful existing-draft update, zero create POSTs');
+check(source.includes("const updateRequests=[];")&&
+  source.includes("page.on('request',onSyncRequest)")&&
+  source.includes("page.off('request',onSyncRequest)"),
+  'update-only request accounting is scoped and cleaned up');
+const sync=source.indexOf('const reusedId=await page.evaluate(');
+const image=source.indexOf("await page.locator('#sanro-image').setInputFiles(");
+const upload=source.indexOf("await page.locator('#sanro-upload-master').click()");
+check(sync>source.indexOf('assert(safeSource,')&&image>sync&&upload>image,
+  'draft sync happens after owner check and before image selection / upload');
 check(source.includes("Never submits an order, places a payment or touches production"),
   'checkout side-effect restriction still documented');
 
