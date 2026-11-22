@@ -428,7 +428,9 @@ catch (_) {
           :/\bhtml\b/i.test(contentType)?'html'
           :/\btext\b/i.test(contentType)?'text':'other';
         const row={side:match[1]||match[2],method:request.method(),
-          http:response.status(),contentType:kind,code:'ok'};
+          http:response.status(),contentType:kind,code:'ok',
+          source:resumePartial&&match[1]==='front'&&request.method()==='POST'
+            ?'verified_previous_upload':'live_server'};
         masterHttp.push(row);
         masterReads.push((async()=>{
           if(response.ok())return;
@@ -453,7 +455,14 @@ catch (_) {
         .test(masterStatus)?masterStatus.slice(0,160):'other';
       console.log('DTF MASTER PHASE: '+JSON.stringify({ui:safeUiStatus,
         responses:masterHttp.map(row=>({side:row.side,method:row.method,
-          http:row.http,contentType:row.contentType,code:row.code}))}));
+          http:row.http,contentType:row.contentType,code:row.code,
+          source:row.source}))}));
+      if(masterHttp.some(row=>row.http===429&&row.code==='sanro_master_rate_limited')){
+        console.error('BLOCKED: per-draft master upload limit reached. The stored front '+
+          'remains owner-bound; do not retry POSTs until natural quota expiration.');
+        process.exitCode=2;
+        return;
+      }
       assert.match(masterStatus,/Master dan posisi gambar terverifikasi untuk front, back/,
         'Private front/back master upload or binding failed; see DTF MASTER PHASE');
       if(resumePartial){
