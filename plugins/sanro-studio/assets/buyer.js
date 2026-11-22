@@ -681,6 +681,8 @@
     if(!savedId||!ownerToken||savedRevision!==editRevision){
      throw new Error('Simpan draft terbaru sebelum mengirim preview.');
     }
+    if(typeof lastKnownDesignHash!=='string'||!/^[a-f0-9]{64}$/.test(lastKnownDesignHash))
+     throw new Error('Revisi desain belum terverifikasi. Simpan ulang desain.');
     uploadButton.disabled=true;
     const revisionAtStart=editRevision;
     uploadStatus.textContent='Menyiapkan preview privat…';
@@ -693,7 +695,7 @@
       const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/previews/'+name,{
        method:'POST',credentials:'same-origin',cache:'no-store',
        headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken},
-       body:JSON.stringify({image_base64:encoded})
+       body:JSON.stringify({image_base64:encoded,expected_design_hash:lastKnownDesignHash})
       });
       if(response.status===410)throw new Error('Draft kedaluwarsa. Simpan draft baru.');
       const result=await response.json();
