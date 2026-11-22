@@ -676,7 +676,7 @@
   const quoteButton=q('#sanro-server-quote'),quoteStatus=q('#sanro-server-quote-status');
   const uploadButton=q('#sanro-upload-previews'),uploadStatus=q('#sanro-preview-upload-status');
   if(uploadButton&&config.preview_upload_enabled){
-   uploadButton.addEventListener('click',async()=>{
+   async function uploadCurrentPreviews(){
     if(!savedId||!ownerToken||savedRevision!==editRevision){
      uploadStatus.textContent='Simpan draft terbaru sebelum mengirim preview.';return;
     }
@@ -713,12 +713,14 @@
       if(editRevision!==revisionAtStart)
        throw new Error('Desain berubah selama upload. Simpan draft dan unggah preview terbaru.');
      }
-     uploadStatus.textContent=completed.length
-      ?'Preview privat tersimpan: '+completed.join(', ')+'. Belum terhubung ke checkout.'
-      :'Tidak ada desain yang dapat dipratinjau.';
-    }catch(error){uploadStatus.textContent=error.message||'Upload preview gagal.'}
+     if(!completed.length)throw new Error('Tidak ada desain yang dapat dipratinjau.');
+     uploadStatus.textContent='Preview terbaru tersimpan dan siap ditautkan ke pesanan.';
+     return completed;
+    }catch(error){uploadStatus.textContent=error.message||'Upload preview gagal.';throw error;}
     finally{uploadButton.disabled=false}
-   });
+   }
+   uploadButton.addEventListener('click',()=>{uploadCurrentPreviews().catch(()=>{});});
+   root.sanroUploadCurrentPreviews=uploadCurrentPreviews;
   }
 
   quoteButton.addEventListener('click',async()=>{
@@ -787,6 +789,12 @@
     target.disabled=true;
     status.textContent='Memvalidasi draft dan harga server…';
     try{
+     if(config.preview_upload_enabled&&typeof root.sanroUploadCurrentPreviews==='function'){
+      status.textContent='Menyimpan preview depan/belakang terbaru…';
+      await root.sanroUploadCurrentPreviews();
+      if(editRevision!==savedRevision)throw new Error('Desain berubah selama upload preview. Simpan ulang.');
+     }
+     status.textContent='Memvalidasi draft dan harga server…';
      const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/cart',{
       method:'POST',credentials:'same-origin',cache:'no-store',
       headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken}
