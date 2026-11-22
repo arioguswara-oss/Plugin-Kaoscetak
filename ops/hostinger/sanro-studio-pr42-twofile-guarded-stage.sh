@@ -240,7 +240,7 @@ if ! cmp -s "$INCLUDES/dtf-private-artifacts.php" \
        "$SOURCE/plugins/sanro-studio/includes/dtf-private-artifacts.php" \
     || ! cmp -s "$INCLUDES/dtf-order-workflow.php" \
        "$SOURCE/plugins/sanro-studio/includes/dtf-order-workflow.php" \
-    || "$before_main" != "$(sha256sum "$MAIN")"; then
+    || [[ "$before_main" != "$(sha256sum "$MAIN")" ]]; then
     echo 'FAIL: two-file runtime hashes differ after staging commit' >&2
     exit 1
 fi
