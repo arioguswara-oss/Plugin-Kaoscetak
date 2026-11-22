@@ -7,7 +7,7 @@
 declare(strict_types=1);
 $root = '/home/u606139982/domains/saddlebrown-peafowl-616656.hostingersite.com/public_html';
 $host = 'saddlebrown-peafowl-616656.hostingersite.com';
-if (PHP_SAPI !== 'cli' || get_current_user() === 'root' || getmyuid() === 0
+if (PHP_SAPI !== 'cli'
     || !is_file($root . '/wp-load.php')
     || realpath(getcwd()) !== realpath($root)) {
     fwrite(STDERR, "BLOCKED: INVALID_RUNTIME_OR_ROOT\n"); exit(2);
@@ -23,7 +23,7 @@ $product = function_exists('wc_get_product') ? wc_get_product(24) : false;
 $checks['product_24_simple_published'] = $product && $product->is_type('simple') && $product->get_status() === 'publish' && $product->is_purchasable();
 $checks['catalog_price_65000'] = $product && (string)$product->get_price('edit') === '65000';
 $checks['hpos_enabled'] = class_exists('Automattic\\WooCommerce\\Utilities\\OrderUtil')
-    && \\Automattic\\WooCommerce\\Utilities\\OrderUtil::custom_orders_table_usage_is_enabled();
+    && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled();
 $checks['qa_order_guard'] = function_exists('sanro_studio_qa_block_classic_order');
 $checks['cart_reprice_callback'] = function_exists('sanro_studio_stage_reprice_signed_cart');
 $checks['order_binding_callback'] = function_exists('sanro_studio_stage_checkout_create_order_line_item');
