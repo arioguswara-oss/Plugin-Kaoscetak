@@ -10,7 +10,7 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
-const {readPrivateDraft,savePrivateDraft} = require('./staging-image-private-draft.cjs');
+const {readPrivateDraft,readTextQaDraft,savePrivateDraft} = require('./staging-image-private-draft.cjs');
 
 if (process.env.SANRO_STAGING_IMAGE_E2E !== '1') {
   console.error('BLOCKED: set SANRO_STAGING_IMAGE_E2E=1 to authorize one synthetic staging image flow.');
@@ -22,6 +22,21 @@ if (process.env.SANRO_STAGING_CART_E2E === '1' ||
   process.exit(2);
 }
 const reuseRequested=process.env.SANRO_STAGING_IMAGE_REUSE==='1';
+const textQaReuseRequested=process.env.SANRO_STAGING_IMAGE_REUSE_TEXT_QA==='1';
+const usingSavedDraft=reuseRequested||textQaReuseRequested;
+if(process.env.SANRO_STAGING_IMAGE_REUSE_TEXT_QA &&
+  !['0','1'].includes(process.env.SANRO_STAGING_IMAGE_REUSE_TEXT_QA)){
+  console.error('BLOCKED: SANRO_STAGING_IMAGE_REUSE_TEXT_QA must be 1 or unset.');
+  process.exit(2);
+}
+if(reuseRequested && textQaReuseRequested){
+  console.error('BLOCKED: choose exactly one owner-bound QA draft source.');
+  process.exit(2);
+}
+if(textQaReuseRequested && process.env.SANRO_STUDIO_QA_ENV!=='staging'){
+  console.error('BLOCKED: reuse of text QA draft requires staging environment.');
+  process.exit(2);
+}
 if (process.env.SANRO_STAGING_IMAGE_REUSE &&
     !['0','1'].includes(process.env.SANRO_STAGING_IMAGE_REUSE)) {
   console.error('BLOCKED: SANRO_STAGING_IMAGE_REUSE must be 1 or unset.');
@@ -47,10 +62,11 @@ catch (_) {
     const context=await browser.newContext({
       viewport:{width:390,height:844},acceptDownloads:false,locale:'id-ID'
     });
-    if(reuseRequested){
-      // Credentials remain in owner-only Hermes file and browser session.
-      // This mode does not issue POST /drafts, preserving the guest rate limit.
-      const saved=readPrivateDraft();
+    if(usingSavedDraft){
+      // Credentials remain owner-only on Hermes. No POST /drafts is made.
+      // Synthetic text QA provenance is checked against the live server
+      // BEFORE allowing any image or private-master mutation.
+      const saved=textQaReuseRequested?readTextQaDraft():readPrivateDraft();
       await context.addInitScript(credentials=>{
         if(location.hostname==='saddlebrown-peafowl-616656.hostingersite.com'){
           sessionStorage.setItem('sanro-studio-draft:24',
@@ -108,12 +124,37 @@ catch (_) {
       assert.equal(crypto.createHash('sha256').update(Buffer.from(servedJs)).digest('hex'),
         sourceHash,'Staging buyer asset differs from image QA source');
       console.log('PASS: staging image E2E source asset verified');
-      if(reuseRequested){
+      if(usingSavedDraft){
         await page.waitForFunction(()=>
           (document.querySelector('#sanro-save-status')?.textContent||'')
             .includes('Draft berhasil dibuka kembali.'),
           null,{timeout:45000});
-        console.log('PASS: owner-bound private DTF QA draft reopened (no new draft POST)');
+        console.log('PASS: owner-bound staging QA draft reopened (no new draft POST)');
+        if(textQaReuseRequested){
+          const safeSource=await page.evaluate(async()=>{
+            const cfg=window.SANRO_STUDIO_EDITOR_CONFIG;
+            let state;
+            try {state=JSON.parse(sessionStorage.getItem('sanro-studio-draft:24')||'null')}
+            catch(_){return false}
+            if(!state||!cfg?.draft_api?.url)return false;
+            const response=await fetch(cfg.draft_api.url+'/'+encodeURIComponent(state.id),{
+              method:'GET',credentials:'same-origin',cache:'no-store',
+              headers:{'X-Sanro-Draft-Nonce':cfg.draft_api.nonce,
+                'X-Sanro-Owner-Token':state.token}
+            });
+            if(!response.ok)return false;
+            const d=await response.json();
+            const sides=['front','back'];
+            return d.valid===true && d.status==='draft'
+              && Number(d.product_id)===24
+              && !Object.keys(d.master_refs||{}).length
+              && sides.every(side=>!(d.design?.[side]?.objects||[])
+                .some(obj=>obj.type==='image'))
+              && Number(d.design?.quantities?.M)===1;
+          });
+          assert(safeSource,'Text QA draft is not a clean owner-bound text-only staging draft; no mutation performed.');
+          console.log('PASS: existing text-only QA draft validated before image mutations');
+        }
       }
 
       // Generate synthetic, non-customer artwork directly inside the isolated
@@ -133,7 +174,9 @@ catch (_) {
       await page.locator('input[data-size="M"]').fill('1');
       for (const {side,base64} of images) {
         await page.locator('#sanro-studio-buyer button[data-side="'+side+'"]').click();
-        await page.locator('#sanro-category').selectOption('A3+');
+        // Keep the original text QA category. Changing a saved text category
+        // would make master upload fail its server-side metadata CAS check.
+        if(!usingSavedDraft)await page.locator('#sanro-category').selectOption('A3+');
         await page.locator('#sanro-image').setInputFiles({
           name:'sanro-qa-'+side+'.png',mimeType:'image/png',
           buffer:Buffer.from(base64,'base64')
@@ -150,7 +193,7 @@ catch (_) {
 
       // Collect only HTTP status and the allowlisted public WP error code.
       // Never print response bodies, draft identifiers, owner tokens or nonces.
-      if(!reuseRequested) {
+      if(!usingSavedDraft) {
       const draftCreates=[];
       const draftReads=[];
       const onDraftCreateResponse=response=>{
