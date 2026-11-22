@@ -174,9 +174,15 @@ catch (_) {
       await page.locator('input[data-size="M"]').fill('1');
       for (const {side,base64} of images) {
         await page.locator('#sanro-studio-buyer button[data-side="'+side+'"]').click();
-        // Keep the original text QA category. Changing a saved text category
-        // would make master upload fail its server-side metadata CAS check.
-        if(!usingSavedDraft)await page.locator('#sanro-category').selectOption('A3+');
+        // A resumed text QA draft may only have saved text on the front side.
+        // Keep the saved category wherever text exists (server metadata CAS);
+        // an EMPTY side has no saved text category and may use A3+ for a
+        // synthetic image without mutating saved text-only metadata.
+        const hasSavedText=(await page.locator('#sanro-text-input').inputValue())
+          .trim().length>0;
+        if(!usingSavedDraft || !hasSavedText){
+          await page.locator('#sanro-category').selectOption('A3+');
+        }
         await page.locator('#sanro-image').setInputFiles({
           name:'sanro-qa-'+side+'.png',mimeType:'image/png',
           buffer:Buffer.from(base64,'base64')
