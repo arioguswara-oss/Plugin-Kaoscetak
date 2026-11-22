@@ -69,7 +69,15 @@ function sanro_studio_checkout_batch_lock_preflight($order, $contract) {
             || $design_id !== ($contract['design_id'] ?? null)) {
             return ['valid' => false, 'error' => 'order_design_mismatch'];
         }
-        $checked = sanro_studio_validate_size_order_item($expected_by_size[$size], $item);
+        // Persisted metadata must agree with the server-authorized DTF quote.
+        // Checking WC totals alone cannot detect a modified quote label.
+        $quote = $expected_by_size[$size];
+        if ($item->get_meta('_sanro_studio_quote_currency', true) !== 'IDR'
+            || (string) $item->get_meta('_sanro_studio_unit_price', true)
+                !== (string) $quote['sanro_studio_unit_price']) {
+            return ['valid' => false, 'error' => 'order_quote_metadata_mismatch'];
+        }
+        $checked = sanro_studio_validate_size_order_item($quote, $item);
         if (empty($checked['valid'])) {
             return ['valid' => false, 'error' => 'order_quote_mismatch'];
         }
@@ -188,6 +196,23 @@ function sanro_studio_stage_checkout_lock_created_order($order) {
     $result = sanro_studio_lock_checkout_order_draft(
         $order, $verified['contract'], $verified['lock_owner_token'], $verified['lock_design_hash']
     );
+    if (!empty($result['valid'])
+        && defined('SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS')
+        && SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS === true) {
+        if (!function_exists('sanro_studio_checkout_bind_existing_item_previews')) {
+            unset($GLOBALS['sanro_studio_checkout_verified']['lock_owner_token']);
+            throw new RuntimeException('SANRO Studio: preview binding unavailable.');
+        }
+        $binding = sanro_studio_checkout_bind_existing_item_previews(
+            $order, $verified['contract']['design_id'],
+            $verified['lock_owner_token'], $result['item_ids']
+        );
+        if (empty($binding['valid'])
+            || ($binding['bound'] ?? null) !== count($result['item_ids'])) {
+            unset($GLOBALS['sanro_studio_checkout_verified']['lock_owner_token']);
+            throw new RuntimeException('SANRO Studio: order preview binding incomplete.');
+        }
+    }
     // Drop the transient secret whether the lock succeeded or not.
     unset($GLOBALS['sanro_studio_checkout_verified']['lock_owner_token']);
     if (empty($result['valid'])) {

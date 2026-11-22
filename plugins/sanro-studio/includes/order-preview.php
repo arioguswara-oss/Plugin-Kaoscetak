@@ -308,6 +308,37 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
     }
     echo '<div class="sanro-studio-item-preview"><strong>' .
         esc_html('SANRO Studio — Preview item') . '</strong>';
+    // Admin-only order summary, based on saved WooCommerce item data.
+    // Missing or mismatched quote metadata must not appear as a valid DTF price.
+    if ($design_id !== '' && method_exists($item, 'get_meta')
+        && method_exists($item, 'get_quantity')
+        && method_exists($item, 'get_subtotal')
+        && method_exists($item, 'get_total')) {
+        $size = $item->get_meta('_sanro_studio_size', true);
+        $price = $item->get_meta('_sanro_studio_unit_price', true);
+        $currency = $item->get_meta('_sanro_studio_quote_currency', true);
+        $qty = $item->get_quantity();
+        $subtotal = $item->get_subtotal();
+        $total = $item->get_total();
+        $price_valid = is_string($size)
+            && in_array($size, ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'], true)
+            && is_numeric($qty) && (int) $qty > 0
+            && (string) (int) $qty === (string) $qty
+            && (is_int($price) || (is_string($price) && preg_match('/^[1-9][0-9]*$/D', $price)))
+            && (int) $price > 0 && $currency === 'IDR'
+            && is_numeric($subtotal) && is_numeric($total)
+            && (float) $subtotal === (float) ((int) $price * (int) $qty)
+            && (float) $total === (float) ((int) $price * (int) $qty);
+        echo '<p>' . esc_html('Design ID: ' . $design_id) . '</p>';
+        if ($price_valid) {
+            echo '<p>' . esc_html('Ukuran: ' . $size . ' | Jumlah: ' . (int) $qty
+                . ' | Harga DTF: Rp ' . number_format((int) $price, 0, ',', '.')
+                . ' / pcs | Subtotal: Rp ' .
+                number_format((int) $price * (int) $qty, 0, ',', '.')) . '</p>';
+        } else {
+            echo '<p>' . esc_html('Harga DTF / ukuran: belum terverifikasi pada item pesanan') . '</p>';
+        }
+    }
     foreach (['front' => 'Depan', 'back' => 'Belakang'] as $side => $label) {
         if (empty($inventory[$side])) {
             echo '<p>' . esc_html($label . ': Belum tersedia') . '</p>';
@@ -367,7 +398,7 @@ function sanro_studio_order_item_production_manifest($order, $item_id) {
         || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id)) {
         return ['valid' => false, 'error' => 'design_not_bound'];
     }
-    $has_preview = $inventory['front'] !== null || $inventory['back'] !== null;
+    $has_preview = $inventory['front'] !== null && $inventory['back'] !== null;
     return [
         'valid' => true,
         'eligible' => $eligibility['eligible'],
@@ -500,4 +531,110 @@ function sanro_studio_admin_production_status($order) {
         echo '</p>';
     }
     echo '</div>';
+}
+
+/**
+ * Bind existing lightweight preview files to persisted Studio order items.
+ * Called ONLY by the verified checkout draft-lock workflow, never via HTTP.
+ * An ambiguous side (multiple different uploads) is deliberately left unbound.
+ * No public links, token persistence, DTF rendering, or Drive writes.
+ */
+function sanro_studio_checkout_bind_existing_item_previews($order, $design_id, $owner_token, $item_ids) {
+    if (!is_object($order) || !method_exists($order, 'get_items')
+        || !is_array($item_ids) || !$item_ids
+        || !is_string($design_id) || !is_string($owner_token)
+        || !function_exists('sanro_studio_read_owned_draft_preview')
+        || !defined('SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS')
+        || SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS !== true
+        || !defined('SANRO_STUDIO_PRIVATE_PREVIEW_DIR')
+        || !is_string(SANRO_STUDIO_PRIVATE_PREVIEW_DIR)) {
+        return ['valid' => false, 'error' => 'preview_unavailable'];
+    }
+    $directory = realpath(SANRO_STUDIO_PRIVATE_PREVIEW_DIR);
+    $root = defined('ABSPATH') ? realpath(ABSPATH) : false;
+    $webroot = isset($_SERVER['DOCUMENT_ROOT']) && is_string($_SERVER['DOCUMENT_ROOT'])
+        ? realpath($_SERVER['DOCUMENT_ROOT']) : false;
+    if (!$directory || is_link(SANRO_STUDIO_PRIVATE_PREVIEW_DIR)
+        || !$root || !$webroot || $directory === $root || $directory === $webroot
+        || strpos($directory, $root . DIRECTORY_SEPARATOR) === 0
+        || strpos($directory, $webroot . DIRECTORY_SEPARATOR) === 0) {
+        return ['valid' => false, 'error' => 'unsafe_preview_directory'];
+    }
+    // The draft's explicit current references are authoritative. Never
+    // select an older upload by scanning the private directory.
+    $record = get_option('sanro_studio_draft_' . $design_id, false);
+    if (!is_array($record) || !is_array($record['preview_refs'] ?? null)
+        || !isset($record['token_hash']) || !is_string($record['token_hash'])
+        || !hash_equals($record['token_hash'], hash('sha256', $owner_token))
+        || !is_array($record['design'] ?? null)
+        || !is_string($record['preview_design_hash'] ?? null)
+        || !hash_equals(
+            hash('sha256', maybe_serialize($record['design'])),
+            $record['preview_design_hash']
+        )) {
+        return ['valid' => false, 'error' => 'preview_revision_mismatch'];
+    }
+    $refs = [];
+    foreach (['front', 'back'] as $side) {
+        $ref = $record['preview_refs'][$side] ?? null;
+        if (!is_string($ref) || $ref === '') continue;
+        $checked = sanro_studio_read_owned_draft_preview(
+            $design_id, $owner_token, $side, $ref
+        );
+        if (!empty($checked['valid'])) $refs[$side] = $ref;
+    }
+    if (count($refs) !== 2) {
+        return ['valid' => false, 'error' => 'incomplete_preview_refs'];
+    }
+    $items = $order->get_items('line_item');
+    // Preflight every line before writing any metadata. A conflict in the
+    // second size must not leave the first size with partially bound artwork.
+    if (count(array_unique($item_ids)) !== count($item_ids)) {
+        return ['valid' => false, 'error' => 'duplicate_order_item'];
+    }
+    foreach ($item_ids as $item_id) {
+        if (!is_int($item_id) || $item_id < 1 || !isset($items[$item_id])
+            || !is_object($items[$item_id])) {
+            return ['valid' => false, 'error' => 'invalid_order_item'];
+        }
+        $candidate = $items[$item_id];
+        if (!method_exists($candidate, 'get_meta') || !method_exists($candidate, 'save')
+            || !method_exists($candidate, 'update_meta_data')
+            || $candidate->get_meta('_sanro_studio_design_id', true) !== $design_id) {
+            return ['valid' => false, 'error' => 'order_design_mismatch'];
+        }
+        foreach ($refs as $side => $ref) {
+            $existing = $candidate->get_meta('_sanro_studio_preview_' . $side . '_ref', true);
+            if ($existing !== '' && $existing !== $ref) {
+                return ['valid' => false, 'error' => 'preview_reference_conflict'];
+            }
+        }
+    }
+    $bound = 0;
+    foreach ($item_ids as $item_id) {
+        $item = $items[$item_id];
+        $changed = false;
+        foreach ($refs as $side => $ref) {
+            $key = '_sanro_studio_preview_' . $side . '_ref';
+            $existing = $item->get_meta($key, true);
+            if ($existing !== '' && $existing !== $ref) {
+                return ['valid' => false, 'error' => 'preview_reference_conflict'];
+            }
+            if ($existing === '') {
+                $item->update_meta_data($key, $ref);
+                $changed = true;
+            }
+        }
+        if ($changed && $item->save() === false) {
+            return ['valid' => false, 'error' => 'preview_order_save_failed'];
+        }
+        // Confirm persisted references for each order line, including retries.
+        foreach ($refs as $side => $ref) {
+            if ($item->get_meta('_sanro_studio_preview_' . $side . '_ref', true) !== $ref) {
+                return ['valid' => false, 'error' => 'preview_order_readback_failed'];
+            }
+        }
+        $bound++;
+    }
+    return ['valid' => true, 'bound' => $bound];
 }
