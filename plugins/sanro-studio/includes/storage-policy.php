@@ -131,7 +131,45 @@ function sanro_studio_store_owned_draft_preview($design_id, $owner_token, $side,
     if (!in_array($side, ['front', 'back'], true)) {
         return ['valid' => false, 'error' => 'invalid_preview_target'];
     }
-    return sanro_studio_store_private_preview($design_id, $side, $bytes);
+    $stored = sanro_studio_store_private_preview($design_id, $side, $bytes);
+    if (empty($stored['valid'])) return $stored;
+    // Keep the currently selected preview reference in the private draft.
+    // Previous content-addressed uploads remain on disk, but cannot be
+    // accidentally attached as the buyer's latest design.
+    global $wpdb;
+    if (!is_object($wpdb) || !isset($wpdb->options)
+        || !method_exists($wpdb, 'prepare') || !method_exists($wpdb, 'query')
+        || !function_exists('maybe_serialize') || !function_exists('wp_cache_delete')) {
+        return ['valid' => false, 'error' => 'draft_storage_unavailable'];
+    }
+    $key = 'sanro_studio_draft_' . $design_id;
+    for ($attempt = 0; $attempt < 3; $attempt++) {
+        wp_cache_delete($key, 'options');
+        $before = get_option($key, false);
+        if (!is_array($before) || ($before['status'] ?? '') !== 'draft'
+            || !isset($before['token_hash'], $before['expires_at'])
+            || !is_string($before['token_hash'])
+            || !hash_equals($before['token_hash'], hash('sha256', $owner_token))
+            || !is_int($before['expires_at']) || $before['expires_at'] <= time()) {
+            return ['valid' => false, 'error' => 'draft_conflict'];
+        }
+        $after = $before;
+        if (!isset($after['preview_refs']) || !is_array($after['preview_refs'])) {
+            $after['preview_refs'] = [];
+        }
+        $after['preview_refs'][$side] = $stored['file_id'];
+        if ($before === $after) return $stored;
+        $changed = $wpdb->query($wpdb->prepare(
+            "UPDATE `{$wpdb->options}` SET option_value = %s WHERE option_name = %s AND BINARY option_value = BINARY %s",
+            maybe_serialize($after), $key, maybe_serialize($before)
+        ));
+        if ($changed === 1) {
+            wp_cache_delete($key, 'options');
+            return $stored;
+        }
+        if ($changed === false) return ['valid' => false, 'error' => 'draft_storage_failed'];
+    }
+    return ['valid' => false, 'error' => 'draft_conflict'];
 }
 
 /**
