@@ -3,7 +3,8 @@
 define('ABSPATH', __DIR__ . '/');
 $GLOBALS['hooks'] = array();
 function add_action($hook, $callback) { $GLOBALS['hooks'][$hook] = $callback; }
-function current_user_can($cap) { return $cap === 'manage_woocommerce'; }
+$GLOBALS['allow_admin'] = true;
+function current_user_can($cap) { return $cap === 'manage_woocommerce' && $GLOBALS['allow_admin']; }
 function esc_html__($s, $domain) { return $s; }
 function __($s, $domain) { return $s; }
 function esc_html($s) { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
@@ -29,4 +30,12 @@ sanro_studio_bootstrap_admin_page();
 $html = ob_get_clean();
 check(strpos($html, 'does not enable buyer editing') !== false, 'explicit inactive state');
 check(strpos($html, 'not_integrated') !== false, 'read-only status rendered');
+$GLOBALS['allow_admin'] = false;
+$denied = false;
+try {
+    sanro_studio_bootstrap_admin_page();
+} catch (RuntimeException $e) {
+    $denied = strpos($e->getMessage(), 'Insufficient permissions') !== false;
+}
+check($denied, 'non-admin cannot access status page');
 echo "PASS: SANRO Studio isolated admin bootstrap contract\n";
