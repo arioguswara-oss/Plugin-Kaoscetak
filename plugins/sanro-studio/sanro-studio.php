@@ -10,6 +10,10 @@
  */
 defined('ABSPATH') || exit;
 
+if (!defined('SANRO_STUDIO_VERSION')) {
+    define('SANRO_STUDIO_VERSION', '0.1.0-dev');
+}
+
 if (!function_exists('sanro_studio_bootstrap_status')) {
     function sanro_studio_bootstrap_status() {
         return array(
