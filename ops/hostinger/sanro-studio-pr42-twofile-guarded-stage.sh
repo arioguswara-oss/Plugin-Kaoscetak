@@ -109,7 +109,8 @@ trap on_exit EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-GIT_TERMINAL_PROMPT=0 git clone -q --depth 1 --single-branch \
+ # Full-history clone: avoid Git .git/shallow metadata races observed on Hostinger.
+GIT_TERMINAL_PROMPT=0 git -c maintenance.auto=false -c gc.auto=0 clone -q --single-branch \
     --branch "$BRANCH" \
     https://github.com/arioguswara-oss/Plugin-Kaoscetak.git "$QA/repo"
 SOURCE="$QA/repo"
@@ -118,7 +119,7 @@ if [[ "$HEAD" != "$SHA" ]]; then
     echo 'BLOCKED: PR42 HEAD has drifted from pinned commit' >&2
     exit 2
 fi
-GIT_TERMINAL_PROMPT=0 git -C "$SOURCE" fetch -q --depth 1 --no-tags origin \
+GIT_TERMINAL_PROMPT=0 git -c maintenance.auto=false -c gc.auto=0 -C "$SOURCE" fetch -q --no-tags origin \
     "+refs/heads/$BASE_BRANCH:refs/remotes/origin/$BASE_BRANCH"
 if [[ "$(git -C "$SOURCE" rev-parse "refs/remotes/origin/$BASE_BRANCH^{commit}")" != "$BASE_SHA" ]]; then
     echo 'BLOCKED: historical PR31 baseline branch moved' >&2
