@@ -583,26 +583,44 @@ function sanro_studio_checkout_bind_existing_item_previews($order, $design_id, $
         );
         if (!empty($checked['valid'])) $refs[$side] = $ref;
     }
-    if (!$refs) return ['valid' => true, 'bound' => 0];
+    if (count($refs) !== 2) {
+        return ['valid' => false, 'error' => 'incomplete_preview_refs'];
+    }
     $items = $order->get_items('line_item');
     $bound = 0;
     foreach ($item_ids as $item_id) {
         if (!is_int($item_id) || $item_id < 1 || !isset($items[$item_id])
-            || !is_object($items[$item_id])) continue;
+            || !is_object($items[$item_id])) {
+            return ['valid' => false, 'error' => 'invalid_order_item'];
+        }
         $item = $items[$item_id];
         if (!method_exists($item, 'get_meta') || !method_exists($item, 'save')
             || !method_exists($item, 'update_meta_data')
-            || $item->get_meta('_sanro_studio_design_id', true) !== $design_id) continue;
+            || $item->get_meta('_sanro_studio_design_id', true) !== $design_id) {
+            return ['valid' => false, 'error' => 'order_design_mismatch'];
+        }
         $changed = false;
         foreach ($refs as $side => $ref) {
             $key = '_sanro_studio_preview_' . $side . '_ref';
             $existing = $item->get_meta($key, true);
+            if ($existing !== '' && $existing !== $ref) {
+                return ['valid' => false, 'error' => 'preview_reference_conflict'];
+            }
             if ($existing === '') {
                 $item->update_meta_data($key, $ref);
                 $changed = true;
             }
         }
-        if ($changed && $item->save() !== false) $bound++;
+        if ($changed && $item->save() === false) {
+            return ['valid' => false, 'error' => 'preview_order_save_failed'];
+        }
+        // Confirm persisted references for each order line, including retries.
+        foreach ($refs as $side => $ref) {
+            if ($item->get_meta('_sanro_studio_preview_' . $side . '_ref', true) !== $ref) {
+                return ['valid' => false, 'error' => 'preview_order_readback_failed'];
+            }
+        }
+        $bound++;
     }
     return ['valid' => true, 'bound' => $bound];
 }
