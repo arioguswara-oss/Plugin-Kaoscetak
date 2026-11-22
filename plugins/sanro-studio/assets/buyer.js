@@ -677,8 +677,9 @@
   const uploadButton=q('#sanro-upload-previews'),uploadStatus=q('#sanro-preview-upload-status');
   if(uploadButton&&config.preview_upload_enabled){
    async function uploadCurrentPreviews(){
+    if(uploadButton.disabled)throw new Error('Upload preview sedang berlangsung.');
     if(!savedId||!ownerToken||savedRevision!==editRevision){
-     uploadStatus.textContent='Simpan draft terbaru sebelum mengirim preview.';return;
+     throw new Error('Simpan draft terbaru sebelum mengirim preview.');
     }
     uploadButton.disabled=true;
     const revisionAtStart=editRevision;
@@ -714,6 +715,7 @@
        throw new Error('Desain berubah selama upload. Simpan draft dan unggah preview terbaru.');
      }
      if(!completed.length)throw new Error('Tidak ada desain yang dapat dipratinjau.');
+     if(editRevision!==revisionAtStart)throw new Error('Desain berubah setelah preview disimpan. Simpan ulang.');
      uploadStatus.textContent='Preview terbaru tersimpan dan siap ditautkan ke pesanan.';
      return completed;
     }catch(error){uploadStatus.textContent=error.message||'Upload preview gagal.';throw error;}
