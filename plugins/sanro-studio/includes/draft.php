@@ -141,6 +141,9 @@ function sanro_studio_update_draft($id, $token, $design, $expected_design_hash =
     }
     $record = $before;
     $record['design'] = $design;
+    // Any geometry/text change invalidates both lightweight previews.
+    // Buyer must regenerate them from the saved design before checkout.
+    unset($record['preview_refs'], $record['preview_design_hash']);
     // Retain a master only when the new design actually contains an image
     // on that side. A removed image must not leave an active master binding.
     $record['master_refs'] = [];
