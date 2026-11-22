@@ -45,6 +45,27 @@ function readPrivateDraft(home) {
   assert(validState(data), 'Expired or invalid private DTF QA draft; new authorized creation required');
   return data;
 }
+/**
+ * A prior successful text-only guest E2E has an owner-bound QA draft already.
+ * Reusing its local credentials lets image QA avoid creating another draft
+ * during a legitimate server-side guest rate-limit window. Explicit opt-in
+ * and a server-side owner-bound GET preflight are required by the runner.
+ * Never search other files or obtain customer data.
+ */
+function readTextQaDraft(home) {
+  const {dir}=statePaths(home);
+  ensurePrivateDir(dir);
+  const file=path.join(dir,'staging-cart-e2e-private.json');
+  assert(fs.existsSync(file),'No existing text-only staging QA draft to reuse');
+  const st=fs.lstatSync(file);
+  assert(st.isFile() && !st.isSymbolicLink()
+    && (!process.getuid || st.uid===process.getuid())
+    && (st.mode & 0o077)===0,
+    'Unsafe existing text-only staging QA credentials');
+  const data=JSON.parse(fs.readFileSync(file,'utf8'));
+  assert(validState(data),'Invalid or expired text-only staging QA draft');
+  return {id:data.id,token:data.token};
+}
 function savePrivateDraft(credentials,home) {
   const {dir,file}=statePaths(home);
   ensurePrivateDir(dir);
@@ -66,4 +87,4 @@ function savePrivateDraft(credentials,home) {
   try { fs.renameSync(temp,file); }
   finally { try { fs.unlinkSync(temp); } catch (_) {} }
 }
-module.exports={statePaths,validState,readPrivateDraft,savePrivateDraft};
+module.exports={statePaths,validState,readPrivateDraft,readTextQaDraft,savePrivateDraft};
