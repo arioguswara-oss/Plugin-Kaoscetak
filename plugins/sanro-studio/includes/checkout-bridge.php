@@ -327,6 +327,36 @@ function sanro_studio_stage_checkout_process() {
             wc_add_notice('SANRO Studio: desain berubah sebelum checkout.', 'error');
             return;
         }
+        // A Studio checkout with private previews enabled must carry the
+        // latest saved artwork, not silently create an order without it.
+        if (defined('SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS')
+            && SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS === true) {
+            $record = get_option('sanro_studio_draft_' . $id, false);
+            $refs = is_array($record) ? ($record['preview_refs'] ?? null) : null;
+            $hash = is_array($record) ? ($record['preview_design_hash'] ?? null) : null;
+            $valid_previews = is_array($refs) && is_string($hash)
+                && hash_equals($draft['design_hash'], $hash)
+                && function_exists('sanro_studio_read_owned_draft_preview');
+            if ($valid_previews) {
+                foreach (['front', 'back'] as $side) {
+                    $ref = $refs[$side] ?? null;
+                    if (!is_string($ref) || $ref === '') {
+                        $valid_previews = false;
+                        break;
+                    }
+                    $preview = sanro_studio_read_owned_draft_preview($id, $token, $side, $ref);
+                    if (empty($preview['valid'])) {
+                        $valid_previews = false;
+                        break;
+                    }
+                }
+            }
+            if (!$valid_previews) {
+                unset($GLOBALS['sanro_studio_checkout_verified']);
+                wc_add_notice('Preview desain depan dan belakang belum sesuai draft terbaru. Kembali ke editor dan simpan ulang preview.', 'error');
+                return;
+            }
+        }
         $GLOBALS['sanro_studio_checkout_verified']['lock_owner_token'] = $token;
         $GLOBALS['sanro_studio_checkout_verified']['lock_design_hash'] = $draft['design_hash'];
     }
