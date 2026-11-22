@@ -86,6 +86,9 @@ check152(strpos($source, 'mv -f -- "$private_tmp"') !== false
     && strpos($source, 'mv -f -- "$workflow_tmp"') !== false
     && strpos($source, 'WRITE_STARTED=1') !== false,
     'two-file only replacement under rollback guard');
+check152(strpos($source, '|| [[ "$before_main" != "$(sha256sum "$MAIN")" ]]; then') !== false
+    && strpos($source, '|| "$before_main" != "$(sha256sum "$MAIN")"; then') === false,
+    'post-APPLY bootstrap digest compared as Bash condition, not executed as a command');
 check152(strpos($source, 'probe after "$QA/after.log"') !== false
     && strpos($source, 'SUCCESS=1') !== false
     && strpos($source, 'DEPLOYED_STAGING_ONLY_DTF_TWOFILE_DISABLED') !== false,
