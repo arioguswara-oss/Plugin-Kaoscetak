@@ -229,6 +229,10 @@ run_check 'PR41 Hostinger staging two-file PLAN Bash syntax' '' bash -n ops/host
 run_check 'PR41 staging PLAN security test PHP syntax' 'No syntax errors detected' php -l tests/staging-pr41-twofile-plan-policy.php
 run_check 'PR41 staging PLAN-only source contract' 'PASS: 20 SANRO PR41 two-file staging PLAN safety checks' php tests/staging-pr41-twofile-plan-policy.php
 
+run_check 'PR42 Hostinger staging guarded two-file installer Bash syntax' '' bash -n ops/hostinger/sanro-studio-pr42-twofile-guarded-stage.sh
+run_check 'PR42 guarded staging policy PHP syntax' 'No syntax errors detected' php -l tests/staging-pr42-twofile-apply-policy.php
+run_check 'PR42 two-file staging rollback and OFF controls' 'PASS: 23 SANRO PR42 two-file staging guarded APPLY policy checks' php tests/staging-pr42-twofile-apply-policy.php
+
 printf '\nSUMMARY: %s checks PASS, %s checks FAIL\n' "$passed" "$failed"
 if [[ $failed -gt 0 ]]; then
   exit 1
