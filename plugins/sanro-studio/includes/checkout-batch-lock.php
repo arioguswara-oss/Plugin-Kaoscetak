@@ -196,6 +196,15 @@ function sanro_studio_stage_checkout_lock_created_order($order) {
     $result = sanro_studio_lock_checkout_order_draft(
         $order, $verified['contract'], $verified['lock_owner_token'], $verified['lock_design_hash']
     );
+    if (!empty($result['valid'])
+        && function_exists('sanro_studio_checkout_bind_existing_item_previews')) {
+        // Preview binding is best-effort: missing artwork remains explicitly
+        // unavailable in admin, without blocking a valid order or payment.
+        sanro_studio_checkout_bind_existing_item_previews(
+            $order, $verified['contract']['design_id'],
+            $verified['lock_owner_token'], $result['item_ids']
+        );
+    }
     // Drop the transient secret whether the lock succeeded or not.
     unset($GLOBALS['sanro_studio_checkout_verified']['lock_owner_token']);
     if (empty($result['valid'])) {
