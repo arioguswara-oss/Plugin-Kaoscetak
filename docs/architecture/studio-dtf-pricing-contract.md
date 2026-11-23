@@ -186,3 +186,21 @@ isolation, invalid/merged/aggregate quantities, missing resolver/master, currenc
 safe-area change, stale category refresh, ordinary/empty cart and adapter conflict.
 The underlying 688 quote assertions also rerun. Real WC hooks/browser/Store API,
 shipping/tax/coupon/order persistence remain NOT TESTED. No production activation.
+
+## Quota recovery — final delta for Hermes
+
+Read-only comparison on 2026-11-23 confirms PR #50 HEAD
+`1d35edac388a9317832669d5a9ca0020b2c8013d` already contains the exact
+`pricing-quote.php` from `b39d13f`, integrated quote callers and #46 hardening.
+Do not reapply the shared calculator, older test copy or overwrite restored
+bootstrap. The remaining pricing delta is commit
+`c4dd7155dd4ba800aa47d7542465f6e849520d26`'s `pricing-woocommerce.php`, its
+31-assertion test, and the surgical require/registration in bootstrap.
+Append/reconcile this adapter contract with the existing PR #50 document.
+
+CI completion and README resolution are on PR #48 at `4cd9589`, including
+`docs/integration/lead-deltas-20261123.md` and the recovered test evidence report.
+No tests were repeated during quota recovery. The adapter's 31 assertions PASS
+at `c4dd715`; latest restore runtime is NOT TESTED. Resolver, old/new writer
+selection, editable-quantity order binding, Classic-only/simple-product gates
+remain integration blockers. Keep the new pricing flag OFF until resolved.
