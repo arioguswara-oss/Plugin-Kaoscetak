@@ -1,10 +1,10 @@
 # SANRO Studio — ledger aktif development
 
-Baseline checkpoint Owner72,90%; hasil source feature completion **75,50% (+2,60 poin)**. Bobot tetap. [Satu tabel progres aktif dan rekonsiliasi saldo Owner0,15](PROGRESS-BASELINE.md).
+Baseline resmi checkpoint75,50%; hasil feature-completion2 **80,50% (+5,00 poin)**. Bobot tetap. [Tabel tunggal dan rekonsiliasi saldo Owner0,15](PROGRESS-BASELINE.md).
 
-- [Laporan feature completion dan batas verifikasi](../qa/studio-feature-completion-20261123.md)
-- [Ownership dan dependency](WORK-OWNERSHIP.md)
-- [Aturan bisnis tetap](../business-rules/kaoscetak-lite-designer-v1.md)
-- [Checkpoint browser/development terdahulu](../qa/studio-mobile-checkout-development-20261123.md), historis
+- [Laporan implementasi, bukti dan batas terbaru](../qa/studio-feature-completion-2-20261123.md)
+- [Ownership/dependency](WORK-OWNERSHIP.md)
+- [Spesifikasi bisnis](../business-rules/kaoscetak-lite-designer-v1.md)
+- [Checkpoint75,50 historis](../qa/studio-feature-completion-20261123.md)
 
-Source branch Work terisolasi dari #50/#51. Tidak menjalankan worker lain, merge, deploy, reinstall atau membuat order. Source lokal PASS untuk focused checks; checkout runtime, GD/font parity/Unicode PDF dan akun Drive nyata belum VERIFIED. HTTP422 staging tetap blocker runtime. Generator/Drive tetap OFF.
+Branch Work/PR#52 terisolasi dari worker #50/#51. Tidak menjalankan AI lain, merge, deploy, mengubah pesanan atau mengaktifkan generator/Drive. Full Audit tetap90%. Bukti lokal tidak menggantikan checkout/gateway/Drive akun nyata atau persetujuan hasil cetak fisik.

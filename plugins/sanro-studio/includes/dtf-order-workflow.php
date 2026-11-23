@@ -205,8 +205,8 @@ function sanro_studio_dtf_preflight_order_item_candidates($order, $item_id) {
             || !is_int($plan['width_px'] ?? null)
             || !is_int($plan['height_px'] ?? null)
             || $plan['width_px'] < 1 || $plan['height_px'] < 1
-            || $plan['width_px'] > 4096 || $plan['height_px'] > 4096
-            || $plan['width_px'] * $plan['height_px'] > 6000000) {
+            || $plan['width_px'] > 6000 || $plan['height_px'] > 6000
+            || $plan['width_px'] * $plan['height_px'] > 24000000) {
             return ['valid' => false, 'error' => 'artifact_preflight_mismatch',
                 'failed_side' => $side, 'partial' => false];
         }

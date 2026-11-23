@@ -109,3 +109,5 @@
  #sanro-studio-buyer .sanro-controls :is(input,textarea,select){font-size:16px}
  #sanro-studio-buyer :is(#sanro-save-draft,#sanro-add-to-cart){min-height:48px}
 }
+
+@font-face{font-family:SanroProduction;src:url("fonts/DejaVuSans.ttf") format("truetype");font-display:block}.sanro-text{font-family:SanroProduction,sans-serif}

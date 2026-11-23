@@ -1,5 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
+require_once __DIR__.'/checkout-recovery.php';
 
 /** Current opaque WC customer session, used only as a server-side draft binding. */
 function sanro_studio_pricing_session_hash() {
@@ -83,7 +84,8 @@ function sanro_studio_pricing_authorized_design($default, $design_id, $product_i
         || !is_string($design_id) || !in_array($context, ['add_to_cart', 'cart'], true)) return null;
     $session = sanro_studio_pricing_session_hash();
     $record = get_option('sanro_studio_draft_' . $design_id, false);
-    if (!is_string($session) || !is_array($record) || ($record['status'] ?? null) !== 'draft'
+    $recovery=is_array($record)&&($record['status']??null)==='locked'?sanro_studio_pricing_recoverable_order($record):null;
+    if (!is_string($session) || !is_array($record) || (($record['status'] ?? null) !== 'draft' && !$recovery)
         || ($record['product_id'] ?? null) !== $product_id
         || !is_int($record['expires_at'] ?? null) || $record['expires_at'] <= time()
         || !is_string($record['wc_session_hash'] ?? null)
@@ -96,7 +98,8 @@ function sanro_studio_pricing_authorized_design($default, $design_id, $product_i
             $design_id, $record['design'], is_array($record['master_refs'] ?? null) ? $record['master_refs'] : []
         )) return null;
     return ['authorized'=>true, 'master_ready'=>true, 'design_id'=>$design_id,
-        'product_id'=>$product_id, 'design'=>$record['design']];
+        'product_id'=>$product_id, 'design'=>$record['design'],
+        'locked_quote'=>$recovery?$record['checkout_quote']:null];
 }
 
 function sanro_studio_pricing_wc_cart() {
@@ -234,6 +237,7 @@ function sanro_studio_register_pricing_integration_hooks() {
     add_action('woocommerce_checkout_create_order_line_item', 'sanro_studio_pricing_order_item', 10, 4);
     add_action('woocommerce_checkout_create_order', 'sanro_studio_pricing_validate_order', 10, 2);
     add_action('woocommerce_checkout_order_created', 'sanro_studio_pricing_lock_order', 10, 1);
+    add_action('woocommerce_before_pay_action','sanro_studio_pricing_before_pay_order',10,1);
 }
 
 function sanro_studio_pricing_checkout_field() {
@@ -284,6 +288,17 @@ function sanro_studio_pricing_checkout_authorize() {
             wc_add_notice('SANRO Studio: invalid size allocation.', 'error'); return;
         }
         $design['quantities'][$size] = $quantity;
+    }
+    $record=get_option('sanro_studio_draft_'.$id,false);
+    if (is_array($record)&&($record['status']??null)==='locked') {
+        $record['design_id']=$id;$resume=sanro_studio_pricing_recoverable_order($record);
+        $saved=$record['design']['quantities']??[];$current=$design['quantities'];ksort($saved);ksort($current);
+        if (!$resume || $saved!==$current || empty(sanro_studio_pricing_preview_bundle($draft,$token)['valid'])) {
+            wc_add_notice('SANRO Studio: resume the original unpaid order or create a new design.', 'error');return;
+        }
+        $contract=['valid'=>true,'design_id'=>$id,'product_id'=>$product,'design'=>$record['design'],'quote'=>$record['checkout_quote']];
+        $GLOBALS['sanro_studio_pricing_checkout']=['id'=>$id,'token'=>$token,'draft'=>$draft,'contract'=>$contract,'sizes'=>[],'existing_order_id'=>$resume->get_id()];
+        return;
     }
     $contract = sanro_studio_prepare_cart_design_contract($id, $token, $product);
     if (empty($contract['valid'])) { wc_add_notice('SANRO Studio: draft is no longer ready.', 'error'); return; }
@@ -344,6 +359,7 @@ function sanro_studio_pricing_validate_order($order, $data) {
         || !method_exists($order,'get_items') || count((array)$order->get_items('line_item')) !== count($verified['sizes'])) {
         throw new RuntimeException('SANRO Studio: invalid order allocation.');
     }
+    if (isset($verified['existing_order_id']) && $order->get_id()!==$verified['existing_order_id']) throw new RuntimeException('SANRO Studio: resume the original order, not a second order.');
     $expected = sanro_studio_prepare_size_cart_lines($verified['contract']);
     if (empty($expected['valid'])) throw new RuntimeException('SANRO Studio: order quote missing.');
     $by_size = [];
@@ -373,6 +389,20 @@ function sanro_studio_pricing_lock_order($order) {
     $ids = array_map('intval', array_keys((array)$order->get_items('line_item'))); sort($ids, SORT_NUMERIC);
     $key = 'sanro_studio_draft_' . $verified['id']; $record = get_option($key, false);
     $session = sanro_studio_pricing_session_hash();
+    if (is_array($record) && ($record['status']??null)==='locked'
+        && ($record['order_id']??null)===$order->get_id()
+        && ($record['wc_session_hash']??null)===$session
+        && is_string($record['token_hash']??null)
+        && hash_equals($record['token_hash'],hash('sha256',$verified['token']))
+        && hash('sha256',maybe_serialize($record['design']))===hash('sha256',maybe_serialize($verified['contract']['design']))) {
+        if(($record['order_item_ids']??null)!==$ids){
+            if(($verified['existing_order_id']??null)!==$order->get_id())throw new RuntimeException('SANRO Studio: order allocation changed.');
+            global $wpdb;$after=$record;$after['order_item_ids']=$ids;
+            $changed=$wpdb->query($wpdb->prepare("UPDATE `{$wpdb->options}` SET option_value = %s WHERE option_name = %s AND BINARY option_value = BINARY %s",maybe_serialize($after),$key,maybe_serialize($record)));wp_cache_delete($key,'options');
+            if($changed!==1)throw new RuntimeException('SANRO Studio: retry allocation conflict.');$record=$after;
+        }
+        sanro_studio_pricing_finish_order_binding($order,$verified,$record);return;
+    }
     if (!is_array($record) || ($record['status'] ?? null) !== 'draft' || ($record['wc_session_hash'] ?? null) !== $session
         || ($record['product_id'] ?? null) !== ($verified['contract']['product_id'] ?? null)
         || !is_int($record['expires_at'] ?? null) || $record['expires_at'] <= time()
@@ -391,13 +421,10 @@ function sanro_studio_pricing_lock_order($order) {
     }
     global $wpdb; $after=$record; $after['design']=$production_design;
     if (isset($after['preview_design_hash'])) $after['preview_design_hash']=hash('sha256',maybe_serialize($production_design));
+    $after['design_id']=$verified['id'];$after['checkout_quote']=$verified['contract']['quote'];
     $after['status']='locked'; $after['order_id']=(int)$order->get_id(); $after['order_item_ids']=$ids; $after['locked_at']=time();
     $changed=$wpdb->query($wpdb->prepare("UPDATE `{$wpdb->options}` SET option_value = %s WHERE option_name = %s AND BINARY option_value = BINARY %s", maybe_serialize($after),$key,maybe_serialize($record)));
     wp_cache_delete($key,'options');
     if ($changed !== 1) throw new RuntimeException('SANRO Studio: draft could not be locked to order.');
-    if (defined('SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS') && SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS === true) {
-        $bound = sanro_studio_checkout_bind_existing_item_previews($order,$verified['id'],$verified['token'],$ids);
-        if (empty($bound['valid'])) throw new RuntimeException('SANRO Studio: private previews were not bound.');
-    }
-    unset($GLOBALS['sanro_studio_pricing_checkout']);
+    sanro_studio_pricing_finish_order_binding($order,$verified,$after);
 }

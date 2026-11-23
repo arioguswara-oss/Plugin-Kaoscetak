@@ -26,3 +26,18 @@ Owner/session runtime AI eksternal tidak diinventarisasi atau dihentikan. Branch
 | Produksi → Drive | paid/admin-ready + locked allocation + private previews → preflight semua paket → existing verified item folders → gated uploads; optional DTF candidate perlu seluruh renderer/artifact/batch flags | Work; runtime semua writer tetap OFF |
 
 Readback akhir #50/#51 tidak berubah. Draft PR#52 tetap draft, tidak merge/deploy. Tidak ada mekanisme untuk melihat/menghentikan seluruh sesi AI eksternal; isolasi branch, lease nonforce pada publish dan SHA readback menjaga Work tidak menimpa branch worker. Bukan klaim global lock atau worker lain telah dihentikan.
+
+## Feature completion2 — parent3d989f2
+
+Work melanjutkan PR#52 untuk lifecycle checkout recovery, A3+ raster/Unicode font, hierarchy Drive order/Produksi/item, Unicode PDF dan read-only admin readiness. Tidak mengubah ref#50/#51 atau menjalankan worker eksternal.
+
+| Dependency | Urutan/alasan |
+|---|---|
+| Native Woo classic lifecycle | owner/session draft → official quote → saved item metadata/amounts → CAS draft lock + quote snapshot → private preview binding; retry hanya original awaiting-payment order |
+| Existing-order pay | Woo nonce/order-key dahulu; guard Studio memeriksa saved quote/alokasi/private previews sebelum payment processing |
+| Production typography | Bundled licensed DejaVuSans + font hash → browser font load/physical measurement → multiline server renderer atau embedded-font PDF; missing glyph/shaping ditolak |
+| DTF | paid/admin-ready + locked item/master → geometry/source resolution/memory plan → front/back RGBA300DPI → output visibility/dimensions/density → private artifact SHA/order binding; approval manusia terpisah |
+| Drive | preflight seluruh paket → order root → Produksi → item → original/preview/guide/manifest/optional DTF candidate; tiap ancestor/file verified privat, recovery lookup tanpa duplikasi |
+| Admin | read-only eligibility/preview/font/writer status; private links hanya sesudah verification, tanpa mengaktifkan writer |
+
+Source+assets+tests berada pada branch Work yang sama dengan lease publish expectedSHA. Tidak migrasi/delete folder legacy. Tidak ada deploy, order DB writes atau aktivasi generator/Drive. Frozen dependency#50/#51 tetap seperti checkpoint sebelumnya; runtime proof tidak dinaikkan hanya dari source.

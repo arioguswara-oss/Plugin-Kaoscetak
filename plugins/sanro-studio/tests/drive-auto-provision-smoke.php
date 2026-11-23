@@ -5,6 +5,7 @@ define('SANRO_STUDIO_ENABLE_DRIVE_AUTO_PROVISION', true);
 define('SANRO_STUDIO_ENABLE_VERIFIED_DRIVE_ATTACHMENT', true);
 define('SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID', 'privateParent_0123456789');
 require dirname(__DIR__) . '/includes/drive-auto-provision.php';
+require dirname(__DIR__) . '/includes/drive-production.php';
 
 $checks = 0;
 function check130($condition, $message) {
@@ -14,6 +15,7 @@ function check130($condition, $message) {
 }
 class WpError130 {}
 function is_wp_error($v) { return $v instanceof WpError130; }
+function current_user_can($cap){return $cap==='manage_woocommerce';}
 function home_url($path = '/') { return 'https://staging.example.test' . $path; }
 function apply_filters($hook, $default) { return $GLOBALS['token130'] ?? $default; }
 function wp_json_encode($v) { return json_encode($v); }
@@ -34,8 +36,11 @@ class Item130 {
     function save() { $this->saves++; return !$this->fail_save; }
 }
 class Order130 {
-    public $items = []; public $status = 'processing'; public $paid = true; public $meta = [];
+    public $fail_save=false; public $items = []; public $status = 'processing'; public $paid = true; public $meta = [];
     function get_id() { return 100; }
+    function update_meta_data($key,$v){$this->meta[$key]=$v;}
+    function save(){return !$this->fail_save;}
+    function get_order_number(){return 'ORDER-100';}
     function get_items($type = 'line_item') { return $this->items; }
     function get_status() { return $this->status; }
     function is_paid() { return $this->paid; }
@@ -49,41 +54,35 @@ function sanro_studio_order_item_production_manifest($order, $item_id) {
     return ['valid' => (bool) $valid,
         'ready_for_drive_integration' => $valid && sanro_studio_auto_drive_order_eligible($order)];
 }
-function sanro_studio_verify_drive_item_folder($order, $item_id, $id) {
-    $file = $GLOBALS['remote130'][$id] ?? null;
-    $valid = is_array($file) && ($file['id'] ?? '') === $id
-        && ($file['parents'] ?? []) === [SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID]
-        && ($file['permissions'] ?? []) === [['type' => 'user']]
-        && ($file['appProperties']['sanroOrderId'] ?? '') === (string) $order->get_id()
-        && ($file['appProperties']['sanroItemId'] ?? '') === (string) $item_id
-        && ($file['appProperties']['sanroSite'] ?? '') === hash('sha256', 'https://staging.example.test');
-    return ['valid' => $valid];
-}
 function wp_remote_get($url, $args) {
     $GLOBALS['get130'][] = ['url' => $url, 'args' => $args];
     if (($GLOBALS['fail_search130'] ?? false) === true) return new WpError130();
     if (strpos($url, '/drive/v3/files?') !== false) {
         parse_str(parse_url($url, PHP_URL_QUERY), $query);
         $GLOBALS['query130'] = $query;
-        $files = array_map(function ($f) { return ['id' => $f['id']]; }, array_values($GLOBALS['remote130']));
-        if ($GLOBALS['ambiguous130'] ?? false) $files[] = ['id' => 'anotherFolder_123456789'];
+        preg_match_all("/key='([^']+)' and value='([^']+)'/",$query['q'],$matches,PREG_SET_ORDER);
+        preg_match("/^'([^']+)' in parents/",$query['q'],$parent);
+        $files=[];foreach($GLOBALS['remote130'] as $file){$valid=($file['parents']??[])===[$parent[1]];foreach($matches as $m)if(($file['appProperties'][$m[1]]??null)!==$m[2])$valid=false;if($valid)$files[]=['id'=>$file['id']];}
+        if($GLOBALS['ambiguous130']??false)$files=[['id'=>'ambiguous-one-100'],['id'=>'ambiguous-two-100']];
+        if(($GLOBALS['foreign130']??false)&&str_contains($query['q'],"key='sanroItemId'"))$files=[['id'=>'foreignFolder_123456']];
         return ['code' => 200, 'body' => json_encode(['files' => $files])];
     }
-    return ['code' => 404, 'body' => '{}'];
+    $id=basename(parse_url($url,PHP_URL_PATH));$file=$GLOBALS['remote130'][$id]??null;if($file&&($GLOBALS['public130']??false))$file['permissions']=[['type'=>'anyone']];
+    return ['code'=>$file?200:404,'body'=>json_encode($file??[])];
 }
 function wp_remote_post($url, $args) {
     $GLOBALS['post130'][] = ['url' => $url, 'args' => $args];
     if ($GLOBALS['fail_create130'] ?? false) return ['code' => 503, 'body' => '{}'];
     $payload = json_decode($args['body'], true);
-    $id = 'createdFolder_100_71';
-    $GLOBALS['remote130'][$id] = $payload + ['id' => $id, 'permissions' => [['type' => 'user']]];
+    $id = isset($payload['appProperties']['sanroItemId'])?'createdFolder_100_71':(($payload['appProperties']['sanroFolderKind']??'')==='order'?'createdOrder_100':'createdProduction_100');
+    $GLOBALS['remote130'][$id] = $payload + ['id' => $id, 'trashed'=>false, 'permissions' => [['type' => 'user']]];
     return ['code' => 201, 'body' => json_encode(['id' => $id])];
 }
 function reset130() {
     $GLOBALS['remote130'] = []; $GLOBALS['locks130'] = []; $GLOBALS['jobs130'] = [];
     $GLOBALS['get130'] = []; $GLOBALS['post130'] = [];
     $GLOBALS['token130'] = 'ya29.synthetic-scope-token';
-    unset($GLOBALS['ambiguous130'], $GLOBALS['fail_search130'], $GLOBALS['fail_create130']);
+    unset($GLOBALS['ambiguous130'], $GLOBALS['fail_search130'], $GLOBALS['fail_create130'],$GLOBALS['foreign130'],$GLOBALS['public130']);
     $order = new Order130(); $item = new Item130();
     $item->meta['_sanro_studio_design_id'] = '123e4567-e89b-42d3-a456-123456789012';
     $item->meta['_sanro_studio_preview_front_ref'] = 'private-preview-reference';
@@ -110,10 +109,10 @@ check130(count($GLOBALS['jobs130']) === 1 && $GLOBALS['jobs130'][0]['unique'] ==
 $result = sanro_studio_run_drive_production(100);
 check130(!empty($result['valid']) && $result['created'] === 1 && $result['reused'] === 0,
     'worker creates private folder after authorization');
-check130(count($GLOBALS['post130']) === 1 && $item->saves === 1,
-    'exactly one Drive POST and one item CRUD save');
-$payload = json_decode($GLOBALS['post130'][0]['args']['body'], true);
-check130($payload['parents'] === [SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID]
+check130(count($GLOBALS['post130']) === 3 && $item->saves === 1,
+    'order, production and item folders created once with one item save');
+$payload = json_decode($GLOBALS['post130'][2]['args']['body'], true);
+check130($payload['parents'] === ['createdProduction_100']
     && $payload['mimeType'] === 'application/vnd.google-apps.folder'
     && $payload['appProperties']['sanroOrderId'] === '100'
     && $payload['appProperties']['sanroItemId'] === '71', 'private parent and immutable binding');
@@ -125,12 +124,12 @@ check130(strpos($GLOBALS['post130'][0]['url'], 'https://www.googleapis.com/drive
 check130($item->meta['_sanro_studio_drive_folder_id'] === 'createdFolder_100_71',
     'verified ID saved only to target order line');
 $result = sanro_studio_run_drive_production(100);
-check130(!empty($result['valid']) && $result['reused'] === 1 && count($GLOBALS['post130']) === 1
+check130(!empty($result['valid']) && $result['reused'] === 1 && count($GLOBALS['post130']) === 3
     && $item->saves === 1, 'repeated job does not create or write again');
 $item->meta['_sanro_studio_drive_folder_id'] = '';
 $result = sanro_studio_run_drive_production(100);
 check130(!empty($result['valid']) && $result['reused'] === 1
-    && count($GLOBALS['post130']) === 1, 'interrupted save recovered by remote lookup');
+    && count($GLOBALS['post130']) === 3, 'interrupted save recovered by remote lookup');
 list($order, $item) = reset130();
 $GLOBALS['fail_search130'] = true;
 check130(sanro_studio_run_drive_production(100)['error'] === 'drive_search_failed'
@@ -157,7 +156,7 @@ $GLOBALS['locks130']['sanro_drive_lock_' . md5(home_url('/') . ':100:71')] = 'in
 check130(sanro_studio_run_drive_production(100)['error'] === 'drive_provision_locked'
     && count($GLOBALS['get130']) === 0, 'concurrent request denied by atomic lock');
 list($order, $item) = reset130();
-$GLOBALS['remote130']['foreignFolder_123456'] = ['id' => 'foreignFolder_123456'];
+$GLOBALS['remote130']['foreignFolder_123456'] = ['id' => 'foreignFolder_123456'];$GLOBALS['foreign130']=true;
 check130(sanro_studio_run_drive_production(100)['error'] === 'drive_created_folder_unverified'
     && $item->saves === 0, 'foreign folder never attached');
 list($order, $item) = reset130();
@@ -165,4 +164,14 @@ $other = new Item130(); $other->meta['_sanro_studio_design_id'] = 'other';
 $order->items[72] = $other;
 check130(sanro_studio_run_drive_production(100)['error'] === 'invalid_production_manifest'
     && count($GLOBALS['get130']) === 0, 'batch preflight blocks partial provisioning');
+list($order,$item)=reset130();sanro_studio_run_drive_production(100);
+check130($order->meta['_sanro_studio_drive_order_folder_id']==='createdOrder_100'&&$order->meta['_sanro_studio_drive_production_folder_id']==='createdProduction_100','order-level hierarchy persisted using CRUD');
+$root=$GLOBALS['remote130']['createdOrder_100'];check130($root['name']==='SANRO-ORDER-100'&&$GLOBALS['remote130']['createdProduction_100']['parents']===['createdOrder_100'],'order number root and Produksi child');
+check130(sanro_studio_verified_order_drive_url($order)==='https://drive.google.com/drive/folders/createdOrder_100','admin root link exists only after entire hierarchy verified');
+$GLOBALS['public130']=true;check130(empty(sanro_studio_verify_drive_item_folder($order,71,'createdFolder_100_71')['valid']),'public ancestor denies otherwise bound item');check130(sanro_studio_verified_order_drive_url($order)===null,'unverified ancestor never emits a root link');unset($GLOBALS['public130']);
+$GLOBALS['remote130']['createdProduction_100']['parents']=['foreignParent_12345'];check130(empty(sanro_studio_verify_drive_item_folder($order,71,'createdFolder_100_71')['valid']),'moved ancestor denies entire hierarchy');
+list($order,$item)=reset130();$order->fail_save=true;
+check130(sanro_studio_run_drive_production(100)['error']==='drive_layout_save_failed'&&count($GLOBALS['post130'])===1,'remote root create with failed order save stops before children');
+$order->fail_save=false;$order->meta=[];
+check130(!empty(sanro_studio_run_drive_production(100)['valid'])&&count($GLOBALS['post130'])===3,'lost order metadata recovers exact remote root without duplication');
 echo 'PASS: ' . $checks . ' SANRO Drive auto-provision regression checks' . "\n";

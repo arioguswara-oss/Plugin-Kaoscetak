@@ -77,7 +77,7 @@ function sanro_studio_drive_upload_item_source($order,$item_id,$folder_id,$side,
         || strlen($source['bytes'])<1 || strlen($source['bytes'])>33554432
         || !is_string($source['sha256']??null) || !hash_equals($source['sha256'],hash('sha256',$source['bytes']))
         || !is_string($source['design_id']??null)) return ['valid'=>false,'error'=>'production_source_invalid'];
-    $formats=['original'=>['image/png'=>'png','image/jpeg'=>'jpg'],'preview'=>['image/jpeg'=>'jpg'],
+    $formats=['original'=>['image/png'=>'png','image/jpeg'=>'jpg'],'preview'=>['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'],
         'guide'=>['application/pdf'=>'pdf'],'manifest'=>['application/json'=>'json'],'dtf-candidate'=>['image/png'=>'png']];
     if (($formats[$kind][$source['mime']??'']??null)!==($source['ext']??null)) return ['valid'=>false,'error'=>'production_type_invalid'];
     $all_items=$order->get_items('line_item');

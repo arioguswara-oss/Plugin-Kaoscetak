@@ -5,6 +5,7 @@ require __DIR__.'/../includes/order-master-source.php';
 require __DIR__.'/../includes/drive-auto-provision.php';
 require __DIR__.'/../includes/production-package.php';
 require __DIR__.'/../includes/drive-master-export.php';
+require __DIR__.'/../includes/production-status.php';
 class PackageItem extends FlowItem {public $name='Cotton Combed 24s';function get_name(){return $this->name;}function get_order_id(){return 88;}}
 class PackageOrder extends FlowOrder {public $paid=false,$status='pending',$ready='';function is_paid(){return $this->paid;}function get_status(){return $this->status;}function get_meta($key,$single=true){return $key==='_sanro_studio_production_ready'?$this->ready:'';}function get_order_number(){return 'TEST-88';}}
 function wc_get_order($id){return $GLOBALS['package_order'];}
@@ -46,11 +47,17 @@ preg_match('/startxref\n([0-9]+)/',$pdf,$xref);flow_check(substr($pdf,(int)$xref
 preg_match_all('/([0-9]{10}) 00000 n /',$pdf,$offsets);foreach($offsets[1] as $index=>$offset)flow_check(str_starts_with(substr($pdf,(int)$offset),($index+1).' 0 obj'),'PDF object offsets valid');
 flow_check($package['manifest']['quantities']===['S'=>3,'L'=>1]&&$package['manifest']['subtotal']===186000,'production follows locked checkout, no live repricing');
 $production->items[71]->total=1;flow_check(sanro_studio_prepare_production_package($production,71)['error']==='production_order_amount_mismatch','production denies modified persisted total');$production->items[71]->total=186000;
-$production->items[71]->name='Kaos é';flow_check(sanro_studio_prepare_production_package($production,71)['error']==='guide_unicode_renderer_required','Unicode fails closed without trusted renderer');$production->items[71]->name='Cotton Combed 24s';
+$production->items[71]->name='Kaos é';flow_check(!empty(sanro_studio_prepare_production_package($production,71)['valid']),'Unicode renders with bundled embedded font');$production->items[71]->name='Cotton Combed 24s';
 $GLOBALS['admin']=true;ob_start();sanro_studio_admin_item_preview_status(71,$production->items[71],null);$html=ob_get_clean();flow_check(substr_count($html,'<img ')===2&&str_contains($html,'_wpnonce=')&&str_contains($html,'#ffffff')&&str_contains($html,'A5'),'admin renders both nonce-protected previews and snapshot');
 flow_check(!str_contains($html,$private)&&!str_contains($html,$token),'admin HTML never leaks private path or owner secret');
 $GLOBALS['admin']=false;ob_start();sanro_studio_admin_item_preview_status(71,$production->items[71],null);flow_check(ob_get_clean()==='','non-admin sees no preview HTML');
 flow_check(!sanro_studio_admin_order_preview_bytes($production,'front',71)['valid'],'non-admin private admin reader denied');
+$GLOBALS['admin']=true;$readiness=sanro_studio_production_status($production,71);flow_check($readiness['order_ready']&&$readiness['design_ready']&&$readiness['previews_ready']&&!$readiness['generator_enabled']&&!$readiness['drive_enabled']&&!$readiness['print_approved'],'admin separates paid/design/preview readiness from disabled writers and print approval');
+if(extension_loaded('gd')){
+    $im=imagecreatetruecolor(20,16);imagefill($im,0,0,imagecolorallocate($im,20,80,120));
+    foreach(['png','webp'] as $format){ob_start();if($format==='png')imagepng($im);else imagewebp($im);$bytes=ob_get_clean();$mime='image/'.$format;$guide=sanro_studio_production_guide_pdf($package['manifest'],['front'=>['mime'=>$mime,'bytes'=>$bytes],'back'=>['mime'=>$mime,'bytes'=>$bytes]]);flow_check(!empty($guide['valid']),'guide supports '.$format.' preview');}
+    imagedestroy($im);
+}
 define('SANRO_STUDIO_ENABLE_DRIVE_AUTO_PROVISION',true);define('SANRO_STUDIO_ENABLE_VERIFIED_DRIVE_ATTACHMENT',true);define('SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID','synthetic-private-parent');define('SANRO_STUDIO_ENABLE_DRIVE_PACKAGE_EXPORT',true);
 foreach([71,72] as $itemid){$result=sanro_studio_export_production_package($production,$itemid,'private-folder-88-'.$itemid);flow_check(!empty($result['valid'])&&$result['uploaded']===4,'upload all four assets with exact private remote verification');}
 flow_check($GLOBALS['uploads']===8,'two sizes have isolated item folders and assets');

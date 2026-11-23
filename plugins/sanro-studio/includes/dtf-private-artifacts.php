@@ -174,8 +174,8 @@ function sanro_studio_dtf_verify_private_artifact($order, $item_id, $side) {
         || ($meta['bytes'] ?? null) !== $png_size
         || !is_int($meta['width_px'] ?? null) || !is_int($meta['height_px'] ?? null)
         || $meta['width_px'] < 1 || $meta['height_px'] < 1
-        || $meta['width_px'] > 4096 || $meta['height_px'] > 4096
-        || $meta['width_px'] * $meta['height_px'] > 6000000
+        || $meta['width_px'] > 6000 || $meta['height_px'] > 6000
+        || $meta['width_px'] * $meta['height_px'] > 24000000
         || !is_numeric($meta['width_cm'] ?? null)
         || !is_numeric($meta['height_cm'] ?? null)
         || !is_numeric($meta['offset_x_cm'] ?? null)
@@ -272,8 +272,8 @@ function sanro_studio_dtf_commit_private_candidate($order, $item_id, $side, $can
         || !is_int($candidate['width_px'] ?? null)
         || !is_int($candidate['height_px'] ?? null)
         || $candidate['width_px'] < 1 || $candidate['height_px'] < 1
-        || $candidate['width_px'] > 4096 || $candidate['height_px'] > 4096
-        || $candidate['width_px'] * $candidate['height_px'] > 6000000
+        || $candidate['width_px'] > 6000 || $candidate['height_px'] > 6000
+        || $candidate['width_px'] * $candidate['height_px'] > 24000000
         || !is_numeric($candidate['width_cm'] ?? null)
         || !is_numeric($candidate['height_cm'] ?? null)
         || !is_numeric($candidate['offset_x_cm'] ?? null)

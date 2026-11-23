@@ -1,11 +1,11 @@
-# SANRO Studio — feature completion development
+# SANRO Studio — feature completion2
 
-23 November 2026 WIB. **72,90% → 75,50%, +2,60 poin berbobot**. Bobot tujuh tahap tidak berubah. Sumber angka tunggal: [ledger aktif](docs/ledger/PROGRESS-BASELINE.md), termasuk saldo Owner historis 0,15 yang belum teralokasi.
+23 November2026 WIB. **75,50% →80,50%, +5,00 poin implementasi berbobot**. Bobot tujuh tahap tetap. Satu tabel resmi aktif: [ledger](docs/ledger/PROGRESS-BASELINE.md), termasuk saldo Owner historis0,15 yang belum teralokasi.
 
-Checkpoint `2d945beac9eb542ad39b5513ea600dc8a71c3c2b`; branch Work terisolasi / Draft PR #52. Dependency #50 `45a7917c320403d1bc0d18caf7ee3398a3ecb416` mencakup pricing #51 `e9cb4679247f30223c33e51ddac1b2405dff961c`; tidak import duplikat atau menulis branch worker.
+Parent3d989f2, branch Work terisolasi, Draft PR#52. IMPLEMENTED baru: retry checkout/pemulihan private-preview save pada order yang sama dengan frozen official quote; A3+300DPI/multiline supported-Unicode/alpha/output validation; order/Produksi/item private Drive hierarchy dengan recovery dan ancestor verification; searchable embedded-font Unicode PDF/JPEG-PNG-WebP guide; admin readiness.
 
-IMPLEMENTED: cart replay/alokasi/harga server, snapshot kuantitas multi-size dan lock produksi yang konsisten, preview admin inline, manifest/PDF panduan/previews dan gated Drive/DTF-candidate handoff. Runtime generator dan Drive tidak diaktifkan; tidak merge/deploy/order/payment.
+VERIFIED lokal: PHP lint112 PASS, recovery20 PASS, Drive hierarchy31 PASS, actual GD/FreeType A3+ front/back12 PASS, Unicode text/spaces extraction dan PDF visual PASS, focused regression terkait PASS. Woo/options/session/HTTP memakai doubles; byte PNG/font/PDF asli sintetis. Tidak mengulang full audit.
 
-VERIFIED lokal: PHP lint103, flow checkout17 + production/admin/upload30, regression terkait PASS. WordPress inventory baca-saja: Studio/Woo aktif, QA lama inactive. Cloud Browser sesi lanjutan tidak tersedia; browser evidence lama tidak diklaim sebagai uji source baru. HTTP422 staging belum root-cause VERIFIED. Live checkout/Drive, GD/font parity, Unicode PDF masih blocker/NOT TESTED.
+Source belum deployed. Tidak ada merge, production/order DB/payment, flag change atau remote Drive writes. DTF dan Drive tetap OFF. NOT TESTED: live checkout/gateway/Drive/physical print; staging422 belum root-cause VERIFIED. Missing glyph/complex shaping ditolak; human print/font parity approval tetapfalse; host memory/GD menjadi runtime prerequisite.
 
-[Laporan implementasi, tes dan batas](docs/qa/studio-feature-completion-20261123.md). GO review/dev. NO-GO merge/deploy/production/aktivasi generator/Drive atau klaim seluruh alur siap rilis.
+[Laporan lengkap](docs/qa/studio-feature-completion-2-20261123.md). GO review/dev. NO-GO deploy/merge/aktivasi writer atau klaim rilis siap cetak.

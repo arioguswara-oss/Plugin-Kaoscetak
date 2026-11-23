@@ -88,6 +88,7 @@ require_once __DIR__ . '/includes/dtf-layer-render.php';
 require_once __DIR__ . '/includes/dtf-private-artifacts.php';
 require_once __DIR__ . '/includes/dtf-order-workflow.php';
 require_once __DIR__ . '/includes/production-package.php';
+require_once __DIR__ . '/includes/production-status.php';
 require_once __DIR__ . '/includes/dtf-admin-order-status.php';
 require_once __DIR__ . '/includes/dtf-admin-generate.php';
 require_once __DIR__ . '/includes/dtf-admin-readiness.php';

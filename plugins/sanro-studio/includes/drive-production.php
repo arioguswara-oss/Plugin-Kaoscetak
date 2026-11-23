@@ -1,5 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
+require_once __DIR__.'/drive-order-layout.php';
 
 /**
  * Verify a SANRO Studio production folder against live Google Drive metadata.
@@ -36,6 +37,12 @@ function sanro_studio_verify_drive_item_folder($order, $item_id, $folder_id) {
     if (!is_string($token) || strlen($token) < 12 || strlen($token) > 4096
         || !preg_match('/^[A-Za-z0-9._~+\/-]+$/D', $token)) {
         return ['valid' => false, 'error' => 'drive_not_connected'];
+    }
+    $production=$order->get_meta('_sanro_studio_drive_production_folder_id',true);
+    if($production!==''){
+        $layout=sanro_studio_drive_verified_layout($order,$token);
+        if(!$layout)return ['valid'=>false,'error'=>'drive_layout_unverified'];
+        $parent=$layout['production_folder_id'];
     }
     $url = 'https://www.googleapis.com/drive/v3/files/' . rawurlencode($folder_id)
         . '?fields=' . rawurlencode('id,name,mimeType,parents,trashed,permissions(type),appProperties');

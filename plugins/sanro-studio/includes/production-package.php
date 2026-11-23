@@ -1,5 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
+require_once __DIR__.'/production-pdf.php';
 
 /** Separate opt-in: loading this module never renders, uploads or schedules. */
 function sanro_studio_drive_package_enabled() {
@@ -48,56 +49,11 @@ function sanro_studio_production_item_manifest($order, $item_id) {
     return ['valid'=>true,'manifest'=>$manifest];
 }
 
-/** Small multipage A4 guide with JPEG previews. Never a printable DTF file.
- * Non-ASCII content needs an explicitly trusted Unicode renderer, never '?'. */
+/** Embedded-font Unicode A4 production guide; never a printable DTF file. */
 function sanro_studio_production_guide_pdf($manifest, $previews) {
     $encoded=json_encode($manifest,JSON_UNESCAPED_UNICODE);
     if(!is_string($encoded)||strlen($encoded)>1048576)return ['valid'=>false,'error'=>'production_manifest_invalid'];
-    if (preg_match('/[^\x09\x0A\x0D\x20-\x7E]/u',$encoded)) {
-        $provided=function_exists('apply_filters')?apply_filters('sanro_studio_unicode_guide_pdf',null,$manifest,$previews):null;
-        return is_string($provided) && strlen($provided)<=4194304 && strpos($provided,'%PDF-')===0
-            ? ['valid'=>true,'bytes'=>$provided] : ['valid'=>false,'error'=>'guide_unicode_renderer_required'];
-    }
-    $objects=[];$add=function($s)use(&$objects){$objects[]=$s;return count($objects);};
-    $catalog=$add('');$pages=$add('');$font=$add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');$page_ids=[];
-    foreach (['front','back'] as $side) {
-        $preview=$previews[$side]??null;
-        $info=is_array($preview)&&is_string($preview['bytes']??null)?@getimagesizefromstring($preview['bytes']):false;
-        if (!$info || ($info['mime']??null)!=='image/jpeg' || ($info['channels']??3)!==3 || ($preview['mime']??null)!=='image/jpeg'
-            || strlen($preview['bytes'])>51200) return ['valid'=>false,'error'=>'guide_jpeg_preview_required'];
-        $entry=$manifest['sides'][$side];$lines=[
-            'SANRO STUDIO - PRODUCTION GUIDE (NOT PRINT-READY)',
-            'Order '.$manifest['order_number'].' / item '.$manifest['item_id'],
-            'Product '.$manifest['product_id'].': '.$manifest['product_name'],
-            'Design '.$manifest['design_id'],
-            'Size '.$manifest['size'].' x '.$manifest['quantity'].' | IDR '.$manifest['unit_price'].' each',
-            'All sizes: '.json_encode($manifest['quantities']),
-            'Shirt '.$manifest['shirt_color'].' | Sleeve '.($manifest['long_sleeve']?'long':'short'),
-            strtoupper($side).' | Category '.($entry['category']??'blank'),
-            'Positions/sizes below are centimeters from the product safe-area origin.'];
-        foreach ($entry['objects'] as $object) $lines[]=$object['type'].' x='.$object['x'].' y='.$object['y'].' width='.$object['width'].' height='.$object['height'].' cm';
-        $lines[]='Text font size: '.($entry['font_size']??'none').' / color '.($entry['text_color']??'none');
-        $lines[]='Text: '.$entry['text'];
-        $flat=[];foreach($lines as $line)foreach(explode("\n",wordwrap($line,88,"\n",true)) as $piece)$flat[]=$piece;
-        $chunks=array_chunk($flat,32);
-        foreach ($chunks as $index=>$chunk) {
-            $stream='';$y=805;
-            foreach($chunk as $line){$escaped=str_replace(['\\','(',')'],['\\\\','\\(','\\)'],$line);$stream.="BT /F1 10 Tf 30 $y Td ($escaped) Tj ET\n";$y-=15;}
-            $image_id=null;
-            if($index===0){$bytes=$preview['bytes'];$image_id=$add('<< /Type /XObject /Subtype /Image /Width '.(int)$info[0].' /Height '.(int)$info[1].' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '.strlen($bytes).">>\nstream\n".$bytes."\nendstream");$stream.="q 220 0 0 220 30 65 cm /Im1 Do Q\n";}
-            $content=$add('<< /Length '.strlen($stream).">>\nstream\n".$stream."endstream");
-            $resource='<< /Font << /F1 '.$font.' 0 R >>'.($image_id?' /XObject << /Im1 '.$image_id.' 0 R >>':'').' >>';
-            $page_ids[]=$add('<< /Type /Page /Parent '.$pages.' 0 R /MediaBox [0 0 595 842] /Resources '.$resource.' /Contents '.$content.' 0 R >>');
-        }
-    }
-    $objects[$catalog-1]='<< /Type /Catalog /Pages '.$pages.' 0 R >>';
-    $objects[$pages-1]='<< /Type /Pages /Kids ['.implode(' ',array_map(fn($id)=>$id.' 0 R',$page_ids)).'] /Count '.count($page_ids).' >>';
-    $pdf="%PDF-1.4\n";$offsets=[0];
-    foreach($objects as $i=>$object){$offsets[]=strlen($pdf);$pdf.=($i+1)." 0 obj\n".$object."\nendobj\n";}
-    $xref=strlen($pdf);$pdf.="xref\n0 ".(count($objects)+1)."\n0000000000 65535 f \n";
-    foreach(array_slice($offsets,1) as $offset)$pdf.=sprintf('%010d 00000 n ',$offset)."\n";
-    $pdf.='trailer << /Size '.(count($objects)+1).' /Root '.$catalog." 0 R >>\nstartxref\n".$xref."\n%%EOF\n";
-    return ['valid'=>true,'bytes'=>$pdf];
+    return sanro_studio_unicode_production_pdf($manifest,$previews);
 }
 
 /** Internal in-memory package. No file, order, Drive, or payment writes. */
@@ -109,7 +65,7 @@ function sanro_studio_prepare_production_package($order,$item_id) {
         $preview=sanro_studio_bound_order_preview_bytes($order,$side,$item_id);
         if(empty($preview['valid']))return ['valid'=>false,'error'=>'production_preview_unavailable'];
         $previews[$side]=$preview;
-        $assets[]=['kind'=>'preview','side'=>$side,'mime'=>$preview['mime'],'ext'=>'jpg','bytes'=>$preview['bytes']];
+        $assets[]=['kind'=>'preview','side'=>$side,'mime'=>$preview['mime'],'ext'=>['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'][$preview['mime']],'bytes'=>$preview['bytes']];
     }
     $guide=sanro_studio_production_guide_pdf($manifest,$previews);
     if(empty($guide['valid']))return $guide;

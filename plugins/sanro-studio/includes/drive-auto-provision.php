@@ -1,5 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
+require_once __DIR__.'/drive-order-layout.php';
 
 /**
  * Server-side, opt-in Drive provisioning. Never runs from a buyer endpoint.
@@ -166,7 +167,9 @@ function sanro_studio_auto_drive_provision_item($order, $item_id) {
             || !preg_match('/^[A-Za-z0-9._~+\/-]+$/D', $token)) {
             return ['valid' => false, 'error' => 'drive_not_connected'];
         }
-        $parent = SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID;
+        $layout=sanro_studio_drive_ensure_order_layout($order);
+        if(empty($layout['valid']))return $layout;
+        $parent=$layout['production_folder_id'];
         $site = hash('sha256', rtrim(home_url('/'), '/'));
         $props = ['sanroSite' => $site, 'sanroOrderId' => (string) $order->get_id(),
             'sanroItemId' => (string) $item_id];

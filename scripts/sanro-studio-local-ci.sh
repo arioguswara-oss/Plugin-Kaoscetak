@@ -59,7 +59,14 @@ run_check 'Cart adapter preflight and rollback' 'PASS: 74 staging cart adapter c
 run_check 'Cart line identity and metadata' 'PASS: 24 isolated cart-line checks' php plugins/sanro-studio/tests/cart-line-snapshot-smoke.php
 run_check 'Checkout authorization gate' 'PASS: 43 checkout gate checks' php plugins/sanro-studio/tests/checkout-gate-smoke.php
 run_check 'Size checkout order-line binding' 'PASS: 13 isolated size-checkout checks' php plugins/sanro-studio/tests/size-checkout-bridge-smoke.php
-run_check 'Pricing multi-size checkout and private production package' 'PASS: 30 production guide/admin/private-upload checks' php plugins/sanro-studio/tests/production-package-flow.php
+run_check 'Pricing multi-size checkout and private production package' 'production guide/admin/private-upload checks' php plugins/sanro-studio/tests/production-package-flow.php
+run_check 'Existing order checkout recovery' 'PASS: 20 same-order checkout recovery checks' php plugins/sanro-studio/tests/checkout-recovery-flow.php
+if php -r 'exit(extension_loaded("gd") ? 0 : 1);'; then
+  run_check 'A3+ actual front/back output' 'PASS: 12 actual A3+ front/back raster and Unicode guide checks' php -d memory_limit=768M plugins/sanro-studio/tests/production-raster-real.php
+  run_check 'Unicode PDF actual font and image conversion' 'PASS: Unicode embedded font' php plugins/sanro-studio/tests/guide-unicode-real.php
+else
+  echo 'NOT TESTED: real A3+ and PNG/WebP guide output require GD/FreeType'
+fi
 
 run_check 'Default-disabled staging cart' '10 assertions PASS, 0 FAIL' php tests/test_sanro_staging_cart_gate.php
 run_check 'Cart REST ownership/session/idempotency' 'PASS: 42 staging REST cart-bootstrap checks' php plugins/sanro-studio/tests/rest-cart-bootstrap-smoke.php
@@ -77,7 +84,7 @@ run_check 'Drive default-disabled regression PHP syntax' 'No syntax errors detec
 run_check 'Drive verification disabled by default' 'PASS: SANRO Drive remote verification defaults disabled' php plugins/sanro-studio/tests/drive-production-default-off.php
 run_check 'Drive auto-provision worker PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/drive-auto-provision.php
 run_check 'Drive auto-provision regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/drive-auto-provision-smoke.php
-run_check 'Drive auto-provision eligibility, duplicate and privacy' 'PASS: 23 SANRO Drive auto-provision regression checks' php plugins/sanro-studio/tests/drive-auto-provision-smoke.php
+run_check 'Drive auto-provision eligibility, duplicate and privacy' 'PASS: 31 SANRO Drive auto-provision regression checks' php plugins/sanro-studio/tests/drive-auto-provision-smoke.php
 run_check 'Drive auto default-disabled PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/drive-auto-default-off.php
 run_check 'Drive auto disabled by default' 'PASS: SANRO Drive automatic provisioning defaults disabled' php plugins/sanro-studio/tests/drive-auto-default-off.php
 run_check 'Order-bound private master source PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/order-master-source.php
@@ -150,7 +157,7 @@ run_check 'Staging DTF front/back image E2E JS syntax' '' node --check tests/sta
 run_check 'Private DTF image QA reuse helper JS syntax' '' node --check tests/staging-image-private-draft.cjs
 run_check 'Private DTF image QA reuse regression JS syntax' '' node --check tests/staging-image-private-draft-node.cjs
 run_check 'Owner-private DTF image QA reuse safety' 'PASS: 15 owner-private DTF QA reuse and permission checks' node tests/staging-image-private-draft-node.cjs
-run_check 'Private DTF image previews and master binding' 'PASS: 7 private DTF image-preview and master-binding checks' node plugins/sanro-studio/tests/buyer-image-preview-node.cjs
+run_check 'Private DTF image previews and master binding' 'PASS: 9 private DTF image-preview and master-binding checks' node plugins/sanro-studio/tests/buyer-image-preview-node.cjs
 run_check 'Private DTF master PHP module syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/master-storage.php
 run_check 'Private DTF front/back storage regression PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/master-storage-roundtrip.php
 run_check 'Private DTF front/back owner-authorized storage roundtrip' 'PASS: 15 isolated private-master front/back roundtrip checks' php plugins/sanro-studio/tests/master-storage-roundtrip.php

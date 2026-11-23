@@ -373,6 +373,7 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
             . ' referrerpolicy="no-referrer" src="' . esc_url($url) . '" alt="'
             . esc_attr('Preview desain ' . $label) . '">';
     }
+    if(function_exists('sanro_studio_admin_item_production_readiness'))sanro_studio_admin_item_production_readiness($order,$item_id);
     echo '</div>';
 }
 

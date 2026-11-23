@@ -435,7 +435,14 @@
   design.long_sleeve=q('#sanro-sleeve').value==='long';
   return design;
  }
+ async function ensureProductionFont(){
+  if(document.fonts&&typeof document.fonts.load==='function'){
+   const faces=await document.fonts.load('22px SanroProduction');
+   if(!faces.length)throw new Error('Font produksi belum tersedia. Muat ulang editor.');
+  }
+ }
  async function exportBoundDraft(){
+  await ensureProductionFont();
   const design=exportTextDraft(true,true);
   for(const name of ['front','back']){
    const d=sides[name],area=config.safe_areas[name];
@@ -471,6 +478,7 @@
  // Derived private JPEG preview, not original print-resolution artwork.
  // Require the owner-bound master before previewing an uploaded image.
  async function makeDesignPreview(name){
+  await ensureProductionFont();
   const d=sides[name],area=config.safe_areas[name];
   // A blank garment side still needs an owner-bound preview for the native
   // order. It remains absent from design.objects and adds no print surcharge.
@@ -507,7 +515,7 @@
     const fontPx=Math.max(8,Math.round(d.fontSize*size/bounds.width));
     const x=d.textX/100*size,y=d.textY/100*size;
     ctx.fillStyle=d.textColor;
-    ctx.font=fontPx+'px sans-serif';ctx.textBaseline='top';
+    ctx.font=fontPx+'px SanroProduction';ctx.textBaseline='top';
     d.text.split('\n').forEach((line,i)=>
      ctx.fillText(line,x,y+i*fontPx*1.2,Math.max(0,size-x)));
    }
@@ -553,6 +561,7 @@
       throw new Error('Revisi draft tidak valid.');
      if(editRevision!==revisionAtStart)
       throw new Error('Desain berubah selama persiapan upload.');
+     await ensureProductionFont();
      const localTextDesign=exportTextDraft(true,true);
      // A reopened draft can contain saved image geometry. Compare only the
      // text/order metadata; keep existing private image geometry intact.
@@ -837,6 +846,7 @@
    if(saving||uploadingMaster){saveStatus.textContent='Tunggu penyimpanan atau upload master selesai.';return;}
    let design;
    try{
+    await ensureProductionFont();
     const hasLocalImage=['front','back'].some(name=>sides[name].url||sides[name].pending);
     design=savedId?await exportBoundDraft()
      :hasLocalImage&&config.master_upload_enabled

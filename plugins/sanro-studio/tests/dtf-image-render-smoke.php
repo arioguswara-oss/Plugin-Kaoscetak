@@ -37,7 +37,7 @@ function chunk133($kind, $data) {
 }
 function png133($width, $height, $type = 6) {
     $pixels = '';
-    $pixel = $type === 6 ? "\xff\x00\x00\x00" : "\xff\x00\x00";
+    $pixel = $type === 6 ? "\xff\x00\x00\xff" : "\xff\x00\x00";
     for ($y = 0; $y < $height; $y++) {
         $pixels .= "\x00" . str_repeat($pixel, $width);
     }
@@ -64,8 +64,8 @@ function sanro_studio_auto_drive_order_eligible($order) {
     return $order->paid === true && $order->status !== 'cancelled';
 }
 function sanro_studio_product_safe_areas($product_id) {
-    return $product_id === 42 ? ['front'=>['width'=>20.0,'height'=>30.0],
-        'back'=>['width'=>20.0,'height'=>30.0]] : [];
+    return $product_id === 42 ? ['front'=>['width'=>32.0,'height'=>48.0],
+        'back'=>['width'=>32.0,'height'=>48.0]] : [];
 }
 function sanro_studio_validate_product_design($product_id, $design) {
     if ($product_id !== 42 || !is_array($design)) return ['valid'=>false];
@@ -155,11 +155,11 @@ check133(sanro_studio_dtf_image_plan($order,71,'front')['error']==='dtf_layers_u
 $order=fixture133();
 $GLOBALS['image133']=png133(12,12,2);
 $GLOBALS['sha133']=hash('sha256',$GLOBALS['image133']);
-check133(sanro_studio_dtf_image_plan($order,71,'front')['error']==='dtf_rgba_png_required',
-    'opaque RGB PNG rejected rather than claiming transparent transfer');
+check133(!empty(sanro_studio_dtf_image_plan($order,71,'front')['valid']),
+    'RGB PNG accepted as opaque artwork without background-removal claim');
 $order=fixture133();$GLOBALS['mime133']='image/jpeg';
-check133(sanro_studio_dtf_image_plan($order,71,'front')['error']==='dtf_rgba_png_required',
-    'JPEG originals rejected until alpha-aware processing exists');
+check133(sanro_studio_dtf_image_plan($order,71,'front')['error']==='dtf_source_resolution',
+    'MIME substitution rejected before image decoding');
 $order=fixture133();$GLOBALS['image133']=png133(8,8);
 $GLOBALS['sha133']=hash('sha256',$GLOBALS['image133']);
 check133(sanro_studio_dtf_image_plan($order,71,'front')['error']==='dtf_source_resolution',
@@ -178,8 +178,8 @@ $order=fixture133();
 $GLOBALS['record133']['design']['front']['category']='A3';
 $GLOBALS['record133']['design']['front']['objects'][0]=
     ['type'=>'image','x'=>0.0,'y'=>0.0,'width'=>20.0,'height'=>25.0];
-check133(sanro_studio_dtf_image_plan($order,71,'front')['error']==='dtf_canvas_limit',
-    'high-memory giant canvas refused pre-render');
+check133(sanro_studio_dtf_image_plan($order,71,'front')['error']==='dtf_source_resolution',
+    'larger canvas still requires real 300-DPI source, no upscaling');
 $order=fixture133();
 $result=sanro_studio_dtf_render_image_side($order,71,'front');
 if (function_exists('imagecreatefromstring') && function_exists('imageresolution')) {

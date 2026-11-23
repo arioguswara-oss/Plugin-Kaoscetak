@@ -8,7 +8,7 @@ const vm=require('node:vm');
 const source=fs.readFileSync(path.join(__dirname,'../assets/buyer.js'),'utf8');
 const zoneStart=source.indexOf(' function visualPrintZone(name){');
 const zoneEnd=source.indexOf(' function render(){',zoneStart);
-const start=source.indexOf(' async function exportBoundDraft(){');
+const start=source.indexOf(' async function ensureProductionFont(){');
 const end=source.indexOf(' if(saveButton&&config.draft_api){',start);
 assert(zoneStart>=0&&zoneEnd>zoneStart&&start>=0&&end>start,
  'SANRO buyer image and print-zone helper functions missing');
@@ -49,7 +49,7 @@ const env={
   }}
 };
 const built=vm.runInNewContext(source.slice(zoneStart,zoneEnd)+source.slice(start,end)+
-  '\n({exportBoundDraft,makeDesignPreview})',env,{
+  '\n({ensureProductionFont,exportBoundDraft,makeDesignPreview})',env,{
     timeout:2000,filename:'sanro-buyer-image-preview.js'
   });
 let checks=0;
@@ -76,6 +76,10 @@ function check(ok,message){assert(ok,message);checks++;}
   const previousTextCalls=textCalls;
   check(typeof await built.makeDesignPreview('front')==='string' && textCalls===previousTextCalls,
     'blank side creates a private garment preview without inventing printed text');
+  env.document.fonts={load:async()=>[]};
+  await assert.rejects(()=>built.ensureProductionFont(),/Font produksi belum tersedia/);checks++;
+  let loaded=false;env.document.fonts.load=async()=>{loaded=true;return [{}]};
+  await built.ensureProductionFont();check(loaded,'production font is loaded before measuring or previewing');
   console.log('PASS: '+checks+' private DTF image-preview and master-binding checks');
 })().catch(error=>{
   console.error('FAIL private DTF preview regression: '+String(error.message).slice(0,240));

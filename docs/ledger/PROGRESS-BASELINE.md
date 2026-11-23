@@ -1,29 +1,29 @@
 # SANRO Studio — baseline aktif development
 
-23 November 2026 WIB. Baseline checkpoint Owner **72,90%**; hasil source putaran feature completion **75,50% (+2,60 poin berbobot)**. Bobot SANRO-7-v1 tetap, tanpa kalibrasi ulang. Nilai mengukur estimasi scope IMPLEMENTED pada development, bukan kesiapan rilis/runtime VERIFIED.
+23 November2026 WIB. Baseline resmi Owner/checkpoint **75,50%** pada `3d989f2edd0f38c13ed3980d8b9b3cbf84104fcf`. Hasil implementasi putaran feature-completion2: **80,50% (+5,00 poin berbobot)**. Bobot SANRO-7-v1 tetap. Ini estimasi scope IMPLEMENTED pada development, bukan kesiapan rilis/runtime VERIFIED.
 
 | Tahap | Bobot | Sebelumnya | Sekarang | Kontribusi sebelumnya → sekarang | Delta berbobot |
 |---|---:|---:|---:|---:|---:|
-| 1. Fondasi/core | 25% | 75% | 75% | 18,75 → 18,75 | 0,00 |
-| 2. Backend produk/admin | 10% | 79% | 81% | 7,90 → 8,10 | +0,20 |
-| 3. Frontend buyer | 15% | 96% | 96% | 14,40 → 14,40 | 0,00 |
-| 4. Harga server/quote | 10% | 83% | 83% | 8,30 → 8,30 | 0,00 |
-| 5. Simpan/ownership/share | 10% | 98% | 98% | 9,80 → 9,80 | 0,00 |
-| 6. Checkout/produksi/Drive | 20% | 48% | 60% | 9,60 → 12,00 | +2,40 |
-| 7. QA/rilis/mobile | 10% | 40% | 40% | 4,00 → 4,00 | 0,00 |
-| **Subtotal tujuh tahap** | **100%** | — | — | **72,75 → 75,35** | **+2,60** |
-| Saldo baseline Owner historis, belum teralokasi | — | — | — | 0,15 → 0,15 | 0,00 |
-| **Total sementara aktif** | — | **72,90%** | **75,50%** | **72,90 → 75,50** | **+2,60** |
+| 1. Fondasi/core |25%|75%|75%|18,75 →18,75|0,00|
+| 2. Backend produk/admin |10%|81%|83%|8,10 →8,30|+0,20|
+| 3. Frontend buyer |15%|96%|96%|14,40 →14,40|0,00|
+| 4. Harga server/quote |10%|83%|83%|8,30 →8,30|0,00|
+| 5. Simpan/ownership/share |10%|98%|98%|9,80 →9,80|0,00|
+| 6. Checkout/produksi/Drive |20%|60%|84%|12,00 →16,80|+4,80|
+| 7. QA/rilis/mobile |10%|40%|40%|4,00 →4,00|0,00|
+| **Subtotal tujuh tahap** |**100%**|—|—|**75,35 →80,35**|**+5,00**|
+| Saldo baseline Owner historis, belum teralokasi |—|—|—|0,15 →0,15|0,00|
+| **Total aktif development** |—|**75,50%**|**80,50%**|**75,50 →80,50**|**+5,00**|
 
-Formula delta Σ(bobot × perubahan tahap / 100). Saldo 0,15 berasal dari baseline Owner 72,10 dibanding source lama 71,95 yang sudah direkonsiliasi pada checkpoint `2d945be`; tidak mengarang alokasi tahap historis. Checkpoint 72,90 sudah mencakup mobile/mockup/short preview route/blank preview/native qty compatibility. Riwayat Git dan laporan lama bukan baseline aktif kedua.
+Formula Σ(bobot×delta tahap/100). Saldo0,15 adalah rekonsiliasi historis baseline Owner72,10 terhadap rincian lama71,95 yang sudah dibuka pada checkpoint2d945be; bukan kredit fitur baru. Tidak mengarang alokasi historis dan tidak mengubah bobot untuk mencapai target. Laporan/source lama tetap histori, bukan baseline aktif kedua.
 
-## Kredit baru, tanpa duplikasi
+## Kredit implementasi baru
 
-- Backend/admin +2 tahap = +0,20: inline preview dua sisi dengan endpoint admin berizin+nonce dan ringkasan snapshot warna/lengan/kategori pada item order. Private reader/nonce security lama adalah dependency, tidak diberi kredit ulang.
-- Checkout/produksi/Drive +12 tahap = +2,40: cart replay/alokasi lengkap dan rollback validation (+2 tahap); qty checkout → snapshot item → CAS locked design → binding preview dua sisi (+4); manifest dan PDF panduan + preview package dari locked/saved amounts (+4); coordinator/uploader paket idempoten, private verification dan handoff candidate (+2). Subitem ini estimasi scope, bukan rasio tes.
-- Snapshot hanya dihitung pada tahap checkout, tidak pada save/backend kedua kali. Repricing engine #51, uploader original/renderer/approval/folder lama #50, mockup/short preview checkpoint, pemulihan dependency dan jumlah tes tidak diberi kredit baru. QA tetap 40%.
-- Pipeline source bertambah, tetapi Unicode PDF, kemampuan renderer DTF lengkap, live OAuth/Drive dan live checkout belum selesai/VERIFIED. Tidak mengklaim tahap6 selesai atau mencapai90%.
+- Backend/admin +2 tahap =+0,20: read model kesiapan item menampilkan paid/admin-ready, locked amounts/design, preview dua sisi, kesiapan font, generator/Drive nonaktif serta tidak memberi persetujuan cetak otomatis. Tautan order privat terverifikasi merupakan bagian layout Drive di tahap6, tidak dihitung dua kali.
+- Checkout/produksi/Drive +24 tahap =+4,80: lifecycle retry order yang sama dan pemulihan binding/save dengan quote tersimpan (+6 tahap); kanvas A3+ resource-safe, multiline supported-Unicode, PNG/JPEG/alpha dan validasi output nyata depan/belakang (+8); hierarchy root-order/Produksi/item dan recovery/ancestor-private verification (+5); embedded-font Unicode PDF/ActualText/pagination dan JPEG/PNG/WebP guide (+5).
+- Font browser bersama adalah dependency pipeline teks, tidak menambah tahap frontend kedua kali. Existing quotes/prices #51, coordinator/renderer/artifact primitives, preview upload, cart metadata dan uploader original lama tidak diberi kredit ulang. Pengujian, font/runtime setup, dan jumlah assertions tidak menambah QA; tetap40%.
+- Subitem angka adalah estimasi scope terbatas pada deliverable source tersebut. Tidak mengklaim semua fitur checkout/produksi selesai; Blocks/variasi/policy pajak-diskon kompleks, complex shaping, runtime akun nyata serta approval hasil cetak tetap terbuka.
 
-DECIDED: baseline/weights, scope dev, runtime OFF, tanpa merge/deploy/order DB. IMPLEMENTED: delta di atas. VERIFIED: focused lint dan flow actual modules dengan WP/Woo/HTTP sintetis serta JPEG/PDF/PNG nyata. Live browser/source baru, checkout order dan akun Drive NOT TESTED. HTTP422 staging tetap blocker runtime; bukan klaim root cause fixed.
+DECIDED: baseline resmi75,50%, fixed weights, Development First/Full Audit90%, runtime writersOFF. IMPLEMENTED: delta source di atas. VERIFIED: PHP lint/focused flow/GD/FreeType/A3+/PDF bytes dan Unicode extraction nyata, dengan Woo/options/HTTP sintetis. Live source browser/checkout/gateway/Drive/physical print NOT TESTED. HTTP422 checkpoint staging belum runtime VERIFIED selesai.
 
-Bukti dan batas lengkap: [studio-feature-completion-20261123.md](../qa/studio-feature-completion-20261123.md). GO review/development. NO-GO merge/deploy/production/aktivasi generator atau Drive.
+[Laporan putaran dan batas](../qa/studio-feature-completion-2-20261123.md). GO review/development. NO-GO merge/deploy/production/aktivasi generator atau Drive/claim print-ready.

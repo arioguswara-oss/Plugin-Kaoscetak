@@ -36,6 +36,11 @@ function sanro_studio_pricing_wc_quote($line, $quantity, $context) {
         || ($resolved['product_id'] ?? null) !== $product_id || !is_array($resolved['design'] ?? null)) {
         throw new RuntimeException('SANRO design authorization or master readiness unavailable.');
     }
+    if (is_array($resolved['locked_quote']??null)) {
+        $saved=$resolved['locked_quote']['items'][$size]??null;
+        if (!is_array($saved) || ($saved['quantity']??null)!==$quantity) throw new RuntimeException('SANRO locked order quantity cannot change.');
+        return $saved;
+    }
     // Re-quote the native cart allocation without changing the saved artwork or draft.
     // Category/geometry/sleeve come only from the freshly authorized server design.
     $design = $resolved['design'];
