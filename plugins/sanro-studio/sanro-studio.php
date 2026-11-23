@@ -56,6 +56,7 @@ if (!function_exists('sanro_studio_bootstrap_admin_menu')) {
 // product configuration and draft dependencies are present and tested.
 require_once __DIR__ . '/includes/print-area.php';
 require_once __DIR__ . '/includes/product-area.php';
+require_once __DIR__ . '/includes/product-pricing.php';
 require_once __DIR__ . '/includes/editor-config.php';
 require_once __DIR__ . '/includes/pricing.php';
 require_once __DIR__ . '/includes/buyer.php';
@@ -65,4 +66,7 @@ add_action('admin_menu', 'sanro_studio_bootstrap_admin_menu');
 add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_area_fields');
 add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_readiness_notice', 30);
 add_action('woocommerce_admin_process_product_object', 'sanro_studio_save_product_areas');
+// Pricing profile opt-in: without it sanro_studio_public_editor_config() rejects every product.
+add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_pricing_fields');
+add_action('woocommerce_admin_process_product_object', 'sanro_studio_save_product_pricing');
 add_action('rest_api_init', 'sanro_studio_register_editor_config_route');
