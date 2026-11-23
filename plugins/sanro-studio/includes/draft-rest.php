@@ -14,7 +14,12 @@ function sanro_studio_draft_rest_enabled() {
 
 function sanro_studio_register_draft_routes() {
     if (!sanro_studio_draft_rest_enabled()) return;
-    if (defined('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT')
+    if (function_exists('sanro_studio_pricing_wc_enabled') && sanro_studio_pricing_wc_enabled()) {
+        register_rest_route('sanro-studio/v1', '/drafts/(?P<id>[a-fA-F0-9-]{36})/cart', [
+            'methods' => 'POST', 'callback' => 'sanro_studio_rest_pricing_draft_cart',
+            'permission_callback' => 'sanro_studio_rest_draft_nonce',
+        ]);
+    } elseif (defined('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT')
         && SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT === true
         && defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
         && SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK === true) {
@@ -572,6 +577,9 @@ function sanro_studio_stage_classic_checkout_ready() {
  * authenticated draft request header, never stored in WC cart metadata.
  */
 function sanro_studio_rest_stage_draft_cart($request) {
+    if (function_exists('sanro_studio_pricing_wc_enabled') && sanro_studio_pricing_wc_enabled()) {
+        return sanro_studio_rest_pricing_draft_cart($request);
+    }
     if (!sanro_studio_draft_rest_enabled()
         || !defined('SANRO_STUDIO_ENABLE_STAGING_CART')
         || SANRO_STUDIO_ENABLE_STAGING_CART !== true

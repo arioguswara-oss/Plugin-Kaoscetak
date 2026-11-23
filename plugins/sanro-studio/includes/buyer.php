@@ -229,6 +229,11 @@ function sanro_studio_render_buyer_editor() {
         echo '<p id="sanro-save-status" role="status">Simpan desain untuk melanjutkan pemesanan.</p>';
     }
     if (!empty($config['draft_api'])
+        && function_exists('sanro_studio_pricing_wc_enabled')
+        && sanro_studio_pricing_wc_enabled()) {
+        echo '<button type="button" id="sanro-add-to-cart">Tambahkan ke Keranjang</button>';
+        echo '<p id="sanro-cart-status" role="status">Simpan desain sebelum melanjutkan ke keranjang.</p>';
+    } elseif (!empty($config['draft_api'])
         && defined('SANRO_STUDIO_ENABLE_STAGING_CART')
         && SANRO_STUDIO_ENABLE_STAGING_CART === true
         && defined('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT')

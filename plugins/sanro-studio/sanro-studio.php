@@ -67,6 +67,8 @@ require_once __DIR__ . '/includes/product-mockups.php';
 require_once __DIR__ . '/includes/editor-config.php';
 require_once __DIR__ . '/includes/pricing.php';
 require_once __DIR__ . '/includes/pricing-quote.php';
+require_once __DIR__ . '/includes/pricing-woocommerce.php';
+require_once __DIR__ . '/includes/pricing-integration.php';
 require_once __DIR__ . '/includes/buyer.php';
 require_once __DIR__ . '/includes/quote.php';
 require_once __DIR__ . '/includes/cart-contract.php';
@@ -116,6 +118,9 @@ add_action('rest_api_init', 'sanro_studio_register_editor_config_route');
 
 // The draft and upload route registrars verify their own explicit opt-in gates.
 add_action('rest_api_init', 'sanro_studio_register_draft_routes');
+// Registers nothing unless the independent WooCommerce pricing opt-in is true.
+sanro_studio_register_pricing_wc_hooks();
+sanro_studio_register_pricing_integration_hooks();
 add_action('rest_api_init', 'sanro_studio_register_preview_upload_route');
 add_action('rest_api_init', 'sanro_studio_register_master_upload_route');
 add_action('woocommerce_admin_order_data_after_order_details', 'sanro_studio_admin_order_preview_status');
