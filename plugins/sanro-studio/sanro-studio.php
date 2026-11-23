@@ -63,6 +63,7 @@ require_once __DIR__ . '/includes/print-area.php';
 require_once __DIR__ . '/includes/product-area.php';
 require_once __DIR__ . '/includes/product-print-zones.php';
 require_once __DIR__ . '/includes/pricing-profiles.php';
+require_once __DIR__ . '/includes/repeat-discount.php';
 require_once __DIR__ . '/includes/product-pricing.php';
 require_once __DIR__ . '/includes/product-mockups.php';
 require_once __DIR__ . '/includes/editor-config.php';
@@ -190,3 +191,6 @@ if (defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
 
 add_action('rest_api_init','sanro_studio_register_readiness_route');
 add_filter('rest_post_dispatch','sanro_studio_rest_source_header',10,3);
+
+add_action('rest_api_init','sanro_studio_repeat_register_routes');
+if(sanro_studio_pricing_wc_enabled())add_action('woocommerce_checkout_update_order_review','sanro_studio_repeat_billing_context',5,1);

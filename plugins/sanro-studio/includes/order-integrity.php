@@ -10,7 +10,7 @@ function sanro_studio_saved_order_context($order, $require_previews = true) {
     foreach($items as $item_id=>$item){
         if(!is_object($item)||!method_exists($item,'get_meta')) return ['valid'=>false,'error'=>'invalid_item'];
         $design=$item->get_meta('_sanro_studio_design_id',true);
-        if($design===''){foreach(['_sanro_studio_size','_sanro_studio_design_snapshot','_sanro_studio_preview_front_ref','_sanro_studio_preview_back_ref'] as $key)if($item->get_meta($key,true)!=='')return ['valid'=>false,'error'=>'order_design_mismatch'];continue;}
+        if($design===''){foreach(['_sanro_studio_size','_sanro_studio_design_snapshot','_sanro_studio_preview_front_ref','_sanro_studio_preview_back_ref','_sanro_studio_repeat_discount'] as $key)if($item->get_meta($key,true)!=='')return ['valid'=>false,'error'=>'order_design_mismatch'];continue;}
         if(!is_string($design)||!preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD',$design)
             ||($id!==null&&$id!==$design)||!is_int($item_id)||$item_id<1)return ['valid'=>false,'error'=>'order_design_mismatch'];
         $id=$design;$ids[]=$item_id;
@@ -21,6 +21,7 @@ function sanro_studio_saved_order_context($order, $require_previews = true) {
     sort($ids,SORT_NUMERIC);$record=get_option('sanro_studio_draft_'.$id,false);
     if(!is_array($record)||($record['status']??null)!=='locked'||($record['order_id']??null)!==$order->get_id()
         ||($record['order_item_ids']??null)!==$ids||!is_array($record['design']??null)||!is_array($record['checkout_quote']??null))return ['valid'=>false,'error'=>'order_snapshot_missing'];
+    if(function_exists('sanro_studio_repeat_saved_order_allowed')&&!sanro_studio_repeat_saved_order_allowed($order,$record))return ['valid'=>false,'error'=>'repeat_order_integrity_failed'];
     $pinned=method_exists($order,'get_meta')?$order->get_meta('_sanro_studio_checkout_quote_hash',true):'';
     if($pinned!==''&&$pinned!==sanro_studio_frozen_quote_hash($record))return ['valid'=>false,'error'=>'order_quote_snapshot_mismatch'];
     $contract=['valid'=>true,'design_id'=>$id,'product_id'=>$record['product_id']??null,'quote'=>$record['checkout_quote'],'shipping_total'=>$record['shipping_total']??0];
@@ -30,7 +31,12 @@ function sanro_studio_saved_order_context($order, $require_previews = true) {
     $quoted=[];foreach($record['checkout_quote']['items']??[] as $size=>$line)$quoted[$size]=$line['quantity']??null;
     ksort($allocation);ksort($quoted);if($allocation!==$quoted)return ['valid'=>false,'error'=>'order_quantity_snapshot_mismatch'];
     $lines=[];
-    foreach($ids as $item_id){$item=$items[$item_id];$snapshot=$item->get_meta('_sanro_studio_design_snapshot',true);
+    foreach($ids as $item_id){$item=$items[$item_id];
+        if(function_exists('sanro_studio_repeat_item_evidence')){
+            $expected=sanro_studio_repeat_item_evidence($record['checkout_quote'],$item->get_meta('_sanro_studio_size',true));$actual=$item->get_meta('_sanro_studio_repeat_discount',true);
+            if($expected!==null?$actual!==$expected:($actual!==''&&$actual!==[]))return ['valid'=>false,'error'=>'repeat_item_evidence_mismatch'];
+        }
+        $snapshot=$item->get_meta('_sanro_studio_design_snapshot',true);
         if(!is_array($snapshot)||($snapshot['version']??null)!==1||($snapshot['design_id']??null)!==$id||($snapshot['design_hash']??null)!==$hash)return ['valid'=>false,'error'=>'order_design_snapshot_mismatch'];
         if($require_previews){
             if(($record['preview_design_hash']??null)!==$hash)return ['valid'=>false,'error'=>'order_preview_revision_mismatch'];

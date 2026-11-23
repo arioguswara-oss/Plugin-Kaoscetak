@@ -49,6 +49,9 @@ function sanro_studio_production_item_manifest($order, $item_id) {
         'quantities'=>$design['quantities'],'unit_price'=>(int)$unit,'subtotal'=>(int)$unit*$qty,'currency'=>'IDR',
         'sleeve_label'=>$record['checkout_quote']['sleeve_label']??(!empty($snapshot['long_sleeve'])?'long':'short'),
         'shirt_color'=>$snapshot['shirt_color'],'long_sleeve'=>$snapshot['long_sleeve'],'sides'=>$snapshot['sides']];
+    if(isset($record['checkout_quote']['repeat_discount'])){
+        $repeat=$record['checkout_quote']['items'][$size];$manifest['repeat_discount']=['rate'=>5,'base_unit_price'=>$repeat['base_unit_price'],'unit_discount'=>$repeat['unit_discount'],'discount_total'=>$repeat['unit_discount']*$qty];
+    }
     return ['valid'=>true,'manifest'=>$manifest];
 }
 

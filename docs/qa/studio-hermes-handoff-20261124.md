@@ -1,46 +1,48 @@
-# Checkpoint hemat kuota — SANRO Studio / PR52
+# SANRO Studio — checkpoint siap Full Audit, belum dimulai
 
-24 November2026 WIB. Base aplikasi terverifikasi `c04653aae4b524fe8283228abafc43b2cb1e8541`; parent commit putaran ini sama. SHA handoff final adalah HEAD PR52 yang membawa file ini; ambil dari GitHub, jangan menebak dari nama branch. Baseline resmi **89,50%**, tabel tunggal `docs/ledger/PROGRESS-BASELINE.md`. Belum90%, Full Audit tidak dimulai. Persiapan Hermes bukan izin menjalankannya pada sesi Work ini.
+24 November2026 WIB. Draft PR52, branch `work/studio-mobile-checkout-integration-20261123`. Parent `5c549432baaf3be93a51f31eeb8a018bccbcbce5`; SHA checkpoint final adalah HEAD commit yang membawa file ini dan exact source_commit di manifest. Baseline resmi **90,50%**, sebelumnya89,50%, delta+1,00; bobot tetap. Tabel tunggal `docs/ledger/PROGRESS-BASELINE.md`.
 
-## Resume tanpa mengulang
+**HENTIKAN fitur baru. Full Audit menunggu instruksi Owner berikutnya.** Hermes/Codex tidak dijalankan; file ini persiapan handoff saja. Tidak deploy/merge/production/order DB atau aktivasi generator/Drive.
 
-1. Fetch PR52 `work/studio-mobile-checkout-integration-20261123`; cocokkan HEAD, baca AGENTS.md bila ada, pastikan clean. Gunakan worktree sendiri dari HEAD tersebut. Jangan mengerjakan #50/#51 atau force-push; jika Work belum menyerahkan ownership, jangan tulis ref PR52 yang sama. Publish hanya expected-SHA nonforce.
-2. Source base #50 frozen45a7917c320403d1bc0d18caf7ee3398a3ecb416; pricing#51e9cb4679247f30223c33e51ddac1b2405dff961c sudah tercakup. Jangan cherry-pick ulang, mengulang instalasiPR50, menjalankan worker lain atau menganggap branch integration sudah merge.
-3. Periksa gap wajib V1 yang belum selesai di bawah. Implementasi dahulu, tes hanya yang terpengaruh. Jangan mengulang quote690, A3+/font, cart recovery, PDF/Drive fixtures yang sudah PASS tanpa perubahan relevan. Jangan membuka Full Audit dari checkpoint ini atau menaikkan angka demi mencapai90.
+## Hasil source putaran ini
 
-## Yang sudah selesai dan bukti yang dipakai
+1. **Crash recovery installer selesai pada filesystem/process boundary.** `tools/studio-install-transaction.py`: durable intent journal dengan file+directory fsync sebelum rename, exact before/candidate digests dan source/archive binding. Recovery memeriksa kenyataan folder, bukan phase saja: prepared→original no-op; old renamed/missing target→restore original; new renamed→quarantine exact candidate lalu restore; committed→no-op dan previous tetap ditahan. Replay recovery aman, termasuk recovery itu sendiri terputus. Unknown/tampered/corrupt/mismatched/locked state fail-closed dan tidak menghapus folder lama. Terminal journal diarsipkan sebelum transaksi berikutnya. `--recover` CLI tetap mewajibkan same approval/source/target/flags; zip/lint baru tidak dibutuhkan untuk mengembalikan folder lama. Tidak mengklaim dua rename sebagai satu transaksi filesystem atomik, power-loss recovery hosting belum diuji.
+2. **Native account checkout diperbaiki.** Woo short numeric session ID hanya diterima jika sama dengan authenticated WP user ID; guest opaque hashes tetap kompatibel. Explicit owner-proof reopen dapat CAS-migrate draft belum terkunci dari guest ke logged-in session; tidak memigrasi order terkunci. Tidak memperluas Blocks/native variations/mixed-design.
+3. **Repeat5% diintegrasikan berdasarkan source lama.** Email proof berada di metadata server, bukan artwork/client assertion; nonce+owner token → challenge hash/email30 menit → single-use CAS verified owner; alamat verified tidak dapat diganti lewat edit token dan copy berbeda owner tidak mewarisi proof. API gated defaultOFF dan mail budget8/hour/IP seperti batas source lama. Tidak ada email nyata dikirim pada sesi ini.
+4. **Harga/net/evidence end-to-end.** Verified owner email == billing email dan actual prior paid/non-refunded Woo object →5% per pcs termasuk satuan; positive integer half-up sama dengan source lama65001→61751. HPOS-compatible paginated native order query, bukan direct order SQL. Technical lookup exhaustion/failure menolak quote, tidak membuat history expiry atau diam-diam mengenakan harga dasar. Checkout email changes reprice dari dasar tanpa compounding. Quote/item immutable evidence mencakup base/net/unit discount/proof; pending pay revalidates saved prior order; order sudahpaid tidak direprice retroaktif. Pajak/fee/kupon tetapOPEN/guarded.
+5. **Production package/admin konsisten.** Repeat base/net/discount dari locked quote masuk manifest dan Unicode guide; generic Drive manifest hashes mengindeks PDF/preview yang sama. Admin menampilkan repeat base/net bersama dua preview privat; tidak menampilkan email/challenge/fingerprint/history IDs. Renderer/font/hierarchy/uploader tidak diubah atau dihitung ulang. Generator/Drive tetapdefaultOFF.
 
-Checkpointc04653a: Cotton/Tunic/server overrides, locked multi-size checkout/shipping/payment integrity, current preview route, admin private previews, memory/provenance/font/PDF, private Drive hierarchy/upload/retry/sealed receipts, watchdog/admin recovery, private diagnostic dan source-bound ZIP. Detail PASS sebelumnya ada pada laporan feature-completion4; tidak perlu audit ulang.
+Source keputusan: `docs/business-rules/kaoscetak-lite-designer-v1.md`; perilaku eligibility/rounding sebelumnya pada `plugins/kaoscetak-lite-designer/includes/repeat.php`, `api.php`, `sharing.php`, `tests/test_repeat.php` dan `tests/test_repeat_checkout.php`. Tidak mengimpor dependency plugin lama atau menciptakan kebijakan bisnis baru. Native query args diverifikasi terhadap dokumentasi primer https://developer.woocommerce.com/docs/features/orders/wc-get-orders/ (page/objects/billing_email/exclude).
 
-Putaran kuota ini menambahkan `tools/studio-staging-install.py`:
-- default PLAN_ONLY, validasi kandidat menggunakan preflight yang sudah ada;
-- WP CLI probe fixed code dengan skip plugins/themes; homeURL staging tepat, bukan production, single site dan existing Studio+Woo aktif; MU/config writer flags harusOFF, nilai selainbooleanfalse ditolak;
-- approval exact action/URL/source/plugin/archive/existing-tree digest + bukti PHP-FPM verified, kemudian re-probe sebelum write;
-- menolak custom plugin layout, WordPress subdirectory, symlink, target berubah, konflik lock, rollback overlap/different-filesystem/nonprivate/in-document-root;
-- hanya swap existing plugin directories, tidak menjalankan plugin install/activate/seed/SQL/order operation dan tidak menulis MU flags/private directories/product metadata;
-- exception pada rename atau post-install hashes mengembalikan folder lama; folder rollback ditahan di luar document root. Setiap rename atomik, keseluruhan dua-rename **bukan crash-atomic**. Jika proses/OS mati antara rename, hentikan apply berikutnya dan pulihkan existing folder dari rollback yang ditahan melalui operator/Hermes yang diotorisasi, jangan meminta Owner menjalankan terminal.
+## Bukti targeted, jangan diulang tanpa perubahan relevan
 
-`python tests/test_studio_staging_install.py`: **9 test PASS** (filesystem/mocked WP process only). Syntax kedua file Python PASS. Tidak menjalankan WP CLI asli, menghubungi staging, apply, deploy atau mengubah order. Tidak ada pemeriksaan aplikasi lama diulang. Installer belum diuji terhadap layout/PHP-FPM Hostinger; fieldapproval bukan pengganti bukti FPM.
+- `python tests/test_studio_installer_crash.py`: **10 tests PASS**, subprocess benar-benar `os._exit` pada prepared/old rename/new rename/committed/quarantine/restore; replay, wrong source/corrupt journal/foreign target dan CLI missing-target recovery memakai fake WP executable + synthetic approval, bukan approval Owner atau hosting.
+- `python tests/test_studio_staging_install.py`: **9 tests PASS**, normal installer/refusal/rollback setelah transaction refactor.
+- `plugins/sanro-studio/tests/authenticated-cart-session.php`: **10 checks PASS**; guest hash compatibility, native authenticated ID, wrong user/owner, CAS migration dan locked refusal.
+- `plugins/sanro-studio/tests/repeat-eligibility-flow.php`: **44 checks PASS**; email/expiry/single-use/token/copy/CAS/mail failure/rate limits, no client proof, paginated paid history/refund/status/email/query failure, half-up, native cart/email change/no compounding, locked evidence/tampering/pending eligibility/paid snapshot, real PDF/preview bytes, sealed manifest/PDF hashes dan admin private images. WordPress/Woo/SQL/mail adalah doubles. Prerequisite17 checkout checks bukan assertion tambahan berulang.
+- `plugins/sanro-studio/tests/repeat-route-security.php`: **11 checks PASS**; defaultOFF, independent opt-ins, POST/nonce boundary dan owner proof terpisah. Tidak ada real SMTP/order query.
+- `tests/studio-bootstrap-offline.php`: PASS setelah module/hook baru.
+- Changed-source lint: **16 PHP,1 JS,4 Python PASS**; git diff --check PASS. PHP lokal8.4.24 +GD/FreeType/ctype; tidak mengklaim PHP7.4/FPM Hostinger.
+- Kandidat ZIP dibuat sesudah clean final commit, semua member/hash/source marker diverifikasi; exact archiveSHA berada di manifest dan PR body. Tidak mengulang Cotton690, full runner, A3+render/font, Drive HTTP fixtures lama atau audit menyeluruh.
 
-## Batas V1 dan pekerjaan berikutnya (maksimal5)
+Command PHP untuk fixture gambar: pilih executable aktual lalu aktifkan GD/ctype bila runtime wrapper `-n`; di workspace Work sesi ini `/workspace/scratch/72df3ab2da51/php-runtime/bin/php`, extensions di sibling `root/usr/lib/php/20240924/{gd,ctype}.so`. Jangan menganggap path ini ada di VPS Hermes; temukan php lokalnya melalui tools. Node untuk syntax buyer.js; Python untuk installer tests.
 
-1. Tutup fitur repeat-order5% hanya setelah mengikat eligibility pada riwayat pelanggan yang sah sesuai keputusan bisnis; nominal DECIDED, mekanisme verifikasi belum diimplementasikan. Jangan mengarang pembulatan, pajak, fee atau kupon. Kebijakan yang belum ada tetap OPEN/fail-closed.
-2. Selesaikan kebutuhan operasional core yang masih nyata, termasuk recovery installer akibat hard process interruption sebelum mengklaim crash-atomic. Native variations/Blocks/mixed-design tetap deferred kecuali ada kebutuhan katalog V1 konkret. Produk staging24 diamati simple; jangan memperluas scope.
-3. Siapkan satu paket approval staging source-bound setelah source siap: exact SHA/archive digest, konfigurasi PHP-FPM/flags/private dirs dan scope pesanan sintetis. Tidak ada approval baru pada checkpoint ini. Generator/Drive tetapOFF; produksi kaoscetak.id/order pelanggan tidak tersentuh.
-4. Sesudah approval Owner, operator yang diotorisasi boleh menjalankan plan/apply yang sesuai. Verifikasi `X-Sanro-Source` dan private `/readiness` dahulu, lalu reproduksi HTTP422 dan E2E editor→draft→master→preview→server quote→cart→checkout→admin. HTTP422 pada source lama bukan bukti sumber baru gagal atau berhasil; root cause belum VERIFIED. New source belum di-deploy.
-5. Pada bukti implementasi90%, berhenti menambah fitur dan siapkan Full Audit di sesi berikutnya. Gateway sandbox/Drive OAuth/cetak fisik adalah bukti terpisah, belum diuji nyata. Jangan mengaktifkan writer atau membuat order tanpa scope approval.
+## Resume dan batas ownership
 
-## Reproduce kandidat dan installer, jangan dieksekusi ke hosting sekarang
+Fetch PR52 dan cocokkan exact latest HEAD/manifest, baca AGENTS.md jika ada, gunakan clean isolated worktree. Frozen base #50 `45a7917c320403d1bc0d18caf7ee3398a3ecb416`; #51 pricing `e9cb4679247f30223c33e51ddac1b2405dff961c` sudah termasuk, jangan cherry-pick lagi. Tidak menyentuh ref Hermes/Cloud. Handoff runtime worker hanya setelah Owner mengotorisasi; jangan menulis branch PR52 bersamaan dengan Work. Publish nonforce expected-SHA; beda HEAD harus direkonsiliasi dahulu. Tidak ada klaim global AI session lock.
 
-Build ZIP dari clean **final HEAD**, bukan memakai kandidatc04653a untuk sourcebaru:
+Reproduce ZIP dari clean checkpoint:
 
 ```bash
-python tools/build-studio-candidate.py --out /tmp/studio-final-candidate
-python tests/test_studio_staging_install.py
+python tools/build-studio-candidate.py --out /tmp/studio-audit-candidate
 ```
 
-Installer CLI memerlukan `--zip`, `--manifest`, `--php`, `--wp`, `--wp-root`, `--document-root`, `--rollback-root`; tanpa `--apply` hanya plan. Semua path harus ditemukan operator dari konfigurasi aktual, jangan menyalin path produksi/menebak. Tidak menyediakan command hosting lengkap karena lokasi belum diverifikasi. Apply memerlukan `--apply --approval <file>`; schema exact ada di fungsi `approve()`. **Tidak membuat approval file sendiri atas nama Owner.**
+Installer: default PLAN_ONLY; future apply/recovery harus exact manifest/source/archive/existing digest + Owner approval dan actual staging/PHP-FPM/flags evidence. `--recover` memakai manifest transaksi terputus yang sama; mempertahankan nonce/activation/config/order restrictions, bukan bypass. Jangan membuat approval file sendiri. Jangan mengulang PR50 reinstall/seed/activate script. Semua candidate source refs baru belum live.
 
-Simpan/review manifest terbaru yang memuat exact finalcommit dan archiveSHA. Runtime Owner-reported terakhir e876035b650692b382e0dd293a88c99acb18cfb0 tetap source lama, tidak disamakan dengan HEAD baru.
+## Paket berikutnya, hanya setelah instruksi
 
-GO: review/handoff/development yang diotorisasi. NO-GO: merge/deploy/production/live order DB/aktivasi generator-Drive/final release. Tidak ada sesi AI eksternal diinventarisasi atau dihentikan; isolasi branch bukan global worker lock.
+1. **Full Audit source/integration terarah** atas checkpoint ini, tanpa fitur baru. Prioritaskan new journal transaction/ownership/auth/eligibility/order snapshots dan batas kapasitas; lanjut evaluasi V1 lama berdasarkan bukti yang telah ada, bukan mengulang semua PASS.
+2. **Satu approval staging terintegrasi** yang menyebut exact final SHA/plugin digest/archiveSHA/URL dan scope synthetic order. Sebelum itu readback staging/config/akses yang tersedia secara read-only; Owner-reported runtime lamae876035b650692b382e0dd293a88c99acb18cfb0 bukan source checkpoint ini. Tidak ada izin deploy/order mutation pada sesi ini.
+3. Setelah approval, validasi PHP-FPM/flags/private dirs/source header, lalu HTTP422 dan E2E guest+logged-in editor→draft→email→master/preview→cart→checkout/retry/admin. SMTP, gateway sandbox, Drive OAuth/private permissions/upload recovery dan physical print/RIP tetap bukti nyata terpisah; writer defaultOFF sampai persetujuan khusus.
+
+Blocker yang masih terbuka: HTTP422 source lama/root cause dan E2E source baru; real SMTP/deliverability/FPM/filesystem hosting, gateway/Drive/print validation; pajak/fee/kupon OPEN. Technical history budget3s/100page adalah unavailable/fail-closed, bukan keputusan bisnis. Native variations/Blocks/mixed-design/shaping kompleks ditunda sesuai scope. GO checkpoint siap review/Full Audit yang diperintahkan; NO-GO deploy/merge/production/order writes/writer activation/final release. Audit belum dijalankan.

@@ -5,8 +5,8 @@ defined('ABSPATH') || exit;
 function sanro_studio_checkout_policy() {
     return ['version'=>1,'currency'=>'IDR','tax'=>['decision'=>'OPEN','guard'=>'reject_nonzero'],
         'fees'=>['decision'=>'OPEN','guard'=>'reject_fee_lines'],'coupons'=>['decision'=>'OPEN','guard'=>'reject_applied_codes'],
-        'discounts'=>['decision'=>'OPEN_ELIGIBILITY','guard'=>'reject_unverified_discount'],
-        'repeat_discount'=>['decision'=>'DECIDED_5_PERCENT','eligibility'=>'NOT_IMPLEMENTED','guard'=>'disabled'],
+        'discounts'=>['decision'=>'OPEN_OTHER_DISCOUNTS','guard'=>'reject_unverified_discount'],
+        'repeat_discount'=>['decision'=>'DECIDED_5_PERCENT','eligibility'=>'verified_design_email_and_native_paid_history','guard'=>'server_net_unit_snapshot'],
         'shipping'=>['source'=>'native_Woo_server','guard'=>'freeze_whole_IDR_snapshot'],
         'native_variations'=>['scope'=>'deferred_unless_catalog_requires','v1'=>'design_size_and_sleeve_map']];
 }

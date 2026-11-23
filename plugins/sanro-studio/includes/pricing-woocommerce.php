@@ -47,6 +47,11 @@ function sanro_studio_pricing_wc_quote($line, $quantity, $context) {
     $design['quantities'] = [$size => $quantity];
     $quote = sanro_studio_product_quote($product_id, $design);
     if (empty($quote['valid']) || !isset($quote['lines'][$size])) throw new RuntimeException('SANRO server quote rejected.');
+    if(function_exists('sanro_studio_repeat_adjust_quote')){
+        $adjusted=sanro_studio_repeat_adjust_quote(['valid'=>true,'items'=>$quote['lines'],'total_price'=>$quote['total']],$id);
+        if(empty($adjusted['valid']))throw new RuntimeException('SANRO repeat quote rejected.');
+        return $adjusted['items'][$size];
+    }
     return $quote['lines'][$size];
 }
 

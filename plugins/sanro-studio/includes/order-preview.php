@@ -351,6 +351,11 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
                 . ' | Harga DTF: Rp ' . number_format((int) $price, 0, ',', '.')
                 . ' / pcs | Subtotal: Rp ' .
                 number_format((int) $price * (int) $qty, 0, ',', '.')) . '</p>';
+            $repeat=$item->get_meta('_sanro_studio_repeat_discount',true);
+            if(is_array($repeat)&&is_array($repeat['proof']??null)&&($repeat['proof']['rate']??null)===5&&is_int($repeat['base_unit_price']??null)&&$repeat['base_unit_price']>0&&$repeat['base_unit_price']<=2000000&&is_int($repeat['unit_discount']??null)
+                &&$repeat['unit_discount']===intdiv($repeat['base_unit_price']*5+50,100)&&$repeat['base_unit_price']-$repeat['unit_discount']===(int)$price){
+                echo '<p>'.esc_html('Repeat 5% tersimpan | Harga dasar Rp '.number_format($repeat['base_unit_price'],0,',','.').' | Diskon Rp '.number_format($repeat['unit_discount'],0,',','.').' / pcs').'</p>';
+            }
         } else {
             echo '<p>' . esc_html('Harga DTF / ukuran: belum terverifikasi pada item pesanan') . '</p>';
         }

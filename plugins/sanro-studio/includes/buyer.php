@@ -229,6 +229,11 @@ function sanro_studio_render_buyer_editor() {
             echo '<button type="button" id="sanro-upload-previews">Perbarui preview desain</button>';
             echo '<p id="sanro-preview-upload-status" role="status" aria-live="polite"></p>';
         }
+        if(function_exists('sanro_studio_pricing_wc_enabled')&&sanro_studio_pricing_wc_enabled()){
+            echo '<fieldset><legend>Verifikasi email pemilik desain</legend><label>Email<input id="sanro-owner-email" type="email" autocomplete="email" maxlength="254"></label>';
+            echo '<button type="button" id="sanro-request-owner-email">Kirim kode verifikasi</button><label>Kode dari email<input id="sanro-owner-email-code" type="text" autocomplete="one-time-code" maxlength="64" spellcheck="false"></label>';
+            echo '<button type="button" id="sanro-confirm-owner-email">Verifikasi kode</button><p id="sanro-owner-email-status" role="status">Simpan desain terlebih dahulu. Repeat 5% dihitung server bila email checkout sama dan riwayat pesanan berbayar terverifikasi.</p></fieldset>';
+        }
         echo '<button type="button" id="sanro-server-quote">Cek harga resmi draft tersimpan</button>';
         echo '<p id="sanro-server-quote-status" role="status" aria-live="polite">Simpan desain sebelum meminta harga server.</p>';
         echo '<p id="sanro-save-status" role="status">Simpan desain untuk melanjutkan pemesanan.</p>';

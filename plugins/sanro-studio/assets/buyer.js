@@ -537,6 +537,31 @@
   throw new Error('Preview melebihi batas 50 KB.');
  }
  if(saveButton&&config.draft_api){
+  const requestEmail=q('#sanro-request-owner-email'),confirmEmail=q('#sanro-confirm-owner-email');
+  if(requestEmail&&confirmEmail){
+   const emailStatus=q('#sanro-owner-email-status');
+   async function verifyOwner(operation){
+    if(!savedId||!ownerToken||saving||uploadingMaster){emailStatus.textContent='Simpan desain dan tunggu proses upload selesai dahulu.';return;}
+    const email=q('#sanro-owner-email'),code=q('#sanro-owner-email-code');
+    if(operation==='request'&&(!email.value.trim()||!email.validity.valid)){emailStatus.textContent='Masukkan alamat email yang valid.';return;}
+    if(operation==='complete'&&!/^[a-f0-9]{64}$/.test(code.value.trim())){emailStatus.textContent='Salin kode lengkap dari email.';return;}
+    requestEmail.disabled=confirmEmail.disabled=true;
+    try{
+     const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/owner-email/'+operation,{
+      method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken},
+      body:JSON.stringify(operation==='request'?{email:email.value.trim()}:{code:code.value.trim()})
+     });
+     const result=await response.json();
+     if(!response.ok||!result.valid)throw new Error('Verifikasi belum berhasil. Periksa kode, kepemilikan draft atau coba lagi nanti.');
+     if(operation==='complete')code.value='';
+     emailStatus.textContent=operation==='request'?'Kode dikirim ke email. Berlaku 30 menit; jangan bagikan kode.':'Email pemilik terverifikasi. Gunakan email yang sama saat checkout; repeat 5% tetap memerlukan riwayat pesanan berbayar.';
+    }catch(error){emailStatus.textContent='Verifikasi belum berhasil. Periksa koneksi, kode atau coba lagi nanti.';}
+    finally{requestEmail.disabled=confirmEmail.disabled=false;}
+   }
+   requestEmail.addEventListener('click',()=>verifyOwner('request'));
+   confirmEmail.addEventListener('click',()=>verifyOwner('complete'));
+  }
+
   const masterButton=q('#sanro-upload-master'),masterStatus=q('#sanro-master-upload-status');
   if(masterButton&&config.master_upload_enabled){
    masterButton.addEventListener('click',async()=>{
@@ -773,6 +798,7 @@
     });
     quoteStatus.textContent='Harga server draft tersimpan: '+money(result.quote.total_price)
      +' untuk '+result.quote.total_quantity+' pcs. '+details.join(' · ')+'. '
+     +(result.quote.repeat_discount?'Repeat 5% terverifikasi; hemat '+money(result.quote.repeat_discount.discount_total)+'. ':'Repeat 5% memerlukan email checkout yang cocok dan riwayat berbayar. ')
      +(editRevision!==revisionAtRequest?'Desain lokal berubah selama pemeriksaan; simpan ulang untuk harga terbaru. ':'')
      +(q('#sanro-add-to-cart')?'Harga terverifikasi; lanjutkan melalui keranjang.':'Checkout belum diaktifkan.');
    }catch(error){quoteStatus.textContent=error.message||'Gagal memeriksa harga server.'}

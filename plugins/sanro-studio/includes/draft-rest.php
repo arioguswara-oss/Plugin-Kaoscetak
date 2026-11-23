@@ -524,11 +524,12 @@ function sanro_studio_rest_quote_draft($request) {
     $quote = sanro_studio_quote_size_quantities(
         $draft['product_id'], $design, $quantities, $long_sleeve
     );
+    if(function_exists('sanro_studio_repeat_adjust_quote'))$quote=sanro_studio_repeat_adjust_quote($quote,$draft['design_id']);
     if (empty($quote['valid'])) return sanro_studio_rest_draft_response($quote);
     return rest_ensure_response([
         'valid' => true,
         'design_id' => $draft['design_id'],
-        'quote' => $quote,
+        'quote' => function_exists('sanro_studio_repeat_public_quote')?sanro_studio_repeat_public_quote($quote):$quote,
         'checkout_enabled' => false,
     ]);
 }

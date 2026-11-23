@@ -67,6 +67,7 @@ function sanro_studio_read_draft($id, $token) {
         'design_hash' => hash('sha256', maybe_serialize($record['design'])),
         'status' => $record['status'],
         'expires_at' => $record['expires_at'],
+        'owner_email_verified'=>function_exists('sanro_studio_repeat_verified_email')&&sanro_studio_repeat_verified_email($record)!=='',
         'master_refs' => is_array($record['master_refs'] ?? null)
             ? array_intersect_key($record['master_refs'], array_flip(['front', 'back'])) : [],
     ];

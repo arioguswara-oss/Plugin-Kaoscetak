@@ -37,6 +37,7 @@ function sanro_studio_prepare_cart_design_contract($design_id, $owner_token, $pr
     $quote = sanro_studio_quote_size_quantities(
         $product_id, $design, $design['quantities'], $design['long_sleeve'] ?? false
     );
+    if(function_exists('sanro_studio_repeat_adjust_quote'))$quote=sanro_studio_repeat_adjust_quote($quote,$draft['design_id']);
     if (empty($quote['valid'])) return $quote;
     if (!isset($quote['total_quantity'], $quote['total_price'])
         || !is_int($quote['total_quantity']) || $quote['total_quantity'] < 1

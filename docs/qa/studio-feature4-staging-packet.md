@@ -29,4 +29,9 @@ Transport baru memisahkan non-JSON dari JSON application rejection tanpa memboco
 
 Urutan uji: HTTPS/mobile editor → simpan draft → original upload → preview current revision depan/belakang → server quote multi-size → native cart replay/edit qty → classic checkout shipping → satu pesanan sintetis → gagal/bayar-ulang pada order sama → DesignID/amount/qty/admin private preview. Persetujuan harus mencakup pesanan sintetis yang dibutuhkan; tidak menyentuh order pelanggan/settlement nyata. Gateway sandbox dan OAuth/Drive/physical-print verification terpisah; writer tetap OFF pada paket uji awal.
 
-Status: source review GO; apply/merge/deploy/production/real order mutation/writer activation NO-GO. Baseline87,50%, belum90%; paket ini persiapan, Full Audit belum dimulai dan tidak ada permintaan approval deploy otomatis.
+Status: source review GO; apply/merge/deploy/production/real order mutation/writer activation NO-GO. Baseline resmi90,50%; paket ini persiapan, Full Audit belum dimulai dan menunggu instruksi berikutnya dan tidak ada permintaan approval deploy otomatis.
+
+
+## Checkpoint road90 terbaru
+
+Lihat `studio-hermes-handoff-20261124.md` dan manifest clean HEAD PR52. Installer kini memiliki journal persisten dan `--recover`; gunakan manifest/approval yang sama dengan transaksi terputus, bukan source baru yang tidak terikat journal. Plan menampilkan recovery_required; apply baru ditolak sampai recovery selesai. Recovery memerlukan seluruh pemeriksaan staging/flags/approval yang sama, tidak ada bypass otomatis. Source baru belum di-deploy. Paket approval staging belum disetujui; jangan membuat approval atas nama Owner.

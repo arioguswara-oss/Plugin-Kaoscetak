@@ -71,3 +71,7 @@ Round4 hanya GET produk24 staging (HTTP200, product-type-simple, tanpa variation
 ## Checkpoint kuota terbatas24 November2026
 
 Work melanjutkan daric04653a hanya pada PR52: implementasi installer existing-plugin dengan approval/source/target guards dan rollback;9 synthetic tests, tanpa WP CLI runtime/apply. Handoff `docs/qa/studio-hermes-handoff-20261124.md` siap, **Hermes tidak dijalankan**. Untuk melanjutkan kelak, worker terotorisasi menggunakan isolated worktree dari final HEAD; jangan menulis ref PR52 bersamaan dengan Work. Baseline89,50%, tidak Full Audit/deploy/merge/production/order writes. Frozen #50/#51 tetap, tidak impor ulang.
+
+## Road90 — checkpoint siap Full Audit
+
+Work saja pada PR52, parent5c54943. Implementasi journal crash recovery, authenticated Woo session/migration, verified repeat5% dan konsistensi locked discount ke PDF/manifest/admin. Baseline resmi90,50%; tidak ada perubahan bobot, branch#50/#51, deploy atau order DB. Full Audit belum dimulai; Hermes/Codex tidak dipanggil. Checkpoint Hermes yang sama diperbarui sebagai titik lanjut tunggal; jangan mengulang installer/quote/font/renderer lama tanpa perubahan. Release/runtime proof tetap terpisah dari source implementation.

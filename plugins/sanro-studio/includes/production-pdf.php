@@ -31,6 +31,7 @@ function sanro_studio_unicode_production_pdf($manifest,$previews) {
             'Warna '.$manifest['shirt_color'].' | Lengan '.(($manifest['sleeve_label']??null)==='3/4'?'3/4':($manifest['long_sleeve']?'panjang':'pendek')),
             strtoupper($side).' | Kategori '.($entry['category']??'tanpa cetak'),
             'Posisi dan dimensi dalam cm dari titik awal area aman produk.'];
+        if(isset($manifest['repeat_discount']))$lines[]='Repeat 5% | Harga dasar IDR '.$manifest['repeat_discount']['base_unit_price'].' | Diskon IDR '.$manifest['repeat_discount']['unit_discount'].' / pcs';
         foreach($entry['objects'] as $obj)$lines[]=$obj['type'].' x='.$obj['x'].' y='.$obj['y'].' lebar='.$obj['width'].' tinggi='.$obj['height'].' cm';
         $lines[]='Font size editor: '.($entry['font_size']??'none').' | Warna '.($entry['text_color']??'none');$lines[]='Teks: '.$entry['text'];
         $wrapped=[];

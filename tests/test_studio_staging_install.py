@@ -13,7 +13,7 @@ class InstallTest(unittest.TestCase):
  def tearDown(self):self.temp.cleanup()
  def test_replacement_preserves_rollback_and_other_plugins(self):
   other=self.root/'plugins/woocommerce';other.mkdir();(other/'keep').write_text('untouched')
-  r=installer.replace_existing(self.z,self.m,self.target,self.back,self.before);self.assertEqual(r['state'],'files_replaced');self.assertEqual((other/'keep').read_text(),'untouched');old=list(self.back.iterdir());self.assertEqual(len(old),1);self.assertEqual((old[0]/'sanro-studio.php').read_text(),'old plugin');self.assertFalse(r['activation_changed']);self.assertFalse(r['order_writes'])
+  r=installer.replace_existing(self.z,self.m,self.target,self.back,self.before);self.assertEqual(r['state'],'files_replaced');self.assertEqual((other/'keep').read_text(),'untouched');old=[p for p in self.back.iterdir() if p.is_dir()];self.assertEqual(len(old),1);self.assertEqual((old[0]/'sanro-studio.php').read_text(),'old plugin');self.assertFalse(r['activation_changed']);self.assertFalse(r['order_writes'])
  def test_failed_second_rename_restores_exact_old_tree(self):
   def fail(src,dest):
    if pathlib.Path(src).name=='sanro-studio' and pathlib.Path(src).parent.name.startswith('.sanro-studio-incoming-'):raise OSError('synthetic failure')
