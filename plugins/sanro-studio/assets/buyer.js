@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 12627)
+Total output lines: 877
+
 'use strict';
 (function(){
  const root=document.getElementById('sanro-studio-buyer'),config=window.SANRO_STUDIO_EDITOR_CONFIG;
@@ -352,14 +355,14 @@
  }
  async function reopenDraft(){
   let stored;
-  try{stored=sessionStorage.getItem(draftStorageKey)}catch(_error){return}
-  if(!stored)return;
+  try{stored=sessionStorage.getItem(draftStorageKey)}catch(_error){return false}
+  if(!stored)return false;
   const revisionAtRequest=editRevision;
   let credentials;
-  try{credentials=JSON.parse(stored)}catch(_error){return}
-  if(!credentials||typeof credentials!=='object')return;
+  try{credentials=JSON.parse(stored)}catch(_error){return false}
+  if(!credentials||typeof credentials!=='object')return false;
   if(typeof credentials.id!=='string'||typeof credentials.token!=='string'
-   ||!/^[a-f0-9-]{36}$/i.test(credentials.id)||!/^[a-f0-9]{64}$/.test(credentials.token))return;
+   ||!/^[a-f0-9-]{36}$/i.test(credentials.id)||!/^[a-f0-9]{64}$/.test(credentials.token))return false;
   const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(credentials.id),{
    method:'GET',headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':credentials.token},
    credentials:'same-origin',cache:'no-store'});
@@ -372,7 +375,7 @@
   if(!result.valid||Number(result.product_id)!==Number(config.product_id))throw new Error('Draft bukan untuk produk ini.');
   if(editRevision!==revisionAtRequest){
    saveStatus.textContent='Draft lama tidak diterapkan karena desain sudah diubah. Muat ulang halaman untuk membuka draft.';
-   return;
+   return false;
   }
   const masterUrls={};
   try{
@@ -393,6 +396,7 @@
   savedId=credentials.id;ownerToken=credentials.token;savedRevision=editRevision;
   lastKnownDesignHash=typeof result.design_hash==='string'?result.design_hash:null;
   saveStatus.textContent='Draft berhasil dibuka kembali. Design ID: '+savedId;
+  return true;
  }
  function exportTextDraft(ignoreImages=false,allowEmpty=false){
   const design={};
@@ -415,52 +419,7 @@
    });
    if(!rect.width||!rect.height||!box.width||!box.height)throw new Error('Ukuran pratinjau belum siap.');
    const object={type:'text',x:d.textX*area.width/100,y:d.textY*area.height/100,
-    width:box.width*area.width/rect.width,height:box.height*area.height/rect.height};
-   const limit=categories[d.category];
-   if(!limit||object.x<0||object.y<0||object.x+object.width>area.width+0.000001
-    ||object.y+object.height>area.height+0.000001
-    ||object.width>limit[0]+0.000001||object.height>limit[1]+0.000001){
-    throw new Error('Teks di luar area aman atau kategori cetak.');
-   }
-   design[name]={category:d.category,objects:[object],text:d.text,font_size:d.fontSize,text_color:d.textColor};
-  }
-  if(!Object.keys(design).length&&!allowEmpty)throw new Error('Tambahkan teks terlebih dahulu.');
-  const quantities=Object.fromEntries(qtyInputs.map(input=>[input.dataset.size,Number(input.value)]));
-  if(Object.values(quantities).some(v=>!Number.isInteger(v)||v<0||v>999)
-   ||Object.values(quantities).reduce((a,b)=>a+b,0)>5000)throw new Error('Jumlah per ukuran tidak valid.');
-  design.shirt_color=shirtColor.value;design.quantities=quantities;
-  design.long_sleeve=q('#sanro-sleeve').value==='long';
-  return design;
- }
- async function exportBoundDraft(){
-  const design=exportTextDraft(true,true);
-  for(const name of ['front','back']){
-   const d=sides[name],area=config.safe_areas[name];
-   if(!area||!d.url)continue;
-   // Never accept a locally replaced image with the prior bound master ID.
-   if(d.pending||d.file)
-    throw new Error('Unggah gambar baru '+name+' sebelum menyimpan.');
-   if(!boundMasterRefs[name])
-    throw new Error('Master privat '+name+' belum terikat.');
-   const dimensions=await new Promise((resolve,reject)=>{
-    const probe=new Image();
-    probe.onload=()=>resolve([probe.naturalWidth,probe.naturalHeight]);
-    probe.onerror=()=>reject(new Error('Gambar '+name+' tidak dapat dibaca.'));
-    probe.src=d.url;
-   });
-   const rect=withPrintZone(name,()=>safe.getBoundingClientRect());
-   if(!rect.width||!rect.height||!dimensions[0]||!dimensions[1])
-    throw new Error('Area gambar belum siap.');
-   const width=d.imageSize*area.width/100;
-   const height=width*rect.width/rect.height*dimensions[1]/dimensions[0]*area.height/area.width;
-   const imageGeometry={type:'image',x:d.imageX*area.width/100,
-    y:d.imageY*area.height/100,width,height};
-   if(imageGeometry.x<0||imageGeometry.y<0
-    ||imageGeometry.x+width>area.width+0.000001
-    ||imageGeometry.y+height>area.height+0.000001)
-    throw new Error('Gambar '+name+' di luar area aman.');
-   if(!design[name])design[name]={category:d.category,objects:[]};
-   design[name].objects.push(imageGeometry);
+    wi…627 tokens truncated…etry);
   }
   if(!design.front&&!design.back)throw new Error('Tambahkan desain terlebih dahulu.');
   return design;
@@ -762,6 +721,21 @@
    }catch(error){quoteStatus.textContent=error.message||'Gagal memeriksa harga server.'}
    finally{quoteButton.disabled=false}
   });
+  const reopenButton=q('#sanro-reopen-draft'),reopenStatus=q('#sanro-reopen-status');
+  if(reopenButton&&reopenStatus){
+   reopenButton.addEventListener('click',async()=>{
+    if(saving||uploadingMaster){reopenStatus.textContent='Tunggu penyimpanan atau upload master selesai.';return;}
+    reopenButton.disabled=true;
+    reopenStatus.textContent='Memeriksa draft tersimpan…';
+    try{
+     const stored=sessionStorage.getItem(draftStorageKey);
+     if(!stored){reopenStatus.textContent='Belum ada draft tersimpan pada sesi browser ini.';return;}
+     const reopened=await reopenDraft();
+     reopenStatus.textContent=reopened?'Draft berhasil dibuka kembali.':'Draft belum dapat diterapkan karena desain editor telah berubah.';
+    }catch(error){reopenStatus.textContent=error.message||'Draft tidak dapat dibuka kembali.';}
+    finally{reopenButton.disabled=false;}
+   });
+  }
   try{reopenDraft().catch(error=>{saveStatus.textContent=error.message})}catch(_error){}
   const cartButton=q('#sanro-add-to-cart'),cartStatus=q('#sanro-cart-status');
   // Prevent a second Cart POST while the first is pending, even if a DOM

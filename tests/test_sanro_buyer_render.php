@@ -14,11 +14,15 @@ function absint($v) { return abs((int)$v); }
 function get_option($key, $default=false) { return $default; }
 function esc_html($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
 function esc_attr($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
+function esc_url_raw($value) { return filter_var((string)$value, FILTER_SANITIZE_URL); }
 function has_action($hook, $callback) { return false; }
 function add_action($hook, $callback, $priority = 10) { $GLOBALS['actions'][] = [$hook, $callback, $priority]; }
 function is_product() { return true; }
 function get_queried_object_id() { return 17; }
 function sanro_studio_public_editor_config($id) { return $GLOBALS['config']; }
+function sanro_studio_draft_rest_enabled() { return true; }
+function rest_url($path) { return 'https://staging.example.test/wp-json/'.$path; }
+function wp_create_nonce($action) { return 'test-nonce'; }
 function plugin_dir_url($file) {
     if (basename($file) !== 'sanro-studio.php') throw new RuntimeException('Invalid plugin entrypoint');
     return 'https://staging.example.test/wp-content/plugins/sanro-studio/';
@@ -32,11 +36,14 @@ function get_footer() { $GLOBALS['footers']++; echo '<footer>FOOTER</footer>'; }
 require __DIR__.'/../plugins/sanro-studio/includes/buyer.php';
 register_shutdown_function(function () {
     $html=ob_get_contents();
+    $buyer_js=file_get_contents(__DIR__.'/../plugins/sanro-studio/assets/buyer.js');
     $assets=$GLOBALS['enqueued'];
     $assertions=[
         'header and footer'=>($GLOBALS['headers']===1 && $GLOBALS['footers']===1),
         'editor markup'=>strpos($html,'id="sanro-studio-buyer"')!==false,
         'front/back navigation'=>strpos($html,'data-side="front"')!==false && strpos($html,'data-side="back"')!==false,
+        'explicit reopen control'=>strpos($html,'id="sanro-reopen-draft"')!==false && strpos($html,'id="sanro-reopen-status"')!==false,
+        'reopen control calls owner-bound draft resolver'=>is_string($buyer_js) && strpos($buyer_js,"reopenButton.addEventListener('click'")!==false && strpos($buyer_js,'await reopenDraft()')!==false,
         'checkout disabled'=>strpos($html,'Simpan dan checkout — belum aktif')!==false,
         'five assets'=>count($assets)===5,
         'CSS path'=>isset($assets[0]) && strpos($assets[0][1][1],'/sanro-studio/assets/buyer.css')!==false,
