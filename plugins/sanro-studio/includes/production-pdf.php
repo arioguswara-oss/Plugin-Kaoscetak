@@ -28,7 +28,7 @@ function sanro_studio_unicode_production_pdf($manifest,$previews) {
             'Design ID: '.$manifest['design_id'],
             'Ukuran '.$manifest['size'].' x '.$manifest['quantity'].' | IDR '.$manifest['unit_price'].' / pcs',
             'Qty semua size: '.json_encode($manifest['quantities']),
-            'Warna '.$manifest['shirt_color'].' | Lengan '.($manifest['long_sleeve']?'panjang':'pendek'),
+            'Warna '.$manifest['shirt_color'].' | Lengan '.(($manifest['sleeve_label']??null)==='3/4'?'3/4':($manifest['long_sleeve']?'panjang':'pendek')),
             strtoupper($side).' | Kategori '.($entry['category']??'tanpa cetak'),
             'Posisi dan dimensi dalam cm dari titik awal area aman produk.'];
         foreach($entry['objects'] as $obj)$lines[]=$obj['type'].' x='.$obj['x'].' y='.$obj['y'].' lebar='.$obj['width'].' tinggi='.$obj['height'].' cm';

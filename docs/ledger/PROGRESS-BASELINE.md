@@ -1,29 +1,29 @@
 # SANRO Studio — baseline aktif development
 
-23 November 2026 WIB. Checkpoint resmi **80,50%** pada `d704b32f31a7e5ce7d904826dcc3f3f282b81e94`; hasil feature-completion3 **83,50% (+3,00 poin berbobot)**. Bobot SANRO-7-v1 tidak berubah. Ini estimasi scope IMPLEMENTED pada development, bukan runtime/release readiness.
+23 November 2026 WIB. Checkpoint resmi **83,50%** pada `a143703581e003e116c5550acf1e89a3d9c7e5b9`; hasil feature-completion4 **87,50% (+4,00 poin berbobot)** pada commit yang membawa ledger ini. Bobot SANRO-7-v1 tetap. Angka adalah estimasi scope IMPLEMENTED development; bukan rasio tes, runtime VERIFIED, atau kesiapan rilis.
 
 | Tahap | Bobot | Sebelumnya | Sekarang | Kontribusi sebelumnya → sekarang | Delta berbobot |
 |---|---:|---:|---:|---:|---:|
-| 1. Fondasi/core |25%|75%|79%|18,75 →19,75|+1,00|
-| 2. Backend produk/admin |10%|83%|85%|8,30 →8,50|+0,20|
+| 1. Fondasi/core |25%|79%|85%|19,75 →21,25|+1,50|
+| 2. Backend produk/admin |10%|85%|94%|8,50 →9,40|+0,90|
 | 3. Frontend buyer |15%|96%|96%|14,40 →14,40|0,00|
-| 4. Harga server/quote |10%|83%|83%|8,30 →8,30|0,00|
+| 4. Harga server/quote |10%|83%|93%|8,30 →9,30|+1,00|
 | 5. Simpan/ownership/share |10%|98%|98%|9,80 →9,80|0,00|
-| 6. Checkout/produksi/Drive |20%|84%|93%|16,80 →18,60|+1,80|
+| 6. Checkout/produksi/Drive |20%|93%|96%|18,60 →19,20|+0,60|
 | 7. QA/rilis/mobile |10%|40%|40%|4,00 →4,00|0,00|
-| **Subtotal tujuh tahap** |**100%**|—|—|**80,35 →83,35**|**+3,00**|
+| **Subtotal tujuh tahap** |**100%**|—|—|**83,35 →87,35**|**+4,00**|
 | Saldo baseline Owner historis, belum teralokasi |—|—|—|0,15 →0,15|0,00|
-| **Total aktif development** |—|**80,50%**|**83,50%**|**80,50 →83,50**|**+3,00**|
+| **Total aktif development** |—|**83,50%**|**87,50%**|**83,50 →87,50**|**+4,00**|
 
-Formula delta Σ(bobot×perubahan tahap/100). Saldo0,15 berasal dari rekonsiliasi historis72,10 vs rincian71,95 pada checkpoint2d945be; dipertahankan transparan, bukan kredit putaran ini atau alokasi tahap rekaan. Riwayat laporan/Git tidak menjadi baseline aktif kedua.
+Formula delta Σ(bobot×perubahan tahap/100). Saldo0,15 berasal dari rekonsiliasi historis72,10 vs rincian71,95 pada checkpoint2d945be; dipertahankan transparan, tidak dialokasikan secara rekaan dan tidak menghasilkan kredit baru. Riwayat Git/laporan bukan baseline aktif lain.
 
-## Dasar kredit baru tanpa duplikasi
+## Kredit implementasi putaran ini, tanpa duplikasi
 
-- Core +4 tahap =+1,00: saved-order identity/quote/preview integrity dipakai bersama pada lifecycle retry, callback pembayaran dan worker produksi (+2 tahap); atomic token/expiry server leases dengan insert-only/CAS renew/release serta takeover pemilik lama ditolak (+2 tahap). Pemakaian kedua primitive di fitur lain tidak diberi kredit core kedua kali.
-- Admin +2 tahap =+0,20: status package seluruh pesanan, receipt parsial/stale, retry/pending/blocked dipisah dari human print approval. Reader/URL privat/preview dan PDF Unicode lama tidak dihitung ulang.
-- Checkout/produksi/Drive +9 tahap =+1,80: native shipping snapshot dan pin pembayaran (+3); provenance per sisi + zero-render reuse (+2); asynchronous bounded upload retry/recovery (+2); hashed manifest + semua-item receipts/completion seal (+2). Ini estimasi scope deliverable source, bukan rasio PASS.
-- Kalkulator/tabel #51, renderer A3+/Unicode/PDF, hierarchy, uploader original, quote/order lock dasar dan mobile sebelumnya tetap dependency. Tes/packaging/setup tidak menaikkan QA; tetap40%. Tidak mengkalibrasi bobot atau mengejar90% secara administratif.
+- Core +6 tahap =+1,50: inventory native/module/gate yang mengikuti source sesungguhnya (+2); endpoint GET diagnostik admin dengan capability+REST nonce, PHP/SAPI/extensions/memory/flags tanpa path/secret (+2); identitas source commit/digest di paket dan REST untuk membedakan kandidat/runtime lama (+2). Builder, ZIP, dokumentasi, lint dan preflight installer tidak menghasilkan kredit tambahan atau menaikkan QA.
+- Backend +9 tahap =+0,90: pemilihan preset Cotton/Tunic (+2); editor tabel harga khusus per produk dengan validasi size/empat kategori/IDR dan update atomik pada metadata produk (+5); konfigurasi invalid/profile mismatch/native variation yang tidak didukung ditolak sebelum editor/quote (+2). Tidak ada seed/override saat upgrade; produk lain tetap independen.
+- Harga server +10 tahap =+1,00: matriks Tunic Owner dan lengan3/4 tetap pada quote authoritative (+6); pemakaian override sah dan revision hash pada quote/cart terkunci (+4). UI estimate dan label PDF/admin adalah dependency fitur ini, tanpa kredit frontend/produksi ganda. Tidak menghitung kembali kalkulator Cotton/#51.
+- Checkout/produksi/Drive +3 tahap =+0,60: guard kupon termasuk nilai nol, fee line nol, pajak/discount dan order coupon pada payment/production (+1); persisted running-job + watchdog crash recovery dengan deadline-specific scheduler/renewal lease dan retry terbatas (+1); aksi retry admin capability+nonce setelah perbaikan, tetap gated dan idempotent (+1). Renderer/memori/font/PDF/hierarchy/upload engine yang telah ada tidak dihitung ulang.
 
-DECIDED: baseline/bobot, Development First/Full Audit90%, runtime OFF, tanpa deploy/merge/order DB. IMPLEMENTED: delta di atas. VERIFIED: focused source checks, actual GD A3+/reuse serta SQL/Woo/HTTP doubles sesuai [laporan putaran](../qa/studio-feature-completion-3-20261123.md). Real WP/gateway/Drive/print fisik NOT TESTED.
+DECIDED: spesifikasi harga yang sudah disetujui, bobot, guard default OFF dan batas tindakan Owner. IMPLEMENTED: delta source di atas. VERIFIED: targeted source smoke sesuai [laporan4](../qa/studio-feature-completion-4-20261123.md), termasuk simulasi native Woo/SQL/Drive dan PDF bytes sungguhan. Runtime Hostinger/gateway/akun Drive/cetak fisik tetap NOT TESTED untuk source baru.
 
-Stage6 belum100%: Blocks/variasi/mixed-design, policy pajak/fees/coupon/repeat discount dan integration akun/runtime belum tuntas. Kandidat ZIP reproducible adalah bahan review, bukan bukti E2E atau izin deploy. GO review/development; NO-GO deploy/merge/production/aktivasi writer/final release.
+Belum90%; Full Audit belum dimulai. Pajak/fee/kupon masih OPEN, bukan diputuskan menjadi0 permanen. Repeat5% DECIDED tetapi verifikasi eligibility/diskonnya belum diimplementasikan. Native variations/Blocks/mixed-design enhancement ditunda sampai ada kebutuhan V1 yang konkret; unsupported tetap fail-closed. HTTP422 runtime lama belum terbukti selesai. GO development/review kandidat; NO-GO deploy/merge/production/aktivasi writer/final release.

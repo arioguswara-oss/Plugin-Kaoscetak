@@ -262,6 +262,7 @@ function sanro_studio_pricing_checkout_authorize() {
     unset($GLOBALS['sanro_studio_pricing_checkout']);
     $cart = sanro_studio_pricing_wc_cart();
     if (!is_object($cart) || !method_exists($cart, 'get_cart')) return;
+    if(function_exists('sanro_studio_cart_policy_issues')&&sanro_studio_cart_policy_issues($cart))return;
     $lines = array_values(array_filter((array)$cart->get_cart(), 'sanro_studio_pricing_is_line'));
     if (!$lines) return;
     if (count($lines) !== count((array)$cart->get_cart()) || !function_exists('wp_verify_nonce')
@@ -344,6 +345,7 @@ function sanro_studio_pricing_order_item($item, $cart_item_key, $values, $order)
     if (!is_array($candidate) || ($verified['id'] ?? null) !== ($values['sanro_studio_design_id'] ?? null)
         || ($candidate['quantity'] ?? null) !== sanro_studio_pricing_quantity($values['quantity'] ?? null)) throw new RuntimeException('SANRO Studio: order line mismatch.');
     $snapshot = sanro_studio_pricing_design_snapshot($verified);
+    $snapshot['sleeve_label']=$verified['contract']['quote']['sleeve_label']??(!empty($snapshot['long_sleeve'])?'long':'short');
     foreach (['_sanro_studio_design_id'=>$verified['id'], '_sanro_studio_size'=>$size,
         '_sanro_studio_unit_price'=>$candidate['unit_price'], '_sanro_studio_quote_currency'=>'IDR',
         '_sanro_studio_design_snapshot'=>$snapshot] as $key=>$value) $item->update_meta_data($key,$value);

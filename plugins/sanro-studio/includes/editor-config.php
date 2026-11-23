@@ -13,10 +13,12 @@ function sanro_studio_public_editor_config($product_id) {
     $product = wc_get_product($product_id);
     if (!$product || !is_object($product) || !method_exists($product, 'get_status')
         || $product->get_status() !== 'publish'
+        || (method_exists($product,'is_type') && !$product->is_type('simple'))
         || !method_exists($product, 'is_purchasable') || !$product->is_purchasable()) {
         return ['valid' => false, 'error' => 'product_unavailable'];
     }
-    if (get_post_meta($product_id, '_sanro_studio_pricing_profile', true) !== 'cotton_combed_24s') {
+    $pricing=function_exists('sanro_studio_product_pricing_config')?sanro_studio_product_pricing_config($product_id):['valid'=>get_post_meta($product_id,'_sanro_studio_pricing_profile',true)==='cotton_combed_24s','profile'=>'cotton_combed_24s'];
+    if (empty($pricing['valid'])) {
         return ['valid' => false, 'error' => 'product_unavailable'];
     }
     $config = sanro_studio_editor_area_config($product_id);
@@ -30,7 +32,8 @@ function sanro_studio_public_editor_config($product_id) {
         'print_zones' => function_exists('sanro_studio_product_print_zones')
             ? sanro_studio_product_print_zones($product_id) : [],
         'categories' => $config['categories'],
-        'pricing_profile' => 'cotton_combed_24s',
+        'pricing_profile' => $pricing['profile'],
+        'pricing' => isset($pricing['table'])?array_intersect_key($pricing,array_flip(['table','sizes','sleeve_extra','fixed_sleeve','revision'])):null,
         // Public, verified Media Library image URLs only. Never private DTF masters.
         'mockups' => function_exists('sanro_studio_product_mockup_urls')
             ? sanro_studio_product_mockup_urls($product_id) : [],

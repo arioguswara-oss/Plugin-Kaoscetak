@@ -21,6 +21,10 @@ manifest={'schema':1,'repository':'arioguswara-oss/Plugin-Kaoscetak','source_com
           'plugin_digest':hashlib.sha256(json.dumps(entries,sort_keys=True,separators=(',',':')).encode()).hexdigest(),
           'generator_default':'OFF','drive_default':'OFF','runtime_e2e':'NOT_TESTED','deployment_authorized':False}
 out=pathlib.Path(args.out).resolve();out.mkdir(parents=True,exist_ok=True)
+identity={k:manifest[k] for k in ('schema','source_commit','plugin_digest')}
+identity_data=(json.dumps(identity,sort_keys=True,separators=(',',':'))+'\n').encode()
+contents['SANRO-STUDIO-BUILD.json']=identity_data
+manifest['build_marker']={'path':'SANRO-STUDIO-BUILD.json','sha256':hashlib.sha256(identity_data).hexdigest(),'bytes':len(identity_data)}
 archive=out/'sanro-studio-staging-candidate.zip'
 with zipfile.ZipFile(archive,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
     for name,data in sorted(contents.items()):

@@ -17,12 +17,12 @@
  function designCategory(d){return d.url||d.text.trim()?d.category:null;}
  function updateEstimate(){
   const output=q('#sanro-price-estimate'),calc=window.SanroStudioEstimate;
-  if(!calc||config.pricing_profile!=='cotton_combed_24s'){output.textContent='Estimasi belum tersedia';return;}
+  if(!calc||!['cotton_combed_24s','tunik_oversize_34'].includes(config.pricing_profile)){output.textContent='Estimasi belum tersedia';return;}
   if(qtyInputs.some(input=>!input.validity.valid)){
    output.textContent='Estimasi tidak tersedia: periksa jumlah per ukuran';return;
   }
   const qty=Object.fromEntries(qtyInputs.map(input=>[input.dataset.size,Number(input.value)]));
-  const result=calc.estimate(qty,designCategory(sides.front),designCategory(sides.back),q('#sanro-sleeve').value==='long');
+  const result=calc.estimate(qty,designCategory(sides.front),designCategory(sides.back),q('#sanro-sleeve').value==='long',config.pricing||null);
   output.textContent=result&&result.pieces>0?'Estimasi: '+new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(result.total)+' (belum final)':'Estimasi harga: lengkapi desain dan jumlah';
  }
  function updateQty(){
@@ -315,7 +315,10 @@
   }
   if(design.long_sleeve!==undefined){
    if(typeof design.long_sleeve!=='boolean')throw new Error('Model lengan draft tidak valid.');
-   q('#sanro-sleeve').value=design.long_sleeve?'long':'short';
+   if(config.pricing&&config.pricing.fixed_sleeve){
+    if(design.long_sleeve)throw new Error('Model lengan draft tidak sesuai produk.');
+    q('#sanro-sleeve').value=config.pricing.fixed_sleeve;
+   }else q('#sanro-sleeve').value=design.long_sleeve?'long':'short';
   }
   if(design.shirt_color!==undefined){
    if(!shirtColors.has(design.shirt_color))throw new Error('Warna draft tidak valid.');
@@ -722,8 +725,7 @@
        method:'GET',credentials:'same-origin',cache:'no-store',
        headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken}
       });
-      if(!readback.ok)throw new Error('Verifikasi preview '+name+' gagal ('+readback.status+').');
-      const verified=await readback.json();
+      const verified=await window.SanroStudioTransport.readJson(readback);
       if(!verified.valid||verified.file_id!==result.file_id||verified.image_base64!==encoded
        ||verified.mime!=='image/jpeg')throw new Error('Integritas preview '+name+' tidak sesuai.');
       completed.push(name);

@@ -10,6 +10,7 @@ function sanro_studio_order_shipping_matches($order,$expected) {
     if(!is_int($expected)||$expected<0)return false;
     $amount=method_exists($order,'get_shipping_total')?sanro_studio_idr_charge($order->get_shipping_total()):0;
     if($amount!==$expected)return false;
+    if(method_exists($order,'get_coupon_codes')&&$order->get_coupon_codes())return false;
     // No unapproved tax/fee/discount policy is inferred from this shipping bridge.
     foreach(['get_total_tax','get_discount_total'] as $method)if(method_exists($order,$method)&&sanro_studio_idr_charge($order->$method())!==0)return false;
     if(method_exists($order,'get_shipping_total')){
@@ -20,6 +21,7 @@ function sanro_studio_order_shipping_matches($order,$expected) {
 }
 function sanro_studio_capture_native_shipping($order,$contract) {
     $cart=sanro_studio_pricing_wc_cart();if(!is_object($cart))return ['valid'=>false];
+    if(function_exists('sanro_studio_cart_policy_issues')&&sanro_studio_cart_policy_issues($cart))return ['valid'=>false];
     $shipping=is_object($cart)&&method_exists($cart,'get_shipping_total')?sanro_studio_idr_charge($cart->get_shipping_total()):0;
     if($shipping===null||!sanro_studio_order_shipping_matches($order,$shipping))return ['valid'=>false];
     if(method_exists($cart,'get_totals')){$totals=$cart->get_totals();if(!is_array($totals)||sanro_studio_idr_charge($totals['total']??null)!==($contract['quote']['total_price']??-1)+$shipping)return ['valid'=>false];}

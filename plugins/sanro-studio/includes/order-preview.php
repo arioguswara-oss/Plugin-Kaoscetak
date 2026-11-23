@@ -317,7 +317,7 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
     if (is_array($snapshot) && ($snapshot['version'] ?? null) === 1
         && ($snapshot['design_id'] ?? null) === $design_id) {
         $labels = ['Kaos: ' . (is_string($snapshot['shirt_color'] ?? null) ? $snapshot['shirt_color'] : ''),
-            'Lengan: ' . (!empty($snapshot['long_sleeve']) ? 'panjang' : 'pendek')];
+            'Lengan: ' . (($snapshot['sleeve_label']??null)==='3/4'?'3/4':(!empty($snapshot['long_sleeve']) ? 'panjang' : 'pendek'))];
         foreach (['front'=>'Depan','back'=>'Belakang'] as $side=>$label) {
             $category = $snapshot['sides'][$side]['category'] ?? null;
             $labels[] = $label . ': ' . (is_string($category) ? $category : 'tanpa cetak');

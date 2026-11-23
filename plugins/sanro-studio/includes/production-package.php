@@ -47,6 +47,7 @@ function sanro_studio_production_item_manifest($order, $item_id) {
         'product_name'=>method_exists($item,'get_name')?(string)$item->get_name():'',
         'design_id'=>$id,'design_hash'=>$hash,'size'=>$size,'quantity'=>$qty,
         'quantities'=>$design['quantities'],'unit_price'=>(int)$unit,'subtotal'=>(int)$unit*$qty,'currency'=>'IDR',
+        'sleeve_label'=>$record['checkout_quote']['sleeve_label']??(!empty($snapshot['long_sleeve'])?'long':'short'),
         'shirt_color'=>$snapshot['shirt_color'],'long_sleeve'=>$snapshot['long_sleeve'],'sides'=>$snapshot['sides']];
     return ['valid'=>true,'manifest'=>$manifest];
 }
@@ -107,7 +108,7 @@ function sanro_studio_package_export_preflight($package) {
 }
 
 /** Gated coordinator; originals, guides/previews, optional unapproved DTF candidates. */
-function sanro_studio_export_production_package($order,$item_id,$folder_id) {
+function sanro_studio_export_production_package($order,$item_id,$folder_id,&$job_lease=null) {
     if(!sanro_studio_drive_package_enabled())return ['valid'=>false,'error'=>'drive_package_disabled'];
     $package=sanro_studio_prepare_production_package($order,$item_id);
     if(empty($package['valid']))return $package;
@@ -127,6 +128,7 @@ function sanro_studio_export_production_package($order,$item_id,$folder_id) {
     $package=sanro_studio_package_finalize_manifest($package);if(empty($package['valid']))return $package;
     $uploaded=0;$reused=0;$receipts=[];
     foreach($package['assets'] as $asset){
+        if($job_lease!==null&&!sanro_studio_lease_refresh($job_lease))return ['valid'=>false,'error'=>'drive_lease_lost'];
         $now=sanro_studio_production_item_manifest($order,$item_id);
         if(empty($now['valid'])||$now['manifest']!==array_diff_key($initial_manifest,array_flip(['assets','policy_hash'])))return ['valid'=>false,'error'=>'production_snapshot_changed'];
         $result=sanro_studio_drive_upload_item_source($order,$item_id,$folder_id,$asset['side'],$asset,$asset['kind']);
@@ -148,7 +150,7 @@ function sanro_studio_order_package_receipt($order) {
     if(empty($context['valid'])||empty($context['studio'])||!sanro_studio_auto_drive_order_eligible($order))return ['valid'=>false,'state'=>'stale'];
     $job=$order->get_meta('_sanro_studio_drive_job',true);
     if(!is_array($job))return ['valid'=>false,'state'=>'pending'];
-    if(($job['state']??null)!=='package_ready')return ['valid'=>false,'state'=>in_array($job['state']??null,['retry_queued','blocked','folders_ready'],true)?$job['state']:'pending'];
+    if(($job['state']??null)!=='package_ready')return ['valid'=>false,'state'=>in_array($job['state']??null,['retry_queued','blocked','folders_ready','running'],true)?$job['state']:'pending'];
     if(($job['fingerprint']??null)!==$context['fingerprint']||($job['policy_hash']??null)!==sanro_studio_production_policy_hash()||array_keys($job['items']??[])!==$context['item_ids'])return ['valid'=>false,'state'=>'stale'];
     $count=0;$seen=[];
     foreach($context['item_ids'] as $id){$item=$order->get_items('line_item')[$id];$receipt=$item->get_meta('_sanro_studio_production_receipt',true);

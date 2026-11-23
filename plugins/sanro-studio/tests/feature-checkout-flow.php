@@ -8,7 +8,7 @@ $GLOBALS['jpeg']=base64_decode('/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJ
 foreach(['print-area','product-area','editor-config','pricing','pricing-quote','quote','draft','cart-contract','checkout-bridge','checkout-batch-lock','pricing-woocommerce','pricing-integration','storage-policy','order-preview'] as $module)require __DIR__.'/../includes/'.$module.'.php';
 function absint($v){return abs((int)$v);}function maybe_serialize($v){return serialize($v);}function wp_cache_delete(...$args){}
 function get_woocommerce_currency(){return 'IDR';}function wp_salt($v){return 'fixture-salt-0123456789';}
-function get_post_meta($id,$key,$single=true){return $key==='_sanro_studio_pricing_profile'?'cotton_combed_24s':($key==='_sanro_studio_safe_areas'?['front'=>['width'=>32,'height'=>48],'back'=>['width'=>32,'height'=>48]]:null);}
+function get_post_meta($id,$key,$single=true){return $key==='_sanro_studio_pricing_profile'?($GLOBALS['pricing_profile']??'cotton_combed_24s'):($key==='_sanro_studio_safe_areas'?['front'=>['width'=>32,'height'=>48],'back'=>['width'=>32,'height'=>48]]:null);}
 function get_option($key,$default=false){return $GLOBALS['options'][$key]??$default;}
 function sanro_studio_draft_image_binding_allowed($design,$refs,$id){return $refs===[];}
 function sanro_studio_draft_rest_enabled(){return true;}function sanro_studio_stage_classic_checkout_ready(){return true;}

@@ -144,9 +144,10 @@ function sanro_studio_render_buyer_editor() {
     // Render as a dedicated view: no WooCommerce add-to-cart form is included.
     $asset = plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/';
     wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], sanro_studio_buyer_style_version());
-    wp_enqueue_script('sanro-studio-estimate', $asset . 'estimate.js', [], SANRO_STUDIO_VERSION, true);
+    wp_enqueue_script('sanro-studio-estimate', $asset . 'estimate.js', [], SANRO_STUDIO_VERSION . '-' . substr(hash_file('sha256',dirname(__DIR__).'/assets/estimate.js'),0,12), true);
+    wp_enqueue_script('sanro-studio-transport', $asset . 'transport.js', [], SANRO_STUDIO_VERSION, true);
     wp_enqueue_script('sanro-studio-cart-redirect', $asset . 'cart-redirect.js', [], SANRO_STUDIO_VERSION, true);
-    wp_enqueue_script('sanro-studio-buyer', $asset . 'buyer.js', ['sanro-studio-estimate', 'sanro-studio-cart-redirect'], sanro_studio_buyer_script_version(), true);
+    wp_enqueue_script('sanro-studio-buyer', $asset . 'buyer.js', ['sanro-studio-estimate', 'sanro-studio-cart-redirect', 'sanro-studio-transport'], sanro_studio_buyer_script_version(), true);
     // Supply API bootstrap only on explicitly enabled staging; no owner token
     // is ever included in page HTML or a shared JavaScript configuration.
     if (function_exists('sanro_studio_draft_rest_enabled') && sanro_studio_draft_rest_enabled()) {
@@ -195,11 +196,12 @@ function sanro_studio_render_buyer_editor() {
     echo '<section class="sanro-controls" id="sanro-design-controls"><h2>Atur desain</h2>';
     echo '<label>Warna kaos<select id="sanro-shirt-color"><option value="#ffffff">Putih</option><option value="#171717">Hitam</option><option value="#b91c1c">Merah</option><option value="#1d4ed8">Biru</option><option value="#166534">Hijau</option></select></label>';
     echo '<fieldset class="sanro-size-qty"><legend>Jumlah per ukuran</legend>';
-    foreach (['S','M','L','XL','2XL','3XL','4XL','5XL'] as $size) {
+    foreach (($config['pricing']['sizes']??['S','M','L','XL','2XL','3XL','4XL','5XL']) as $size) {
         echo '<label>' . esc_html($size) . '<input type="number" data-size="' . esc_attr($size) . '" min="0" max="999" step="1" value="0" inputmode="numeric"></label>';
     }
     echo '</fieldset><p id="sanro-qty-total" role="status">Total: 0 pcs</p>';
-    echo '<label>Model lengan<select id="sanro-sleeve"><option value="short">Lengan pendek</option><option value="long">Lengan panjang (+Rp10.000/pcs)</option></select></label>';
+    if(($config['pricing']['fixed_sleeve']??null)==='3/4')echo '<label>Model lengan<select id="sanro-sleeve"><option value="3/4">Lengan 3/4</option></select></label>';
+    else echo '<label>Model lengan<select id="sanro-sleeve"><option value="short">Lengan pendek</option><option value="long">Lengan panjang (+Rp10.000/pcs)</option></select></label>';
     echo '<p id="sanro-price-estimate" role="status">Estimasi harga: pilih desain dan jumlah. Harga final dihitung saat checkout.</p>';
     echo '<label>Gambar PNG/JPEG maks. 10 MB<input type="file" id="sanro-image" accept="image/png,image/jpeg"></label>';
     echo '<label>Ukuran gambar<input type="range" id="sanro-image-size" min="10" max="100" value="60"></label>';

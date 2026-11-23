@@ -167,9 +167,11 @@ function sanro_studio_product_readiness($product_id) {
     if ($product->get_status() !== 'publish') $issues[] = 'product_not_published';
     if (!$product->is_purchasable()) $issues[] = 'product_not_purchasable';
     if (!sanro_studio_product_safe_areas($product_id)) $issues[] = 'safe_area_missing';
-    if (get_post_meta($product_id, '_sanro_studio_pricing_profile', true) !== 'cotton_combed_24s') {
+    $pricing=function_exists('sanro_studio_product_pricing_config')?sanro_studio_product_pricing_config($product_id):['valid'=>get_post_meta($product_id,'_sanro_studio_pricing_profile',true)==='cotton_combed_24s'];
+    if (empty($pricing['valid'])) {
         $issues[] = 'pricing_profile_missing';
     }
+    if(method_exists($product,'is_type')&&!$product->is_type('simple'))$issues[]='native_variations_not_configured';
     return ['ready' => !$issues, 'issues' => $issues];
 }
 
@@ -184,7 +186,8 @@ function sanro_studio_product_readiness_notice() {
         'product_not_published' => 'Produk belum dipublikasikan',
         'product_not_purchasable' => 'Produk belum dapat dibeli',
         'safe_area_missing' => 'Area cetak depan/belakang belum dikonfigurasi',
-        'pricing_profile_missing' => 'Profil harga Cotton Combed 24s belum dipilih',
+        'pricing_profile_missing' => 'Profil atau tabel harga SANRO Studio belum valid',
+        'native_variations_not_configured'=>'V1 menggunakan size/lengan pada desain. Native variasi Woo belum dikonfigurasi untuk editor.',
     ];
     echo '<div class="options_group"><p><strong>SANRO Studio — Kesiapan Produk</strong></p>';
     if ($status['ready']) {

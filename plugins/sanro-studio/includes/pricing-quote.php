@@ -14,7 +14,7 @@ function sanro_studio_product_quote($product_id, $design) {
         return ['valid' => false, 'error' => 'unsupported_currency'];
     }
     $config = sanro_studio_public_editor_config($product_id);
-    if (empty($config['valid']) || $config['pricing_profile'] !== 'cotton_combed_24s') {
+    if (empty($config['valid']) || !in_array($config['pricing_profile'],['cotton_combed_24s','tunik_oversize_34'],true)) {
         return ['valid' => false, 'error' => 'product_unavailable'];
     }
     if (!is_array($design) || (array_key_exists('long_sleeve', $design) && !is_bool($design['long_sleeve']))) {
@@ -35,9 +35,9 @@ function sanro_studio_product_quote($product_id, $design) {
     $pieces = $total = 0;
     foreach ($quantities as $size => $quantity) {
         if ($quantity === 0) continue;
-        $unit = sanro_studio_24s_unit_price(
-            $size, $categories['front'], $categories['back'], $design['long_sleeve'] ?? false
-        );
+        $profile=function_exists('sanro_studio_product_pricing_config')?sanro_studio_product_pricing_config($product_id):null;
+        $unit=$profile!==null?sanro_studio_profile_unit_price($profile,$size,$categories['front'],$categories['back'],$design['long_sleeve']??false)
+            :sanro_studio_24s_unit_price($size,$categories['front'],$categories['back'],$design['long_sleeve']??false);
         if (!$unit['valid']) return $unit;
         $subtotal = $unit['unit_price'] * $quantity;
         $lines[$size] = ['quantity' => $quantity, 'unit_price' => $unit['unit_price'], 'subtotal' => $subtotal];
@@ -48,6 +48,8 @@ function sanro_studio_product_quote($product_id, $design) {
     return [
         'valid' => true, 'contract_version' => 1, 'product_id' => $product_id,
         'pricing_profile' => $config['pricing_profile'], 'currency' => 'IDR',
+        'pricing_revision'=>$profile['revision']??null,
+        'sleeve_label'=>$profile['fixed_sleeve']??(!empty($design['long_sleeve'])?'long':'short'),
         'categories' => $categories, 'sides' => $validated['sides'],
         'lines' => $lines, 'pieces' => $pieces, 'total' => $total,
     ];

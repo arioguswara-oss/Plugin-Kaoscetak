@@ -1,10 +1,11 @@
 # SANRO Studio — ledger aktif development
 
-Checkpoint resmi80,50%; hasil feature-completion3 **83,50% (+3,00 poin)**. Bobot tetap. [Tabel tunggal dan rekonsiliasi saldo Owner](PROGRESS-BASELINE.md).
+Checkpoint resmi83,50%; hasil feature-completion4 **87,50% (+4,00 poin)**. Bobot tetap. [Tabel tunggal dan rekonsiliasi saldo Owner](PROGRESS-BASELINE.md).
 
-- [Laporan terbaru: implementasi, bukti dan batas](../qa/studio-feature-completion-3-20261123.md)
+- [Laporan terbaru: implementasi, bukti dan batas](../qa/studio-feature-completion-4-20261123.md)
 - [Ownership/dependency](WORK-OWNERSHIP.md)
-- [Spesifikasi bisnis](../business-rules/kaoscetak-lite-designer-v1.md)
-- [Checkpoint80,50 historis](../qa/studio-feature-completion-2-20261123.md)
+- [Kebijakan checkout: DECIDED dan OPEN](../business-rules/studio-checkout-v1-boundary.md)
+- [Paket persiapan staging](../qa/studio-feature4-staging-packet.md)
+- [Spesifikasi bisnis sumber](../business-rules/kaoscetak-lite-designer-v1.md)
 
-Work hanya menulis branch PR#52 dengan lease expected-SHA, tanpa worker AI lain, merge/deploy atau perubahan order. Kandidat staging dari clean HEAD tidak memberi izin instalasi. Full Audit tetap90%. Generator/Drive tetap default OFF; runtime/akun nyata/hasil cetak belum VERIFIED.
+Work hanya menulis branch PR52 dengan lease expected-SHA. Tidak menjalankan worker lain, merge/deploy atau menulis order live. Kandidat bukan izin instalasi. Full Audit tetap90%; generator/Drive default OFF. Ledger historis disimpan di Git, tidak menjadi baseline aktif kedua.

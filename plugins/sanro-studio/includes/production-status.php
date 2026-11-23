@@ -20,7 +20,7 @@ function sanro_studio_admin_item_production_readiness($order,$item_id) {
         'Desain & harga: '.($s['design_ready']?'terikat dan valid':'belum siap'),'Preview dua sisi: '.($s['previews_ready']?'tersedia':'belum lengkap'),
         'Panduan: '.($s['guide_capable']?'font tersedia':'font / aksara belum didukung'),
         'Generator: '.($s['generator_enabled']?'aktif; cek hasil kandidat':'nonaktif'),'Drive: '.($s['drive_enabled']?'aktif; cek berkas terverifikasi':'nonaktif'),
-        'Paket pesanan: '.($s['package_recorded']?'tercatat lengkap; izin berkas mengikuti verifikasi Drive':($s['package_state']==='retry_queued'?'menunggu retry':($s['package_state']==='stale'?'perlu pemulihan konsistensi':'belum lengkap'))),
+        'Paket pesanan: '.($s['package_recorded']?'tercatat lengkap; izin berkas mengikuti verifikasi Drive':($s['package_state']==='running'?'sedang diproses':($s['package_state']==='retry_queued'?'menunggu retry':($s['package_state']==='stale'?'perlu pemulihan konsistensi':'belum lengkap')))),
         'Persetujuan hasil cetak: belum diberikan otomatis'];
     echo '<div class="sanro-studio-production-status"><strong>'.esc_html('Kesiapan produksi').'</strong><p>'.esc_html(implode(' | ',$labels)).'</p>';
     if(function_exists('sanro_studio_verified_order_drive_url')){$url=sanro_studio_verified_order_drive_url($order);if($url)echo '<a target="_blank" rel="noopener noreferrer" href="'.esc_url($url).'">'.esc_html('Folder pesanan privat').'</a>';}

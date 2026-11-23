@@ -53,3 +53,17 @@ Source+assets+tests berada pada branch Work yang sama dengan lease publish expec
 | Kandidat staging | Clean committed tree → plugin-only ZIP + commit/file/archive manifest. Bahan review; belum deploy dan tidak mengubah flag |
 
 Tidak menulis #50/#51 atau menginisiasi Hermes/Codex/AI lain. Tidak mengklaim global runtime lock atas sesi AI eksternal. Ref#52 dipublish nonforce dengan expected SHA; dependency base tetap45a7917 sesuai checkpoint, tanpa merge.
+
+## Feature completion4 — parent a143703
+
+| Dependency | Implementasi/urutan |
+|---|---|
+| Catalog → quote | Preset Owner Cotton/Tunic → opsional tabel override terikat profile → validasi simple product/safe area → quote server/revision/sleeve label → cart → saved quote/order item. Harga live tidak mengganti order terkunci |
+| Checkout policy | Cart Studio → tolak applied coupon/fee/tax/discount yang belum didukung → shipping native snapshot → saved-order/payment guard; keputusan pajak/fee/kupon belum dibuat |
+| Running production | Root lease → persist run_id/attempt → jadwalkan watchdog sebelum network → preflight/heartbeat/asset receipts → complete. Silent crash → cek run+lease → bounded retry; active/renewed/replaced worker tidak diambil alih |
+| Recovery admin | manage_woocommerce + order nonce + package gates + eligibility/integrity → queue worker yang sama; tidak menyatakan pembayaran sah atau mengaktifkan flag |
+| Staging candidate | Clean commit → ZIP+build identity+manifest → local plan-only validator → review Owner → kelak deployment terpisah, runtime source/flags readback → E2E sintetis yang disetujui |
+
+PR52 masih Draft dan ref Work saja yang boleh diperbarui. HEAD sebelum publish a143703, base45a7917; branch sumber Hermes/Cloud tidak disentuh dan source pricing tidak diimpor ulang. Tidak ada AI tambahan dipanggil. Tidak memiliki visibilitas seluruh sesi eksternal, sehingga tidak mengklaim global lock. Jika expected-SHA berbeda, hentikan publish dan rekonsiliasi dahulu.
+
+Round4 hanya GET produk24 staging (HTTP200, product-type-simple, tanpa variations_form). Tidak melakukan draft/order/payment writes atau deploy; hasil browser putaran sebelumnya tetap bukti historis pada source lama. Runtime yang Owner laporkan e876035 tidak disamakan dengan kandidat baru.

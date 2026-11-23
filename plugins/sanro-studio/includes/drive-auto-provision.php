@@ -47,7 +47,7 @@ function sanro_studio_schedule_drive_production($order_id) {
 }
 
 /** Only server cron / WooCommerce Action Scheduler calls this registered action. */
-function sanro_studio_perform_drive_production($order_id) {
+function sanro_studio_perform_drive_production($order_id,&$job_lease=null) {
     if (!sanro_studio_auto_drive_enabled() || !is_numeric($order_id)
         || (int) $order_id < 1 || !function_exists('wc_get_order')) {
         return ['valid' => false, 'error' => 'drive_auto_disabled'];
@@ -80,6 +80,7 @@ function sanro_studio_perform_drive_production($order_id) {
     // folder is created. This new package path is independently default OFF.
     if (function_exists('sanro_studio_drive_package_enabled') && sanro_studio_drive_package_enabled()) {
         foreach ($targets as $item_id) {
+            if($job_lease!==null&&!sanro_studio_lease_refresh($job_lease))return ['valid'=>false,'error'=>'drive_lease_lost'];
             $package=sanro_studio_prepare_production_package($order,$item_id);
             if (empty($package['valid'])) return ['valid'=>false,'error'=>$package['error']??'production_package_invalid'];
             $ready=sanro_studio_package_export_preflight($package);if(empty($ready['valid']))return $ready;
@@ -92,6 +93,7 @@ function sanro_studio_perform_drive_production($order_id) {
     $created = 0; $reused = 0;
     $masters_exported = 0; $masters_reused = 0; $masters_skipped = 0;
     foreach ($targets as $item_id) {
+        if($job_lease!==null&&!sanro_studio_lease_refresh($job_lease))return ['valid'=>false,'error'=>'drive_lease_lost'];
         $result = sanro_studio_auto_drive_provision_item($order, $item_id);
         if (empty($result['valid'])) return ['valid' => false,
             'error' => $result['error'] ?? 'drive_provision_failed',
@@ -99,7 +101,7 @@ function sanro_studio_perform_drive_production($order_id) {
         if (!empty($result['created'])) $created++;
         else $reused++;
         if (function_exists('sanro_studio_drive_package_enabled') && sanro_studio_drive_package_enabled()) {
-            $package=sanro_studio_export_production_package($order,$item_id,$result['folder_id']);
+            $package=sanro_studio_export_production_package($order,$item_id,$result['folder_id'],$job_lease);
             if (empty($package['valid'])) return ['valid'=>false,'error'=>$package['error']??'production_package_failed','created'=>$created,'reused'=>$reused];
         }
         // A folder being ready does NOT mean that a final DTF composition is

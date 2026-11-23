@@ -18,8 +18,8 @@ function sanro_studio_native_capabilities() {
         'order_item_manifest' => function_exists('sanro_studio_order_item_production_manifest'),
         'legacy_runtime_loaded' => function_exists('sanro_studio_boot_runtime'),
         'woocommerce_loaded' => class_exists('WooCommerce', false),
-        'private_master_storage' => false,
-        'checkout' => false,
+        'private_master_storage' => function_exists('sanro_studio_store_owned_draft_master'),
+        'checkout' => function_exists('sanro_studio_pricing_lock_order'),
         'production_ready' => false,
     ];
 }
@@ -49,7 +49,7 @@ function sanro_studio_native_core_status() {
         'legacy_compat_enabled' => defined('SANRO_STUDIO_ENABLE_LEGACY_COMPAT')
             && SANRO_STUDIO_ENABLE_LEGACY_COMPAT === true,
         'legacy_runtime_loaded' => $capabilities['legacy_runtime_loaded'],
-        'checkout_enabled' => false,
+        'checkout_enabled' => $capabilities['woocommerce_loaded'] && function_exists('sanro_studio_pricing_wc_enabled') && sanro_studio_pricing_wc_enabled(),
         'production_ready' => false,
         'verified_end_to_end' => false,
     ];
