@@ -1,30 +1,37 @@
 # SANRO Studio — ledger koordinator
 
-Satu baseline implementasi resmi: **71,95%**, metode SANRO-7-v1. Owner menetapkan baseline ini pada instruksi NEXT koordinasi PR #48–#50. Satu sumber bobot/progres adalah [PROGRESS-BASELINE.md](PROGRESS-BASELINE.md). Nilai sebelumnya → sekarang **71,95% → 71,95%, delta 0,00 poin**. Ini baseline estimasi penyelesaian scope donor yang telah diterima Owner, bukan persentase runtime VERIFIED.
+**Integration Coordination Update 2**, 23 November 2026 WIB.
 
-| Dokumen | Peran |
+Satu baseline implementasi resmi: **71,95% → 71,95%; delta 0,00 poin**. Bobot SANRO-7-v1 tetap 25/10/15/10/10/20/10, tidak dikalibrasi ulang. Angka/tabel resmi hanya di [PROGRESS-BASELINE.md](PROGRESS-BASELINE.md).
+
+| Dokumen | Fungsi |
 |---|---|
-| [PROGRESS-BASELINE.md](PROGRESS-BASELINE.md) | Satu sumber angka resmi, bobot tujuh tahap dan formula |
-| [INTEGRATION-20261123.md](INTEGRATION-20261123.md) | Snapshot #48–#50, overlap source, dependency, urutan integrasi, serta arsip tabel #14–#47 |
-| [WORK-OWNERSHIP.md](WORK-OWNERSHIP.md) | Hermes = restore/editor/core; Cloud = pricing/CI; Work = ledger/koordinasi |
-| [DTF-BUSINESS-RULES.md](DTF-BUSINESS-RULES.md) | Keputusan tarif DTF dan bagian OPEN; tidak diubah pada putaran ini |
+| [PROGRESS-BASELINE.md](PROGRESS-BASELINE.md) | Tujuh tahap, sebelum/sekarang, kontribusi, delta dan alasan tidak menggandakan kredit |
+| [INTEGRATION-20261123.md](INTEGRATION-20261123.md) | Readback PR #46–#51, diff implementasi, matriks dependency/ownership, evidence dan maksimal lima task menuju 90% |
+| [WORK-OWNERSHIP.md](WORK-OWNERSHIP.md) | Batas Hermes/Cloud/Work dan aturan satu penulis |
+| [DTF-BUSINESS-RULES.md](DTF-BUSINESS-RULES.md) | Aturan Owner yang tetap; tidak diubah pada Update 2 |
 
-STATUS.md hanya menunjuk baseline ini. docs/DEVELOPMENT-LEDGER.md pada #48 adalah evidence kapabilitas branch, tanpa baseline persen sendiri; sumber angka historis 89,4%/90%/35% tidak berlaku sebagai baseline aktif. Branch lain yang belum menerima docs ini masih dapat memuat angka lama; tidak ada perubahan paksa pada branch lain atau integration.
+## Checkpoint terbaru yang diperiksa
 
-## Checkpoint source yang diperiksa
+| PR | HEAD |
+|---|---|
+| #46 hardening donor | e01bdc55a21b4f0b2c471300dfc58ac482641a07 |
+| #47 bootstrap | 71955dd3d4df9669b1e667e928a64508a2d579b6 |
+| #48 runner CI | e8404d61d5161e4c5d6cfe5a04b9470f8e7145fe |
+| #49 ledger parent sebelum Update 2 | 0d6cbdbcebe2ce4ac2074c723a10a575469ae592 |
+| #50 restore/wiring | 0b3004b858391ad38919a5733f2f7835ed8dec93 |
+| #51 pricing quote | b39d13fc741985b467ebc2c9df397000225a6eca |
 
-- #48 e8404d61d5161e4c5d6cfe5a04b9470f8e7145fe, base #47; bounded offline PASS dilaporkan.
-- #49 77011df8fe14c9fe25b96bddffaa63e218374d83 sebelum pembaruan koordinasi ini; target integration.
-- #50 7d097fe0cd1c06a0f24a1f575063149ca677c49d, base #47; restore source #45, bukan delta lanjutan #46; hasil QA bercampur PASS/FAIL/SKIP.
-- Pricing 7a732797ebe43960f3f98e8d666cc792d21454f9; product-pricing.php identik dengan #50; test pricing offline unik belum di #50.
-- Integration masih 0d981b634888a5389bc394b93a13a4177090cc76 tanpa plugin Studio.
+Semua OPEN/Draft, belum merged. Integration 0d981b6 belum memuat plugin Studio. Source #50 selain bootstrap identik donor #45; hardening #46 belum otomatis ikut. Quote #51 memiliki bentuk berbeda dan belum dipanggil #50. Runner dan Node smoke #51 identik #48.
 
-## Validasi dan batas
+## Evidence dan hasil koordinasi
 
-Pemeriksaan API metadata/files/comments dan Git diff/blob dilakukan read-only. Verifikasi dokumen: bobot 100, kontribusi 71,95, tidak ada kenaikan angka tahap, tautan dokumen lokal sah, diff hanya dokumentasi, whitespace check dan readback remote. Hasil akhir dicatat di laporan PR #49.
+DECIDED: tarif/bobot/ownership. IMPLEMENTED pada branch: wiring #50, API quote read-only #51. VERIFIED oleh Work: HEAD/diff/blob/overlap/schema dan perhitungan ledger. Hasil eksekusi worker yang dibaca: #50 lint 176 PASS, CI 184 PASS/1 FAIL EPERM, parity alternatif 400/400 PASS, dependency tests 22 PASS; #51 688 quote assertions PASS. Hasil lokal bukan GitHub Actions atau runtime WordPress/Woo VERIFIED.
 
-Tidak menjalankan ulang lint/unit/E2E aplikasi. PASS pada #48 hanya berlaku pada SHA/lingkungan tersebut; FAIL kontrak cart/draft-lock/native-core di laporan #50 tidak disamarkan sebagai PASS. SKIP GD bukan verifikasi gambar. Identitas/ACK runtime AI eksternal NOT VERIFIED; ownership administratif dari usulan Owner dan pemisahan source dicatat secara terpisah.
+Tidak menganggap seluruh FAIL historis masih aktif, atau sembuh hanya dari angka agregat. Core source lama, harga lama, restored companion dan runner duplikat tidak diberi kredit fitur baru. Baseline tetap; bukan mengurangi kemajuan penyiapan source yang sudah terjadi.
 
-Hasil putaran: pemetaan ownership dan dependency, urutan bootstrap → restore → delta pricing → CI terpadu, serta baseline tunggal. Tidak ada implementasi fitur baru atau kenaikan progres. Langkah berikutnya milik Hermes/Cloud sesuai scope; merge dan deploy tetap memerlukan izin Owner dan tidak dilakukan di sini.
+Validasi dokumen: bobot 100, kontribusi 71,95, angka tujuh tahap tidak berubah, delta nol, tautan internal valid, hanya STATUS/docs/ledger berubah, diff whitespace dan readback remote. Tes PHP/JS/E2E aplikasi NOT TESTED oleh Work pada tugas ini; tidak mengulang suite worker tanpa perubahan relevan.
 
-GO koordinasi dan development pemilik yang terisolasi. NO-GO merge/deploy/production dan worker duplikat restore/editor.
+Urutan usulan source: #47 → #50 dengan hardening #46 terpilih → #51 dengan adapter quote → delta CI #48 yang belum tercakup. Tidak melakukan retarget/merge/deploy atau dispatch worker. Capaian 90% memerlukan 18,05 poin scope baru; lima task di matriks bukan klaim target sudah tercapai.
+
+GO koordinasi/development source terisolasi; NO-GO merge/deploy/production/order baru dan klaim rilis final. ACK runtime worker eksternal tetap NOT VERIFIED.

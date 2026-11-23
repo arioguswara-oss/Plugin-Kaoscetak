@@ -1,27 +1,27 @@
-# SANRO Studio — status koordinasi
+# SANRO Studio — status resmi koordinasi
 
-Updated: 2026-11-23 (Asia/Jakarta).
+Updated: 2026-11-23 (Asia/Jakarta), Integration Coordination Update 2.
 
-**Baseline implementasi resmi: 71,95%.** Satu sumber angka, bobot tujuh tahap dan kontribusi: [docs/ledger/PROGRESS-BASELINE.md](docs/ledger/PROGRESS-BASELINE.md). Putaran koordinasi PR #48–#50: **71,95% → 71,95%; delta 0,00 poin**. Tidak ada implementasi fitur baru oleh tugas dokumentasi.
+**Baseline implementasi: 71,95% → 71,95%; delta 0,00 poin.** Bobot tetap tanpa kalibrasi. Satu sumber angka/tabel: [docs/ledger/PROGRESS-BASELINE.md](docs/ledger/PROGRESS-BASELINE.md). Angka historis lain bukan baseline aktif.
 
-Angka 89,4% yang sebelumnya tercantum di file ini adalah estimasi historis yang telah digantikan untuk pelaporan aktif; tetap tersimpan di riwayat Git dan bagian rekonsiliasi ledger. Jangan memakai angka itu sebagai baseline kedua. Baseline 71,95% bukan bukti integrasi runtime.
+## Source terbaru
 
-## Pembagian kerja
-
-| Pemilik | Tanggung jawab |
+| Komponen | Status pada snapshot |
 |---|---|
-| Codex CLI Hermes | Restore/editor/core WooCommerce pada #50 |
-| Codex Cloud | Pricing DTF pada branch pricing profile dan CI #48 |
-| ChatGPT Work | Koordinasi, ledger dan pemetaan integrasi pada #49 |
+| #50 0b3004b | Wiring native admin/editor/classic checkout IMPLEMENTED di balik gate; source Studio selain bootstrap sama donor #45 |
+| #51 b39d13f | API quote/validasi cart-line IMPLEMENTED read-only; tarif inti sama, caller/schema bridge #50 belum terhubung |
+| #48 e8404d6 | Runner offline; runner/Node smoke juga direuse identik di #51 |
+| #46 e01bdc5 | Hardening preview/checkout lanjutan masih perlu dipilih untuk #50 |
+| #47 71955dd | Bootstrap, belum merged ke integration |
 
-[Ownership dan batas verifikasi](docs/ledger/WORK-OWNERSHIP.md) membedakan penugasan Owner dari ACK worker eksternal yang belum tersedia.
+Source preparation nyata diakui, tetapi restore/duplikasi fungsi lama atau jumlah assertion tidak menjadi kenaikan scope kedua kali. DTF/Drive otomatis tetap OFF. Tidak menyebut quote editor atau checkout gabungan sudah VERIFIED.
 
-## Jalur tunggal
+## Ownership dan langkah berikutnya
 
-Target kode: integration/sanro-studio. Urutan penerimaan yang diusulkan: bootstrap #47 → restore #50 → delta pricing unik → CI #48 yang disesuaikan. #49 dokumentasi dapat direview paralel. PR #48/#50 saat ini masih berbasis #47; tidak ada retarget/merge pada tugas ini.
+Hermes CLI: restore/editor/bootstrap/Woo core #50. Codex Cloud: pricing #51 dan CI #48. ChatGPT Work: ledger/koordinasi #49. Shared bootstrap hanya Hermes; Cloud menyediakan adapter/kontrak harga bersama pemanggil Hermes.
 
-[Dependency, overlap dan evidence source](docs/ledger/INTEGRATION-20261123.md) mencatat product-pricing yang sudah tercakup #50, tests/README.md yang beririsan, dependency runner terhadap fixture, dan delta keamanan #46 yang belum otomatis ikut restore #45. Laporan #50 masih memiliki FAIL kontrak; gabungan source belum E2E VERIFIED.
+[Matriks dependency, evidence dan lima pekerjaan menuju 90%](docs/ledger/INTEGRATION-20261123.md). [Batas ownership dan runtime ACK](docs/ledger/WORK-OWNERSHIP.md).
 
-## Gate
+Evidence worker yang dibaca: #50 lint 176 PASS; local CI 184 PASS/1 FAIL EPERM; parity alternatif 400/400 PASS; 22 dependency tests dipulihkan. #51 688 quote assertions PASS. Ini hasil bounded offline pada branch masing-masing, bukan PASS seluruh suite gabungan/GitHub Actions/runtime. Work tidak menjalankan tes aplikasi ulang.
 
-GO koordinasi dan development terisolasi sesuai ownership. NO-GO merge/deploy/production, perubahan database, order baru, penghapusan branch atau klaim kesiapan rilis dari dokumen ini. DTF/Drive otomatis tetap OFF. Tidak menjalankan restore/editor atau tes aplikasi di tugas Work ini.
+GO koordinasi/development source terisolasi. NO-GO merge/deploy/production/order baru, perubahan database atau penghapusan branch pada tugas ini. Semua PR tetap Draft/unmerged; runtime worker ACK belum tersedia.
