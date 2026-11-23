@@ -203,8 +203,30 @@ if (function_exists("sanro_studio_product_readiness")) {
 echo get_permalink($id);
 ' --path="$WP_ROOT")"
 
+wp eval '
+$id = function_exists("wc_get_product_id_by_sku") ? wc_get_product_id_by_sku("SANRO-STUDIO-STAGE-QA") : 0;
+$design = [
+    "front" => ["category" => "A5", "text" => "STAGING QA FRONT", "objects" => [["type" => "text", "x" => 1, "y" => 1, "width" => 6, "height" => 3]]],
+    "back" => ["category" => "A5", "text" => "STAGING QA BACK", "objects" => [["type" => "text", "x" => 1, "y" => 1, "width" => 6, "height" => 3]]],
+    "quantities" => ["S" => 1, "M" => 2],
+    "long_sleeve" => false,
+];
+$quote = sanro_studio_quote_size_quantities($id, $design, $design["quantities"], false);
+if (empty($quote["valid"]) || count($quote["lines"] ?? []) !== 2 || ($quote["pieces"] ?? 0) !== 3 || ($quote["total"] ?? 0) <= 0) {
+    fwrite(STDERR, "synthetic_multi_size_quote_failed=" . wp_json_encode($quote["error"] ?? "invalid_quote") . "\n"); exit(22);
+}
+echo "synthetic_multi_size_quote=PASS pieces=" . $quote["pieces"] . " currency=" . $quote["currency"] . "\n";
+' --path="$WP_ROOT" || fail 'server-side synthetic multi-size quote smoke failed'
+
+if ! curl --fail --silent --show-error --location --max-time 20 "$SYNTHETIC_URL" \
+  | grep -q 'id="sanro-studio-buyer"'; then
+  fail 'synthetic product buyer editor did not render over HTTPS'
+fi
+
 note "APPLY=PASS source_sha=$SOURCE_SHA"
 note "synthetic_product=$SYNTHETIC_URL"
+note 'synthetic_quote=PASS front/back A5 text design; sizes S=1 and M=2'
+note 'buyer_render_smoke=PASS HTTPS product page contains the native Studio editor'
 note 'runtime_flags=buyer,draft_api,wc_pricing,private_master,private_preview ON; staging_cart,DTF,Drive OFF'
 note 'browser_e2e=OWNER ACTION REQUIRED: open the synthetic URL in a staging browser session; test front/back design, save/reopen, quote, cart, Classic Checkout with a no-payment test method, then confirm the synthetic order lock and admin previews.'
 note 'No production host, production database, payment transaction, or Hostinger security guard was changed.'
