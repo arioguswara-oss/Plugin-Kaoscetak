@@ -2,7 +2,7 @@
 // Offline bootstrap contract: no WordPress installation or database needed.
 define('ABSPATH', __DIR__ . '/');
 $GLOBALS['hooks'] = array();
-function add_action($hook, $callback) { $GLOBALS['hooks'][$hook] = $callback; }
+function add_action($hook, $callback) { $GLOBALS['hooks'][$hook][] = $callback; }
 $GLOBALS['allow_admin'] = true;
 function current_user_can($cap) { return $cap === 'manage_woocommerce' && $GLOBALS['allow_admin']; }
 function esc_html__($s, $domain) { return $s; }
@@ -16,7 +16,8 @@ require dirname(__DIR__) . '/plugins/sanro-studio/sanro-studio.php';
 function check($condition, $label) {
     if (!$condition) { throw new RuntimeException('FAIL: ' . $label); }
 }
-check(($GLOBALS['hooks']['admin_menu'] ?? null) === 'sanro_studio_bootstrap_admin_menu', 'admin hook');
+check(in_array('sanro_studio_bootstrap_admin_menu', $GLOBALS['hooks']['admin_menu'] ?? array(), true), 'status admin hook');
+check(in_array('sanro_studio_admin_menu', $GLOBALS['hooks']['admin_menu'] ?? array(), true), 'native settings admin hook');
 sanro_studio_bootstrap_admin_menu();
 check($GLOBALS['menu']['cap'] === 'manage_woocommerce', 'admin capability');
 check($GLOBALS['menu']['parent'] === 'woocommerce', 'WooCommerce menu');

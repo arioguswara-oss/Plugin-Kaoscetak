@@ -1,0 +1,12 @@
+[Unit]
+Description=Hourly SANRO Studio isolated CI (disabled until owner approval)
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=5min
+AccuracySec=1min
+Persistent=false
+Unit=sanro-studio-ci.service
+
+[Install]
+WantedBy=timers.target

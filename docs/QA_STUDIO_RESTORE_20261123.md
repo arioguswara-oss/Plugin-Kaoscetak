@@ -4,7 +4,15 @@ Base: `feature/studio-bootstrap-admin` at `71955dd3d4df9669b1e667e928a64508a2d57
 Source checkout: `fix/sanro-studio-master-text-float-guard-20261122` at `179850842be5f801e9c79aad6afc4c522e6e8e23`.
 Pricing profile comparison: `work/claude-sanro-studio-product-pricing-profile-20261123` at `7a732797ebe43960f3f98e8d666cc792d21454f9`.
 
-The restore branch keeps the integration bootstrap, adds source module requires and admin hooks, and leaves all feature flags undefined. The frontend and staging cart hooks are absent.
+The restore branch keeps the integration bootstrap and leaves all feature flags undefined. Later work on this same branch added the historical companions and opt-in hook wiring; the original checkpoint results below are retained for traceability.
+
+## Putaran koordinasi 12 — update 2026-11-23
+
+**IMPLEMENTED:** restored historical `plugins/kaoscetak-lite-designer/`, `ops/hermes/`, `ops/hostinger/`, `scripts/`, and `prototypes/` from source commit `179850842be5f801e9c79aad6afc4c522e6e8e23`. Wired native settings/admin-post, private storage initialization, explicitly gated buyer editor, and explicitly gated classic checkout/cart hooks in the integration bootstrap. All flags remain undefined by default; DTF generator and Drive stay OFF. Updated the buyer-render fixture to match the source asset graph, without changing the editor implementation. The DTF pricing handoff is in `docs/architecture/studio-dtf-pricing-handoff-20261123.md`; the pricing engine is untouched.
+
+**VERIFIED:** 176 tracked PHP files pass `php -l`. Local CI: 184 checks PASS, one harness FAIL because Node `spawnSync('php')` is denied with `EPERM` in this sandbox; the same 400 PHP/JS pricing parity cases PASS when PHP and Node run as separate shell processes. The 22 PHP tests previously failing solely for missing companions now PASS. Editor geometry: 10 assertions PASS; legacy editor unit: 21 tests PASS; buyer render: 12 assertions PASS; staging preflight: 9 groups PASS; checkout security: 23 checks PASS; default-OFF/bootstrap checks PASS. Actual WordPress staging, WooCommerce Place Order/payment, GD rendering, and Drive remain NOT TESTED. The `tests/test_sanro_editor_geometry.js` case was executed with Node (a PHP invocation of a JS file is not a valid test).
+
+**DECIDED:** Pricing DTF remains Codex Cloud-owned. No numeric progress increase is asserted: the user-provided baseline is 71.95%, while the current official seven-stage ledger was not available in this workspace or connected Drive/Pages search. The historical roadmap supplies the seven stage names, not current stage percentages.
 
 ## Restore branch PHP lint
 

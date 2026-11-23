@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: SANRO Studio
- * Description: SANRO Studio isolated bootstrap. Read-only admin status only.
+ * Description: SANRO Studio native editor and WooCommerce integration, disabled by default.
  * Version: 0.1.0-dev
  * Requires PHP: 7.4
  * Requires Plugins: woocommerce
@@ -52,9 +52,12 @@ if (!function_exists('sanro_studio_bootstrap_admin_menu')) {
         );
     }
 }
-// Buyer template is loaded for integration, but frontend hooks stay disabled until
-// product configuration and draft dependencies are present and tested.
+// Load the historical source modules; their activation gates remain default OFF.
 require_once __DIR__ . '/includes/private-master-setup.php';
+if (function_exists('register_activation_hook')) {
+    register_activation_hook(__FILE__, 'sanro_studio_provision_private_master_storage');
+}
+add_action('init', 'sanro_studio_initialize_auto_private_master_storage', 0);
 require_once __DIR__ . '/includes/core.php';
 require_once __DIR__ . '/includes/print-area.php';
 require_once __DIR__ . '/includes/product-area.php';
@@ -87,7 +90,15 @@ require_once __DIR__ . '/includes/dtf-admin-readiness.php';
 require_once __DIR__ . '/includes/production-ready-admin.php';
 require_once __DIR__ . '/includes/draft-rest.php';
 require_once __DIR__ . '/includes/admin.php';
+if (defined('SANRO_STUDIO_ENABLE_LEGACY_COMPAT')
+    && SANRO_STUDIO_ENABLE_LEGACY_COMPAT === true) {
+    require_once __DIR__ . '/includes/runtime.php';
+    add_filter('lumise_settings', 'sanro_studio_filter_settings', 100);
+    add_action('plugins_loaded', 'sanro_studio_boot_runtime', 20);
+}
 add_action('admin_menu', 'sanro_studio_bootstrap_admin_menu');
+add_action('admin_menu', 'sanro_studio_admin_menu');
+add_action('admin_post_sanro_studio_save', 'sanro_studio_save_settings');
 
 // Product configuration is editable only through WooCommerce product admin.
 add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_area_fields');
@@ -102,8 +113,7 @@ add_action('woocommerce_admin_process_product_object', 'sanro_studio_save_produc
 add_action('admin_enqueue_scripts', 'sanro_studio_enqueue_product_mockup_admin');
 add_action('rest_api_init', 'sanro_studio_register_editor_config_route');
 
-// Source modules keep their own opt-in guards. Buyer and staging checkout hooks
-// are deliberately absent from this integration bootstrap.
+// The draft and upload route registrars verify their own explicit opt-in gates.
 add_action('rest_api_init', 'sanro_studio_register_draft_routes');
 add_action('rest_api_init', 'sanro_studio_register_preview_upload_route');
 add_action('rest_api_init', 'sanro_studio_register_master_upload_route');
@@ -123,3 +133,40 @@ add_action('woocommerce_payment_complete', 'sanro_studio_schedule_drive_producti
 add_action('woocommerce_order_status_changed', 'sanro_studio_schedule_drive_production', 20, 1);
 add_action('sanro_studio_production_ready_marked', 'sanro_studio_schedule_drive_production', 10, 1);
 add_action('sanro_studio_drive_provision_order', 'sanro_studio_run_drive_production', 10, 1);
+
+// These registrations are absent at the default-OFF setting. A staging
+// environment must explicitly opt in before the buyer editor can run.
+if (defined('SANRO_STUDIO_ENABLE_BUYER_EDITOR')
+    && SANRO_STUDIO_ENABLE_BUYER_EDITOR === true) {
+    add_action('woocommerce_single_product_summary', 'sanro_studio_product_editor_link', 35);
+    add_action('template_redirect', 'sanro_studio_render_buyer_editor', 20);
+}
+
+// Keep the signed cart and checkout bridge disconnected until every staging
+// gate is explicitly enabled. The source callbacks revalidate authorization.
+if (defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
+    && SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK === true) {
+    if (defined('SANRO_STUDIO_ENABLE_STAGING_CART')
+        && SANRO_STUDIO_ENABLE_STAGING_CART === true
+        && defined('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT')
+        && SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT === true) {
+        add_action('woocommerce_before_calculate_totals',
+            'sanro_studio_stage_reprice_signed_cart', 999, 1);
+        add_filter('woocommerce_get_item_data',
+            'sanro_studio_stage_cart_item_display', 20, 2);
+    }
+    add_action('wp_enqueue_scripts', 'sanro_studio_stage_enqueue_checkout_authorization', 30);
+    add_action('woocommerce_review_order_before_submit',
+        'sanro_studio_stage_checkout_credential_field', 5);
+    add_filter('sanro_studio_staging_checkout_owner_token',
+        'sanro_studio_stage_checkout_post_token', 10, 3);
+    add_action('woocommerce_checkout_process', 'sanro_studio_stage_checkout_process', 5);
+    add_action('woocommerce_checkout_create_order_line_item',
+        'sanro_studio_stage_checkout_create_order_line_item', 10, 4);
+    add_action('woocommerce_checkout_create_order',
+        'sanro_studio_stage_checkout_verify_order_batch', 10, 2);
+    if (sanro_studio_stage_checkout_batch_lock_enabled()) {
+        add_action('woocommerce_checkout_order_created',
+            'sanro_studio_stage_checkout_lock_created_order', 10, 1);
+    }
+}
