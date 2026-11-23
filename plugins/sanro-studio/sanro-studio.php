@@ -66,6 +66,7 @@ require_once __DIR__ . '/includes/product-pricing.php';
 require_once __DIR__ . '/includes/product-mockups.php';
 require_once __DIR__ . '/includes/editor-config.php';
 require_once __DIR__ . '/includes/pricing.php';
+require_once __DIR__ . '/includes/pricing-quote.php';
 require_once __DIR__ . '/includes/buyer.php';
 require_once __DIR__ . '/includes/quote.php';
 require_once __DIR__ . '/includes/cart-contract.php';

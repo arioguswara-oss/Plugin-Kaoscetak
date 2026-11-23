@@ -1,5 +1,13 @@
 # SANRO Studio restore QA — 2026-11-23
 
+## Koordinasi 12 update 2 — PR #46/#51 integration
+
+**IMPLEMENTED:** integrated the unique `pricing-quote.php` calculator from PR #51 without replacing the existing product pricing profile or duplicating its admin hooks. The existing draft/cart quote now delegates to that calculator and retains its established response shape. Applied PR #46's draft-revision preview binding, checkout quote metadata checks, order-item preview binding, and browser authorization hardening. All gates remain default OFF. Source pricing and hardening branches were not modified.
+
+**VERIFIED (changed paths only):** pricing quote 690 assertions PASS; Node pricing/assets 3 tests PASS; draft REST 37 PASS; buyer render 12 PASS; quote integration 31 PASS; cart adapter 74 PASS; checkout gate 43 PASS; REST cart bootstrap 42 PASS; checkout batch lock 32 PASS; checkout source security 23 PASS; order preview, draft lock, and storage-policy targeted scripts PASS. PR #46 offline one-order boundary 19 PASS, preflight 46 PASS, and Woo adapter PASS. Bootstrap/default-OFF PASS. Changed PHP files pass lint, changed JavaScript files pass `node --check`, and `git diff --check` passes. The two staging-root runtime preflights return BLOCKED without a staging environment; actual WooCommerce Place Order/payment remains NOT TESTED.
+
+**DECIDED:** no full audit or complete suite rerun this round. PR #51's CI runner, existing pricing profile module, and duplicate product hooks were not imported. No production flags, DTF generator, or Drive were enabled.
+
 Base: `feature/studio-bootstrap-admin` at `71955dd3d4df9669b1e667e928a64508a2d579b6`.
 Source checkout: `fix/sanro-studio-master-text-float-guard-20261122` at `179850842be5f801e9c79aad6afc4c522e6e8e23`.
 Pricing profile comparison: `work/claude-sanro-studio-product-pricing-profile-20261123` at `7a732797ebe43960f3f98e8d666cc792d21454f9`.

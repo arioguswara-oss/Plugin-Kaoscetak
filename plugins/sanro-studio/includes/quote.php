@@ -70,6 +70,19 @@ function sanro_studio_quote_size_quantities($product_id, $design, $quantities, $
     if ($saved_quantities !== $requested_quantities) {
         return ['valid' => false, 'error' => 'design_quantities_mismatch'];
     }
+    // The native product quote is authoritative whenever the integrated
+    // pricing module is loaded. Preserve the established draft/cart response
+    // shape so signed cart lines and checkout consume the same recalculation.
+    if (function_exists('sanro_studio_product_quote')) {
+        $quote = sanro_studio_product_quote($product_id, $design);
+        if (empty($quote['valid'])) return $quote;
+        return [
+            'valid' => true, 'currency' => $quote['currency'],
+            'items' => $quote['lines'],
+            'total_quantity' => $quote['pieces'],
+            'total_price' => $quote['total'],
+        ];
+    }
     $allowed = sanro_studio_24s_price_table();
     // Validate the design and product price profile once, even when a quote
     // contains multiple sizes. Never accept a browser-provided unit price.

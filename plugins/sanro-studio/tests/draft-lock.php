@@ -53,6 +53,9 @@ class SanroLockItem {
     public function __construct($product, $quantity = 2) { $this->product = $product; $this->quantity = $quantity; }
     public function get_product_id() { return $this->product; }
     public function get_quantity() { return $this->quantity; }
+    public function get_meta($key, $single = true) {
+        return $key === '_sanro_studio_design_id' ? $GLOBALS['draftLockId'] : '';
+    }
     public function get_subtotal() { return '150000.00'; }
     public function get_total() { return '135000.00'; }
     public function get_total_tax() { return '14850.00'; }
@@ -65,6 +68,7 @@ class SanroLockOrder {
     public function get_items($type) { return $type === 'line_item' ? $this->items : []; }
 }
 $order = new SanroLockOrder([7 => new SanroLockItem(12), 8 => new SanroLockItem(13), 10 => new SanroLockItem(12, 3)]);
+$GLOBALS['draftLockId'] = $id;
 verify(sanro_studio_lock_draft_for_order_item($id, $token, $order, 7)['error'] === 'forbidden', 'order lock requires admin');
 $GLOBALS['can_manage'] = true;
 verify(sanro_studio_lock_draft_for_order_item($id, $token, $order, 9)['error'] === 'invalid_order_item', 'unknown order item denied');

@@ -29,6 +29,7 @@ function sanro_studio_prepare_size_cart_lines($contract) {
     foreach ($contract['quote']['items'] as $size => $row) {
         $lines[] = ['sanro_studio_size' => $size, 'product_id' => $contract['product_id'],
             'quantity' => $row['quantity'], 'sanro_studio_design_id' => $contract['design_id'],
+            'sanro_studio_unit_price' => $row['unit_price'],
             'sanro_studio_line_subtotal' => $row['subtotal']];
     }
     return ['valid' => true, 'lines' => $lines];
@@ -59,10 +60,10 @@ class Db132 {
 }
 class Item132 {
     public $id; public $size; public $design; public $qty; public $product = 42;
-    public $subtotal;
+    public $subtotal; public $unit_price; public $currency='IDR';
     function __construct($id,$size,$quantity,$subtotal,$design) {
         $this->id=$id;$this->size=$size;$this->qty=$quantity;
-        $this->subtotal=$subtotal;$this->design=$design;
+        $this->subtotal=$subtotal;$this->unit_price=(int) ($subtotal / $quantity);$this->design=$design;
     }
     function get_id() { return $this->id; }
     function get_product_id() { return $this->product; }
@@ -72,6 +73,8 @@ class Item132 {
     function get_meta($key,$single=true) {
         if ($key === '_sanro_studio_size') return $this->size;
         if ($key === '_sanro_studio_design_id') return $this->design;
+        if ($key === '_sanro_studio_unit_price') return $this->unit_price;
+        if ($key === '_sanro_studio_quote_currency') return $this->currency;
         return '';
     }
 }
@@ -89,8 +92,8 @@ function reset132() {
     $GLOBALS['contract132'] = ['valid'=>true,
         'design_id'=>$GLOBALS['design132'],'product_id'=>42,
         'quote'=>['total_price'=>190000,'items'=>[
-            'M'=>['quantity'=>2,'subtotal'=>100000],
-            'L'=>['quantity'=>3,'subtotal'=>90000]
+            'M'=>['quantity'=>2,'unit_price'=>50000,'subtotal'=>100000],
+            'L'=>['quantity'=>3,'unit_price'=>30000,'subtotal'=>90000]
         ]]];
     $GLOBALS['draft132'] = [
         'status'=>'draft','design'=>['front'=>['objects'=>[]]],
@@ -114,6 +117,10 @@ $order = reset132();
 check132(sanro_studio_stage_checkout_batch_lock_enabled(), 'staging-only opt-in enabled');
 $pre = sanro_studio_checkout_batch_lock_preflight($order,$GLOBALS['contract132']);
 check132(!empty($pre['valid']) && $pre['item_ids']===[71,72], 'complete persisted size batch accepted');
+$order->items[72]->unit_price=1;
+check132(sanro_studio_checkout_batch_lock_preflight($order,$GLOBALS['contract132'])['error']
+    ==='order_quote_metadata_mismatch', 'tampered persisted quote denied');
+$order->items[72]->unit_price=30000;
 $order->items[73] = new Item132(73,'XL',1,10000,$GLOBALS['design132']);
 check132(sanro_studio_checkout_batch_lock_preflight($order,$GLOBALS['contract132'])['error']
     ==='order_line_count_mismatch', 'extra order item denied');

@@ -1,6 +1,8 @@
 <?php
 define('ABSPATH', __DIR__ . '/');
 define('SANRO_STUDIO_ENABLE_DRAFT_API', true);
+define('SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS', true);
+define('SANRO_STUDIO_ENABLE_PREVIEW_UPLOAD', true);
 define('HOUR_IN_SECONDS', 3600);
 class WP_Error {
     public $code; public $message; public $data;
@@ -88,4 +90,22 @@ $readBad = sanro_studio_rest_read_draft(new SanroTestRequest(['id' => 'draft'], 
 verify_rest($readBad instanceof WP_Error && $readBad->data['status'] === 404, 'private read rejects wrong owner');
 $readGood = sanro_studio_rest_read_draft(new SanroTestRequest(['id' => 'draft'], ['X-Sanro-Owner-Token' => str_repeat('a', 64)]));
 verify_rest($readGood['valid'] === true && $readGood['product_id'] === 17, 'private read returns authorized product');
+
+// Preview upload must distinguish stale design revision from malformed image input.
+function sanro_studio_store_owned_draft_preview($id, $token, $side, $bytes, $hash) {
+    return ['valid' => false, 'error' => 'draft_conflict'];
+}
+$preview = new SanroTestRequest([
+    'id' => 'draft', 'side' => 'front', 'image_base64' => 'AAAA',
+    'expected_design_hash' => str_repeat('a', 64),
+], ['X-Sanro-Owner-Token' => str_repeat('a', 64)]);
+$conflict = sanro_studio_rest_upload_preview($preview);
+verify_rest($conflict instanceof WP_Error && $conflict->code === 'sanro_draft_conflict'
+    && $conflict->data['status'] === 409, 'stale preview revision returns HTTP 409');
+$invalid = sanro_studio_rest_upload_preview(new SanroTestRequest([
+    'id' => 'draft', 'side' => 'front', 'image_base64' => '%%%%',
+    'expected_design_hash' => str_repeat('a', 64),
+]));
+verify_rest($invalid instanceof WP_Error && $invalid->data['status'] === 400,
+    'malformed preview image remains HTTP 400');
 echo "SANRO draft REST: {$checks} assertions PASS, 0 FAIL\n";

@@ -19,12 +19,14 @@ verify(sanro_studio_store_private_preview($fakeId, '../back', 'bytes')['error'] 
 
 function sanro_studio_read_draft($id, $token) {
     if ($token !== 'owner-secret') return ['valid' => false, 'error' => 'not_found'];
-    return ['valid' => true, 'status' => $id === 'locked' ? 'locked' : 'draft'];
+    return ['valid' => true, 'status' => $id === 'locked' ? 'locked' : 'draft',
+        'design_hash' => hash('sha256', 'saved-design')];
 }
 verify(sanro_studio_store_owned_draft_preview($fakeId, 'wrong', 'front', 'bytes')['error'] === 'not_found', 'invalid owner cannot write preview');
 verify(sanro_studio_store_owned_draft_preview('locked', 'owner-secret', 'front', 'bytes')['error'] === 'draft_locked', 'locked draft cannot write preview');
 verify(sanro_studio_store_owned_draft_preview($fakeId, 'owner-secret', 'other', 'bytes')['error'] === 'invalid_preview_target', 'reject unknown side');
-verify(sanro_studio_store_owned_draft_preview($fakeId, 'owner-secret', 'front', 'bytes')['error'] === 'preview_storage_disabled', 'authorized write still requires storage opt-in');
+verify(sanro_studio_store_owned_draft_preview($fakeId, 'owner-secret', 'front', 'bytes')['error'] === 'draft_conflict', 'preview write requires saved design hash');
+verify(sanro_studio_store_owned_draft_preview($fakeId, 'owner-secret', 'front', 'bytes', hash('sha256', 'saved-design'))['error'] === 'preview_storage_disabled', 'authorized write still requires storage opt-in');
 
 verify(sanro_studio_read_owned_draft_preview($fakeId, 'wrong', 'front', 'x')['error'] === 'not_found', 'preview read rejects wrong owner');
 verify(sanro_studio_read_owned_draft_preview($fakeId, 'owner-secret', 'front', '../secret')['error'] === 'invalid_preview_reference', 'preview read rejects traversal');

@@ -131,6 +131,7 @@ class SanroProductionItemOrderFixture {
 $boundPreview = new SanroOrderPreviewFixture([
     '_sanro_studio_design_id' => $id,
     '_sanro_studio_preview_front_ref' => $ref,
+    '_sanro_studio_preview_back_ref' => str_replace('-front-', '-back-', $ref),
 ]);
 $unboundPreview = new SanroOrderPreviewFixture([
     '_sanro_studio_preview_front_ref' => $ref,
@@ -190,6 +191,7 @@ verify(sanro_studio_mark_order_production_ready($failedReady)['error'] === 'prod
 $folderItem = new SanroMutablePreviewItem();
 $folderItem->meta['_sanro_studio_design_id'] = $id;
 $folderItem->meta['_sanro_studio_preview_front_ref'] = $ref;
+$folderItem->meta['_sanro_studio_preview_back_ref'] = str_replace('-front-', '-back-', $ref);
 $folderOrder = new SanroProductionItemOrderFixture([60 => $folderItem], true);
 $folderId = 'driveFolder_0123456789';
 $GLOBALS['admin_enabled'] = false;
@@ -213,6 +215,7 @@ verify(sanro_studio_attach_item_production_folder_id($pendingFolderOrder, 60, $f
 $unverifiedItem = new SanroMutablePreviewItem();
 $unverifiedItem->meta['_sanro_studio_design_id'] = $id;
 $unverifiedItem->meta['_sanro_studio_preview_front_ref'] = $ref;
+$unverifiedItem->meta['_sanro_studio_preview_back_ref'] = str_replace('-front-', '-back-', $ref);
 $unverifiedOrder = new SanroProductionItemOrderFixture([61 => $unverifiedItem], true);
 verify(sanro_studio_attach_item_production_folder_id($unverifiedOrder, 61, 'unverifiedFolder_12345')['error']
     === 'drive_folder_binding_mismatch', 'wrong Drive folder identity cannot be attached to a new item');
@@ -234,6 +237,7 @@ $adminOrder = new SanroAdminReadyOrderFixture();
 $adminItem = new SanroMutablePreviewItem();
 $adminItem->meta['_sanro_studio_design_id'] = $id;
 $adminItem->meta['_sanro_studio_preview_front_ref'] = $ref;
+$adminItem->meta['_sanro_studio_preview_back_ref'] = str_replace('-front-', '-back-', $ref);
 $adminOrder->items = [71 => $adminItem];
 $preflight = sanro_studio_production_ready_admin_preflight($adminOrder);
 verify($preflight['valid'] && $preflight['order_id'] === 99,
