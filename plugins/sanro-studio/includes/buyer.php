@@ -216,6 +216,8 @@ function sanro_studio_render_buyer_editor() {
     echo '<p id="sanro-validation" role="status">Belum ada desain.</p>';
     if (!empty($config['draft_api'])) {
         echo '<button type="button" id="sanro-save-draft">Simpan desain</button>';
+        echo '<button type="button" id="sanro-reopen-draft">Buka ulang draft tersimpan</button>';
+        echo '<p id="sanro-reopen-status" role="status" aria-live="polite">Draft milik sesi browser ini dapat dibuka kembali.</p>';
         if (!empty($config['master_upload_enabled'])) {
             echo '<button type="button" id="sanro-upload-master">Unggah gambar asli ke draft (staging)</button>';
             echo '<p id="sanro-master-upload-status" role="status" aria-live="polite">Simpan draft teks sebelum mengunggah gambar.</p>';
@@ -229,6 +231,11 @@ function sanro_studio_render_buyer_editor() {
         echo '<p id="sanro-save-status" role="status">Simpan desain untuk melanjutkan pemesanan.</p>';
     }
     if (!empty($config['draft_api'])
+        && function_exists('sanro_studio_pricing_wc_enabled')
+        && sanro_studio_pricing_wc_enabled()) {
+        echo '<button type="button" id="sanro-add-to-cart">Tambahkan ke Keranjang</button>';
+        echo '<p id="sanro-cart-status" role="status">Simpan desain sebelum melanjutkan ke keranjang.</p>';
+    } elseif (!empty($config['draft_api'])
         && defined('SANRO_STUDIO_ENABLE_STAGING_CART')
         && SANRO_STUDIO_ENABLE_STAGING_CART === true
         && defined('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT')

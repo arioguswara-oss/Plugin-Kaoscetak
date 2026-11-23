@@ -352,14 +352,14 @@
  }
  async function reopenDraft(){
   let stored;
-  try{stored=sessionStorage.getItem(draftStorageKey)}catch(_error){return}
-  if(!stored)return;
+  try{stored=sessionStorage.getItem(draftStorageKey)}catch(_error){return false}
+  if(!stored)return false;
   const revisionAtRequest=editRevision;
   let credentials;
-  try{credentials=JSON.parse(stored)}catch(_error){return}
-  if(!credentials||typeof credentials!=='object')return;
+  try{credentials=JSON.parse(stored)}catch(_error){return false}
+  if(!credentials||typeof credentials!=='object')return false;
   if(typeof credentials.id!=='string'||typeof credentials.token!=='string'
-   ||!/^[a-f0-9-]{36}$/i.test(credentials.id)||!/^[a-f0-9]{64}$/.test(credentials.token))return;
+   ||!/^[a-f0-9-]{36}$/i.test(credentials.id)||!/^[a-f0-9]{64}$/.test(credentials.token))return false;
   const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(credentials.id),{
    method:'GET',headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':credentials.token},
    credentials:'same-origin',cache:'no-store'});
@@ -372,7 +372,7 @@
   if(!result.valid||Number(result.product_id)!==Number(config.product_id))throw new Error('Draft bukan untuk produk ini.');
   if(editRevision!==revisionAtRequest){
    saveStatus.textContent='Draft lama tidak diterapkan karena desain sudah diubah. Muat ulang halaman untuk membuka draft.';
-   return;
+   return false;
   }
   const masterUrls={};
   try{
@@ -393,6 +393,7 @@
   savedId=credentials.id;ownerToken=credentials.token;savedRevision=editRevision;
   lastKnownDesignHash=typeof result.design_hash==='string'?result.design_hash:null;
   saveStatus.textContent='Draft berhasil dibuka kembali. Design ID: '+savedId;
+  return true;
  }
  function exportTextDraft(ignoreImages=false,allowEmpty=false){
   const design={};
@@ -762,6 +763,21 @@
    }catch(error){quoteStatus.textContent=error.message||'Gagal memeriksa harga server.'}
    finally{quoteButton.disabled=false}
   });
+  const reopenButton=q('#sanro-reopen-draft'),reopenStatus=q('#sanro-reopen-status');
+  if(reopenButton&&reopenStatus){
+   reopenButton.addEventListener('click',async()=>{
+    if(saving||uploadingMaster){reopenStatus.textContent='Tunggu penyimpanan atau upload master selesai.';return;}
+    reopenButton.disabled=true;
+    reopenStatus.textContent='Memeriksa draft tersimpan…';
+    try{
+     const stored=sessionStorage.getItem(draftStorageKey);
+     if(!stored){reopenStatus.textContent='Belum ada draft tersimpan pada sesi browser ini.';return;}
+     const reopened=await reopenDraft();
+     reopenStatus.textContent=reopened?'Draft berhasil dibuka kembali.':'Draft belum dapat diterapkan karena desain editor telah berubah.';
+    }catch(error){reopenStatus.textContent=error.message||'Draft tidak dapat dibuka kembali.';}
+    finally{reopenButton.disabled=false;}
+   });
+  }
   try{reopenDraft().catch(error=>{saveStatus.textContent=error.message})}catch(_error){}
   const cartButton=q('#sanro-add-to-cart'),cartStatus=q('#sanro-cart-status');
   // Prevent a second Cart POST while the first is pending, even if a DOM
