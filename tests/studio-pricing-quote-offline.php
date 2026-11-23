@@ -1,0 +1,109 @@
+<?php
+// Synthetic WordPress/WooCommerce boundaries; never writes data or calls a site.
+define('ABSPATH', __DIR__ . '/');
+$GLOBALS['currency'] = 'IDR';
+$GLOBALS['profile'] = 'cotton_combed_24s';
+$GLOBALS['published'] = true;
+$GLOBALS['purchasable'] = true;
+$GLOBALS['areas'] = ['front' => ['width' => 32, 'height' => 48], 'back' => ['width' => 32, 'height' => 48]];
+function absint($id) { return abs((int) $id); }
+function get_woocommerce_currency() { return $GLOBALS['currency']; }
+function get_post_meta($id, $key, $single) {
+    return $key === '_sanro_studio_pricing_profile' ? $GLOBALS['profile'] : $GLOBALS['areas'];
+}
+function wc_get_product($id) {
+    return $id === 7 ? new class {
+        public function get_status() { return $GLOBALS['published'] ? 'publish' : 'draft'; }
+        public function is_purchasable() { return $GLOBALS['purchasable']; }
+    } : false;
+}
+foreach (['print-area', 'product-area', 'editor-config', 'pricing', 'pricing-quote'] as $file) {
+    require dirname(__DIR__) . '/plugins/sanro-studio/includes/' . $file . '.php';
+}
+$checks = 0;
+function check_quote($condition, $label) {
+    global $checks;
+    $checks++;
+    if (!$condition) throw new RuntimeException('FAIL: ' . $label);
+}
+function side($category, $width = 10, $height = 10) {
+    return ['category' => $category, 'objects' => [['type' => 'image', 'x' => 0, 'y' => 0, 'width' => $width, 'height' => $height]]];
+}
+function design() { return ['front' => side('A3'), 'back' => side('A5'), 'quantities' => ['S' => 2, 'L' => 1]]; }
+$official = [
+    'S' => [62000,72000,82000,87000], 'M' => [65000,75000,85000,90000],
+    'L' => [68000,78000,88000,93000], 'XL' => [72000,82000,92000,97000],
+    '2XL' => [77000,87000,97000,102000], '3XL' => [80000,90000,100000,105000],
+    '4XL' => [83000,93000,103000,108000], '5XL' => [85000,95000,105000,110000],
+];
+$categories = ['A5','A4','A3','A3+'];
+$extras = [15000,25000,35000,40000];
+foreach ($official as $size => $prices) {
+    foreach ($categories as $i => $front) {
+        foreach ([false, true] as $long) {
+            foreach ([null, 'A5','A4','A3','A3+'] as $back) {
+                $d = ['front' => side($front), 'quantities' => [$size => 1], 'long_sleeve' => $long];
+                if ($back !== null) $d['back'] = side($back);
+                $j = $back === null ? $i : array_search($back, $categories, true);
+                $expected = $prices[max($i,$j)] + ($back === null ? 0 : $extras[min($i,$j)]) + ($long ? 10000 : 0);
+                $q = sanro_studio_product_quote(7, $d);
+                check_quote($q['valid'] && $q['total'] === $expected, 'official full price matrix');
+                $swap = $d; unset($swap['front'], $swap['back']);
+                $swap['back'] = side($front);
+                if ($back !== null) $swap['front'] = side($back);
+                check_quote(sanro_studio_product_quote(7, $swap)['total'] === $expected, 'front/back symmetry');
+            }
+        }
+    }
+}
+check_quote(sanro_studio_product_quote(7, design())['total'] === 297000, 'multi-size quantity totals');
+$q = sanro_studio_product_quote(7, ['front' => side('A5'), 'quantities' => ['S' => 1], 'long_sleeve' => true]);
+check_quote($q['total'] === 72000, 'Owner long-sleeve S example');
+foreach ($categories as $category) {
+    [$w,$h] = sanro_studio_print_categories()[$category];
+    $d = ['front' => side($category, $w, $h), 'quantities' => ['S' => 1]];
+    check_quote(sanro_studio_product_quote(7, $d)['valid'], 'exact category boundary');
+    $d['front']['objects'][0]['width'] += 0.01;
+    check_quote(!sanro_studio_product_quote(7, $d)['valid'], 'category exceeded');
+}
+$d = design(); $d['front']['objects'][] = ['type'=>'text','x'=>25,'y'=>0,'width'=>5,'height'=>5];
+check_quote(!sanro_studio_product_quote(7, $d)['valid'], 'combined image/text bounding box');
+$d = design(); $d['back'] = ['category'=>'A3+', 'objects'=>[]];
+check_quote(sanro_studio_product_quote(7, $d)['total'] === 252000, 'empty side not charged');
+foreach ([[], ['S'=>0], ['S'=>-1], ['S'=>1.5], ['S'=>'1'], ['S'=>1000], ['XXL'=>1], null,
+    ['S'=>999,'M'=>999,'L'=>999,'XL'=>999,'2XL'=>999,'3XL'=>999]] as $quantities) {
+    $d = design(); $d['quantities'] = $quantities;
+    check_quote(!sanro_studio_product_quote(7, $d)['valid'], 'invalid quantity rejected');
+}
+foreach (['unit_price'=>1, 'total'=>1, 'safe_areas'=>[], 'repeat_verified'=>true, 'pricing_profile'=>'hoodie'] as $key=>$value) {
+    $d = design(); $d[$key] = $value;
+    check_quote(!sanro_studio_product_quote(7, $d)['valid'], 'client authority rejected');
+}
+foreach ([null, 1, 'true'] as $value) {
+    $d = design(); $d['long_sleeve'] = $value;
+    check_quote(!sanro_studio_product_quote(7, $d)['valid'], 'strict sleeve boolean');
+}
+$d = design(); $d['front']['category'] = 'A2';
+check_quote(!sanro_studio_product_quote(7, $d)['valid'], 'unknown category');
+$d = design(); $d['front']['objects'][0]['width'] = INF;
+check_quote(!sanro_studio_product_quote(7, $d)['valid'], 'non-finite geometry');
+$GLOBALS['areas']['front']['width'] = 5;
+check_quote(!sanro_studio_product_quote(7, design())['valid'], 'admin safe area enforced');
+$GLOBALS['areas']['front']['width'] = 32;
+foreach ([-7, '7', 0, [], 99] as $id) check_quote(!sanro_studio_product_quote($id, design())['valid'], 'product ID validation');
+$GLOBALS['profile'] = 'hoodie';
+check_quote(!sanro_studio_product_quote(7, design())['valid'], 'unknown profile fails closed');
+$GLOBALS['profile'] = 'cotton_combed_24s';
+$GLOBALS['published'] = false;
+check_quote(!sanro_studio_product_quote(7, design())['valid'], 'unpublished product');
+$GLOBALS['published'] = true; $GLOBALS['purchasable'] = false;
+check_quote(!sanro_studio_product_quote(7, design())['valid'], 'unavailable product');
+$GLOBALS['purchasable'] = true; $GLOBALS['currency'] = 'USD';
+check_quote(!sanro_studio_product_quote(7, design())['valid'], 'no implicit currency conversion');
+$GLOBALS['currency'] = 'IDR';
+$line = sanro_studio_validate_priced_cart_line(7, design(), 'L', 1);
+check_quote($line['valid'] && $line['unit_price'] === 103000 && $line['subtotal'] === 103000, 'recomputed Woo line');
+foreach ([['L',2],['S',1],['XL',1],['L','1'],['L',0],['L',1.5]] as $args) {
+    check_quote(!sanro_studio_validate_priced_cart_line(7, design(), $args[0], $args[1])['valid'], 'cart mismatch rejection');
+}
+echo "PASS: {$checks} server pricing quote assertions\n";
