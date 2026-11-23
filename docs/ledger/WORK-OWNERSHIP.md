@@ -1,49 +1,33 @@
-# Kepemilikan pekerjaan dan pencegahan bentrok branch
+# Ownership SANRO Studio — PR #48–#50
 
-Snapshot 23 November 2026 WIB. Tugas koordinator tidak menjalankan restore atau mengedit kode.
+Tanggal 23 November 2026 WIB. Pembagian yang diusulkan Owner pada instruksi NEXT diterapkan sebagai pembagian kerja koordinasi. Ini memperbarui pemetaan penulis lama yang memakai nama Claude; tidak mengganti nama branch dan tidak memulai/menghentikan worker.
 
-## Yang benar-benar diamati
-
-| Lingkup | Fakta | Status |
-|---|---|---|
-| Tim percakapan ini | Inventory collaboration hanya /root berjalan; tidak ada child agent | VERIFIED saat diperiksa |
-| Workspace ini | Clone terpisah; branch docs/coordinator-ledger-20261123 hanya docs/ledger | VERIFIED melalui diff dan status |
-| PR #47 | feature/studio-bootstrap-admin, SHA 71955dd3d4df9669b1e667e928a64508a2d579b6, kandidat bootstrap/editor | Source VERIFIED; pemilik sesi eksternal belum diketahui |
-| Claude | work/claude-sanro-studio-product-pricing-profile-20261123, SHA 7a732797ebe43960f3f98e8d666cc792d21454f9, turunan #47 | Ancestry VERIFIED; aktivitas runtime/ack belum terlihat |
-| Donor #46 | dev/staging-one-order-gate-20261122, SHA e01bdc55a21b4f0b2c471300dfc58ac482641a07 | Snapshot source VERIFIED; bukan target tulis bersama |
-| Hermes/Codex Cloud/Claude sesi lain | Tidak tersedia inventory job/sesi remote atau readback lease dari worker pada tools yang ditemukan | NOT VERIFIED |
-
-Tidak adanya push atau assignee bukan bukti bahwa AI lain idle. Semua PR #14–#47 pada snapshot tidak memiliki assignee, sehingga assignment GitHub tidak dapat membuktikan kepemilikan worker. Branch Claude yang berbeda menghindari ref sama, tetapi perubahan pricing/bootstrap tetap dapat tumpang tindih dengan #47.
-
-## Batas kerja yang ditetapkan koordinator
-
-| Pekerjaan | Branch | Penulis | Batas tulis/keputusan |
+| Pemilik | Branch / PR | Scope eksklusif | Batas |
 |---|---|---|---|
-| Ledger/koordinasi sesi ini | docs/coordinator-ledger-20261123 | /root | Hanya docs/ledger; tanpa kode/runtime |
-| Bootstrap/editor utama | feature/studio-bootstrap-admin (#47) | Satu pemilik eksternal, BELUM ACK | Jangan menambah worker kedua, restore kedua, atau menulis branch ini dari sesi koordinator |
-| Profil harga produk | work/claude-sanro-studio-product-pricing-profile-20261123 | Kandidat Claude berdasar nama branch/commit, BELUM ACK runtime | Usulan batas: product-pricing.php, test harga; perubahan sanro-studio.php diserialkan dengan pemilik #47 |
-| Donor kumulatif/restore source | #46 dan semua PR lama | Arsip baca-saja untuk sesi ini | Tidak menjalankan restore atau worker di branch donor |
-| integration/sanro-studio | Target PR tunggal | Merge Owner saja | Tidak menerima push kode langsung atau restore |
-| main/production/database live | Diluar tugas | Owner berizin | Tidak disentuh |
+| Codex CLI Hermes | work/hermes-studio-restore-20261123 / #50 | Restore source, editor, core WooCommerce, draft/master, quote/cart/checkout binding, admin preview, hook/bootstrap | Satu penulis sanro-studio.php dan aset buyer. Review delta donor #46 serta FAIL cart/lock/core; tidak menulis CI branch atau ledger resmi. |
+| Codex Cloud — pricing | work/claude-sanro-studio-product-pricing-profile-20261123 | pricing.php, product-pricing.php dan tes harga; hanya delta yang belum tercakup #50 | Nama branch lama bukan penetapan Claude sebagai worker aktif. Hook bootstrap diminta ke Hermes, bukan diedit bersamaan. |
+| Codex Cloud — CI | work/codex-studio-ci-20261123 / #48 | Runner CI offline, test discovery/fixtures, tests/README.md dan bukti QA per branch | Tidak restore editor/core dan tidak membuat baseline resmi kedua. Kebutuhan perubahan code core diteruskan ke Hermes. |
+| ChatGPT Work | docs/coordinator-ledger-20261123 / #49 | docs/ledger, penunjuk STATUS.md, pemetaan dependency dan progres | Tidak mengubah plugin, scripts, tests atau workflow. |
+| Owner | integration/sanro-studio dan main | Keputusan merge/deploy | Tidak ada merge/deploy pada tugas ini. |
 
-Tabel ini adalah kebijakan koordinasi yang dicatat, BUKAN klaim penguncian Git server atau acknowledgement worker yang sudah diterima.
+## Verifikasi dan batas bukti
 
-## Protokol satu penulis
+- PR #48/#49/#50 OPEN/Draft dan belum merged. Branch terpisah terverifikasi dari API dan Git. Semua komentar/timeline yang tersedia pada ketiga PR kosong ketika dibaca.
+- #48 hanya tests/docs; #50 206 file source/tests/docs; #49 dokumentasi. Scope PR sesuai pembagian tingkat tugas, dengan overlap spesifik yang harus diserialkan (lihat INTEGRATION-20261123.md).
+- Source product-pricing.php pricing dan #50 identik; bootstrap #50 sudah memuat hook pricing. Ini overlap source, bukan bukti dua sesi menulis branch yang sama.
+- Assignment yang tercatat berasal dari instruksi Owner pada percakapan ini. Identitas worker runtime, status ACTIVE/DONE, heartbeat, dan ACK Hermes/Cloud belum dapat diverifikasi melalui tools yang tersedia. GitHub account author yang sama tidak membuktikan identitas AI.
+- Tidak mengklaim semua worker eksternal idle atau branch dikunci server. Tidak menghubungi AI eksternal, menjalankan Hermes/Codex, atau mengubah task mereka dari sesi ini.
 
-Sebelum melanjutkan restore/editor, satu pemilik harus mengakui assignment branch dan scope: task ID, worker/session ID, branch, base SHA, daftar path, mulai, heartbeat/expiry yang jelas, dan status ACTIVE/DONE. Koordinator mencatat acknowledgment; worker lain memakai worktree/branch berbeda dan tidak mengambil scope beririsan. Lease kedaluwarsa bukan izin mengambil alih otomatis; cek tugas lama berhenti dahulu. Sebelum push periksa head terhadap SHA awal, jangan force-push. Bila berubah, hentikan push dan rekonsiliasi.
+## Aturan operasional
 
-Shared path sanro-studio.php hanya punya satu penulis pada satu waktu. Branch berbeda saja tidak cukup. Restore/port ulang file editor yang sudah dimiliki #47 ditahan sampai ACK atau task lama terbukti selesai. Perubahan pricing Claude harus dikirim sebagai delta setelah bootstrap, dengan init/hook integration dimiliki penulis yang disepakati.
+1. Satu worker menulis satu branch/scope. Hermes tidak menulis branch pricing/CI; Cloud tidak menulis branch restore/editor; Work hanya docs.
+2. File bersama sanro-studio.php milik Hermes. Core menyediakan API quote/cart dan integrasi hook; Cloud menyediakan harga/test serta kontrak yang dibutuhkan. product-pricing.php yang identik tidak direstore kedua kali.
+3. tests/README.md milik Cloud pada hasil gabungan; fixture dari restore dipertahankan bila relevan tanpa overwrite panduan CI. Dokumentasi QA boleh mencatat PASS/FAIL/SKIP, tetapi angka resmi hanya di PROGRESS-BASELINE.md.
+4. Sebelum writer melanjutkan, catat branch/head/task/scope dalam laporan sesi yang memang menjalankannya. Periksa remote head sebelum push; bila SHA bergeser jangan force-push atau overwrite. Ini prosedur kerja, bukan approval Owner tambahan.
+5. ACK worker yang belum tersedia dicatat NOT VERIFIED. Tidak membuat worker restore/editor tambahan; pemilik yang ditetapkan melanjutkan sesuai scope terpisah dan izin yang sudah ada. Izin merge/deploy tidak tersirat dari penetapan ownership.
 
-## Kesimpulan poin 4
+## Kesimpulan
 
-**Sesi ini aman dari bentrok yang dibuat sendiri:** satu agent, branch dokumentasi terpisah, nol restore/editor/code write. **Jaminan global tidak ada AI lain menulis branch/scope yang sama: BELUM DAPAT DIVERIFIKASI.** Tidak mengaku sudah menghentikan atau mengunci Hermes/Claude/Codex eksternal.
+Ownership administratif **DITETAPKAN berdasarkan usulan Owner**; pemisahan branch dan overlap path **VERIFIED melalui source**; pengakuan/status sesi worker eksternal **NOT VERIFIED**. Risiko overlap utama: bootstrap/profil harga dan test runner terhadap fixture restore. Pemilik dan urutan penyelesaiannya sudah ditetapkan, tanpa mengubah kode atau menutup pekerjaan pihak lain.
 
-GO dokumentasi dan review baca-saja. **NO-GO untuk memulai writer restore/editor tambahan** sampai inventory/ack worker eksternal tersedia. Tidak menghubungi pihak lain, menonaktifkan layanan, membatalkan job, atau mengubah worker pada tugas ini.
-
-## Temuan akhir: PR #48 di luar inventaris awal #14–#47
-
-PR [#48](https://github.com/arioguswara-oss/Plugin-Kaoscetak/pull/48) muncul saat finalisasi, branch `work/codex-studio-ci-20261123`, HEAD `e8404d61d5161e4c5d6cfe5a04b9470f8e7145fe`, base #47 `71955dd3d4df9669b1e667e928a64508a2d579b6`. Metadata dan `docs/DEVELOPMENT-LEDGER.md` dibaca: perubahan hanya tests/ dan docs/, plugin source tetap identik menurut laporan PR; bounded offline bootstrap/Node PASS dilaporkan, bukan runtime WP/Woo.
-
-Pekerjaan QA ini berada di branch terpisah; tidak membuktikan restore/editor pada branch yang sama sedang berjalan atau sudah berhenti. Sesi Codex eksternal belum ACK ownership. Jangan menjalankan duplikat runner atau mengubah branch #48 pada tugas ini. Sesuai jalur tunggal, usulan kelanjutan QA adalah PR langsung ke integration setelah dependency bootstrap masuk; tidak melakukan retarget/merge sekarang.
-
-Ledger #48 mengelompokkan tujuh kapabilitas dengan urutan berbeda dan tanpa persen, hanya untuk source bootstrap. Ini evidence per branch, bukan pengganti bobot tujuh tahap SANRO-7-v1 di PROGRESS-BASELINE.md. Tahap draft/master dan checkout pada #48 BLOCKED karena source belum ada di base, konsisten dengan perbedaan donor dan integration. Jangan menyalin angka 71,95% ke source bootstrap sebagai capaian VERIFIED.
+Baseline tunggal 71,95%; delta 0,00 poin. GO koordinasi dan development terisolasi oleh pemilik; NO-GO merge/deploy, worker duplikat editor/restore, atau klaim runtime sudah bebas bentrok.

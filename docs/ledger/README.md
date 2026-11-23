@@ -1,30 +1,30 @@
 # SANRO Studio — ledger koordinator
 
-Tanggal baseline: 23 November 2026 WIB. Dokumentasi ini dibuat atas tugas Owner, tanpa perubahan kode.
+Satu baseline implementasi resmi: **71,95%**, metode SANRO-7-v1. Owner menetapkan baseline ini pada instruksi NEXT koordinasi PR #48–#50. Satu sumber bobot/progres adalah [PROGRESS-BASELINE.md](PROGRESS-BASELINE.md). Nilai sebelumnya → sekarang **71,95% → 71,95%, delta 0,00 poin**. Ini baseline estimasi penyelesaian scope donor yang telah diterima Owner, bukan persentase runtime VERIFIED.
 
-| Dokumen | Isi |
+| Dokumen | Peran |
 |---|---|
-| [INTEGRATION-20261123.md](INTEGRATION-20261123.md) | Seluruh PR #14–#47, target tunggal dan kandidat arsip bersyarat |
-| [PROGRESS-BASELINE.md](PROGRESS-BASELINE.md) | Baseline resmi SANRO-7-v1, bobot, formula dan rekonsiliasi riwayat |
-| [DTF-BUSINESS-RULES.md](DTF-BUSINESS-RULES.md) | Kategori, paket satu/dua sisi, lengan panjang, tarif dan keputusan OPEN |
-| [WORK-OWNERSHIP.md](WORK-OWNERSHIP.md) | Satu penulis, branch terpisah, batas observasi sesi eksternal |
+| [PROGRESS-BASELINE.md](PROGRESS-BASELINE.md) | Satu sumber angka resmi, bobot tujuh tahap dan formula |
+| [INTEGRATION-20261123.md](INTEGRATION-20261123.md) | Snapshot #48–#50, overlap source, dependency, urutan integrasi, serta arsip tabel #14–#47 |
+| [WORK-OWNERSHIP.md](WORK-OWNERSHIP.md) | Hermes = restore/editor/core; Cloud = pricing/CI; Work = ledger/koordinasi |
+| [DTF-BUSINESS-RULES.md](DTF-BUSINESS-RULES.md) | Keputusan tarif DTF dan bagian OPEN; tidak diubah pada putaran ini |
 
-Baseline pengembangan donor: **71,95%** estimasi berbobot dari rincian tahap historis, bukan persentase VERIFIED. Riwayat 89,4% dipertahankan. Delta implementasi tugas ini **0 poin**. Source integration belum memuat plugin; #47 belum merge. Poin pencegahan bentrok AI eksternal **NOT VERIFIED**, tidak disamakan dengan tidak ada worker.
+STATUS.md hanya menunjuk baseline ini. docs/DEVELOPMENT-LEDGER.md pada #48 adalah evidence kapabilitas branch, tanpa baseline persen sendiri; sumber angka historis 89,4%/90%/35% tidak berlaku sebagai baseline aktif. Branch lain yang belum menerima docs ini masih dapat memuat angka lama; tidak ada perubahan paksa pada branch lain atau integration.
 
-## Bukti pembacaan
+## Checkpoint source yang diperiksa
 
-- GitHub PR API state=all/per_page=100: 34 PR rentang 14–47, 28 OPEN dan 6 CLOSED (#28,#29,#30,#34,#37,#41), semua belum merged dan Draft.
-- Git clone remote refs; baca STATUS di integration, #47, #46 dan Claude; baca roadmap donor dan business-rules main.
-- Ancestry Git: #44 → #45 → #46; #47 → branch Claude. Integration dan integration/studio-preview-conflict sama SHA 0d981b6 pada snapshot.
-- Tabel/fungsi pricing.php 24s pada #45/#47/Claude identik saat dibaca.
-- Inventory agent percakapan hanya /root; tidak ada API inventory worker eksternal yang tersedia. Tidak masuk VPS Hermes.
+- #48 e8404d61d5161e4c5d6cfe5a04b9470f8e7145fe, base #47; bounded offline PASS dilaporkan.
+- #49 77011df8fe14c9fe25b96bddffaa63e218374d83 sebelum pembaruan koordinasi ini; target integration.
+- #50 7d097fe0cd1c06a0f24a1f575063149ca677c49d, base #47; restore source #45, bukan delta lanjutan #46; hasil QA bercampur PASS/FAIL/SKIP.
+- Pricing 7a732797ebe43960f3f98e8d666cc792d21454f9; product-pricing.php identik dengan #50; test pricing offline unik belum di #50.
+- Integration masih 0d981b634888a5389bc394b93a13a4177090cc76 tanpa plugin Studio.
 
-## Validasi dokumen yang diperlukan sebelum publikasi
+## Validasi dan batas
 
-Hitung bobot 100 dan kontribusi 71,95; pastikan 34 nomor PR lengkap/tanpa duplikat; hanya lima Markdown docs/ledger berubah; git diff --check; pembacaan kembali commit remote sesudah simpan. Hasil aktual dilaporkan bersama PR dokumentasi.
+Pemeriksaan API metadata/files/comments dan Git diff/blob dilakukan read-only. Verifikasi dokumen: bobot 100, kontribusi 71,95, tidak ada kenaikan angka tahap, tautan dokumen lokal sah, diff hanya dokumentasi, whitespace check dan readback remote. Hasil akhir dicatat di laporan PR #49.
 
-PHP/JS lint, unit test aplikasi, browser E2E, order sintetis, file DTF dan Drive: **NOT TESTED** pada tugas ini (kode tidak diubah). Tidak mengklaim PASS historis sebagai PASS pada HEAD integration. Tidak ada merge/deploy, penghapusan branch, penutupan PR, perubahan database atau restore.
+Tidak menjalankan ulang lint/unit/E2E aplikasi. PASS pada #48 hanya berlaku pada SHA/lingkungan tersebut; FAIL kontrak cart/draft-lock/native-core di laporan #50 tidak disamarkan sebagai PASS. SKIP GD bukan verifikasi gambar. Identitas/ACK runtime AI eksternal NOT VERIFIED; ownership administratif dari usulan Owner dan pemisahan source dicatat secara terpisah.
 
-Langkah berikutnya: satu pemilik #47 dan harga mengakui scope, siapkan alur fitur native melalui PR langsung ke integration, lalu pengujian proporsional pada source yang diintegrasikan. Tidak memulai implementasi dalam tugas koordinator ini.
+Hasil putaran: pemetaan ownership dan dependency, urutan bootstrap → restore → delta pricing → CI terpadu, serta baseline tunggal. Tidak ada implementasi fitur baru atau kenaikan progres. Langkah berikutnya milik Hermes/Cloud sesuai scope; merge dan deploy tetap memerlukan izin Owner dan tidak dilakukan di sini.
 
-GO hasil koordinasi/dokumentasi; NO-GO production, merge/deploy/order tanpa izin dan writer restore/editor tambahan sebelum ownership eksternal terkonfirmasi.
+GO koordinasi dan development pemilik yang terisolasi. NO-GO merge/deploy/production dan worker duplikat restore/editor.

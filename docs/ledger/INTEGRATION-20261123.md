@@ -1,19 +1,77 @@
-# Jalur integrasi tunggal — keputusan koordinator 23 November 2026 WIB
+# Jalur integrasi tunggal — koordinasi PR #48–#50
 
-Scope: PR #14–#47; dokumentasi saja. Snapshot API GitHub dan Git dibaca pada sesi ini. Tidak ada penutupan PR, penghapusan branch, restore, merge, retarget, atau deploy oleh tugas ini.
+Tanggal 23 November 2026 WIB. Menggantikan urutan usulan awal pada versi terdahulu dokumen ini. Tabel #14–#47 di bawah dipertahankan sebagai snapshot historis. Tidak ada retarget, perubahan kode, merge, deploy, penutupan PR atau penghapusan branch.
 
-## Jalur yang dipilih
+Baseline resmi **71,95%**, bobot dan kontribusi hanya di [PROGRESS-BASELINE.md](PROGRESS-BASELINE.md). Delta putaran ini 0,00 poin.
 
-`main` → `integration/sanro-studio` sebagai satu-satunya target integrasi → feature PR langsung → setelah izin Owner, kandidat staging → setelah gate dan izin terpisah, main/production.
-Anak panah adalah alur usulan, bukan operasi Git yang sudah dilakukan.
+## Snapshot branch dan PR
 
-Baseline integration: `0d981b634888a5389bc394b93a13a4177090cc76`; parent main `0760f565e8b1ef068c706748022d2f8b5539837a`. Integration hanya menambah STATUS.md, belum berisi plugin SANRO Studio. Branch `integration/studio-preview-conflict` pada SHA yang sama: kandidat arsip alias duplikat, jangan dipakai sebagai jalur kedua. Tidak ada branch develop yang perlu dibuat.
+| PR/komponen | Head branch | SHA diperiksa | Base aktual | Keadaan |
+|---|---|---|---|---|
+| #47 bootstrap (dependency) | feature/studio-bootstrap-admin | 71955dd3d4df9669b1e667e928a64508a2d579b6 | integration/sanro-studio | Dependency bootstrap belum terintegrasi pada target |
+| #48 CI/QA | work/codex-studio-ci-20261123 | e8404d61d5161e4c5d6cfe5a04b9470f8e7145fe | feature/studio-bootstrap-admin | OPEN/Draft; 5 file tests/docs |
+| #49 koordinator | docs/coordinator-ledger-20261123 | 77011df8fe14c9fe25b96bddffaa63e218374d83 (sebelum pembaruan ini) | integration/sanro-studio | OPEN/Draft; dokumentasi saja |
+| #50 restore/core | work/hermes-studio-restore-20261123 | 7d097fe0cd1c06a0f24a1f575063149ca677c49d | feature/studio-bootstrap-admin | OPEN/Draft; 206 file |
+| Pricing profile | work/claude-sanro-studio-product-pricing-profile-20261123 | 7a732797ebe43960f3f98e8d666cc792d21454f9 | Turunan #47 (bukan PR pricing terpisah pada daftar yang dibaca) | Owner usulan: Codex Cloud; nama branch lama dipertahankan |
+| Integration target | integration/sanro-studio | 0d981b634888a5389bc394b93a13a4177090cc76 | main parent 0760f565e8b1ef068c706748022d2f8b5539837a | Belum memuat plugin Studio |
 
-1. Gunakan PR #47 (`71955dd3d4df9669b1e667e928a64508a2d579b6`) untuk bootstrap/editor asli. Public editor hooks belum diregistrasikan; jangan menyebut editor integration berfungsi.
-2. Branch `work/claude-sanro-studio-product-pricing-profile-20261123` pada `7a732797ebe43960f3f98e8d666cc792d21454f9` adalah turunan #47 (ancestry Git terbukti), membawa 3 file / 90 baris tambahan untuk profil harga. Jadikan calon PR langsung tersendiri berbasis integration terbaru SETELAH #47 disetujui/diintegrasikan, hanya delta modul harga. Jangan impor seluruh bootstrap lagi; jangan mengganti branch Claude atau #47.
-3. Pilih versi akhir modul native dari donor kumulatif #46 (`e01bdc55a21b4f0b2c471300dfc58ac482641a07`): draft/REST, master privat, quote/cart, checkout binding, admin preview dan production-ready. #45 adalah ancestor #46; #44 ancestor #45. Jangan merge berurutan seluruh #14–#46 dan jangan copy seluruh plugin lama di atas bootstrap baru. Review dependency, hook, constant, helper, dan test per modul terlebih dahulu. Isolasi runtime vendor internal dari jalur native.
-4. Selesaikan satu alur: desain depan/belakang → save/reopen → quote server → cart → satu order sintetis staging → admin preview kedua sisi → artifact privat yang benar-benar dapat diakses admin berizin. PR #46 baru preflight, bukan bypass checkout atau runner. Unduh artifact berizin masih gap; panel status bukan bukti file dapat diakses.
-5. Drive otomatis dan raster DTF 300 DPI tetap OFF dan ditunda sesudah alur inti terbukti. Setelah tiap PR selesai, PR berikutnya berangkat dari integration terbaru; tidak ada PR bertumpuk baru. Merge dan staging order/deploy tetap memerlukan izin Owner untuk tindakan tersebut.
+Snapshot GitHub metadata, daftar changed files, komentar #48–#50 (kosong), remote branch refs, diff dan blob Git diperiksa. Label mergeable=true untuk masing-masing PR terhadap base aktual TIDAK membuktikan gabungan feature branches bebas konflik.
+
+## Ownership dan irisan scope
+
+| Pasangan/path | Bukti source | Keputusan integrasi |
+|---|---|---|
+| #48 / #50: tests/README.md | Keduanya berubah dari base #47; #48 menambah panduan offline runner, #50 menambah panduan fixture RC lama | Codex Cloud pemilik final panduan CI. Pertahankan konteks fixture yang masih valid secara terpisah; jangan overwrite seluruh README. Irisan file bukan bukti konflik tekstual. |
+| Pricing / #50: includes/product-pricing.php | Blob sama dd073c09c45aacbcfd7d8558e4eff0343f1c60a4 | Sudah tercakup #50. Jangan menambah ulang atau menghitung dua kali; pemilik perubahan pricing berikutnya Codex Cloud. |
+| Pricing / #50: sanro-studio.php | #50 sudah memiliki require product-pricing dan kedua hook admin profil harga dari delta pricing; keseluruhan bootstrap berbeda | Hermes satu penulis bootstrap. Pricing menyerahkan kebutuhan hook sebagai dependency, tidak mengganti bootstrap. |
+| Pricing: tests/studio-product-pricing-offline.php | Ada di branch pricing, tidak ada di #50 atau #48 | Delta unik untuk dipertahankan oleh Codex Cloud setelah restore; bukan alasan cherry-pick seluruh commit pricing. |
+| includes/pricing.php | Blob 468c04772bf19410d394dbde5d8f0e780dae90a4 identik pada #48, #50, pricing | Tidak ada beda tarif pada snapshot. Restore file identik bukan implementasi tarif baru. |
+| #49 / #48 / #50 | Lima docs/ledger awal #49 tidak beririsan dengan changed files #48/#50; pembaruan ini menambah penunjuk STATUS.md | Work hanya docs. docs/DEVELOPMENT-LEDGER.md #48 tetap evidence source bootstrap, tanpa bobot/persen tandingan. |
+| CI runner / restore test tree | #48 run-all.sh mengeksekusi seluruh root tests/*.php/js/cjs/mjs; #50 memulihkan fixture/helper dan skrip staging/legacy | Cloud harus menyesuaikan kontrak discovery setelah restore, bukan menganggap semua file executable test. Tidak menjalankan blanket runner terhadap gabungan source pada sesi ini. |
+
+## Dependency source penting
+
+PR #50 memulihkan source dari **#45 SHA 179850842be5f801e9c79aad6afc4c522e6e8e23**, BUKAN donor kumulatif #46 SHA e01bdc55a21b4f0b2c471300dfc58ac482641a07. Commit PR #46 bukan otomatis hilang: branch donor tetap disimpan. Hermes harus memilih delta native yang diperlukan; jangan restore massal lagi atau menganggap #50 sudah memuat seluruh hardening #46.
+
+Diff source #45 → #46 menunjukkan perubahan lanjutan pada:
+- assets/buyer.js, assets/checkout-auth.js, includes/buyer.php;
+- includes/checkout-batch-lock.php, checkout-bridge.php, draft-rest.php, draft.php, order-preview.php, storage-policy.php;
+- root tests/test_sanro_draft_rest.php dan sembilan tests/staging-one-order-*.
+
+Contoh dependency yang masih perlu dinilai: quote metadata order item (34d43eb), preview revision/binding (35393c5, 7e907df, 4bc1caa), preflight seluruh size lines (6ec389e), kedua sisi produksi lengkap (bc8acaa), checkout menolak binding belum terintegrasi (6a195ed), HTTP 409 stale preview revision (49cb791). Ini daftar source untuk review Hermes; tidak ada cherry-pick/aplikasi patch pada sesi Work.
+
+Pricing bergantung konfigurasi produk, tabel harga server dan quote/cart milik core. CI #48 hanya terbukti pada base bootstrap: private draft/master/checkout tidak tersedia pada snapshot #48. PR #50 menghadirkan source dependency itu tetapi belum membuktikan runtime atau semua kontrak PASS.
+
+## Urutan integrasi yang ditetapkan
+
+Urutan berikut adalah proposal untuk pelaksanaan SETELAH persetujuan merge Owner; tidak satu pun merge dilakukan sekarang.
+
+| Urutan | Kandidat / pemilik | Prasyarat dan hasil |
+|---|---|---|
+| 0 | #49 ledger / Work | Tetapkan pointer baseline tunggal dan ownership sekarang; boleh direview paralel karena hanya docs. |
+| 1 | #47 bootstrap | Fondasi ke integration/sanro-studio; tidak membuka frontend atau checkout. |
+| 2 | #50 restore/core / Hermes | Setelah bootstrap, siapkan delta langsung terhadap integration terbaru, selesaikan irisan bootstrap, review delta keamanan #46 dan FAIL kontrak inti. Fitur tetap default OFF. |
+| 3 | Pricing profile / Cloud | Setelah restore, bawa hanya delta pricing/test yang belum ada; hindari duplikasi product-pricing dan hook. Buat PR langsung ke integration, bukan PR bertumpuk baru. |
+| 4 | #48 CI / Cloud | Setelah kontrak tree restore+pricing jelas, siapkan delta langsung ke integration; pertahankan tests/README, batasi discovery offline dan penuhi dependency fixture. Evaluasi FAIL inti bersama Hermes. |
+| 5 | Kandidat fitur terpadu / Hermes + Cloud | Setelah source konsisten dan check proporsional PASS, tentukan langkah implementasi frontend/Woo berikutnya. Staging/E2E/order membutuhkan izin sesuai scope; tidak dilakukan sekarang. |
+
+Pengembangan delta pricing dan penyesuaian CI dapat berlangsung paralel di branch Cloud yang berbeda tanpa menyentuh bootstrap/editor Hermes. Urutan penerimaan tetap 1→2→3→4; jangan mencampur izin koordinasi dengan izin merge. Semua PR kode baru/yang dipersiapkan ulang menargetkan integration/sanro-studio setelah basis siap. Base #48/#50 saat ini masih #47; belum diretarget.
+
+## QA yang dibaca, bukan dijalankan ulang
+
+#48 melaporkan PHP/JS syntax dan bounded bootstrap/Node PASS pada e8404d6; GitHub Actions dan runtime WordPress/Woo NOT VERIFIED. #50 melaporkan lint 153 PHP tracked ditambah guard PASS dan bootstrap/restore guard PASS. Laporan #50 juga memuat:
+- FAIL cart-contract.php: server quote retained;
+- FAIL draft-lock.php: mismatched order quantity denied;
+- FAIL native-core.php: native function inventory;
+- kegagalan dependency/fixture staging atau legacy serta GD tidak tersedia;
+- dua baris PASS dengan pesan SKIP GD pada admin-preview-delivery/private-preview-files: dicatat sebagai assertion terkait belum dijalankan, bukan verifikasi gambar PASS;
+- inherited trailing whitespace pada skrip staging E2E.
+
+Jangan menggolongkan semua FAIL sebagai lingkungan. Hermes menilai dan memperbaiki kontrak cart/lock/core; Cloud menilai runner, fixture, dan test contract. Source pricing terpisah memiliki laporan 9 lint PASS dan dua offline test PASS dari QA Hermes; bukan bukti pricing gabungan #50+#48 sudah PASS. Work tidak menjalankan atau memperbaiki kode/tes pada putaran ini.
+
+GO koordinasi dan kelanjutan development oleh pemilik pada scope terpisah. NO-GO merge/deploy dan klaim integrasi final; runtime ACK worker eksternal masih belum tersedia. Semua angka tahap tetap baseline resmi.
+
+---
 
 ## Matriks seluruh 34 PR
 

@@ -1,6 +1,12 @@
 # Baseline resmi pelaporan SANRO Studio — 23 November 2026 WIB
 
-Baseline administratif berbobot: **71,95%**, versi metode **SANRO-7-v1**. Ini estimasi penyelesaian scope pengembangan pada source donor, BUKAN persentase VERIFIED, source integration, atau kesiapan production. Tahap di bawah memakai rincian terakhir yang tersedia lengkap; tidak dianggap pengukuran ulang fitur terbaru.
+Baseline implementasi resmi yang ditetapkan Owner: **71,95%**, versi metode **SANRO-7-v1**. Ini estimasi penyelesaian scope pengembangan pada source donor, BUKAN persentase VERIFIED, source integration, atau kesiapan production. Tahap di bawah memakai rincian terakhir yang tersedia lengkap; tidak dianggap pengukuran ulang fitur terbaru.
+
+## Keputusan NEXT Owner — satu baseline resmi
+
+Instruksi Owner pada putaran ini menetapkan **71,95%** dan bobot SANRO-7-v1 yang sudah didokumentasikan. Satu sumber angka resmi adalah file ini. STATUS.md dan indeks ledger hanya merujuk file ini; ledger kapabilitas PR #48 adalah evidence per branch, bukan baseline kedua. Semua angka 89,4%, 90%, dan 35% di riwayat bersifat HISTORIS/SUPERSEDED untuk pelaporan terkini.
+
+**Sebelum → sesudah koordinasi PR #48–#50: 71,95% → 71,95%; delta 0,00 poin.** Restore source pada #50, lint/tes terbatas, pemetaan scope, dan dokumen baru tidak cukup untuk menaikkan penyelesaian tahap. Runtime integration dan acceptance end-to-end tetap belum VERIFIED. Definisi tujuh tahap dan bobot tidak berubah; baseline bukan klaim semua source integration sudah tersedia.
 
 ## Rekonsiliasi tanpa menghapus riwayat
 
@@ -16,7 +22,7 @@ Baseline administratif berbobot: **71,95%**, versi metode **SANRO-7-v1**. Ini es
 | Tahap | Bobot | Estimasi tahap diwarisi | Kontribusi | Status/batas bukti |
 |---|---:|---:|---:|---|
 | 1. Fondasi core/native bootstrap | 25% | 75% | 18,75 | IMPLEMENTED sebagian di donor; integration belum memuat plugin, #47 belum merge |
-| 2. Backend produk/mockup/area | 10% | 79% | 7,90 | IMPLEMENTED sebagian; profil harga Claude terpisah, belum terintegrasi |
+| 2. Backend produk/mockup/area | 10% | 79% | 7,90 | IMPLEMENTED sebagian; profil harga ditugaskan ke Codex Cloud, belum terintegrasi |
 | 3. Frontend buyer | 15% | 94% | 14,10 | IMPLEMENTED donor; teks staging pernah PASS, gambar end-to-end masih gap |
 | 4. Harga server/quote | 10% | 83% | 8,30 | IMPLEMENTED donor; aturan DECIDED; integration quote/cart belum ada |
 | 5. Simpan/ownership/share | 10% | 97% | 9,70 | IMPLEMENTED sebagian donor; tidak menyatakan semua share/email sudah VERIFIED |
@@ -36,6 +42,10 @@ Formula: total = Σ(bobot tahap × penyelesaian tahap / 100). Nilai disimpan dua
 - Tidak ada persen VERIFIED agregat yang dapat dihitung dari sumber sekarang. Status alur integration: **NOT INTEGRATED / NOT TESTED**, bukan 89,4% runtime.
 - Full audit baru saat implementasi berbobot mendekati 90%; saat development cukup lint/build, kontrak penting dan smoke relevan. Tidak mengulang tes PASS tanpa perubahan relevan.
 
-## Hasil putaran ini
+## Hasil putaran koordinasi PR #48–#50
+
+PR #48 CI/QA, #49 ledger, dan #50 restore semuanya OPEN/Draft, belum merged pada snapshot. Ownership administratif: Hermes CLI = restore/editor/core Woo #50; Codex Cloud = pricing profile dan CI #48; ChatGPT Work = koordinasi/ledger/pemetaan #49. Source overlap dan dependency dicatat di INTEGRATION-20261123.md. Assignment Owner tidak disamakan dengan ACK sesi worker yang tidak dapat diakses.
+
+## Hasil putaran awal
 
 Dokumen jalur integrasi, baseline, aturan DTF dan koordinasi penulis: IMPLEMENTED sebagai dokumentasi. Kode aplikasi: tidak berubah. Validasi dokumen, hitungan, inventaris PR dan diff-only dicatat pada README ledger. Tes PHP/JS/E2E: NOT TESTED (scope dokumentasi). GO koordinasi/development terisolasi; NO-GO merge/deploy/production/order baru tanpa izin yang diperlukan.

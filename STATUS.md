@@ -1,35 +1,27 @@
-# SANRO Studio — Integration Status
+# SANRO Studio — status koordinasi
 
-Updated: 2026-11-23
-Overall progress: **89.4%** (historical estimate; unchanged pending runtime verification).
+Updated: 2026-11-23 (Asia/Jakarta).
 
-## Branch policy
-- Integration branch: `integration/sanro-studio`, created from `main` and verified identical at baseline.
-- Feature branches must target this integration branch directly. No stacked PRs.
-- Do not merge into integration or main without Owner approval and local tests PASS.
-- No production deployment, live database changes, or disabling legacy designer without explicit approval.
+**Baseline implementasi resmi: 71,95%.** Satu sumber angka, bobot tujuh tahap dan kontribusi: [docs/ledger/PROGRESS-BASELINE.md](docs/ledger/PROGRESS-BASELINE.md). Putaran koordinasi PR #48–#50: **71,95% → 71,95%; delta 0,00 poin**. Tidak ada implementasi fitur baru oleh tugas dokumentasi.
 
-## Vertical slice acceptance
-Buyer creates and reopens front/back design → adds verified DTF quote to cart → checks out **one synthetic staging order** → admin sees front/back previews → private production artifact is accessible to authorized admin.
+Angka 89,4% yang sebelumnya tercantum di file ini adalah estimasi historis yang telah digantikan untuk pelaporan aktif; tetap tersimpan di riwayat Git dan bagian rekonsiliasi ledger. Jangan memakai angka itu sebagai baseline kedua. Baseline 71,95% bukan bukti integrasi runtime.
 
-| Feature | Status | Evidence / gap |
-|---|---|---|
-| Editor, draft, front/back preview | IMPLEMENTED | Existing feature branches; integration pending |
-| DTF pricing, cart, checkout bridge | IMPLEMENTED | Existing checkout branch; integration and staging E2E pending |
-| Admin order previews | IMPLEMENTED | Existing feature branch; staging readback pending |
-| Private production file | DECIDED | Verify actual file and authorization before marking VERIFIED |
-| DTF 300 DPI, Drive automation | DECIDED | Deferred, feature flags OFF |
+## Pembagian kerja
 
-## Evidence
-- Checkout source branch: `dev/staging-one-order-gate-20261122`.
-- Local fast check: `bash scripts/sanro-studio-slice-check.sh` on source branch; **NOT RUN**.
-- Latest preview status fix: `49cb791`; regression tests: `e01bdc5`; **NOT RUN**.
-- Historical 143 PASS / 0 FAIL is not proof for the latest source.
-- PR #28–30, #34, #37, #41 closed as obsolete QA/plan-only branches.
-- This STATUS file records the integration baseline, not a completed feature integration.
+| Pemilik | Tanggung jawab |
+|---|---|
+| Codex CLI Hermes | Restore/editor/core WooCommerce pada #50 |
+| Codex Cloud | Pricing DTF pada branch pricing profile dan CI #48 |
+| ChatGPT Work | Koordinasi, ledger dan pemetaan integrasi pada #49 |
 
-## Next
-1. Review/select minimal functional files for first editor → cart → checkout vertical slice.
-2. Prepare a small non-stacked PR targeting `integration/sanro-studio`.
-3. Run local contract checks and request Owner approval before merge.
-4. Perform one staging E2E after slice is integrated and staging changes are authorized.
+[Ownership dan batas verifikasi](docs/ledger/WORK-OWNERSHIP.md) membedakan penugasan Owner dari ACK worker eksternal yang belum tersedia.
+
+## Jalur tunggal
+
+Target kode: integration/sanro-studio. Urutan penerimaan yang diusulkan: bootstrap #47 → restore #50 → delta pricing unik → CI #48 yang disesuaikan. #49 dokumentasi dapat direview paralel. PR #48/#50 saat ini masih berbasis #47; tidak ada retarget/merge pada tugas ini.
+
+[Dependency, overlap dan evidence source](docs/ledger/INTEGRATION-20261123.md) mencatat product-pricing yang sudah tercakup #50, tests/README.md yang beririsan, dependency runner terhadap fixture, dan delta keamanan #46 yang belum otomatis ikut restore #45. Laporan #50 masih memiliki FAIL kontrak; gabungan source belum E2E VERIFIED.
+
+## Gate
+
+GO koordinasi dan development terisolasi sesuai ownership. NO-GO merge/deploy/production, perubahan database, order baru, penghapusan branch atau klaim kesiapan rilis dari dokumen ini. DTF/Drive otomatis tetap OFF. Tidak menjalankan restore/editor atau tes aplikasi di tugas Work ini.
