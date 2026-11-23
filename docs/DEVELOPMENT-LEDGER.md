@@ -1,5 +1,7 @@
 # SANRO Studio development ledger
 
+Later restore compatibility evidence: [2026-11-23 completion report](qa/studio-pricing-ci-completion-20261123.md). The table below remains the sparse-base snapshot, not certification of restored source.
+
 Snapshot: 2026-11-23. Base: `feature/studio-bootstrap-admin` at
 `71955dd3d4df9669b1e667e928a64508a2d579b6`. Work branch:
 `work/codex-studio-ci-20261123`. This ledger describes this branch only; other
