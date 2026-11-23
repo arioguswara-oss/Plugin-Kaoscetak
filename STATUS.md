@@ -1,35 +1,27 @@
-# SANRO Studio — Integration Status
+# SANRO Studio — status resmi koordinasi
 
-Updated: 2026-11-23
-Overall progress: **89.4%** (historical estimate; unchanged pending runtime verification).
+Updated: 2026-11-23 (Asia/Jakarta), Integration Coordination Update 2.
 
-## Branch policy
-- Integration branch: `integration/sanro-studio`, created from `main` and verified identical at baseline.
-- Feature branches must target this integration branch directly. No stacked PRs.
-- Do not merge into integration or main without Owner approval and local tests PASS.
-- No production deployment, live database changes, or disabling legacy designer without explicit approval.
+**Baseline implementasi: 71,95% → 71,95%; delta 0,00 poin.** Bobot tetap tanpa kalibrasi. Satu sumber angka/tabel: [docs/ledger/PROGRESS-BASELINE.md](docs/ledger/PROGRESS-BASELINE.md). Angka historis lain bukan baseline aktif.
 
-## Vertical slice acceptance
-Buyer creates and reopens front/back design → adds verified DTF quote to cart → checks out **one synthetic staging order** → admin sees front/back previews → private production artifact is accessible to authorized admin.
+## Source terbaru
 
-| Feature | Status | Evidence / gap |
-|---|---|---|
-| Editor, draft, front/back preview | IMPLEMENTED | Existing feature branches; integration pending |
-| DTF pricing, cart, checkout bridge | IMPLEMENTED | Existing checkout branch; integration and staging E2E pending |
-| Admin order previews | IMPLEMENTED | Existing feature branch; staging readback pending |
-| Private production file | DECIDED | Verify actual file and authorization before marking VERIFIED |
-| DTF 300 DPI, Drive automation | DECIDED | Deferred, feature flags OFF |
+| Komponen | Status pada snapshot |
+|---|---|
+| #50 0b3004b | Wiring native admin/editor/classic checkout IMPLEMENTED di balik gate; source Studio selain bootstrap sama donor #45 |
+| #51 b39d13f | API quote/validasi cart-line IMPLEMENTED read-only; tarif inti sama, caller/schema bridge #50 belum terhubung |
+| #48 e8404d6 | Runner offline; runner/Node smoke juga direuse identik di #51 |
+| #46 e01bdc5 | Hardening preview/checkout lanjutan masih perlu dipilih untuk #50 |
+| #47 71955dd | Bootstrap, belum merged ke integration |
 
-## Evidence
-- Checkout source branch: `dev/staging-one-order-gate-20261122`.
-- Local fast check: `bash scripts/sanro-studio-slice-check.sh` on source branch; **NOT RUN**.
-- Latest preview status fix: `49cb791`; regression tests: `e01bdc5`; **NOT RUN**.
-- Historical 143 PASS / 0 FAIL is not proof for the latest source.
-- PR #28–30, #34, #37, #41 closed as obsolete QA/plan-only branches.
-- This STATUS file records the integration baseline, not a completed feature integration.
+Source preparation nyata diakui, tetapi restore/duplikasi fungsi lama atau jumlah assertion tidak menjadi kenaikan scope kedua kali. DTF/Drive otomatis tetap OFF. Tidak menyebut quote editor atau checkout gabungan sudah VERIFIED.
 
-## Next
-1. Review/select minimal functional files for first editor → cart → checkout vertical slice.
-2. Prepare a small non-stacked PR targeting `integration/sanro-studio`.
-3. Run local contract checks and request Owner approval before merge.
-4. Perform one staging E2E after slice is integrated and staging changes are authorized.
+## Ownership dan langkah berikutnya
+
+Hermes CLI: restore/editor/bootstrap/Woo core #50. Codex Cloud: pricing #51 dan CI #48. ChatGPT Work: ledger/koordinasi #49. Shared bootstrap hanya Hermes; Cloud menyediakan adapter/kontrak harga bersama pemanggil Hermes.
+
+[Matriks dependency, evidence dan lima pekerjaan menuju 90%](docs/ledger/INTEGRATION-20261123.md). [Batas ownership dan runtime ACK](docs/ledger/WORK-OWNERSHIP.md).
+
+Evidence worker yang dibaca: #50 lint 176 PASS; local CI 184 PASS/1 FAIL EPERM; parity alternatif 400/400 PASS; 22 dependency tests dipulihkan. #51 688 quote assertions PASS. Ini hasil bounded offline pada branch masing-masing, bukan PASS seluruh suite gabungan/GitHub Actions/runtime. Work tidak menjalankan tes aplikasi ulang.
+
+GO koordinasi/development source terisolasi. NO-GO merge/deploy/production/order baru, perubahan database atau penghapusan branch pada tugas ini. Semua PR tetap Draft/unmerged; runtime worker ACK belum tersedia.
