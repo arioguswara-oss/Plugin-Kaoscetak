@@ -7,6 +7,9 @@ define('SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID', 'privateParent_0123456789');
 require dirname(__DIR__) . '/includes/drive-auto-provision.php';
 require dirname(__DIR__) . '/includes/drive-production.php';
 
+$GLOBALS['drive_lease_fixture_store']='locks130';require __DIR__.'/lease-fixture.php';
+function get_option($key,$default=false){return $GLOBALS['locks130'][$key]??$default;}
+function maybe_serialize($v){return serialize($v);}
 $checks = 0;
 function check130($condition, $message) {
     global $checks;

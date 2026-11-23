@@ -152,6 +152,7 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
         'offset_x_cm' => $min_x, 'offset_y_cm' => $min_y,
         'design_id' => $design_id, 'order_id' => $order->get_id(),
         'item_id' => $item_id, 'side' => $side,
+        'source_fingerprint'=>sanro_studio_artifact_source_fingerprint($record,$order->get_id(),$item_id,$design_id,$side),
         'image' => null, 'text_layer' => null,
     ];
 
@@ -228,6 +229,8 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
     }
     $source_pixels=$plan['image']?$plan['image']['source_w']*$plan['image']['source_h']:0;
     if(!sanro_studio_dtf_memory_available($width_px,$height_px,$source_pixels))return ['valid'=>false,'error'=>'dtf_memory_limit'];
+    $now=get_option('sanro_studio_draft_'.$design_id,false);
+    if(!is_string($plan['source_fingerprint'])||$plan['source_fingerprint']!==sanro_studio_artifact_source_fingerprint($now,$order->get_id(),$item_id,$design_id,$side))return ['valid'=>false,'error'=>'dtf_source_snapshot_changed'];
     return $plan;
 }
 

@@ -17,6 +17,8 @@ require dirname(__DIR__) . '/includes/master-storage.php';
 require dirname(__DIR__) . '/includes/order-master-source.php';
 require dirname(__DIR__) . '/includes/drive-master-export.php';
 
+$GLOBALS['drive_lease_fixture_store']='locks131';require __DIR__.'/lease-fixture.php';
+function maybe_serialize($v){return serialize($v);}
 $checks = 0;
 function check131($good, $message) {
     global $checks;
@@ -28,7 +30,7 @@ function is_wp_error($value) { return $value instanceof WP_Error_131; }
 function home_url($path = '/') { return 'https://staging.example.test' . $path; }
 function apply_filters($name, $default) { return $GLOBALS['token131']; }
 function get_option($key, $default = false) {
-    return $key === 'sanro_studio_draft_' . $GLOBALS['design131'] ? $GLOBALS['draft131'] : $default;
+    return $key === 'sanro_studio_draft_' . $GLOBALS['design131'] ? $GLOBALS['draft131'] : ($GLOBALS['locks131'][$key]??$default);
 }
 function wp_json_encode($value) { return json_encode($value); }
 function add_option($key, $value, $unused = '', $autoload = false) {

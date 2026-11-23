@@ -140,7 +140,7 @@ add_action('admin_post_sanro_studio_generate_dtf_candidates', 'sanro_studio_admi
 add_action('woocommerce_payment_complete', 'sanro_studio_schedule_drive_production', 20, 1);
 add_action('woocommerce_order_status_changed', 'sanro_studio_schedule_drive_production', 20, 1);
 add_action('sanro_studio_production_ready_marked', 'sanro_studio_schedule_drive_production', 10, 1);
-add_action('sanro_studio_drive_provision_order', 'sanro_studio_run_drive_production', 10, 1);
+add_action('sanro_studio_drive_provision_order', 'sanro_studio_run_drive_production', 10, 2);
 
 // These registrations are absent at the default-OFF setting. A staging
 // environment must explicitly opt in before the buyer editor can run.

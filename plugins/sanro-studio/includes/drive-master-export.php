@@ -1,5 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
+require_once __DIR__.'/worker-lease.php';
+require_once __DIR__.'/production-memory.php';
 
 /**
  * Export original, content-addressed master images to a VERIFIED private
@@ -104,11 +106,11 @@ function sanro_studio_drive_upload_item_source($order,$item_id,$folder_id,$side,
     ];
     if ($kind!=='original') $properties['sanroAssetKind']=$kind;
     $lock = 'sanro_drive_master_lock_' . md5(home_url('/') . ':' . $order->get_id() . ':' . $item_id . ':' . $side . ($kind==='original'?'':':'.$kind));
-    if (!add_option($lock, (string) time(), '', false)) {
+    if (!($lease=sanro_studio_lease_acquire($lock))) {
         return ['valid' => false, 'error' => 'drive_master_locked'];
     }
     try {
-        $meta_key = $kind==='original' ? '_sanro_studio_drive_master_' . $side . '_id' : '_sanro_studio_drive_package_'.str_replace('-','_',$kind).'_'.$side.'_id';
+        $meta_key = $kind==='original' ? '_sanro_studio_drive_master_' . $side . '_id' : '_sanro_studio_drive_package_'.str_replace('-','_',$kind).'_'.$side.'_id_'.$source['sha256'];
         $existing = $item->get_meta($meta_key, true);
         if ($existing !== '') {
             return sanro_studio_drive_master_remote_valid($folder_id, $existing, $properties, $source, $token)
@@ -141,6 +143,7 @@ function sanro_studio_drive_upload_item_source($order,$item_id,$folder_id,$side,
         } else {
             // Keep raw image bytes solely in this server-side HTTPS POST; no
             // buyer URL, WP Media Library attachment or public Drive sharing.
+            if(!sanro_studio_memory_bytes_available(strlen($source['bytes'])*3+16777216))return ['valid'=>false,'error'=>'drive_upload_memory_limit'];
             $boundary = 'sanro-' . bin2hex(random_bytes(16));
             $metadata = [
                 'name' => 'SANRO-' . (int) $order->get_id() . '-ITEM-' . $item_id
@@ -152,6 +155,7 @@ function sanro_studio_drive_upload_item_source($order,$item_id,$folder_id,$side,
                 . wp_json_encode($metadata) . "\r\n--" . $boundary
                 . "\r\nContent-Type: " . $source['mime'] . "\r\n\r\n"
                 . $source['bytes'] . "\r\n--" . $boundary . "--\r\n";
+            if(!sanro_studio_lease_refresh($lease))return ['valid'=>false,'error'=>'drive_lease_lost'];
             $response = wp_remote_post(
                 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
                 ['timeout' => 60, 'redirection' => 0, 'limit_response_size' => 8192,
@@ -174,10 +178,11 @@ function sanro_studio_drive_upload_item_source($order,$item_id,$folder_id,$side,
         if (!sanro_studio_auto_drive_order_eligible($order) || $item->get_meta($meta_key, true) !== '') {
             return ['valid' => false, 'error' => 'drive_master_conflict'];
         }
+        if(!sanro_studio_lease_refresh($lease))return ['valid'=>false,'error'=>'drive_lease_lost'];
         $item->update_meta_data($meta_key, $file_id);
         if ($item->save() === false) return ['valid' => false, 'error' => 'drive_master_save_failed'];
         return ['valid' => true, 'created' => $created, 'file_id' => $file_id];
     } finally {
-        delete_option($lock);
+        sanro_studio_lease_release($lease);
     }
 }

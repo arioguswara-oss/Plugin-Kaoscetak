@@ -24,6 +24,8 @@ foreach (array(
     'woocommerce_checkout_create_order_line_item',
     'woocommerce_checkout_create_order',
     'woocommerce_checkout_order_created',
+    'woocommerce_before_pay_action',
+    'woocommerce_pre_payment_complete',
 ) as $name) {
     studio_restore_check(empty($GLOBALS['studio_hooks'][$name]), $name . ' remains inactive');
 }

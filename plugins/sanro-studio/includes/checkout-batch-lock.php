@@ -1,5 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
+require_once __DIR__.'/checkout-charges.php';
 
 /**
  * Optional classic-checkout-only draft lock, disabled by default.
@@ -84,8 +85,11 @@ function sanro_studio_checkout_batch_lock_preflight($order, $contract) {
         $ids[] = $item_id;
         unset($expected_by_size[$size]);
     }
+    $shipping=$contract['shipping_total']??0;
+    if(!sanro_studio_order_shipping_matches($order,$shipping))return ['valid'=>false,'error'=>'order_shipping_mismatch'];
+    $total_contract=$contract;$total_contract['quote']['total_price']+=$shipping;
     if ($expected_by_size || empty(sanro_studio_validate_order_grand_total(
-        $contract, $order->get_total()
+        $total_contract, $order->get_total()
     )['valid'])) {
         return ['valid' => false, 'error' => 'order_total_mismatch'];
     }

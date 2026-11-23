@@ -35,6 +35,7 @@ function candidate136($side) {
         . substr($png, 33);
     return [
         'valid' => true, 'skipped' => false,
+        'source_fingerprint'=>sanro_studio_artifact_source_fingerprint($GLOBALS['record133'],100,71,'123e4567-e89b-42d3-a456-123456789012',$side),
         'kind' => 'layered_dtf_raster_candidate',
         'quality_approved' => false, 'font_parity_approved' => false,
         'order_id' => 100, 'item_id' => 71,

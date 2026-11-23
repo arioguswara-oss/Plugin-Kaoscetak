@@ -61,8 +61,10 @@ run_check 'Checkout authorization gate' 'PASS: 43 checkout gate checks' php plug
 run_check 'Size checkout order-line binding' 'PASS: 13 isolated size-checkout checks' php plugins/sanro-studio/tests/size-checkout-bridge-smoke.php
 run_check 'Pricing multi-size checkout and private production package' 'production guide/admin/private-upload checks' php plugins/sanro-studio/tests/production-package-flow.php
 run_check 'Existing order checkout recovery' 'PASS: 20 same-order checkout recovery checks' php plugins/sanro-studio/tests/checkout-recovery-flow.php
+run_check 'Native shipping snapshot' 'PASS: 5 native Woo shipping snapshot checks' php plugins/sanro-studio/tests/checkout-shipping-flow.php
+run_check 'Order/payment and leased Drive recovery consistency' 'PASS: 34 order/payment/Drive recovery and artifact consistency checks' php plugins/sanro-studio/tests/completion-consistency.php
 if php -r 'exit(extension_loaded("gd") ? 0 : 1);'; then
-  run_check 'A3+ actual front/back output' 'PASS: 12 actual A3+ front/back raster and Unicode guide checks' php -d memory_limit=768M plugins/sanro-studio/tests/production-raster-real.php
+  run_check 'A3+ actual front/back output' 'PASS: 15 actual A3+ front/back raster and Unicode guide checks' php -d memory_limit=768M plugins/sanro-studio/tests/production-raster-real.php
   run_check 'Unicode PDF actual font and image conversion' 'PASS: Unicode embedded font' php plugins/sanro-studio/tests/guide-unicode-real.php
 else
   echo 'NOT TESTED: real A3+ and PNG/WebP guide output require GD/FreeType'
@@ -122,7 +124,7 @@ run_check 'DTF two-side preflight contract PHP syntax' 'No syntax errors detecte
 run_check 'DTF two-side source/master preflight before any write' 'PASS: 12 SANRO two-side no-write preflight policy checks' php plugins/sanro-studio/tests/dtf-order-preflight-policy.php
 run_check 'DTF locked snapshot policy PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-locked-snapshot-policy.php
 run_check 'DTF locked draft version across preflight/render/commit' 'PASS: 14 SANRO locked DTF draft fingerprint policy checks' php plugins/sanro-studio/tests/dtf-locked-snapshot-policy.php
-run_check 'DTF order item render persist private readback lifecycle' 'PASS: 40 SANRO order-item DTF batch and private status checks' php plugins/sanro-studio/tests/dtf-order-workflow-smoke.php
+run_check 'DTF order item render persist private readback lifecycle' 'PASS: 42 SANRO order-item DTF batch and private status checks' php plugins/sanro-studio/tests/dtf-order-workflow-smoke.php
 run_check 'DTF order batch default-off syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-order-workflow-default-off.php
 run_check 'DTF order batch disabled by default' 'PASS: SANRO DTF order batch defaults disabled' php plugins/sanro-studio/tests/dtf-order-workflow-default-off.php
 run_check 'DTF two-side real GD staging smoke PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-order-workflow-real-smoke.php

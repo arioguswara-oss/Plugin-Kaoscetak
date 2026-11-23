@@ -1,5 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
+require_once __DIR__.'/production-provenance.php';
+require_once __DIR__.'/production-memory.php';
 
 /**
  * Sprint 136: private, immutable per-order DTF PNG candidate storage.
@@ -131,7 +133,7 @@ function sanro_studio_dtf_artifact_geometry_matches($metadata, $binding) {
 /** Fixed name, not derived from a buyer-controlled file path or URL. */
 function sanro_studio_dtf_artifact_basename($binding) {
     return 'order-' . $binding['order_id'] . '-item-' . $binding['item_id']
-        . '-' . $binding['design_id'] . '-' . $binding['side'];
+        . '-' . $binding['design_id'] . '-' . $binding['side'] . '-v2';
 }
 
 /** Private metadata only. Never return raw PNG bytes, filesystem path or URL. */
@@ -161,7 +163,8 @@ function sanro_studio_dtf_verify_private_artifact($order, $item_id, $side) {
     }
     $json = @file_get_contents($meta_file);
     $meta = is_string($json) ? json_decode($json, true) : null;
-    if (!is_array($meta) || ($meta['schema'] ?? null) !== 1
+    if (!is_array($meta) || ($meta['schema'] ?? null) !== 2
+        || ($meta['source_fingerprint']??null)!==sanro_studio_artifact_source_fingerprint(get_option('sanro_studio_draft_'.$binding['design_id'],false),$binding['order_id'],$binding['item_id'],$binding['design_id'],$binding['side'])
         || ($meta['order_id'] ?? null) !== $binding['order_id']
         || ($meta['item_id'] ?? null) !== $binding['item_id']
         || ($meta['design_id'] ?? null) !== $binding['design_id']
@@ -193,6 +196,7 @@ function sanro_studio_dtf_verify_private_artifact($order, $item_id, $side) {
         || !preg_match('/^[a-f0-9]{64}$/D', $meta['sha256'])) {
         return ['valid' => false, 'error' => 'artifact_integrity_failed'];
     }
+    if(!sanro_studio_memory_bytes_available($png_size+8388608))return ['valid'=>false,'error'=>'artifact_memory_limit'];
     $bytes = @file_get_contents($png_file);
     if (!is_string($bytes) || strlen($bytes) !== $png_size
         || !hash_equals($meta['sha256'], hash('sha256', $bytes))
@@ -264,6 +268,8 @@ function sanro_studio_dtf_commit_private_candidate($order, $item_id, $side, $can
         || ($candidate['order_id'] ?? null) !== $binding['order_id']
         || ($candidate['item_id'] ?? null) !== $binding['item_id']
         || strtolower((string) ($candidate['design_id'] ?? '')) !== $binding['design_id']
+        || !is_string($candidate['source_fingerprint']??null)
+        || $candidate['source_fingerprint']!==sanro_studio_artifact_source_fingerprint(get_option('sanro_studio_draft_'.$binding['design_id'],false),$binding['order_id'],$binding['item_id'],$binding['design_id'],$binding['side'])
         || ($candidate['side'] ?? null) !== $binding['side']
         || ($candidate['quality_approved'] ?? null) !== false
         || ($candidate['font_parity_approved'] ?? null) !== false
@@ -338,7 +344,7 @@ function sanro_studio_dtf_commit_private_candidate($order, $item_id, $side, $can
             return $existing + ['idempotent' => true];
         }
         $meta = [
-            'schema' => 1, 'order_id' => $binding['order_id'],
+            'schema' => 2, 'source_fingerprint'=>$candidate['source_fingerprint'], 'order_id' => $binding['order_id'],
             'item_id' => $binding['item_id'], 'design_id' => $binding['design_id'],
             'side' => $binding['side'], 'kind' => $candidate['kind'],
             'quality_approved' => false, 'font_parity_approved' => false,
@@ -386,6 +392,7 @@ function sanro_studio_dtf_private_candidate_source($order,$item_id,$side) {
     $dir=sanro_studio_dtf_artifact_directory();
     if(empty($binding['valid'])||!$dir)return ['valid'=>false,'error'=>'artifact_unavailable'];
     $file=$dir.DIRECTORY_SEPARATOR.sanro_studio_dtf_artifact_basename($binding).'.png';
+    if(!sanro_studio_memory_bytes_available($verified['bytes']+8388608))return ['valid'=>false,'error'=>'artifact_memory_limit'];
     $bytes=!is_link($file)?@file_get_contents($file,false,null,0,33554433):false;
     if(!is_string($bytes)||strlen($bytes)!==$verified['bytes']||!hash_equals($verified['sha256'],hash('sha256',$bytes)))return ['valid'=>false,'error'=>'artifact_integrity_failed'];
     return ['valid'=>true,'bytes'=>$bytes,'mime'=>'image/png','ext'=>'png',
@@ -400,6 +407,9 @@ function sanro_studio_dtf_persist_order_item_side($order, $item_id, $side, $expe
             || !sanro_studio_dtf_locked_snapshot_matches($order, $item_id, $expected_snapshot))) {
         return ['valid' => false, 'error' => 'artifact_snapshot_changed'];
     }
+    $existing=sanro_studio_dtf_verify_private_artifact($order,$item_id,$side);
+    if(!empty($existing['valid']))return $existing+['idempotent'=>true];
+    if(($existing['error']??null)!=='artifact_missing_or_incomplete')return $existing;
     if (!function_exists('sanro_studio_dtf_render_layer_side')) {
         return ['valid' => false, 'error' => 'artifact_renderer_unavailable'];
     }

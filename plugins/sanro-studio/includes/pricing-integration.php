@@ -238,6 +238,7 @@ function sanro_studio_register_pricing_integration_hooks() {
     add_action('woocommerce_checkout_create_order', 'sanro_studio_pricing_validate_order', 10, 2);
     add_action('woocommerce_checkout_order_created', 'sanro_studio_pricing_lock_order', 10, 1);
     add_action('woocommerce_before_pay_action','sanro_studio_pricing_before_pay_order',10,1);
+    add_action('woocommerce_pre_payment_complete','sanro_studio_pricing_before_payment_complete',5,1);
 }
 
 function sanro_studio_pricing_checkout_field() {
@@ -296,7 +297,7 @@ function sanro_studio_pricing_checkout_authorize() {
         if (!$resume || $saved!==$current || empty(sanro_studio_pricing_preview_bundle($draft,$token)['valid'])) {
             wc_add_notice('SANRO Studio: resume the original unpaid order or create a new design.', 'error');return;
         }
-        $contract=['valid'=>true,'design_id'=>$id,'product_id'=>$product,'design'=>$record['design'],'quote'=>$record['checkout_quote']];
+        $contract=['valid'=>true,'design_id'=>$id,'product_id'=>$product,'design'=>$record['design'],'quote'=>$record['checkout_quote'],'shipping_total'=>$record['shipping_total']??0];
         $GLOBALS['sanro_studio_pricing_checkout']=['id'=>$id,'token'=>$token,'draft'=>$draft,'contract'=>$contract,'sizes'=>[],'existing_order_id'=>$resume->get_id()];
         return;
     }
@@ -376,6 +377,8 @@ function sanro_studio_pricing_validate_order($order, $data) {
         unset($by_size[$size]);
     }
     if ($by_size) throw new RuntimeException('SANRO Studio: incomplete order sizes.');
+    if(!isset($verified['existing_order_id'])){$charges=sanro_studio_capture_native_shipping($order,$verified['contract']);if(empty($charges['valid']))throw new RuntimeException('SANRO Studio: native shipping or order charges do not match.');$verified['contract']['shipping_total']=$charges['shipping_total'];}
+    if(!sanro_studio_order_shipping_matches($order,$verified['contract']['shipping_total']??0))throw new RuntimeException('SANRO Studio: saved shipping changed.');
     $verified['order_id'] = 0; $GLOBALS['sanro_studio_pricing_checkout'] = $verified;
 }
 
@@ -392,6 +395,7 @@ function sanro_studio_pricing_lock_order($order) {
     if (is_array($record) && ($record['status']??null)==='locked'
         && ($record['order_id']??null)===$order->get_id()
         && ($record['wc_session_hash']??null)===$session
+        && ($record['shipping_total']??0)===($verified['contract']['shipping_total']??0)
         && is_string($record['token_hash']??null)
         && hash_equals($record['token_hash'],hash('sha256',$verified['token']))
         && hash('sha256',maybe_serialize($record['design']))===hash('sha256',maybe_serialize($verified['contract']['design']))) {
@@ -421,7 +425,7 @@ function sanro_studio_pricing_lock_order($order) {
     }
     global $wpdb; $after=$record; $after['design']=$production_design;
     if (isset($after['preview_design_hash'])) $after['preview_design_hash']=hash('sha256',maybe_serialize($production_design));
-    $after['design_id']=$verified['id'];$after['checkout_quote']=$verified['contract']['quote'];
+    $after['design_id']=$verified['id'];$after['checkout_quote']=$verified['contract']['quote'];$after['shipping_total']=$verified['contract']['shipping_total']??0;
     $after['status']='locked'; $after['order_id']=(int)$order->get_id(); $after['order_item_ids']=$ids; $after['locked_at']=time();
     $changed=$wpdb->query($wpdb->prepare("UPDATE `{$wpdb->options}` SET option_value = %s WHERE option_name = %s AND BINARY option_value = BINARY %s", maybe_serialize($after),$key,maybe_serialize($record)));
     wp_cache_delete($key,'options');

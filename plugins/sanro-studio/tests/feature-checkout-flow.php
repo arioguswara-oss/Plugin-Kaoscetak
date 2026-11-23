@@ -21,7 +21,7 @@ function rest_ensure_response($data){return $data;}function wc_get_cart_url(){re
 class WP_Error {public function __construct(public $code,public $message,public $data){}}
 class FlowProduct {public $price='1';function get_status(){return 'publish';}function is_purchasable(){return true;}function is_type($type){return $type==='simple';}function get_price(){return $this->price;}function set_price($price){$this->price=$price;}}
 class FlowSession {function get_customer_id(){return 'fixture-wc-session-123456';}}
-class FlowDB {public $options='wp_options';function prepare($sql,...$args){return $args;}function query($args){[$after,$key,$before]=$args;if(serialize($GLOBALS['options'][$key])!==$before)return 0;$GLOBALS['options'][$key]=unserialize($after);return 1;}}
+class FlowDB {public $options='wp_options';function prepare($sql,...$args){return str_starts_with($sql,'INSERT IGNORE')?['insert'=>$args]:$args;}function query($args){if(isset($args['insert'])){[$key,$value]=$args['insert'];if(isset($GLOBALS['options'][$key]))return 0;$GLOBALS['options'][$key]=unserialize($value);return 1;}if(count($args)===2){[$key,$before]=$args;if(serialize($GLOBALS['options'][$key]??false)!==$before)return 0;unset($GLOBALS['options'][$key]);return 1;}[$after,$key,$before]=$args;if(serialize($GLOBALS['options'][$key])!==$before)return 0;$GLOBALS['options'][$key]=unserialize($after);return 1;}}
 class FlowCart {
  public $cart_contents=[],$adds=0;function get_cart(){return $this->cart_contents;}
  function add_to_cart($id,$qty,$variation,$vars,$meta){if(!sanro_studio_pricing_add_validation(true,$id,$qty,$variation,$vars,$meta))return false;$key='line-'.++$this->adds;$this->cart_contents[$key]=$meta+['product_id'=>$id,'quantity'=>$qty,'variation_id'=>0,'data'=>wc_get_product($id)];return $key;}
@@ -29,7 +29,7 @@ class FlowCart {
 }
 class FlowRequest {public $token;function get_param($key){return $GLOBALS['design_id'];}function get_header($key){return $this->token;}}
 class FlowItem {function save(){return $this->id;}public $meta=[],$total;function __construct(public $id,public $qty,public $unit){$this->total=$qty*$unit;}function get_id(){return $this->id;}function get_product_id(){return 7;}function get_quantity(){return $this->qty;}function get_subtotal(){return $this->qty*$this->unit;}function get_total(){return $this->total;}function get_meta($key,$single=true){return $this->meta[$key]??'';}function update_meta_data($key,$value){$this->meta[$key]=$value;}}
-class FlowOrder {public $items=[];function get_id(){return 88;}function get_items($type='line_item'){return $this->items;}function get_currency(){return 'IDR';}function get_total(){return array_sum(array_map(fn($i)=>$i->total,$this->items));}}
+class FlowOrder {public $meta=[];function get_meta($key,$single=true){return $this->meta[$key]??'';}function update_meta_data($key,$v){$this->meta[$key]=$v;}function save(){return 88;}public $items=[];function get_id(){return 88;}function get_items($type='line_item'){return $type==='line_item'?$this->items:[];}function get_currency(){return 'IDR';}function get_total(){return array_sum(array_map(fn($i)=>$i->total,$this->items));}}
 $checks=0;function flow_check($ok,$message){global $checks;if(!$ok)throw new RuntimeException($message);$checks++;}
 $GLOBALS['wpdb']=new FlowDB();$GLOBALS['wc']=(object)['session'=>new FlowSession(),'cart'=>new FlowCart()];$GLOBALS['notices']=[];
 $id=$GLOBALS['design_id']='11111111-1111-4111-8111-111111111111';$token=str_repeat('a',64);

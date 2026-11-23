@@ -41,3 +41,15 @@ Work melanjutkan PR#52 untuk lifecycle checkout recovery, A3+ raster/Unicode fon
 | Admin | read-only eligibility/preview/font/writer status; private links hanya sesudah verification, tanpa mengaktifkan writer |
 
 Source+assets+tests berada pada branch Work yang sama dengan lease publish expectedSHA. Tidak migrasi/delete folder legacy. Tidak ada deploy, order DB writes atau aktivasi generator/Drive. Frozen dependency#50/#51 tetap seperti checkpoint sebelumnya; runtime proof tidak dinaikkan hanya dari source.
+
+## Feature completion 3 — parent d704b32
+
+| Dependency baru | Urutan / ownership |
+|---|---|
+| Saved-order integrity | Source quote + native shipping → pinned order hashes → all-size amount/Design ID/snapshot/preview checks → retry/pay/callback/production. Work hanya di#52 |
+| DTF v2 | Locked-side artwork/master/font hash → versioned candidate → verify/reuse sebelum planner → no render pada retry yang sudah valid. Legacy tetap disimpan |
+| Drive worker | insert-only/CAS lease → whole-order preflight → hierarchy/assets → verified per-item receipts → seluruh item cocok → package_ready; kegagalan sementara dijadwalkan dengan retry limit |
+| PDF/manifest/admin | Per-asset SHA index + policy/order fingerprints → receipt seluruh pesanan; stale/partial/retry tidak dianggap lengkap, print approval tetapfalse |
+| Kandidat staging | Clean committed tree → plugin-only ZIP + commit/file/archive manifest. Bahan review; belum deploy dan tidak mengubah flag |
+
+Tidak menulis #50/#51 atau menginisiasi Hermes/Codex/AI lain. Tidak mengklaim global runtime lock atas sesi AI eksternal. Ref#52 dipublish nonforce dengan expected SHA; dependency base tetap45a7917 sesuai checkpoint, tanpa merge.

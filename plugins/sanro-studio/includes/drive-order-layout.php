@@ -1,5 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
+require_once __DIR__.'/worker-lease.php';
 
 function sanro_studio_drive_token() {
     $token=apply_filters('sanro_studio_drive_access_token','');
@@ -27,7 +28,7 @@ function sanro_studio_drive_verified_layout($order,$token) {
         ?['order_folder_id'=>$root,'production_folder_id'=>$production]:false;
 }
 /** Recover a remote create before a failed local CRUD save; ambiguity blocks writes. */
-function sanro_studio_drive_find_or_create_folder($parent,$props,$name,$token) {
+function sanro_studio_drive_find_or_create_folder($parent,$props,$name,$token,&$lease) {
     $q="'".$parent."' in parents and trashed = false and mimeType = 'application/vnd.google-apps.folder'";
     foreach($props as $key=>$value)$q.=" and appProperties has { key='".$key."' and value='".$value."' }";
     $headers=['Authorization'=>'Bearer '.$token,'Accept'=>'application/json'];
@@ -35,7 +36,7 @@ function sanro_studio_drive_find_or_create_folder($parent,$props,$name,$token) {
     if(is_wp_error($r)||wp_remote_retrieve_response_code($r)!==200)return ['valid'=>false,'error'=>'drive_search_failed'];$body=wp_remote_retrieve_body($r);$v=is_string($body)&&strlen($body)<=8192?json_decode($body,true):null;
     if(!is_array($v)||!is_array($v['files']??null)||count($v['files'])>1||!empty($v['nextPageToken']))return ['valid'=>false,'error'=>'drive_search_ambiguous'];$created=false;
     if($v['files'])$id=$v['files'][0]['id']??null;
-    else{$r=wp_remote_post('https://www.googleapis.com/drive/v3/files?fields=id',['timeout'=>15,'redirection'=>0,'limit_response_size'=>8192,'headers'=>$headers+['Content-Type'=>'application/json'],'body'=>wp_json_encode(['name'=>$name,'mimeType'=>'application/vnd.google-apps.folder','parents'=>[$parent],'appProperties'=>$props])]);
+    else{if(!sanro_studio_lease_refresh($lease))return ['valid'=>false,'error'=>'drive_lease_lost'];$r=wp_remote_post('https://www.googleapis.com/drive/v3/files?fields=id',['timeout'=>15,'redirection'=>0,'limit_response_size'=>8192,'headers'=>$headers+['Content-Type'=>'application/json'],'body'=>wp_json_encode(['name'=>$name,'mimeType'=>'application/vnd.google-apps.folder','parents'=>[$parent],'appProperties'=>$props])]);
         if(is_wp_error($r)||!in_array(wp_remote_retrieve_response_code($r),[200,201],true))return ['valid'=>false,'error'=>'drive_create_failed'];$v=json_decode(wp_remote_retrieve_body($r),true);$id=$v['id']??null;$created=true;}
     if(!sanro_studio_drive_folder_matches($id,$parent,$props,$token))return ['valid'=>false,'error'=>'drive_folder_unverified'];
     return ['valid'=>true,'folder_id'=>$id,'created'=>$created];
@@ -44,17 +45,17 @@ function sanro_studio_drive_find_or_create_folder($parent,$props,$name,$token) {
 function sanro_studio_drive_ensure_order_layout($order) {
     if(!sanro_studio_auto_drive_enabled()||!sanro_studio_auto_drive_order_eligible($order)||!method_exists($order,'update_meta_data')||!method_exists($order,'save'))return ['valid'=>false,'error'=>'drive_layout_unavailable'];
     $token=sanro_studio_drive_token();if(!$token)return ['valid'=>false,'error'=>'drive_not_connected'];
-    $lock='sanro_drive_order_lock_'.md5(home_url('/').':'.$order->get_id());if(!add_option($lock,(string)time(),'',false))return ['valid'=>false,'error'=>'drive_layout_locked'];
+    $lock='sanro_drive_order_lock_'.md5(home_url('/').':'.$order->get_id());if(!($lease=sanro_studio_lease_acquire($lock)))return ['valid'=>false,'error'=>'drive_layout_locked'];
     try{$props=sanro_studio_drive_order_properties($order);$parent=SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID;
         $number=method_exists($order,'get_order_number')?(string)$order->get_order_number():(string)$order->get_id();$number=preg_replace('/[^a-zA-Z0-9._-]/','-',substr($number,0,80));
         foreach(['order'=>['key'=>'_sanro_studio_drive_order_folder_id','name'=>'SANRO-'.$number],'production'=>['key'=>'_sanro_studio_drive_production_folder_id','name'=>'Produksi']] as $kind=>$entry){
             $existing=$order->get_meta($entry['key'],true);$expected=$props+['sanroFolderKind'=>$kind];
             if($existing!==''){if(!sanro_studio_drive_folder_matches($existing,$parent,$expected,$token))return ['valid'=>false,'error'=>'drive_layout_conflict'];$id=$existing;}
-            else{$found=sanro_studio_drive_find_or_create_folder($parent,$expected,$entry['name'],$token);if(empty($found['valid']))return $found;$id=$found['folder_id'];if(!sanro_studio_auto_drive_order_eligible($order))return ['valid'=>false,'error'=>'production_not_ready'];$order->update_meta_data($entry['key'],$id);if($order->save()===false)return ['valid'=>false,'error'=>'drive_layout_save_failed'];}
+            else{$found=sanro_studio_drive_find_or_create_folder($parent,$expected,$entry['name'],$token,$lease);if(empty($found['valid']))return $found;$id=$found['folder_id'];if(!sanro_studio_auto_drive_order_eligible($order))return ['valid'=>false,'error'=>'production_not_ready'];if(!sanro_studio_lease_refresh($lease))return ['valid'=>false,'error'=>'drive_lease_lost'];$order->update_meta_data($entry['key'],$id);if($order->save()===false)return ['valid'=>false,'error'=>'drive_layout_save_failed'];}
             $parent=$id;
         }
         $verified=sanro_studio_drive_verified_layout($order,$token);return $verified?['valid'=>true]+$verified:['valid'=>false,'error'=>'drive_layout_unverified'];
-    }finally{delete_option($lock);}
+    }finally{sanro_studio_lease_release($lease);}
 }
 function sanro_studio_verified_order_drive_url($order) {
     if(!current_user_can('manage_woocommerce')||!defined('SANRO_STUDIO_ENABLE_VERIFIED_DRIVE_ATTACHMENT')||SANRO_STUDIO_ENABLE_VERIFIED_DRIVE_ATTACHMENT!==true||!sanro_studio_auto_drive_order_eligible($order))return null;

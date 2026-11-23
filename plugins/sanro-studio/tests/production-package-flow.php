@@ -6,8 +6,8 @@ require __DIR__.'/../includes/drive-auto-provision.php';
 require __DIR__.'/../includes/production-package.php';
 require __DIR__.'/../includes/drive-master-export.php';
 require __DIR__.'/../includes/production-status.php';
-class PackageItem extends FlowItem {public $name='Cotton Combed 24s';function get_name(){return $this->name;}function get_order_id(){return 88;}}
-class PackageOrder extends FlowOrder {public $paid=false,$status='pending',$ready='';function is_paid(){return $this->paid;}function get_status(){return $this->status;}function get_meta($key,$single=true){return $key==='_sanro_studio_production_ready'?$this->ready:'';}function get_order_number(){return 'TEST-88';}}
+class PackageItem extends FlowItem {public $fail_saves=0;function save(){if($this->fail_saves>0){$this->fail_saves--;return false;}return $this->id;}public $name='Cotton Combed 24s';function get_name(){return $this->name;}function get_order_id(){return 88;}}
+class PackageOrder extends FlowOrder {public $paid=false,$status='pending',$ready='';function is_paid(){return $this->paid;}function get_status(){return $this->status;}function get_meta($key,$single=true){return $key==='_sanro_studio_production_ready'?$this->ready:parent::get_meta($key,$single);}function get_order_number(){return 'TEST-88';}}
 function wc_get_order($id){return $GLOBALS['package_order'];}
 function current_user_can($cap){return !empty($GLOBALS['admin'])&&$cap==='manage_woocommerce';}
 function esc_html($s){return htmlspecialchars($s,ENT_QUOTES,'UTF-8');}function esc_attr($s){return esc_html($s);}function esc_url($s){return esc_html($s);}
@@ -34,6 +34,7 @@ function wp_remote_post($url,$args){
  $parts=explode('--'.$boundary,$args['body']);$meta=json_decode(explode("\r\n\r\n",$parts[1],2)[1],true);
  $bytes=explode("\r\n\r\n",$parts[2],2)[1];$bytes=substr($bytes,0,-2);
  $id='synthetic-file-'.count($GLOBALS['remote']);$GLOBALS['remote'][$id]=$meta+['id'=>$id,'trashed'=>false,'size'=>(string)strlen($bytes),'md5Checksum'=>md5($bytes),'permissions'=>[['type'=>'user']]];
+ if(!empty($GLOBALS['lost_upload_response'])){$GLOBALS['lost_upload_response']=false;return ['code'=>503,'body'=>'{}'];}
  return ['code'=>201,'body'=>json_encode(['id'=>$id])];
 }
 $checks=0;$production=new PackageOrder();foreach($order->items as $old){$item=new PackageItem($old->id,$old->qty,$old->unit);$item->meta=$old->meta;$production->items[$item->id]=$item;}$GLOBALS['package_order']=$production;
@@ -46,7 +47,7 @@ $pdf=$package['assets'][2]['bytes'];flow_check(str_starts_with($pdf,'%PDF-1.4')&
 preg_match('/startxref\n([0-9]+)/',$pdf,$xref);flow_check(substr($pdf,(int)$xref[1],4)==='xref','PDF cross-reference offset valid');
 preg_match_all('/([0-9]{10}) 00000 n /',$pdf,$offsets);foreach($offsets[1] as $index=>$offset)flow_check(str_starts_with(substr($pdf,(int)$offset),($index+1).' 0 obj'),'PDF object offsets valid');
 flow_check($package['manifest']['quantities']===['S'=>3,'L'=>1]&&$package['manifest']['subtotal']===186000,'production follows locked checkout, no live repricing');
-$production->items[71]->total=1;flow_check(sanro_studio_prepare_production_package($production,71)['error']==='production_order_amount_mismatch','production denies modified persisted total');$production->items[71]->total=186000;
+$production->items[71]->total=1;flow_check(sanro_studio_prepare_production_package($production,71)['error']==='order_amount_or_allocation_mismatch','production denies modified persisted total');$production->items[71]->total=186000;
 $production->items[71]->name='Kaos é';flow_check(!empty(sanro_studio_prepare_production_package($production,71)['valid']),'Unicode renders with bundled embedded font');$production->items[71]->name='Cotton Combed 24s';
 $GLOBALS['admin']=true;ob_start();sanro_studio_admin_item_preview_status(71,$production->items[71],null);$html=ob_get_clean();flow_check(substr_count($html,'<img ')===2&&str_contains($html,'_wpnonce=')&&str_contains($html,'#ffffff')&&str_contains($html,'A5'),'admin renders both nonce-protected previews and snapshot');
 flow_check(!str_contains($html,$private)&&!str_contains($html,$token),'admin HTML never leaks private path or owner secret');

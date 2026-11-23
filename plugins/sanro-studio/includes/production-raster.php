@@ -1,13 +1,13 @@
 <?php
 defined('ABSPATH') || exit;
 require_once __DIR__.'/production-typography.php';
+require_once __DIR__.'/production-memory.php';
+require_once __DIR__.'/production-provenance.php';
 
 /** Covers A3+ (3780x5669 at 300 DPI); refuse before allocating beyond worker memory. */
 function sanro_studio_dtf_memory_available($width,$height,$source_pixels=0) {
     if($width<1||$height<1||$width>6000||$height>6000||$width*$height>24000000)return false;
-    $limit=ini_get('memory_limit');if($limit==='-1')return true;
-    $bytes=(int)$limit;$suffix=strtolower(substr($limit,-1));if($suffix==='g')$bytes*=1073741824;elseif($suffix==='m')$bytes*=1048576;elseif($suffix==='k')$bytes*=1024;
-    return $bytes>memory_get_usage(true)+$width*$height*12+$source_pixels*6+33554432;
+    return sanro_studio_memory_bytes_available($width*$height*12+$source_pixels*6+33554432);
 }
 
 /** Physical output validation is machine-checkable, not a human print approval. */

@@ -13,6 +13,8 @@ function sanro_studio_drive_package_enabled() {
 function sanro_studio_production_item_manifest($order, $item_id) {
     if (!is_int($item_id) || $item_id < 1
         || !sanro_studio_auto_drive_order_eligible($order)) return ['valid'=>false,'error'=>'production_not_ready'];
+    $integrity=sanro_studio_saved_order_context($order,true);
+    if(empty($integrity['valid'])||empty($integrity['studio']))return ['valid'=>false,'error'=>$integrity['error']??'production_order_integrity_failed'];
     $items=$order->get_items('line_item'); $item=$items[$item_id]??null;
     if (!is_object($item) || !method_exists($item,'get_product_id') || !method_exists($item,'get_quantity')) return ['valid'=>false,'error'=>'invalid_item'];
     $id=$item->get_meta('_sanro_studio_design_id',true);
@@ -70,11 +72,38 @@ function sanro_studio_prepare_production_package($order,$item_id) {
     $guide=sanro_studio_production_guide_pdf($manifest,$previews);
     if(empty($guide['valid']))return $guide;
     $assets[]=['kind'=>'guide','side'=>'guide','mime'=>'application/pdf','ext'=>'pdf','bytes'=>$guide['bytes']];
-    $json=json_encode($manifest,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+    foreach(['front','back'] as $side){$has_image=false;foreach($manifest['sides'][$side]['objects'] as $object)if($object['type']==='image')$has_image=true;
+        if(!$has_image)continue;$source=sanro_studio_locked_item_master_source($order,$item_id,$side);
+        if(empty($source['valid'])||!empty($source['skipped']))return ['valid'=>false,'error'=>'production_original_unavailable'];
+        $assets[]=$source+['kind'=>'original','side'=>$side];
+    }
+    $package=['valid'=>true,'manifest'=>$manifest,'assets'=>$assets,'print_ready'=>false];
+    return sanro_studio_package_finalize_manifest($package);
+}
+
+function sanro_studio_production_policy_hash() {
+    $font=sanro_studio_production_font();
+    return hash('sha256',json_encode(['package-v2',$font?hash_file('sha256',$font):null,
+        defined('SANRO_STUDIO_ENABLE_DRIVE_DTF_CANDIDATES')&&SANRO_STUDIO_ENABLE_DRIVE_DTF_CANDIDATES===true]));
+}
+function sanro_studio_package_finalize_manifest($package) {
+    $assets=[];$index=[];$seen=[];
+    foreach($package['assets'] as $asset){if($asset['kind']==='manifest')continue;
+        $identity=$asset['kind'].':'.$asset['side'];if(isset($seen[$identity]))return ['valid'=>false,'error'=>'production_duplicate_asset'];$seen[$identity]=true;
+        $asset['valid']=true;$asset['design_id']=$package['manifest']['design_id'];$asset['sha256']=hash('sha256',$asset['bytes']);
+        $index[]=['kind'=>$asset['kind'],'side'=>$asset['side'],'mime'=>$asset['mime'],'bytes'=>strlen($asset['bytes']),'sha256'=>$asset['sha256']];$assets[]=$asset;
+    }
+    $package['manifest']['assets']=$index;$package['manifest']['policy_hash']=sanro_studio_production_policy_hash();
+    $json=json_encode($package['manifest'],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
     if(!is_string($json)||strlen($json)>1048576)return ['valid'=>false,'error'=>'production_manifest_invalid'];
-    $assets[]=['kind'=>'manifest','side'=>'guide','mime'=>'application/json','ext'=>'json','bytes'=>$json];
-    foreach($assets as &$asset){$asset['valid']=true;$asset['design_id']=$manifest['design_id'];$asset['sha256']=hash('sha256',$asset['bytes']);}unset($asset);
-    return ['valid'=>true,'manifest'=>$manifest,'assets'=>$assets,'print_ready'=>false];
+    $assets[]=['valid'=>true,'kind'=>'manifest','side'=>'guide','mime'=>'application/json','ext'=>'json','bytes'=>$json,
+        'design_id'=>$package['manifest']['design_id'],'sha256'=>hash('sha256',$json)];
+    $package['assets']=$assets;return $package;
+}
+function sanro_studio_package_export_preflight($package) {
+    if(empty($package['valid']))return $package;
+    foreach($package['assets'] as $asset)if($asset['kind']==='original'&&!sanro_studio_drive_master_export_enabled())return ['valid'=>false,'error'=>'drive_original_export_required'];
+    return ['valid'=>true];
 }
 
 /** Gated coordinator; originals, guides/previews, optional unapproved DTF candidates. */
@@ -82,6 +111,10 @@ function sanro_studio_export_production_package($order,$item_id,$folder_id) {
     if(!sanro_studio_drive_package_enabled())return ['valid'=>false,'error'=>'drive_package_disabled'];
     $package=sanro_studio_prepare_production_package($order,$item_id);
     if(empty($package['valid']))return $package;
+    $ready=sanro_studio_package_export_preflight($package);if(empty($ready['valid']))return $ready;
+    $context=sanro_studio_saved_order_context($order,true);
+    if(empty($context['valid']))return $context;
+    $initial_manifest=$package['manifest'];
     if(defined('SANRO_STUDIO_ENABLE_DRIVE_DTF_CANDIDATES')&&SANRO_STUDIO_ENABLE_DRIVE_DTF_CANDIDATES===true){
         $render=sanro_studio_dtf_prepare_order_item_candidates($order,$item_id);
         if(empty($render['valid'])||empty($render['complete']))return ['valid'=>false,'error'=>'dtf_package_incomplete'];
@@ -91,13 +124,39 @@ function sanro_studio_export_production_package($order,$item_id,$folder_id) {
             if(empty($candidate['skipped']))$package['assets'][]=$candidate+['kind'=>'dtf-candidate','side'=>$side];
         }
     }
-    $uploaded=0;$reused=0;
+    $package=sanro_studio_package_finalize_manifest($package);if(empty($package['valid']))return $package;
+    $uploaded=0;$reused=0;$receipts=[];
     foreach($package['assets'] as $asset){
         $now=sanro_studio_production_item_manifest($order,$item_id);
-        if(empty($now['valid'])||$now['manifest']!==$package['manifest'])return ['valid'=>false,'error'=>'production_snapshot_changed'];
+        if(empty($now['valid'])||$now['manifest']!==array_diff_key($initial_manifest,array_flip(['assets','policy_hash'])))return ['valid'=>false,'error'=>'production_snapshot_changed'];
         $result=sanro_studio_drive_upload_item_source($order,$item_id,$folder_id,$asset['side'],$asset,$asset['kind']);
         if(empty($result['valid']))return ['valid'=>false,'error'=>$result['error']??'production_upload_failed','uploaded'=>$uploaded,'reused'=>$reused];
+        $receipts[]=['kind'=>$asset['kind'],'side'=>$asset['side'],'file_id'=>$result['file_id'],'sha256'=>$asset['sha256'],'bytes'=>strlen($asset['bytes'])];
         if(!empty($result['created']))$uploaded++;else $reused++;
     }
-    return ['valid'=>true,'uploaded'=>$uploaded,'reused'=>$reused,'print_ready'=>false];
+    $now=sanro_studio_saved_order_context($order,true);
+    if(empty($now['valid'])||$now['fingerprint']!==$context['fingerprint']||!sanro_studio_auto_drive_order_eligible($order))return ['valid'=>false,'error'=>'production_snapshot_changed'];
+    $receipt=['version'=>1,'fingerprint'=>$context['fingerprint'],'policy_hash'=>sanro_studio_production_policy_hash(),'folder_id'=>$folder_id,'assets'=>$receipts,'complete'=>true,'print_approved'=>false];
+    $item=$order->get_items('line_item')[$item_id];$item->update_meta_data('_sanro_studio_production_receipt',$receipt);
+    if($item->save()===false)return ['valid'=>false,'error'=>'drive_package_save_failed'];
+    return ['valid'=>true,'uploaded'=>$uploaded,'reused'=>$reused,'print_ready'=>false,'receipt'=>$receipt];
+}
+
+/** Whole-order local receipt validation. Remote permissions are rechecked by the private links. */
+function sanro_studio_order_package_receipt($order) {
+    $context=sanro_studio_saved_order_context($order,true);
+    if(empty($context['valid'])||empty($context['studio'])||!sanro_studio_auto_drive_order_eligible($order))return ['valid'=>false,'state'=>'stale'];
+    $job=$order->get_meta('_sanro_studio_drive_job',true);
+    if(!is_array($job))return ['valid'=>false,'state'=>'pending'];
+    if(($job['state']??null)!=='package_ready')return ['valid'=>false,'state'=>in_array($job['state']??null,['retry_queued','blocked','folders_ready'],true)?$job['state']:'pending'];
+    if(($job['fingerprint']??null)!==$context['fingerprint']||($job['policy_hash']??null)!==sanro_studio_production_policy_hash()||array_keys($job['items']??[])!==$context['item_ids'])return ['valid'=>false,'state'=>'stale'];
+    $count=0;$seen=[];
+    foreach($context['item_ids'] as $id){$item=$order->get_items('line_item')[$id];$receipt=$item->get_meta('_sanro_studio_production_receipt',true);
+        if($receipt!==$job['items'][$id]||($receipt['folder_id']??null)!==$item->get_meta('_sanro_studio_drive_folder_id',true))return ['valid'=>false,'state'=>'stale'];
+        foreach($receipt['assets']??[] as $asset){$file=$asset['file_id']??null;
+            if(!is_string($file)||!preg_match('/^[a-zA-Z0-9_-]{10,128}$/D',$file)||isset($seen[$file])||!is_string($asset['sha256']??null)||!preg_match('/^[a-f0-9]{64}$/D',$asset['sha256']))return ['valid'=>false,'state'=>'stale'];
+            $seen[$file]=true;$count++;
+        }
+    }
+    return ['valid'=>true,'state'=>'recorded','item_count'=>count($context['item_ids']),'artifact_count'=>$count,'print_approved'=>false];
 }
