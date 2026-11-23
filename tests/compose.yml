@@ -1,0 +1,36 @@
+name: kaoscetak-lite-tests
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_DATABASE: kld_fixture
+      MARIADB_USER: kld_fixture
+      MARIADB_PASSWORD: fixture-only
+      MARIADB_ROOT_PASSWORD: fixture-only-root
+    tmpfs: [/var/lib/mysql]
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      interval: 3s
+      retries: 30
+  wordpress:
+    image: wordpress:php8.3-fpm-alpine
+    entrypoint: [sh, /fixtures/tests/serve.sh]
+    environment:
+      WORDPRESS_DEBUG: "1"
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_NAME: kld_fixture
+      WORDPRESS_DB_USER: kld_fixture
+      WORDPRESS_DB_PASSWORD: fixture-only
+      WORDPRESS_CONFIG_EXTRA: |
+        define('KLD_LOCAL_FIXTURE', true);
+        define('WP_DEBUG_LOG', true);
+        define('WP_DEBUG_DISPLAY', false);
+        define('DISABLE_WP_CRON', true);
+    ports: ['127.0.0.1:8893:8000']
+    volumes:
+      - wordpress:/var/www/html
+      - ../:/fixtures:ro
+    depends_on:
+      db: {condition: service_healthy}
+volumes:
+  wordpress:

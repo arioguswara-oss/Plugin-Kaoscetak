@@ -1,0 +1,13 @@
+{
+  "version": "2.1.2",
+  "archive_sha256": "3f7cb449653d0a58a15f4b77a69f29a669853d13e3b9153e0db415dc8007643f",
+  "entrypoint": "lumise.php",
+  "critical_files": {
+    "lumise.php": "87f1735c9f43194e823916608d29b86ddc66dff455bc0c068d6573580bd137c1",
+    "includes/class-lumise.php": "1163e75873c86f0e6cd0a3d22bd411028f9bc1f038d7f7341f764e4c125dce8b",
+    "woo_connector.php": "b590d810955d574d2298f4dd69a89a8773251cbf61bb2a5c652db68f7dc29945",
+    "core/includes/main.php": "e561cdf146d418f55c20736f8da6d1691fa533a151ada993e6a1c582648e0ef5",
+    "core/includes/config.php": "b99001bd9daa01cc2ad897814e5fd8ad48d32d0033760680086ce07ebb8ed1ab",
+    "core/includes/tmpl.php": "ef08b35bffbfc08c0b7a4ef274a0ef5b3eb1b384672bc048149f8370c06e52e3"
+  }
+}
