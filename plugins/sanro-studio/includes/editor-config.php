@@ -61,3 +61,13 @@ function sanro_studio_rest_editor_config($request) {
     }
     return rest_ensure_response($config);
 }
+
+/** Product cards use configured one-side prices, never the placeholder Woo catalog price. */
+function sanro_studio_minimum_configured_price($config) {
+    if(!is_array($config)||empty($config['valid'])||!is_array($config['pricing']['table']??null))return null;
+    $minimum=null;
+    foreach($config['pricing']['table'] as $row){
+        if(!is_array($row)||count($row)!==4)return null;
+        foreach($row as $value){if(!is_int($value)||$value<1)return null;$minimum=$minimum===null?$value:min($minimum,$value);}
+    }return $minimum;
+}

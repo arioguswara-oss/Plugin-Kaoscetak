@@ -211,6 +211,8 @@ function sanro_studio_cleanup_expired_drafts($limit = 50, $after_id = 0) {
         if (!is_string($key) || !preg_match('/^sanro_studio_draft_[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $key)) continue;
         $record = maybe_unserialize($row['option_value']);
         if (!is_array($record) || ($record['status'] ?? null) !== 'draft') continue;
+        // Never discard a possibly order-bound source because its status was corrupted or imported.
+        if(array_key_exists('order_id',$record)||array_key_exists('order_item_ids',$record)||array_key_exists('checkout_quote',$record))continue;
         $expires = $record['expires_at'] ?? null;
         if (!is_int($expires) || $expires > time()) continue;
         $affected = $wpdb->query($wpdb->prepare(

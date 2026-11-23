@@ -37,7 +37,11 @@ function sanro_studio_saved_order_context($order, $require_previews = true) {
             if($expected!==null?$actual!==$expected:($actual!==''&&$actual!==[]))return ['valid'=>false,'error'=>'repeat_item_evidence_mismatch'];
         }
         $snapshot=$item->get_meta('_sanro_studio_design_snapshot',true);
-        if(!is_array($snapshot)||($snapshot['version']??null)!==1||($snapshot['design_id']??null)!==$id||($snapshot['design_hash']??null)!==$hash)return ['valid'=>false,'error'=>'order_design_snapshot_mismatch'];
+        if(!is_array($snapshot)||!function_exists('sanro_studio_pricing_design_snapshot'))return ['valid'=>false,'error'=>'order_design_snapshot_mismatch'];
+        try{$expected_snapshot=sanro_studio_pricing_design_snapshot(['id'=>$id,'contract'=>['design'=>$record['design']]]);}catch(Throwable $error){return ['valid'=>false,'error'=>'order_design_snapshot_mismatch'];}
+        // Compare the full canonical payload, not just a copied ID/hash label.
+        if(array_key_exists('sleeve_label',$snapshot)||array_key_exists('sleeve_label',$record['checkout_quote']))$expected_snapshot['sleeve_label']=$record['checkout_quote']['sleeve_label']??(!empty($record['design']['long_sleeve'])?'long':'short');
+        if($snapshot!==$expected_snapshot)return ['valid'=>false,'error'=>'order_design_snapshot_mismatch'];
         if($require_previews){
             if(($record['preview_design_hash']??null)!==$hash)return ['valid'=>false,'error'=>'order_preview_revision_mismatch'];
             foreach(['front','back'] as $side){$ref=$item->get_meta('_sanro_studio_preview_'.$side.'_ref',true);

@@ -70,7 +70,8 @@ function sanro_studio_render_product_picker($page_url) {
     echo '<div class="sanro-product-grid">';
     $shown = 0;
     foreach ($ids as $id) {
-        if (empty(sanro_studio_public_editor_config($id)['valid'])) continue;
+        $editor_config=sanro_studio_public_editor_config($id);
+        if (empty($editor_config['valid'])) continue;
         $product = wc_get_product($id);
         if (!$product) continue;
         $name = $product->get_name();
@@ -78,7 +79,8 @@ function sanro_studio_render_product_picker($page_url) {
         echo '<a class="sanro-product-card" href="' . esc_url($url) . '" data-name="' . esc_attr(strtolower($name)) . '">';
         echo $product->get_image('woocommerce_thumbnail', ['loading' => 'lazy']);
         echo '<strong>' . esc_html($name) . '</strong>';
-        echo '<span>' . wp_kses_post(wc_price(wc_get_price_to_display($product))) . '</span></a>';
+        $minimum=function_exists('sanro_studio_minimum_configured_price')?sanro_studio_minimum_configured_price($editor_config):null;
+        echo '<span>'.($minimum===null?esc_html('Harga dihitung server sesuai desain'):esc_html('Mulai ').wp_kses_post(wc_price($minimum))).'</span></a>';
         $shown++;
     }
     echo '</div>';
@@ -222,8 +224,8 @@ function sanro_studio_render_buyer_editor() {
         echo '<button type="button" id="sanro-reopen-draft">Buka ulang draft tersimpan</button>';
         echo '<p id="sanro-reopen-status" role="status" aria-live="polite">Draft milik sesi browser ini dapat dibuka kembali.</p>';
         if (!empty($config['master_upload_enabled'])) {
-            echo '<button type="button" id="sanro-upload-master">Unggah gambar asli ke draft (staging)</button>';
-            echo '<p id="sanro-master-upload-status" role="status" aria-live="polite">Simpan draft teks sebelum mengunggah gambar.</p>';
+            echo '<button type="button" id="sanro-upload-master">Unggah gambar asli</button>';
+            echo '<p id="sanro-master-upload-status" role="status" aria-live="polite">Simpan desain sebelum mengunggah gambar.</p>';
         }
         if (!empty($config['preview_upload_enabled'])) {
             echo '<button type="button" id="sanro-upload-previews">Perbarui preview desain</button>';

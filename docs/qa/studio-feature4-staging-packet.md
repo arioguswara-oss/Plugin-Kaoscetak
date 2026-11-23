@@ -1,3 +1,5 @@
+> Paket historis feature-completion4. Untuk keputusan terbaru gunakan [paket setelah audit](studio-audit-staging-packet-20261124.md) dan [audit](studio-full-audit-20261124.md). Tidak ada izin deploy tersirat.
+
 # Kandidat integrasi staging — bahan review, belum izin apply
 
 Target tunggal `https://saddlebrown-peafowl-616656.hostingersite.com`. Production kaoscetak.id dilarang. Source baru belum di-deploy; runtime/source lama tidak membuktikan kandidat ini.
@@ -29,7 +31,7 @@ Transport baru memisahkan non-JSON dari JSON application rejection tanpa memboco
 
 Urutan uji: HTTPS/mobile editor → simpan draft → original upload → preview current revision depan/belakang → server quote multi-size → native cart replay/edit qty → classic checkout shipping → satu pesanan sintetis → gagal/bayar-ulang pada order sama → DesignID/amount/qty/admin private preview. Persetujuan harus mencakup pesanan sintetis yang dibutuhkan; tidak menyentuh order pelanggan/settlement nyata. Gateway sandbox dan OAuth/Drive/physical-print verification terpisah; writer tetap OFF pada paket uji awal.
 
-Status: source review GO; apply/merge/deploy/production/real order mutation/writer activation NO-GO. Baseline resmi90,50%; paket ini persiapan, Full Audit belum dimulai dan menunggu instruksi berikutnya dan tidak ada permintaan approval deploy otomatis.
+Status: source review GO; apply/merge/deploy/production/real order mutation/writer activation NO-GO. Baseline resmi90,50%; paket ini persiapan, Full Audit source telah dijalankan; sign-off runtime belum tersedia dan tidak ada permintaan approval deploy otomatis.
 
 
 ## Checkpoint road90 terbaru

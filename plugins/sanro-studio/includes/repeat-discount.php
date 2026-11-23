@@ -1,5 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
+require_once __DIR__.'/worker-lease.php';
 
 /** Source rule: verified design-owner email == checkout email, prior paid order, 5% per piece. */
 function sanro_studio_repeat_email($value) {
@@ -86,17 +87,25 @@ function sanro_studio_repeat_update($id,$token,$change) {
     $record=$after['record'];$n=$wpdb->query($wpdb->prepare("UPDATE `{$wpdb->options}` SET option_value = %s WHERE option_name = %s AND BINARY option_value = BINARY %s",maybe_serialize($record),$key,maybe_serialize($before)));
     wp_cache_delete($key,'options');return $n===1?['valid'=>true]:['valid'=>false,'error'=>'verification_conflict'];
 }
-function sanro_studio_repeat_mail_budget() {
+/** Serialize both sender-IP and recipient budgets; concurrent requests cannot bypass them. */
+function sanro_studio_repeat_mail_budget($email='') {
     if(!function_exists('get_transient')||!function_exists('set_transient')||!function_exists('wp_salt'))return false;
-    $ip=$_SERVER['REMOTE_ADDR']??null;if(!is_string($ip)||!filter_var($ip,FILTER_VALIDATE_IP))return false;
-    $key='sanro_repeat_mail_'.substr(hash_hmac('sha256',$ip,wp_salt('auth')),0,32);$count=get_transient($key);
-    if($count!==false&&(!is_int($count)||$count>=8))return false;
-    return set_transient($key,$count===false?1:$count+1,3600);
+    $ip=$_SERVER['REMOTE_ADDR']??null;$email=sanro_studio_repeat_email($email);
+    if(!is_string($ip)||!filter_var($ip,FILTER_VALIDATE_IP)||$email==='')return false;
+    $keys=['sanro_repeat_mail_'.substr(hash_hmac('sha256',$ip,wp_salt('auth')),0,32),
+        'sanro_repeat_recipient_'.substr(hash_hmac('sha256',$email,wp_salt('auth')),0,32)];$leases=[];
+    try{
+        foreach($keys as $key){$lease=sanro_studio_lease_acquire($key.'_lock',15);if(!$lease)return false;$leases[]=$lease;}
+        $counts=[];foreach($keys as $key){$count=get_transient($key);if($count!==false&&(!is_int($count)||$count>=8))return false;$counts[$key]=$count===false?1:$count+1;}
+        foreach($counts as $key=>$count)if(!set_transient($key,$count,3600))return false;
+        return true;
+    }finally{foreach(array_reverse($leases) as $lease)sanro_studio_lease_release($lease);}
 }
+
 function sanro_studio_repeat_request_verification($id,$owner_token,$email) {
     $email=sanro_studio_repeat_email($email);if($email===''||!function_exists('wp_mail'))return ['valid'=>false,'error'=>'verification_unavailable'];
     $draft=sanro_studio_read_draft($id,$owner_token);if(empty($draft['valid'])||($draft['status']??null)!=='draft')return ['valid'=>false,'error'=>'verification_unavailable'];
-    if(!sanro_studio_repeat_mail_budget())return ['valid'=>false,'error'=>'verification_rate_limit'];
+    if(!sanro_studio_repeat_mail_budget($email))return ['valid'=>false,'error'=>'verification_rate_limit'];
     $code=bin2hex(random_bytes(32));
     $result=sanro_studio_repeat_update($id,$owner_token,static function($record)use($email,$code){
         $verified=sanro_studio_repeat_verified_email($record);if($verified!==''&&$verified!==$email)return ['valid'=>false,'error'=>'verification_unavailable'];

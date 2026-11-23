@@ -37,3 +37,6 @@ ok4(sanro_studio_build_identity()['source_commit']==='unpackaged','unpackaged ch
 $diag=sanro_studio_runtime_readiness(7);ok4(!$diag['flags']['DTF_ADMIN_GENERATE']&&!$diag['flags']['DRIVE_AUTO_PROVISION']&&!$diag['verified_end_to_end'],'diagnostic records OFF gates and no E2E approval');
 $response=new class {public $headers=[];function header($k,$v){$this->headers[$k]=$v;}};$req=new class {function get_route(){return '/sanro-studio/v1/drafts/test';}};sanro_studio_rest_source_header($response,null,$req);ok4($response->headers['X-Sanro-Source']==='unpackaged','Studio REST responses carry honest source identity');
 echo "PASS: $n profile/quote/policy/admin checks\n";
+$price_config=sanro_studio_public_editor_config(7);ok4(sanro_studio_minimum_configured_price($price_config)===62000,'native card minimum uses official configured matrix, not placeholder SKU price');
+$price_config['pricing']['table']['S'][0]=1.5;ok4(sanro_studio_minimum_configured_price($price_config)===null,'invalid display matrix cannot publish an invented price');
+echo "PASS: product-card server-price audit regressions\n";

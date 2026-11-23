@@ -82,3 +82,7 @@ $wpdb->options = 'wp_options';
 $wpdb->rows = [row(11, ['status'=>'draft','expires_at'=>time()+3600])];
 $active = sanro_studio_cleanup_expired_drafts(10);
 check($active['deleted']===0 && count($wpdb->rows)===1, 'unexpired record is retained');
+
+$wpdb->rows=[row(21,['status'=>'draft','expires_at'=>time()-3600,'order_id'=>52]),row(22,['status'=>'draft','expires_at'=>time()-3600,'order_item_ids'=>[71]]),row(23,['status'=>'draft','expires_at'=>time()-3600,'checkout_quote'=>['valid'=>true]])];
+$protected=sanro_studio_cleanup_expired_drafts(10);
+check($protected['deleted']===0&&count($wpdb->rows)===3,'order-bound source is retained even if imported/corrupted status says draft');

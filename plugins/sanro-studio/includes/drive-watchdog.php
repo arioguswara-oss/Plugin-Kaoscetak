@@ -9,7 +9,13 @@ function sanro_studio_job_schedule($at,$hook,$args) {
     return function_exists('wp_schedule_single_event')&&function_exists('wp_next_scheduled')
         &&(wp_next_scheduled($hook,$args)||wp_schedule_single_event($at,$hook,$args));
 }
-function sanro_studio_drive_job_key($order_id){return 'sanro_drive_job_'.md5(home_url('/').':'.$order_id);}
+function sanro_studio_drive_order_id($raw) {
+    if(is_int($raw))return $raw>0?$raw:null;
+    if(!is_string($raw)||strlen($raw)>20||!preg_match('/^[0-9]+$/D',$raw))return null;
+    $normal=ltrim($raw,'0');$id=(int)$normal;
+    return $id>0&&(string)$id===$normal?$id:null;
+}
+function sanro_studio_drive_job_key($order_id){$id=sanro_studio_drive_order_id($order_id);return $id===null?null:'sanro_drive_job_'.md5(home_url('/').':'.$id);}
 
 /** Read persisted running state; never steals an active lease or changes payment state. */
 function sanro_studio_drive_job_watchdog($order_id,$run_id,$attempt,$scheduled_at=0) {

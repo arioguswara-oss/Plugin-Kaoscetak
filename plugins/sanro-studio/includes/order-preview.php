@@ -233,6 +233,7 @@ function sanro_studio_attach_item_preview_refs($order, $item_id, $design_id, $ow
     if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) {
         return ['valid' => false, 'error' => 'forbidden'];
     }
+    if(function_exists('sanro_studio_saved_order_context')&&empty(sanro_studio_saved_order_context($order,true)['valid']))return ['valid'=>false,'error'=>'order_integrity_failed'];
     $inventory = sanro_studio_order_item_preview_inventory($order, $item_id);
     if (empty($inventory['valid']) || !is_array($refs) || !$refs || count($refs) > 2
         || !function_exists('sanro_studio_read_draft')
@@ -302,6 +303,9 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
     if (!$order_id || !$item_id) return;
     // Use the same strict binding validation as the private delivery endpoint.
     $order = function_exists('wc_get_order') ? wc_get_order($order_id) : false;
+    if(function_exists('sanro_studio_saved_order_context')&&empty(sanro_studio_saved_order_context($order,true)['valid'])){
+        echo '<p>'.esc_html('SANRO Studio: integritas pesanan perlu dipulihkan sebelum preview/metadata digunakan untuk produksi.').'</p>';return;
+    }
     $inventory = sanro_studio_order_item_preview_inventory($order, $item_id);
     if (empty($inventory['valid'])) return;
     $design_id = method_exists($item, 'get_meta') ? $item->get_meta('_sanro_studio_design_id', true) : '';

@@ -16,7 +16,7 @@ else:m.recover_existing(r/'plugins/sanro-studio',r/'rollback',manifest,checkpoin
 class CrashTests(unittest.TestCase):
  def setUp(self):
   self.temp=tempfile.TemporaryDirectory();self.root=pathlib.Path(self.temp.name);self.target=self.root/'plugins/sanro-studio';self.target.mkdir(parents=True);(self.target/'sanro-studio.php').write_text('original plugin');self.rollback=self.root/'rollback';self.rollback.mkdir(mode=0o700);self.before=installer.tree_digest(self.target);(self.root/'before').write_text(self.before)
-  self.m={'source_commit':'a'*40,'plugin_digest':'b'*64,'archive_sha256':'c'*64,'files':[],'build_marker':{}}
+  self.m={'schema':1,'generator_default':'OFF','drive_default':'OFF','deployment_authorized':False,'source_commit':'a'*40,'plugin_digest':'b'*64,'archive_sha256':'c'*64,'files':[],'build_marker':{}}
   with zipfile.ZipFile(self.root/'candidate.zip','w') as z:
    for key,name,data in [('files','sanro-studio.php',b'new plugin'),('build_marker','SANRO-STUDIO-BUILD.json',b'{}')]:
     item={'path':name,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}

@@ -1,9 +1,11 @@
-# SANRO Studio — ledger aktif development
+# SANRO Studio — ledger aktif
 
-24 November2026 WIB: **89,50 →90,50% (+1,00 poin)**; bobot tetap. [Satu baseline resmi dan tujuh tahap](PROGRESS-BASELINE.md).
+24 November2026 WIB: **90,50 →90,50%, delta0,00**, bobot tetap. Full Audit source dan self-fix sudah dijalankan; sign-off runtime/rilis **NO-GO** karena gap V1 dan bukti hosting masih terbuka.
 
-- [Checkpoint Hermes dan paket siap Full Audit](../qa/studio-hermes-handoff-20261124.md)
-- [Kebijakan checkout V1](../business-rules/studio-checkout-v1-boundary.md)
-- [Ownership/dependency](WORK-OWNERSHIP.md)
+- [Satu baseline dan tujuh tahap](PROGRESS-BASELINE.md)
+- [Audit lengkap, severity, perbaikan dan evidence](../qa/studio-full-audit-20261124.md)
+- [Paket persiapan E2E Hostinger](../qa/studio-audit-staging-packet-20261124.md)
+- [Checkpoint Hermes](../qa/studio-hermes-handoff-20261124.md)
+- [Ownership](WORK-OWNERSHIP.md)
 
-Penambahan fitur dihentikan pada ambang90%. Full Audit belum dimulai; tunggu instruksi berikutnya. Hermes/Codex tidak dijalankan. Tidak merge/deploy/production/order writes; generator/Drive defaultOFF. Laporan lama tersimpan sebagai riwayat Git.
+Tidak ada kredit administratif untuk audit/tes; angka bukan tanda seluruh fitur wajib sudah selesai. Generator/Drive defaultOFF, no deploy/merge/production/order writes. Codex/Hermes tidak dijalankan.

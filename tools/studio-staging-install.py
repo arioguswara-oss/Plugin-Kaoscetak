@@ -35,7 +35,7 @@ def main():
  parser=argparse.ArgumentParser(description=__doc__)
  for name in ('zip','manifest','php','wp','wp-root','document-root','rollback-root'):parser.add_argument('--'+name,required=True)
  mode=parser.add_mutually_exclusive_group();mode.add_argument('--apply',action='store_true');mode.add_argument('--recover',action='store_true');parser.add_argument('--approval');args=parser.parse_args()
- manifest=json.loads(pathlib.Path(args.manifest).read_text());candidate=None if args.recover else preflight.validate(args.zip,args.manifest,TARGET,args.php)
+ manifest=preflight.load_manifest(args.manifest);candidate=None if args.recover else preflight.validate(args.zip,args.manifest,TARGET,args.php)
  wp_root=canonical(args.wp_root);rollback=canonical(args.rollback_root);state=probe(args.wp,wp_root);plugin_parent=canonical(state['plugin_dir']);target=plugin_parent/'sanro-studio'
  # Parent path is derived from the probed WordPress installation, never a caller-supplied target plugin.
  if plugin_parent!=wp_root/'wp-content/plugins':raise ValueError('custom_plugin_layout_not_supported')

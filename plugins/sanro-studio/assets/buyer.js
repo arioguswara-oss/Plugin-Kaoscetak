@@ -258,7 +258,7 @@
   el.addEventListener('pointercancel',finish);
   el.addEventListener('lostpointercapture',()=>{start=null;});
  }
- // Text-only staging draft: no master upload, checkout or public share.
+ // Owner-bound draft session; master/preview APIs and checkout use independent server gates.
  const saveButton=q('#sanro-save-draft'),saveStatus=q('#sanro-save-status');
  let savedId=null,ownerToken=null,saving=false,uploadingMaster=false,editRevision=0,savedRevision=-1,lastKnownDesignHash=null;
  const boundMasterRefs={};
