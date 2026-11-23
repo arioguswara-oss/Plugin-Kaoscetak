@@ -1,11 +1,10 @@
 # SANRO Studio — ledger aktif development
 
-Checkpoint resmi83,50%; hasil feature-completion4 **87,50% (+4,00 poin)**. Bobot tetap. [Tabel tunggal dan rekonsiliasi saldo Owner](PROGRESS-BASELINE.md).
+24 November 2026 WIB: **87,50 →89,50% (+2,00 poin)**; bobot tetap. [Satu baseline dan tujuh tahap](PROGRESS-BASELINE.md).
 
-- [Laporan terbaru: implementasi, bukti dan batas](../qa/studio-feature-completion-4-20261123.md)
+- [Checkpoint siap dilanjutkan Hermes](../qa/studio-hermes-handoff-20261124.md)
+- [Laporan aplikasi checkpointc04653a](../qa/studio-feature-completion-4-20261123.md)
 - [Ownership/dependency](WORK-OWNERSHIP.md)
-- [Kebijakan checkout: DECIDED dan OPEN](../business-rules/studio-checkout-v1-boundary.md)
-- [Paket persiapan staging](../qa/studio-feature4-staging-packet.md)
-- [Spesifikasi bisnis sumber](../business-rules/kaoscetak-lite-designer-v1.md)
+- [Kebijakan bisnis yang tetap OPEN](../business-rules/studio-checkout-v1-boundary.md)
 
-Work hanya menulis branch PR52 dengan lease expected-SHA. Tidak menjalankan worker lain, merge/deploy atau menulis order live. Kandidat bukan izin instalasi. Full Audit tetap90%; generator/Drive default OFF. Ledger historis disimpan di Git, tidak menjadi baseline aktif kedua.
+Full Audit tidak dimulai pada sesi kuota terbatas. Hermes tidak dijalankan; hanya handoff. Tidak merge/deploy/production/order writes; generator/Drive default OFF.

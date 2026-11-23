@@ -67,3 +67,7 @@ Tidak menulis #50/#51 atau menginisiasi Hermes/Codex/AI lain. Tidak mengklaim gl
 PR52 masih Draft dan ref Work saja yang boleh diperbarui. HEAD sebelum publish a143703, base45a7917; branch sumber Hermes/Cloud tidak disentuh dan source pricing tidak diimpor ulang. Tidak ada AI tambahan dipanggil. Tidak memiliki visibilitas seluruh sesi eksternal, sehingga tidak mengklaim global lock. Jika expected-SHA berbeda, hentikan publish dan rekonsiliasi dahulu.
 
 Round4 hanya GET produk24 staging (HTTP200, product-type-simple, tanpa variations_form). Tidak melakukan draft/order/payment writes atau deploy; hasil browser putaran sebelumnya tetap bukti historis pada source lama. Runtime yang Owner laporkan e876035 tidak disamakan dengan kandidat baru.
+
+## Checkpoint kuota terbatas24 November2026
+
+Work melanjutkan daric04653a hanya pada PR52: implementasi installer existing-plugin dengan approval/source/target guards dan rollback;9 synthetic tests, tanpa WP CLI runtime/apply. Handoff `docs/qa/studio-hermes-handoff-20261124.md` siap, **Hermes tidak dijalankan**. Untuk melanjutkan kelak, worker terotorisasi menggunakan isolated worktree dari final HEAD; jangan menulis ref PR52 bersamaan dengan Work. Baseline89,50%, tidak Full Audit/deploy/merge/production/order writes. Frozen #50/#51 tetap, tidak impor ulang.
