@@ -73,6 +73,18 @@ function sanro_studio_run_drive_production($order_id) {
         $targets[] = $item_id;
     }
     if (!$targets) return ['valid' => false, 'error' => 'no_studio_designs'];
+    // Validate every guide/preview/locked allocation before the first remote
+    // folder is created. This new package path is independently default OFF.
+    if (function_exists('sanro_studio_drive_package_enabled') && sanro_studio_drive_package_enabled()) {
+        foreach ($targets as $item_id) {
+            $package=sanro_studio_prepare_production_package($order,$item_id);
+            if (empty($package['valid'])) return ['valid'=>false,'error'=>$package['error']??'production_package_invalid'];
+            if(defined('SANRO_STUDIO_ENABLE_DRIVE_DTF_CANDIDATES')&&SANRO_STUDIO_ENABLE_DRIVE_DTF_CANDIDATES===true){
+                $dtf=sanro_studio_dtf_preflight_order_item_candidates($order,$item_id);
+                if(empty($dtf['valid']))return ['valid'=>false,'error'=>'dtf_package_preflight_failed'];
+            }
+        }
+    }
     $created = 0; $reused = 0;
     $masters_exported = 0; $masters_reused = 0; $masters_skipped = 0;
     foreach ($targets as $item_id) {
@@ -82,6 +94,10 @@ function sanro_studio_run_drive_production($order_id) {
             'created' => $created, 'reused' => $reused];
         if (!empty($result['created'])) $created++;
         else $reused++;
+        if (function_exists('sanro_studio_drive_package_enabled') && sanro_studio_drive_package_enabled()) {
+            $package=sanro_studio_export_production_package($order,$item_id,$result['folder_id']);
+            if (empty($package['valid'])) return ['valid'=>false,'error'=>$package['error']??'production_package_failed','created'=>$created,'reused'=>$reused];
+        }
         // A folder being ready does NOT mean that a final DTF composition is
         // ready. Export only explicitly bound, locked ORIGINAL image assets.
         if (function_exists('sanro_studio_drive_master_export_enabled')

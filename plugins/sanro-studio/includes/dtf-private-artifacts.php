@@ -378,6 +378,20 @@ function sanro_studio_dtf_commit_private_candidate($order, $item_id, $side, $can
 }
 
 /** No registered hooks: a future authorized worker must invoke explicitly. */
+/** Internal, bounded byte handoff after the existing SHA/300-DPI verification. */
+function sanro_studio_dtf_private_candidate_source($order,$item_id,$side) {
+    $verified=sanro_studio_dtf_verify_private_artifact($order,$item_id,$side);
+    if(empty($verified['valid'])||!empty($verified['skipped']))return $verified;
+    $binding=sanro_studio_dtf_artifact_binding($order,$item_id,$side);
+    $dir=sanro_studio_dtf_artifact_directory();
+    if(empty($binding['valid'])||!$dir)return ['valid'=>false,'error'=>'artifact_unavailable'];
+    $file=$dir.DIRECTORY_SEPARATOR.sanro_studio_dtf_artifact_basename($binding).'.png';
+    $bytes=!is_link($file)?@file_get_contents($file,false,null,0,33554433):false;
+    if(!is_string($bytes)||strlen($bytes)!==$verified['bytes']||!hash_equals($verified['sha256'],hash('sha256',$bytes)))return ['valid'=>false,'error'=>'artifact_integrity_failed'];
+    return ['valid'=>true,'bytes'=>$bytes,'mime'=>'image/png','ext'=>'png',
+        'sha256'=>$verified['sha256'],'design_id'=>$verified['design_id']];
+}
+
 function sanro_studio_dtf_persist_order_item_side($order, $item_id, $side, $expected_snapshot = null) {
     $binding = sanro_studio_dtf_artifact_binding($order, $item_id, $side);
     if (empty($binding['valid']) || !empty($binding['skipped'])) return $binding;

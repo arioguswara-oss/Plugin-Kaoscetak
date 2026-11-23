@@ -115,6 +115,11 @@ function sanro_studio_admin_order_preview_bytes($order, $side, $item_id = null) 
     if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) {
         return ['valid' => false, 'error' => 'forbidden'];
     }
+    return sanro_studio_bound_order_preview_bytes($order, $side, $item_id);
+}
+
+/** Internal reader shared by authorized admin delivery and paid/ready workers. */
+function sanro_studio_bound_order_preview_bytes($order, $side, $item_id = null) {
     if (!in_array($side, ['front', 'back'], true)) {
         return ['valid' => false, 'error' => 'invalid_side'];
     }
@@ -308,6 +313,17 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
     }
     echo '<div class="sanro-studio-item-preview"><strong>' .
         esc_html('SANRO Studio — Preview item') . '</strong>';
+    $snapshot = $item->get_meta('_sanro_studio_design_snapshot', true);
+    if (is_array($snapshot) && ($snapshot['version'] ?? null) === 1
+        && ($snapshot['design_id'] ?? null) === $design_id) {
+        $labels = ['Kaos: ' . (is_string($snapshot['shirt_color'] ?? null) ? $snapshot['shirt_color'] : ''),
+            'Lengan: ' . (!empty($snapshot['long_sleeve']) ? 'panjang' : 'pendek')];
+        foreach (['front'=>'Depan','back'=>'Belakang'] as $side=>$label) {
+            $category = $snapshot['sides'][$side]['category'] ?? null;
+            $labels[] = $label . ': ' . (is_string($category) ? $category : 'tanpa cetak');
+        }
+        echo '<p class="sanro-studio-design-summary">' . esc_html(implode(' | ',$labels)) . '</p>';
+    }
     // Admin-only order summary, based on saved WooCommerce item data.
     // Missing or mismatched quote metadata must not appear as a valid DTF price.
     if ($design_id !== '' && method_exists($item, 'get_meta')
@@ -353,6 +369,9 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
         $url = wp_nonce_url($url, 'sanro_order_preview_' . $order_id . '_' . $side . '_item_' . $item_id);
         echo '<p><a target="_blank" rel="noopener noreferrer" href="' . esc_url($url) . '">' .
             esc_html('Lihat preview ' . $label) . '</a></p>';
+        echo '<img loading="lazy" width="160" height="160" style="max-width:100%;object-fit:contain"'
+            . ' referrerpolicy="no-referrer" src="' . esc_url($url) . '" alt="'
+            . esc_attr('Preview desain ' . $label) . '">';
     }
     echo '</div>';
 }

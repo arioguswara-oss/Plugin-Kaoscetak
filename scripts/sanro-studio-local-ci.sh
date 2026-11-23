@@ -59,6 +59,7 @@ run_check 'Cart adapter preflight and rollback' 'PASS: 74 staging cart adapter c
 run_check 'Cart line identity and metadata' 'PASS: 24 isolated cart-line checks' php plugins/sanro-studio/tests/cart-line-snapshot-smoke.php
 run_check 'Checkout authorization gate' 'PASS: 43 checkout gate checks' php plugins/sanro-studio/tests/checkout-gate-smoke.php
 run_check 'Size checkout order-line binding' 'PASS: 13 isolated size-checkout checks' php plugins/sanro-studio/tests/size-checkout-bridge-smoke.php
+run_check 'Pricing multi-size checkout and private production package' 'PASS: 30 production guide/admin/private-upload checks' php plugins/sanro-studio/tests/production-package-flow.php
 
 run_check 'Default-disabled staging cart' '10 assertions PASS, 0 FAIL' php tests/test_sanro_staging_cart_gate.php
 run_check 'Cart REST ownership/session/idempotency' 'PASS: 42 staging REST cart-bootstrap checks' php plugins/sanro-studio/tests/rest-cart-bootstrap-smoke.php
@@ -102,7 +103,7 @@ run_check 'DTF layered default-disabled regression syntax' 'No syntax errors det
 run_check 'DTF layered compositor disabled by default' 'PASS: SANRO layered DTF raster defaults disabled' php plugins/sanro-studio/tests/dtf-layer-default-off.php
 run_check 'DTF private order artifact module PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/dtf-private-artifacts.php
 run_check 'DTF private artifact lifecycle regression syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-private-artifacts-smoke.php
-run_check 'DTF order item side private persistence and integrity' 'PASS: 28 SANRO order-bound private DTF artifact checks' php plugins/sanro-studio/tests/dtf-private-artifacts-smoke.php
+run_check 'DTF order item side private persistence and integrity' 'PASS: 31 SANRO order-bound private DTF artifact checks' php plugins/sanro-studio/tests/dtf-private-artifacts-smoke.php
 run_check 'DTF private artifact default-off syntax' 'No syntax errors detected' php -l plugins/sanro-studio/tests/dtf-private-artifacts-default-off.php
 run_check 'DTF private artifact storage remains default-off' 'PASS: SANRO DTF private artifact storage defaults disabled' php plugins/sanro-studio/tests/dtf-private-artifacts-default-off.php
 run_check 'DTF order batch coordinator PHP syntax' 'No syntax errors detected' php -l plugins/sanro-studio/includes/dtf-order-workflow.php

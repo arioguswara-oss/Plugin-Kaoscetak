@@ -25,6 +25,7 @@ done
 "$PHP_BIN" plugins/sanro-studio/tests/cart-adapter-smoke.php
 "$PHP_BIN" plugins/sanro-studio/tests/rest-cart-bootstrap-smoke.php
 "$PHP_BIN" plugins/sanro-studio/tests/size-checkout-bridge-smoke.php
+"$PHP_BIN" plugins/sanro-studio/tests/production-package-flow.php
 "$PHP_BIN" plugins/sanro-studio/tests/checkout-gate-smoke.php
 "$PHP_BIN" plugins/sanro-studio/tests/order-amount-contract.php
 "$PHP_BIN" plugins/sanro-studio/tests/order-lock-boundary.php
