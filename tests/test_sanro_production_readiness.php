@@ -29,6 +29,7 @@ $front = $id . '-front-' . str_repeat('a', 64) . '.png';
 $item = new SanroProductionItem([
     '_sanro_studio_design_id' => $id,
     '_sanro_studio_preview_front_ref' => $front,
+    '_sanro_studio_preview_back_ref' => $id . '-back-' . str_repeat('b', 64) . '.png',
 ]);
 $withoutPreview = new SanroProductionItem(['_sanro_studio_design_id' => $id]);
 $wrong = new SanroProductionItem([
@@ -46,7 +47,7 @@ check_production(sanro_studio_order_production_file_status($approved)['reason'] 
 check_production(sanro_studio_order_production_file_status($untrusted)['eligible'] === false, 'truthy metadata rejected');
 check_production(sanro_studio_order_item_production_manifest($pending, 11)['ready_for_drive_integration'] === false, 'unpaid manifest not ready');
 $manifest = sanro_studio_order_item_production_manifest($paid, 11);
-check_production($manifest['ready_for_drive_integration'] === true && $manifest['preview_front_available'] === true && $manifest['preview_back_available'] === false, 'paid item with preview ready');
+check_production($manifest['ready_for_drive_integration'] === true && $manifest['preview_front_available'] === true && $manifest['preview_back_available'] === true, 'paid item with front and back previews ready');
 check_production(sanro_studio_order_item_production_manifest($paid, 12)['ready_for_drive_integration'] === false, 'missing preview blocks drive');
 check_production(sanro_studio_order_item_production_manifest($paid, 13)['error'] === 'preview_design_mismatch', 'cross-design preview rejected');
 check_production(sanro_studio_order_item_production_manifest($paid, 999)['error'] === 'invalid_order_item', 'missing item rejected');

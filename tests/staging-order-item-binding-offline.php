@@ -38,7 +38,11 @@ s168_check(($result['valid'] ?? false) === true, 'real bridge accepts authorized
 s168_check(($result['requires_item_save'] ?? false) === true, 'explicit item save remains required');
 s168_check($good->get_meta('_sanro_studio_design_id') === $design, 'design ID bound');
 s168_check($good->get_meta('_sanro_studio_size') === 'M', 'size bound');
-s168_check(count($good->meta) === 2, 'no token, master bytes or private path written');
+s168_check(count($good->meta) === 4
+    && $good->get_meta('_sanro_studio_unit_price') === 130000
+    && $good->get_meta('_sanro_studio_quote_currency') === 'IDR'
+    && !isset($good->meta['_sanro_studio_owner_token'], $good->meta['_sanro_studio_master_bytes'], $good->meta['_sanro_studio_private_path']),
+    'server quote metadata persisted without token, master bytes or private path');
 s168_check(($result['checkout_enabled'] ?? true) === false, 'helper never enables checkout');
 s168_check(empty(sanro_studio_prepare_size_checkout_order_item($line, $good)['valid']), 'duplicate binding rejected');
 $mutations = [

@@ -54,9 +54,19 @@ function get_permalink($id) { return $id === 52 ? 'https://example.test/custom/'
 function esc_html($text) { return htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8'); }
 function esc_url($url) { return htmlspecialchars((string)$url, ENT_QUOTES, 'UTF-8'); }
 function checked($value) { if ($value) echo 'checked="checked"'; }
+function selected($selected, $current = true, $echo = true) {
+    $value = (string)$selected === (string)$current ? 'selected="selected"' : '';
+    if ($echo) echo $value;
+    return $value;
+}
 function wp_nonce_field($action) { echo '<input name="_wpnonce" value="synthetic">'; }
+function wp_dropdown_pages($args) { echo '<select name="' . esc_html($args['name']) . '"></select>'; }
+function esc_attr($text) { return htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8'); }
+function sanitize_key($text) { return preg_replace('/[^a-z0-9_\\-]/', '', strtolower((string)$text)); }
+function wp_unslash($value) { return $value; }
 function submit_button($label) { echo '<button>' . esc_html($label) . '</button>'; }
 function add_submenu_page(...$args) { $GLOBALS['ss_menu'] = $args; }
+function add_menu_page(...$args) { $GLOBALS['ss_menu'] = $args; }
 function wp_remote_request(...$args) { throw new RuntimeException('Network forbidden'); }
 function ss_assert($condition, $label) {
     if (!$condition) throw new RuntimeException('FAIL: ' . $label);

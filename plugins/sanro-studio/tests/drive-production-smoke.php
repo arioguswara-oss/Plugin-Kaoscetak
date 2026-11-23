@@ -67,6 +67,7 @@ $design = '123e4567-e89b-42d3-a456-123456789012';
 $item = new SanroDriveFixtureItem();
 $item->meta['_sanro_studio_design_id'] = $design;
 $item->meta['_sanro_studio_preview_front_ref'] = $design . '-front-' . str_repeat('a', 64) . '.png';
+$item->meta['_sanro_studio_preview_back_ref'] = $design . '-back-' . str_repeat('b', 64) . '.png';
 $order = new SanroDriveFixtureOrder();
 $order->items = [71 => $item];
 $metadata = [

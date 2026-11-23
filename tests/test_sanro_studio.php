@@ -1,6 +1,9 @@
 <?php
 require __DIR__ . '/sanro-studio-fixture.php';
 $before = $GLOBALS['ss_options'];
+// Exercise the legacy profile callback only in this isolated enabled scenario;
+// the dedicated default-off test covers bootstrap defaults separately.
+define('SANRO_STUDIO_ENABLE_LEGACY_COMPAT', true);
 require __DIR__ . '/../plugins/sanro-studio/sanro-studio.php';
 $settings = [
     'components' => ['product', 'templates', 'uploads', 'text', 'cliparts', 'shop', 'layers', 'back', 'shapes', 'drawing'],
@@ -9,7 +12,12 @@ $settings = [
     'stages' => '4', 'editor_page' => 52, 'price' => ['total' => 113000],
 ];
 ss_assert($GLOBALS['ss_options'] === $before && !$GLOBALS['ss_writes'], 'bootstrap preserves all options');
-ss_assert(count($GLOBALS['ss_hooks']) === 4, 'only expected profile, runtime and admin hooks registered');
+ss_assert(!isset($GLOBALS['ss_hooks']['woocommerce_single_product_summary'])
+    && !isset($GLOBALS['ss_hooks']['template_redirect'])
+    && !isset($GLOBALS['ss_hooks']['woocommerce_before_calculate_totals'])
+    && !isset($GLOBALS['ss_hooks']['woocommerce_checkout_process'])
+    && isset($GLOBALS['ss_hooks']['lumise_settings']),
+    'explicit profile scenario registers only its profile hook; buyer/cart/checkout remain absent');
 $GLOBALS['ss_options']['sanro_studio_options'] = ['admin_preview' => 'yes'];
 if ($scenario !== 'normal') {
     ss_assert(apply_filters('lumise_settings', $settings) === $settings, 'unavailable/unknown/vendor-admin context remains unchanged');
@@ -38,13 +46,14 @@ ss_assert(apply_filters('lumise_settings', ['components' => null]) === ['compone
 ss_assert(apply_filters('lumise_settings', null) === null, 'malformed settings pass through');
 ss_assert(apply_filters('lumise_settings', ['components' => ['product', ['uploads'], 1]]) === ['components' => ['product']], 'unexpected component entries safely excluded');
 sanro_studio_admin_menu();
-ss_assert($GLOBALS['ss_menu'][3] === 'manage_options', 'settings restricted to administrator');
+ss_assert($GLOBALS['ss_menu'][2] === 'manage_options'
+    && $GLOBALS['ss_menu'][3] === 'sanro-studio', 'settings restricted to administrator on native page');
 ob_start(); sanro_studio_render_settings(); $html = ob_get_clean();
 ss_assert(strpos($html, '<h1>SANRO Studio</h1>') !== false, 'own settings branding');
 ss_assert(stripos($html, 'Lumise') === false, 'own settings UI uses SANRO branding');
 ss_assert(strpos($html, 'https://example.test/custom/') !== false, 'configured editor link reused');
 ss_assert(strpos($html, 'name="_wpnonce"') !== false, 'settings form includes nonce');
-$_POST = ['admin_preview' => 'yes', 'kld_client_secret' => 'attempted-change', 'lumise_editor_page' => '99'];
+$_POST = ['settings_type' => 'legacy_preview', 'admin_preview' => 'yes', 'kld_client_secret' => 'attempted-change', 'lumise_editor_page' => '99'];
 $_SERVER['REQUEST_METHOD'] = 'POST';
 foreach (['capability', 'nonce', 'method'] as $failure) {
     $GLOBALS['ss_cap'] = $failure !== 'capability';
@@ -60,7 +69,7 @@ catch (SS_Redirect $e) { ss_assert($e->getMessage() === 'https://example.test/wp
 ss_assert(count($GLOBALS['ss_writes']) === 1, 'valid save writes only dedicated option');
 ss_assert(sanro_studio_options()['admin_preview'] === true, 'valid preview save');
 foreach ($before as $key => $value) ss_assert($GLOBALS['ss_options'][$key] === $value, 'vendor/KLD option preserved: ' . $key);
-$_POST = ['admin_preview' => ['yes']];
+$_POST = ['settings_type' => 'legacy_preview', 'admin_preview' => ['yes']];
 try { sanro_studio_save_settings(); } catch (SS_Redirect $e) {}
 ss_assert(sanro_studio_options()['admin_preview'] === false, 'malformed checkbox cannot enable profile');
 $GLOBALS['ss_cap'] = false;

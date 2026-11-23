@@ -14,6 +14,12 @@ function sanro_studio_read_draft($id, $token) {
         'design' => ['quantities' => ['M' => 2], 'long_sleeve' => false],
     ];
 }
+function sanro_studio_validate_product_design($product, $design) {
+    return ['valid' => $product === 12 && is_array($design)];
+}
+function sanro_studio_draft_image_binding_allowed($design, $refs, $id) {
+    return is_array($design) && is_array($refs) && $refs === [] && is_string($id);
+}
 function sanro_studio_quote_size_quantities($product, $design, $qty, $sleeve) {
     if ($qty !== ['M' => 2] || $product !== 12) return ['valid' => false, 'error' => 'invalid_quantities'];
     return ['valid' => true, 'total_quantity' => 2, 'total_price' => $GLOBALS['quote_price'] ?? 150000, 'currency' => $GLOBALS['quote_currency'] ?? 'IDR'];
