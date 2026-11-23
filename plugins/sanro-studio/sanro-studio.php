@@ -59,6 +59,7 @@ require_once __DIR__ . '/includes/product-area.php';
 require_once __DIR__ . '/includes/product-pricing.php';
 require_once __DIR__ . '/includes/editor-config.php';
 require_once __DIR__ . '/includes/pricing.php';
+require_once __DIR__ . '/includes/pricing-quote.php';
 require_once __DIR__ . '/includes/buyer.php';
 add_action('admin_menu', 'sanro_studio_bootstrap_admin_menu');
 
