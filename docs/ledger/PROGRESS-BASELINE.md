@@ -1,58 +1,38 @@
-# Baseline resmi SANRO Studio — Integration Coordination Update 2
+# SANRO Studio — baseline development sementara
 
-Tanggal 23 November 2026 WIB. **Baseline resmi 71,95% → 71,95%; delta 0,00 poin.** Bobot metode SANRO-7-v1 tidak diubah atau dikalibrasi ulang. File ini satu-satunya sumber angka resmi; STATUS.md dan indeks ledger hanya menunjuk ke sini.
+Tanggal 23 November 2026 WIB. Owner menetapkan baseline sementara **72,10%** untuk tugas development ini. Bobot tujuh tahap tetap SANRO-7-v1: 25/10/15/10/10/20/10. **Hasil putaran: 72,10% → 72,90%; delta +0,80 poin berbobot.** Ini estimasi scope IMPLEMENTED pada branch development, bukan release readiness atau checkout runtime VERIFIED.
 
-Baseline mengukur estimasi penyelesaian scope source donor yang telah ditetapkan Owner, bukan jumlah assertion, kesiapan production, atau persentase source yang sudah merged. Integration branch saat dibaca masih 0d981b634888a5389bc394b93a13a4177090cc76 tanpa plugin Studio; feature PR tetap terpisah dan belum merged.
+## Rincian tahap dan rekonsiliasi baseline
 
-## Perhitungan tujuh tahap
+Ledger terakhir yang tersedia pada source #50 masih merinci total 71,95%, bukan 72,10%. Owner tidak memberikan alokasi tambahan 0,15 poin per tahap. Selisih ini dipertahankan sebagai saldo baseline Owner **belum teralokasi**; tidak mengarang perubahan tahap lama atau mengganti bobot.
 
-| Tahap | Bobot tetap | Sebelum | Sekarang | Kontribusi sebelum → sekarang | Delta total |
+| Tahap | Bobot | Rincian sebelumnya | Sekarang | Kontribusi sebelumnya → sekarang | Delta berbobot |
 |---|---:|---:|---:|---:|---:|
-| 1. Fondasi core/native bootstrap | 25% | 75% | 75% | 18,75% → 18,75% | 0,00 |
-| 2. Backend produk/mockup/area | 10% | 79% | 79% | 7,90% → 7,90% | 0,00 |
-| 3. Frontend buyer | 15% | 94% | 94% | 14,10% → 14,10% | 0,00 |
-| 4. Harga server/quote | 10% | 83% | 83% | 8,30% → 8,30% | 0,00 |
-| 5. Simpan/ownership/share | 10% | 97% | 97% | 9,70% → 9,70% | 0,00 |
-| 6. Checkout/order/produksi/Drive | 20% | 46% | 46% | 9,20% → 9,20% | 0,00 |
-| 7. QA/rilis/mobile/package | 10% | 40% | 40% | 4,00% → 4,00% | 0,00 |
-| **Total** | **100%** | **71,95%** | **71,95%** | **71,95% → 71,95%** | **0,00 poin** |
+| 1. Fondasi/core | 25% | 75% | 75% | 18,75 → 18,75 | 0,00 |
+| 2. Backend produk | 10% | 79% | 79% | 7,90 → 7,90 | 0,00 |
+| 3. Frontend buyer | 15% | 94% | 96% | 14,10 → 14,40 | +0,30 |
+| 4. Harga server/quote | 10% | 83% | 83% | 8,30 → 8,30 | 0,00 |
+| 5. Simpan/ownership/share | 10% | 97% | 98% | 9,70 → 9,80 | +0,10 |
+| 6. Checkout/produksi/Drive | 20% | 46% | 48% | 9,20 → 9,60 | +0,40 |
+| 7. QA/rilis/mobile | 10% | 40% | 40% | 4,00 → 4,00 | 0,00 |
+| **Subtotal tujuh tahap** | **100%** | — | — | **71,95 → 72,75** | **+0,80** |
+| Saldo baseline sementara Owner, belum teralokasi | — | — | — | 0,15 → 0,15 | 0,00 |
+| **Total sementara sesuai baseline Owner** | — | **72,10%** | **72,90%** | **72,10 → 72,90** | **+0,80** |
 
-Formula tetap: total = Σ(bobot tahap × penyelesaian tahap / 100). Setiap delta total tahap = bobot tetap × (progres sekarang − progres sebelumnya) / 100. Semua delta tahap pada putaran ini nol; tidak ada penurunan atau reset baseline.
+Formula delta tetap Σ(bobot × perubahan tahap / 100). Total sementara = baseline Owner 72,10 + delta source baru 0,80. Saldo 0,15 bukan kredit putaran ini dan tidak dihitung ulang sebagai fitur. Dibedakan dari subtotal tahap agar laporan tidak mengaku rincian historis yang belum ada.
 
-## Mengapa tidak menambah angka dari bukti terbaru
+## Dasar kredit implementasi baru, tanpa duplikasi
 
-Readback #46–#51 dan Git diff dilakukan terhadap checkpoint update sebelumnya: #50 7d097fe → 0b3004b dan pricing 7a73279 → #51 b39d13f. Ada perubahan source nyata, dibedakan dari penyelesaian scope baru yang dapat diberi kredit:
-- #50 memasang hook native/admin/private-storage/editor/classic checkout pada bootstrap baru. Ini kemajuan penggabungan source, tetapi modul fungsi beserta hook tersebut sudah ada pada donor #45 yang menjadi sumber baseline. Seluruh folder plugins/sanro-studio sama dengan donor #45 kecuali file bootstrap. Restore companion KLD/ops/scripts/prototypes dan callback lama tidak dihitung sebagai fitur SANRO baru.
-- #51 menambah pricing-quote.php dan dua fungsi kontrak yang benar-benar baru sebagai source, tetapi kemampuan pokok tarif resmi, geometri, satu/dua sisi, lengan sekali, quote multisize dan cart contract sudah ada di quote.php/cart-contract.php donor. Fungsi baru belum dipanggil bridge #50; schema keluaran belum sama. Tidak menggandakan kredit tahap harga atau checkout untuk API paralel.
-- product-pricing.php dan pricing.php identik antara donor/#50/#51; tests/run-all.sh dan studio-assets.test.cjs di #51 identik dengan #48. Tidak diberi kredit dua kali.
-- 176 lint, 184 PASS/1 EPERM, parity alternatif 400/400 dan 688 assertion memperkuat evidence offline pada scope masing-masing. Tes/dependency dipulihkan bukan unit fitur baru. Tidak menggunakan rasio PASS untuk mengubah persentase tahap.
-- Tidak ada capability tahap yang terbukti selesai melampaui capaian yang sudah masuk baseline lama. Karena itu angka dipertahankan; bukan mensyaratkan deploy/E2E untuk semua kredit implementasi. Implementasi baru yang menyelesaikan gap jelas dapat dinilai pada source/check proporsional tanpa menunggu production.
+- Frontend +2 poin tahap = +0,30 berbobot: (1) fallback garment dengan lengan/kerah/sisi/warna yang tidak mengganti print-plane, mempertahankan merchant photo; (2) navigasi mobile preview/kontrol dan target/form yang lebih mudah dipakai. Source startup/switch-side/color dan PHP render diperiksa; visual source baru di browser belum VERIFIED.
+- Simpan +1 poin tahap = +0,10 berbobot: owner-authorized short readback memilih hanya preview terikat revisi server, tanpa path/file authority dari client; expiry, stale revision, foreign owner dan corrupt-reader refusal diuji. Tidak dihitung lagi sebagai share/email atau checkout selesai.
+- Checkout +2 poin tahap = +0,40 berbobot: (1) frontend menghasilkan preview sisi kosong yang diperlukan order tanpa menambah biaya/objek cetak; (2) quantity boundary menerima tipe integral native Woo tanpa membuka qty pecahan/mismatch, sebelum metadata order ditulis. Ini compatibility source, bukan E2E order PASS.
+- Pricing #51 dan adapter/session/order yang sudah ada di base #50 tidak mendapat kredit ulang. Jumlah lint/tests/browser screenshot dan pemulihan source lama tidak menambah progres. QA tahap tetap 40%.
+- Persen adalah estimasi scope implementation yang terbatas pada item di atas. Tidak mengklaim deploy/runtime baru; nilai tidak dinaikkan dari rasio assertion.
 
-| Tahap | Penilaian bukti terbaru |
-|---|---|
-| 1. Fondasi core/native bootstrap | Hook native dipasang ulang di bootstrap #50; modul/callback sudah ada di donor #45. Runtime native belum VERIFIED. |
-| 2. Backend produk/mockup/area | Profil/admin/settings dipulihkan; product-pricing identik, belum ada profil tunik/override baru. |
-| 3. Frontend buyer | Wiring buyer opt-in dipulihkan; implementasi editor selain bootstrap identik dengan donor #45. |
-| 4. Harga server/quote | Kontrak baru #51 IMPLEMENTED; aturan inti/quote multisize sudah ada. Adapter #50↔#51 belum tersambung. |
-| 5. Simpan/ownership/share | Dependency draft/master dipulihkan; tidak ada implementasi native baru share/email/repeat yang terbukti. |
-| 6. Checkout/order/produksi/Drive | Hook classic opt-in dipasang; hardening #46 dan satu alur order/artifact terpadu belum selesai. |
-| 7. QA/rilis/mobile/package | Evidence offline bertambah; dependency lama dipulihkan. Tidak menyamakan test count dengan fitur/rilis baru. |
+## Status bukti
 
-## DECIDED / IMPLEMENTED / VERIFIED
+DECIDED: baseline sementara Owner, bobot, izin development terisolasi dan staging QA, larangan deploy/merge/production/DTF/Drive. IMPLEMENTED: perbaikan mobile/mockup, short preview readback, blank-side preview dan normalisasi kuantitas order. VERIFIED: lint/tes bounded source baru; browser staging berhasil draft/master/reopen/server quote. BLOCKED: preview staging 422 dan cart yang bergantung padanya; checkout/order runtime tidak diuji.
 
-- **DECIDED:** bobot tujuh tahap, tarif kategori/sisi/lengan, ownership Hermes/Cloud/Work dan jalur integration tunggal.
-- **IMPLEMENTED pada feature branch:** bootstrap native opt-in #50 0b3004b; kontrak quote dan validasi cart-line read-only #51 b39d13f. Belum tergabung menjadi satu alur. Flags OFF tidak berarti source belum diimplementasikan.
-- **VERIFIED melalui inspeksi Work:** HEAD/diff/blob/overlap/schema dan hasil hitung ledger. Evidence eksekusi offline berasal dari laporan committed worker pada SHA yang disebutkan; Work tidak menjalankan ulang PHP/JS/E2E.
-- **Belum VERIFIED:** gabungan native Woo/editor/cart/order, master gambar/admin artifact nyata, variasi/pajak/kupon/stok di runtime, ACK sesi worker eksternal. GitHub Actions tidak disertifikasi dari hasil lokal.
+Laporan lengkap, SHA dan hasil tes: [studio-mobile-checkout-development-20261123.md](../qa/studio-mobile-checkout-development-20261123.md). Rincian lama 71,95% dan laporan koordinasi sebelumnya tetap historis pada Git, tidak menjadi baseline aktif kedua.
 
-## Aturan kredit berikutnya
-
-Gunakan bobot tetap; setiap kenaikan harus menunjuk gap fitur yang selesai, commit/diff dan pemeriksaan proporsional. Pisahkan penyelesaian source, pengujian offline, integrasi dan runtime; jangan mengalikan tes/PR/restorasi file menjadi progres. Jangan menghitung callback, tabel tarif atau runner yang sama pada dua branch. Jangan menaikkan angka hanya agar target 90% tercapai.
-
-Selisih terhadap 90% adalah **18,05 poin berbobot**. Lima pekerjaan di INTEGRATION-20261123.md adalah arah penutupan gap, bukan janji otomatis mencapai 90% atau alokasi persen baru. Setelah deliverable benar-benar selesai, nilai kontribusi dengan bobot ini; full audit baru saat implementasi mendekati 90%.
-
-## Riwayat yang dipertahankan
-
-71,95% ditetapkan dari rincian tahap 75/79/94/83/97/46/40, lalu ditegaskan Owner pada NEXT. Source historis docs/architecture/sanro-studio-roadmap.md donor #45 memuat rincian tersebut. Angka 89,4%, 90% atau audit delapan tahap 35% di arsip adalah HISTORIS/SUPERSEDED, bukan baseline aktif dan tidak dipakai untuk perhitungan update ini. Tidak mengubah keputusan lama atau melakukan kalibrasi ulang.
-
-GO koordinasi dan kelanjutan development source terisolasi oleh pemilik. NO-GO merge/deploy/production, order baru atau klaim rilis final pada tugas ini.
+GO review source/Draft PR. NO-GO merge/deploy/production atau klaim end-to-end checkout/print-ready. DTF dan Drive tidak diaktifkan.

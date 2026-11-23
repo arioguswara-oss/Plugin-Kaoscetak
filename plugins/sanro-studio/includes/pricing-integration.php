@@ -248,7 +248,7 @@ function sanro_studio_pricing_order_item($item, $cart_item_key, $values, $order)
     $size = $values['sanro_studio_size'] ?? null;
     $candidate = $verified['contract']['quote']['items'][$size] ?? null;
     if (!is_array($candidate) || ($verified['id'] ?? null) !== ($values['sanro_studio_design_id'] ?? null)
-        || ($candidate['quantity'] ?? null) !== ($values['quantity'] ?? null)) throw new RuntimeException('SANRO Studio: order line mismatch.');
+        || ($candidate['quantity'] ?? null) !== sanro_studio_pricing_quantity($values['quantity'] ?? null)) throw new RuntimeException('SANRO Studio: order line mismatch.');
     foreach (['_sanro_studio_design_id'=>$verified['id'], '_sanro_studio_size'=>$size,
         '_sanro_studio_unit_price'=>$candidate['unit_price'], '_sanro_studio_quote_currency'=>'IDR'] as $key=>$value) $item->update_meta_data($key,$value);
     $verified['sizes'][$size] = true; $GLOBALS['sanro_studio_pricing_checkout'] = $verified;

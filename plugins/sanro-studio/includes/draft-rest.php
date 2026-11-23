@@ -65,6 +65,13 @@ function sanro_studio_preview_upload_enabled() {
 
 function sanro_studio_register_preview_upload_route() {
     if (!sanro_studio_preview_upload_enabled()) return;
+    // Keep private filenames out of the URL, as with the existing master-read
+    // route. The server resolves only the owner's current bound preview.
+    register_rest_route('sanro-studio/v1', '/drafts/(?P<id>[a-fA-F0-9-]{36})/preview-read/(?P<side>front|back)', [
+        'methods' => 'GET',
+        'callback' => 'sanro_studio_rest_read_current_preview',
+        'permission_callback' => 'sanro_studio_rest_draft_nonce',
+    ]);
     register_rest_route('sanro-studio/v1', '/drafts/(?P<id>[a-fA-F0-9-]{36})/previews/(?P<side>front|back)/(?P<file_id>[a-f0-9-]{36}-(?:front|back)-[a-f0-9]{64}\\.(?:png|jpg|webp))', [
         'methods' => 'GET',
         'callback' => 'sanro_studio_rest_read_preview',
@@ -99,9 +106,47 @@ function sanro_studio_rest_read_preview($request) {
     if (function_exists('nocache_headers')) nocache_headers();
     $response = rest_ensure_response([
         'valid' => true,
+        'file_id' => $request->get_param('file_id'),
         'mime' => $result['mime'],
         'image_base64' => base64_encode($result['bytes']),
     ]);
+    $response->header('Cache-Control', 'private, no-store, max-age=0');
+    $response->header('X-Content-Type-Options', 'nosniff');
+    return $response;
+}
+
+/** Read only the preview bound to this owner's current saved revision. */
+function sanro_studio_rest_read_current_preview($request) {
+    if (!sanro_studio_preview_upload_enabled()) {
+        return new WP_Error('sanro_preview_disabled', 'Preview unavailable.', ['status' => 403]);
+    }
+    $id = $request->get_param('id');
+    $token = $request->get_header('X-Sanro-Owner-Token');
+    $side = $request->get_param('side');
+    $draft = sanro_studio_read_draft($id, $token);
+    if (empty($draft['valid'])) {
+        return new WP_Error('sanro_preview_unavailable', 'Preview unavailable.',
+            ['status' => ($draft['error'] ?? '') === 'draft_expired' ? 410 : 404]);
+    }
+    if (!in_array($side, ['front', 'back'], true)) {
+        return new WP_Error('sanro_preview_unavailable', 'Preview unavailable.', ['status' => 404]);
+    }
+    $record = get_option('sanro_studio_draft_' . $id, false);
+    $ref = is_array($record) ? ($record['preview_refs'][$side] ?? null) : null;
+    $revision = is_array($record) ? ($record['preview_design_hash'] ?? null) : null;
+    if (!is_string($ref) || !is_string($revision) || !is_string($draft['design_hash'] ?? null)
+        || !hash_equals($draft['design_hash'], $revision)) {
+        return new WP_Error('sanro_preview_not_current', 'Refresh the saved design preview.', ['status' => 409]);
+    }
+    // Reuses the filesystem boundary: exact design/side, safe directory, MIME,
+    // bounded bytes and content digest. No client path or file ID is accepted.
+    $result = sanro_studio_read_owned_draft_preview($id, $token, $side, $ref);
+    if (empty($result['valid'])) {
+        return new WP_Error('sanro_preview_unavailable', 'Preview unavailable.', ['status' => 404]);
+    }
+    if (function_exists('nocache_headers')) nocache_headers();
+    $response = rest_ensure_response(['valid' => true, 'file_id' => $ref,
+        'mime' => $result['mime'], 'image_base64' => base64_encode($result['bytes'])]);
     $response->header('Cache-Control', 'private, no-store, max-age=0');
     $response->header('X-Content-Type-Options', 'nosniff');
     return $response;

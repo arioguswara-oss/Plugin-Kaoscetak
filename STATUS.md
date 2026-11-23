@@ -1,35 +1,13 @@
-# SANRO Studio — Integration Status
+# SANRO Studio — development integration
 
-Updated: 2026-11-23
-Overall progress: **89.4%** (historical estimate; unchanged pending runtime verification).
+23 November 2026 WIB. **Progres sementara: 72,10% → 72,90%, +0,80 poin**. Bobot tujuh tahap tetap. Satu sumber angka dan rekonsiliasi saldo baseline Owner 0,15 yang belum teralokasi: [docs/ledger/PROGRESS-BASELINE.md](docs/ledger/PROGRESS-BASELINE.md).
 
-## Branch policy
-- Integration branch: `integration/sanro-studio`, created from `main` and verified identical at baseline.
-- Feature branches must target this integration branch directly. No stacked PRs.
-- Do not merge into integration or main without Owner approval and local tests PASS.
-- No production deployment, live database changes, or disabling legacy designer without explicit approval.
+Source development terisolasi berbasis #50 SHA 45a7917c320403d1bc0d18caf7ee3398a3ecb416, dengan pricing terbaru #51 e9cb4679247f30223c33e51ddac1b2405dff961c sudah tercakup pada base. Tidak mengulang import pricing atau instalasi #50.
 
-## Vertical slice acceptance
-Buyer creates and reopens front/back design → adds verified DTF quote to cart → checks out **one synthetic staging order** → admin sees front/back previews → private production artifact is accessible to authorized admin.
+IMPLEMENTED baru: bentuk fallback kaos depan/belakang, navigasi mobile, short preview readback owner/revision-bound, preview blank side tanpa biaya tambahan, dan native order quantity normalization.
 
-| Feature | Status | Evidence / gap |
-|---|---|---|
-| Editor, draft, front/back preview | IMPLEMENTED | Existing feature branches; integration pending |
-| DTF pricing, cart, checkout bridge | IMPLEMENTED | Existing checkout branch; integration and staging E2E pending |
-| Admin order previews | IMPLEMENTED | Existing feature branch; staging readback pending |
-| Private production file | DECIDED | Verify actual file and authorization before marking VERIFIED |
-| DTF 300 DPI, Drive automation | DECIDED | Deferred, feature flags OFF |
+Cloud Browser staging: editor/draft/master/reopen/server quote PASS, total Rp273.000 untuk M×2 + L×1 A3+. Preview readback 422; cart berhenti di dependency tersebut. Checkout/order/payment NOT TESTED. Fix source baru belum deployed atau browser runtime VERIFIED.
 
-## Evidence
-- Checkout source branch: `dev/staging-one-order-gate-20261122`.
-- Local fast check: `bash scripts/sanro-studio-slice-check.sh` on source branch; **NOT RUN**.
-- Latest preview status fix: `49cb791`; regression tests: `e01bdc5`; **NOT RUN**.
-- Historical 143 PASS / 0 FAIL is not proof for the latest source.
-- PR #28–30, #34, #37, #41 closed as obsolete QA/plan-only branches.
-- This STATUS file records the integration baseline, not a completed feature integration.
+[Laporan hasil, test dan batas](docs/qa/studio-mobile-checkout-development-20261123.md). WordPress read-only mengonfirmasi SANRO Studio aktif, QA lama inactive. Tidak mengubah plugin/settings atau runtime flag.
 
-## Next
-1. Review/select minimal functional files for first editor → cart → checkout vertical slice.
-2. Prepare a small non-stacked PR targeting `integration/sanro-studio`.
-3. Run local contract checks and request Owner approval before merge.
-4. Perform one staging E2E after slice is integrated and staging changes are authorized.
+GO review development. NO-GO merge/deploy/production/DTF/Drive. Riwayat koordinasi sebelumnya adalah snapshot lama.

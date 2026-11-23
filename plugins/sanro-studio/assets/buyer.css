@@ -85,3 +85,27 @@
  background-size:contain;
  background-repeat:no-repeat;
 }
+
+/* Garment fallback: keep the print-plane box/centimeter mapping unchanged.
+   Only the decorative layer is shaped; uploaded artwork is never clipped. */
+#sanro-studio-buyer .sanro-shirt{isolation:isolate;background-color:transparent!important;border-radius:0}
+#sanro-studio-buyer .sanro-shirt::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--sanro-shirt-color,#fff);clip-path:polygon(30% 5%,40% 1%,60% 1%,70% 5%,100% 22%,86% 43%,75% 37%,75% 99%,25% 99%,25% 37%,14% 43%,0 22%);filter:drop-shadow(0 2px 2px #64748b);border-bottom:2px solid #94a3b8;pointer-events:none}
+#sanro-studio-buyer .sanro-shirt::after{content:"";position:absolute;left:40%;top:0;width:20%;height:10%;border:2px solid #94a3b8;border-top:0;border-radius:0 0 50% 50%;background:#f5f7fb;pointer-events:none}
+#sanro-studio-buyer .sanro-shirt[data-side="back"]::after{height:5%}
+#sanro-studio-buyer .sanro-shirt[data-mockup="true"]::before,
+#sanro-studio-buyer .sanro-shirt[data-mockup="true"]::after{display:none}
+#sanro-studio-buyer .sanro-safe{z-index:1}
+#sanro-studio-buyer .sanro-preview{align-self:start}
+#sanro-studio-buyer .sanro-mobile-jumps{display:none}
+#sanro-studio-buyer .sanro-controls p{margin:0;line-height:1.5}
+#sanro-studio-buyer :is(#sanro-save-status,#sanro-cart-status,#sanro-server-quote-status,#sanro-preview-upload-status){overflow-wrap:anywhere}
+#sanro-studio-buyer :is(#sanro-save-draft,#sanro-add-to-cart){background:#183c66;color:#fff;font-weight:600}
+@media(min-width:751px){#sanro-studio-buyer .sanro-preview{position:sticky;top:12px}}
+@media(max-width:750px){
+ #sanro-studio-buyer .sanro-mobile-jumps{display:flex;position:sticky;top:0;z-index:5;gap:8px;padding:8px 0;background:#fff}
+ #sanro-studio-buyer .sanro-mobile-jumps a{display:grid;place-items:center;flex:1;min-height:44px;border:1px solid #94a3b8;border-radius:8px;color:#183c66;text-decoration:none;font-weight:600}
+ #sanro-studio-buyer :is(#sanro-design-preview,#sanro-design-controls){scroll-margin-top:68px}
+ #sanro-studio-buyer .sanro-controls{padding-bottom:max(16px,env(safe-area-inset-bottom))}
+ #sanro-studio-buyer .sanro-controls :is(input,textarea,select){font-size:16px}
+ #sanro-studio-buyer :is(#sanro-save-draft,#sanro-add-to-cart){min-height:48px}
+}

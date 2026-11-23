@@ -10,9 +10,9 @@
  const shirtColors=new Set(['#ffffff','#171717','#b91c1c','#1d4ed8','#166534']);
  const shirtColor=q('#sanro-shirt-color');
  shirtColor.addEventListener('change',()=>{
-  if(shirtColors.has(shirtColor.value)){editRevision++;q('.sanro-shirt').style.backgroundColor=shirtColor.value;}
+  if(shirtColors.has(shirtColor.value)){editRevision++;q('.sanro-shirt').style.setProperty('--sanro-shirt-color',shirtColor.value);}
  });
- q('.sanro-shirt').style.backgroundColor=shirtColor.value;
+ q('.sanro-shirt').style.setProperty('--sanro-shirt-color',shirtColor.value);
  const qtyInputs=Array.from(root.querySelectorAll('[data-size]'));
  function designCategory(d){return d.url||d.text.trim()?d.category:null;}
  function updateEstimate(){
@@ -78,6 +78,8 @@
   const mockup = config.mockups && Object.prototype.hasOwnProperty.call(config.mockups,side)
     ? config.mockups[side] : null;
   const shirt=q('.sanro-shirt');
+  shirt.setAttribute('data-side',side);
+  shirt.setAttribute('data-mockup',String(typeof mockup==='string' && /^https?:\/\//i.test(mockup)));
   shirt.style.backgroundImage=(typeof mockup==='string' && /^https?:\/\//i.test(mockup))
     ? 'url('+JSON.stringify(mockup)+')' : '';
   // Merchant-controlled visual overlay; authoritative geometry uses
@@ -317,7 +319,7 @@
   }
   if(design.shirt_color!==undefined){
    if(!shirtColors.has(design.shirt_color))throw new Error('Warna draft tidak valid.');
-   shirtColor.value=design.shirt_color;q('.sanro-shirt').style.backgroundColor=shirtColor.value;
+   shirtColor.value=design.shirt_color;q('.sanro-shirt').style.setProperty('--sanro-shirt-color',shirtColor.value);
   }
   if(design.quantities!==undefined){
    if(!design.quantities||typeof design.quantities!=='object'||Array.isArray(design.quantities))
@@ -470,7 +472,9 @@
  // Require the owner-bound master before previewing an uploaded image.
  async function makeDesignPreview(name){
   const d=sides[name],area=config.safe_areas[name];
-  if(!area||(!d.url&&!d.text.trim()))return null;
+  // A blank garment side still needs an owner-bound preview for the native
+  // order. It remains absent from design.objects and adds no print surcharge.
+  if(!area)return null;
   if(d.pending||d.file||(d.url&&!boundMasterRefs[name]))
    throw new Error('Unggah dan simpan master '+name+' sebelum membuat preview.');
   const bounds=withPrintZone(name,()=>safe.getBoundingClientRect());
@@ -705,13 +709,13 @@
        throw new Error('Upload '+name+' gagal ('+response.status+').');
       // Verify private readback before reporting success. Preview is not a master file.
       const readback=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)
-       +'/previews/'+name+'/'+encodeURIComponent(result.file_id),{
+       +'/preview-read/'+name,{
        method:'GET',credentials:'same-origin',cache:'no-store',
        headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken}
       });
       if(!readback.ok)throw new Error('Verifikasi preview '+name+' gagal ('+readback.status+').');
       const verified=await readback.json();
-      if(!verified.valid||verified.image_base64!==encoded
+      if(!verified.valid||verified.file_id!==result.file_id||verified.image_base64!==encoded
        ||verified.mime!=='image/jpeg')throw new Error('Integritas preview '+name+' tidak sesuai.');
       completed.push(name);
       if(editRevision!==revisionAtStart)
@@ -759,7 +763,7 @@
     quoteStatus.textContent='Harga server draft tersimpan: '+money(result.quote.total_price)
      +' untuk '+result.quote.total_quantity+' pcs. '+details.join(' · ')+'. '
      +(editRevision!==revisionAtRequest?'Desain lokal berubah selama pemeriksaan; simpan ulang untuk harga terbaru. ':'')
-     +'Belum dapat checkout.';
+     +(q('#sanro-add-to-cart')?'Harga terverifikasi; lanjutkan melalui keranjang.':'Checkout belum diaktifkan.');
    }catch(error){quoteStatus.textContent=error.message||'Gagal memeriksa harga server.'}
    finally{quoteButton.disabled=false}
   });

@@ -186,12 +186,13 @@ function sanro_studio_render_buyer_editor() {
     }
     echo '</header>';
     echo '<nav class="sanro-workflow" aria-label="Tahapan desain"><span class="sanro-workflow-done">1. Pilih Produk</span><span class="sanro-workflow-current" aria-current="step">2. Atur Desain</span><span class="sanro-workflow-pending">3. Desain Saya</span></nav>';
-    echo '<div class="sanro-layout"><section class="sanro-preview" aria-label="Pratinjau desain">';
+    echo '<nav class="sanro-mobile-jumps" aria-label="Navigasi editor"><a href="#sanro-design-preview">Lihat kaos</a><a href="#sanro-design-controls">Atur desain</a></nav>';
+    echo '<div class="sanro-layout"><section class="sanro-preview" id="sanro-design-preview" aria-label="Pratinjau desain">';
     echo '<nav aria-label="Sisi kaos"><button type="button" data-side="front" aria-pressed="' . ($config['default_side'] === 'front' ? 'true' : 'false') . '">Depan</button> <button type="button" data-side="back" aria-pressed="' . ($config['default_side'] === 'back' ? 'true' : 'false') . '">Belakang</button></nav>';
     echo '<div class="sanro-shirt"><div class="sanro-safe"><img alt="Gambar desain" hidden><div class="sanro-text" hidden></div></div></div>';
     echo '<p id="sanro-side-summary" role="status">Depan: kosong · Belakang: kosong</p>';
     echo '<p class="sanro-hint">Geser gambar atau teks. Ukuran cetak dihitung dalam cm.</p></section>';
-    echo '<section class="sanro-controls"><h2>Atur desain</h2>';
+    echo '<section class="sanro-controls" id="sanro-design-controls"><h2>Atur desain</h2>';
     echo '<label>Warna kaos<select id="sanro-shirt-color"><option value="#ffffff">Putih</option><option value="#171717">Hitam</option><option value="#b91c1c">Merah</option><option value="#1d4ed8">Biru</option><option value="#166534">Hijau</option></select></label>';
     echo '<fieldset class="sanro-size-qty"><legend>Jumlah per ukuran</legend>';
     foreach (['S','M','L','XL','2XL','3XL','4XL','5XL'] as $size) {

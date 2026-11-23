@@ -73,8 +73,9 @@ function check(ok,message){assert(ok,message);checks++;}
   check(await built.makeDesignPreview('front')==='cHJldmlldw=='&&textCalls>0,
     'text preview stays supported without a master');
   d.text='';
-  check(await built.makeDesignPreview('front')===null,
-    'empty side does not create a preview');
+  const previousTextCalls=textCalls;
+  check(typeof await built.makeDesignPreview('front')==='string' && textCalls===previousTextCalls,
+    'blank side creates a private garment preview without inventing printed text');
   console.log('PASS: '+checks+' private DTF image-preview and master-binding checks');
 })().catch(error=>{
   console.error('FAIL private DTF preview regression: '+String(error.message).slice(0,240));
