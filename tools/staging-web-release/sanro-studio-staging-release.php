@@ -2,7 +2,7 @@
 /*
 Plugin Name: SANRO Studio Staging Release Transport
 Description: Exact-target, hash-bound administrator release transport. No shell, public API, scheduled writer or automatic installation.
-Version: 0.3.1
+Version: 0.3.2
 */
 defined('ABSPATH') || exit;
 require_once __DIR__.'/transaction.php';
@@ -133,6 +133,7 @@ function sswr_page() {
         $gate=sswr_preflight();echo '<pre>'.esc_html(wp_json_encode($gate,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)).'</pre>';
         if(!$gate['installed']) {echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'">';submit_button('Install approved staging candidate','primary','sswr_install');echo '</form>';}
         if(function_exists('sanro_studio_runtime_readiness'))echo '<h2>Runtime readiness</h2><pre>'.esc_html(wp_json_encode(sanro_studio_runtime_readiness(24),JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)).'</pre>';
+        echo '<h2>Read-only configuration declaration inventory</h2><pre>'.esc_html(wp_json_encode(sswr_config_inventory(),JSON_PRETTY_PRINT)).'</pre>';
         sswr_acceptance_page();
     } catch(Throwable $e) {error_log('SANRO staging release gate: '.get_class($e));echo '<p>NO-GO: '.esc_html($e instanceof RuntimeException?$e->getMessage():'release_validation_failed').'</p>';}
     echo '</div>';
@@ -147,6 +148,7 @@ add_action('admin_init',static function(){
     if(($_POST['source']??null)!==SSWR_SOURCE)wp_die('Source mismatch',409);
     try{
         if($_POST['acceptance']==='create_unpaid')$result=sswr_create_synthetic_order();
+        elseif($_POST['acceptance']==='package_local')$result=sswr_synthetic_local_package();
         elseif(in_array($_POST['acceptance'],['arm_dtf','dtf','restore_dtf'],true)){
             $path=sswr_private_root().'/dtf-config.lock';if(is_link($path))throw new RuntimeException('unsafe_config_lock');
             $lock=fopen($path,'c+');if(!$lock||!flock($lock,LOCK_EX|LOCK_NB))throw new RuntimeException('configuration_busy');chmod($path,0600);

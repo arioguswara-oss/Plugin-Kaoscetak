@@ -1,6 +1,17 @@
 <?php
 /** Explicit staging configuration opt-in, never PHP constant redefinition. Default and every GET stay OFF. */
 function sswr_dtf_config_flags(){return ['DTF_ADMIN_GENERATE','DTF_ORDER_BATCH','DTF_IMAGE_RASTER','DTF_LAYER_RASTER','DTF_PRIVATE_ARTIFACTS'];}
+/** Return only SANRO flag names and declaration categories, never source text, paths or credential values. */
+function sswr_config_inventory(){
+    $out=[];$root=realpath(WPMU_PLUGIN_DIR);
+    foreach(get_included_files() as $path){$actual=realpath($path);if(!$actual||is_link($path))continue;
+        if(strpos($actual,$root.'/')!==0){if(stripos(basename($actual),'sanro')!==false&&strpos($actual,SSWR_DOCROOT.'/')!==0)$out[]=['file'=>basename($actual),'scope'=>'private_include_not_read'];continue;}
+        if(filesize($actual)>131072)continue;$tokens=token_get_all(file_get_contents($actual),TOKEN_PARSE);$known=[];$map=[];$shape=[];
+        foreach($tokens as $i=>$token)if(is_array($token)&&$token[0]===T_CONSTANT_ENCAPSED_STRING){$name=substr($token[1],1,-1);foreach(sswr_dtf_config_flags() as $flag)if($name===$flag||$name==='SANRO_STUDIO_ENABLE_'.$flag){$known[$flag]=true;$j=$i+1;while(isset($tokens[$j])&&is_array($tokens[$j])&&in_array($tokens[$j][0],[T_WHITESPACE,T_COMMENT,T_DOC_COMMENT],true))$j++;if(is_array($tokens[$j]??null)&&$tokens[$j][0]===T_DOUBLE_ARROW)$map[$flag]=true;}}
+        $matches=sswr_false_flag_offsets(file_get_contents($actual));
+        if($known||stripos(basename($actual),'sanro')!==false)$out[]=['file'=>basename($actual),'scope'=>'mu_plugin','dtf_literals'=>array_keys($known),'dtf_map_keys'=>array_keys($map),'supported_false_definitions'=>count($matches)];
+    }return $out;
+}
 function sswr_false_flag_offsets($source) {
     $tokens=[];$offset=0;
     foreach(token_get_all($source,TOKEN_PARSE) as $t){$text=is_array($t)?$t[1]:$t;$kind=is_array($t)?$t[0]:null;if(!in_array($kind,[T_WHITESPACE,T_COMMENT,T_DOC_COMMENT],true))$tokens[]=[$kind,$text,$offset];$offset+=strlen($text);}

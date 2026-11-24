@@ -80,6 +80,13 @@ function sswr_generate_synthetic_dtf() {
     }
     $record['dtf']=['state'=>'PASS_PRIVATE_CANDIDATES_AND_LOCAL_PDF','quality_approved'=>false,'print_ready'=>false,'results'=>$results,'flags_persisted'=>false,'drive_invoked'=>false];sswr_acceptance_record($record);return $record['dtf'];
 }
+function sswr_synthetic_local_package(){
+    sswr_preflight();$r=sswr_acceptance_record();if(($r['order_id']??null)!==56)throw new RuntimeException('exact_order_required');$order=wc_get_order(56);sswr_acceptance_order_summary($order);
+    if(!sanro_studio_auto_drive_order_eligible($order))throw new RuntimeException('production_approval_required');
+    $dir=sswr_private_root().'/production-package';if(!is_dir($dir)&&!mkdir($dir,0700))throw new RuntimeException('package_directory_failed');if(is_link($dir)||($mode=fileperms($dir))===false||($mode&0077))throw new RuntimeException('unsafe_package_directory');
+    $items=[];foreach($order->get_items() as $id=>$item){$p=sanro_studio_prepare_production_package($order,$id);if(empty($p['valid']))throw new RuntimeException('package_'.$p['error']);$assets=[];foreach($p['assets'] as $a){$name='item-'.$id.'-'.$a['kind'].'-'.$a['side'].'.'.$a['ext'];sswr_write($dir.'/'.$name,$a['bytes']);$assets[]=['file'=>$name,'bytes'=>strlen($a['bytes']),'sha256'=>hash('sha256',$a['bytes']),'mime'=>$a['mime']];}sswr_write($dir.'/item-'.$id.'-manifest.json',wp_json_encode($p['manifest'],JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));$items[]=['item_id'=>$id,'manifest'=>$p['manifest'],'assets'=>$assets];}
+    $r['local_package']=['state'=>'PASS_MANIFEST_PRIVATE_PREVIEWS_UNICODE_PDF','items'=>$items,'dtf_generated'=>false,'drive_invoked'=>false,'flags_changed'=>false];sswr_acceptance_record($r);return $r['local_package'];
+}
 function sswr_acceptance_page() {
     echo '<h2>One synthetic unpaid acceptance order</h2><p>No gateway, payment, customer profile update or shipment. Same native Studio checkout authorization/order hooks. Maximum one order; ambiguous attempts fail closed.</p>';
     $status=sswr_private_root().'/acceptance-status.json';if(is_file($status)&&!is_link($status)&&filesize($status)<4096)echo '<pre>'.esc_html(file_get_contents($status)).'</pre>';
@@ -88,7 +95,7 @@ function sswr_acceptance_page() {
     if($record){
         echo '<pre>'.esc_html(wp_json_encode($record,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)).'</pre>';
         if(!empty($record['order_id'])){echo '<a href="'.esc_url(wc_get_order($record['order_id'])->get_edit_order_url()).'">Open synthetic WooCommerce order</a>';echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'"><input type="hidden" name="acceptance" value="dtf">';submit_button('Generate private DTF and PDF for this order','primary','sswr_generate');echo '</form>';
-            foreach(['arm_dtf'=>'Arm bounded DTF configuration for this order','restore_dtf'=>'Restore original DTF configuration'] as $action=>$label){echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'"><input type="hidden" name="acceptance" value="'.esc_attr($action).'">';submit_button($label,'primary','sswr_'.$action);echo '</form>';}
+            foreach(['arm_dtf'=>'Arm bounded DTF configuration for this order','restore_dtf'=>'Restore original DTF configuration','package_local'=>'Build private PDF and manifest without DTF'] as $action=>$label){echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'"><input type="hidden" name="acceptance" value="'.esc_attr($action).'">';submit_button($label,'primary','sswr_'.$action);echo '</form>';}
         }
         return;
     }
