@@ -19,7 +19,7 @@
   },
   "staging_identity": {
     "ssh_alias": "kaoscetak-staging",
-    "host_fingerprint_result": "id-dci-web1631.main-hosting.eu",
+    "ssh_remote_hostname": "id-dci-web1631.main-hosting.eu",
     "account_user": "u606139982",
     "canonical_document_root": "/home/u606139982/domains/saddlebrown-peafowl-616656.hostingersite.com/public_html",
     "wordpress_site_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
