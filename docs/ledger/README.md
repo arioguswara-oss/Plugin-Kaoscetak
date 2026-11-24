@@ -1,6 +1,6 @@
 # SANRO Studio — ledger aktif
 
-Terbaru: [installation gate refusal](../qa/studio-installation-attempt-20261124.md). Runtime identity, LiteSpeed SAPI, private storage, flags and clean journal/lock state PASS; official installer refuses because the active plugin array has sparse numeric keys and JSON-encodes as an object. Approved candidate remains uninstalled and unchanged. Fix/rebuild requires new hashes and Owner reapproval. Baseline90,50%, delta0.
+Terbaru: [installer self-fix and full dry-run](../qa/studio-installer-dry-run-20261124.md). Sparse WordPress active-plugin JSON is normalized by the official probe with sanitized actual-runtime regression coverage. Targeted tests, local preflight and Hostinger plan-only PASS; identity, LiteSpeed SAPI, private storage, writer flags, lock/journal and crash-recovery checks PASS. Final package: `artifacts/studio-v1/081a63f`; exact approval request remains `approved:false`. GO to request approval; no install/deploy/merge/production/order write. Baseline90,50%, delta0.
 
 - [Perbaikan menu dan evidence](../qa/studio-admin-menu-correction-20261124.md)
 - [Staging runtime preflight dan blocker](../qa/studio-runtime-preflight-20261124.md)

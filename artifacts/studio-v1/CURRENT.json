@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "candidate_source": "793784f5c33c885dfd9f1b7a52a5e0786f072194",
-  "artifact_directory": "artifacts/studio-v1/793784f",
-  "archive_sha256": "d76514ed96c122a6242baad9ea36f4b15f11d93c36de733e9292664bba826381",
-  "manifest_sha256": "00fcd0483b41825c2983d78e936b0e86333a7e43c68042d7310c4fff595de62e",
+  "candidate_source": "081a63f78b88a3139327af6a545be1993b48506f",
+  "artifact_directory": "artifacts/studio-v1/081a63f",
+  "archive_sha256": "f66cdc28e3b2b1914df94ca4b4f6e40c7a84fb2da60fc01884a231ffbd903800",
+  "manifest_sha256": "7452cbc476266cd3d36454445ebacbd0bb06dd1add80a6fe91277755501b9177",
   "plugin_digest": "f21bcd20f5bdb8013d1a939d09761d4af3a0b2b96b4ef4790fd09616600d63d2",
-  "supersedes": "8d817c2ba92b89d03eaa4d680173925361ce0a36",
-  "reason": "Hostinger runtime gate accepts verified LiteSpeed web SAPI; candidate remains unapproved",
+  "supersedes": "793784f5c33c885dfd9f1b7a52a5e0786f072194",
+  "reason": "Installer probe normalized actual sparse WordPress active_plugins JSON-object shape; official Hostinger plan-only dry-run PASS; candidate remains unapproved",
   "deployment_authorized": false,
   "runtime_e2e": "NOT_TESTED"
 }
