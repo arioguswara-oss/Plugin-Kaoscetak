@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "candidate_source": "8d817c2ba92b89d03eaa4d680173925361ce0a36",
+  "artifact_directory": "artifacts/studio-v1/8d817c2",
+  "archive_sha256": "ca55c23ef3b13408e45d4b011a7d47be3676aec7da6e2d3e906508873ae66afd",
+  "manifest_sha256": "d77c4d63807cc0fc72d359b311dd883805c607735cc82d3ab8caa649d620f7dc",
+  "plugin_digest": "f21bcd20f5bdb8013d1a939d09761d4af3a0b2b96b4ef4790fd09616600d63d2",
+  "supersedes": "f45b43ba191ce49ffad67070e0643918765fe719",
+  "reason": "Owner pre-install independent admin menu correction",
+  "deployment_authorized": false,
+  "runtime_e2e": "NOT_TESTED"
+}

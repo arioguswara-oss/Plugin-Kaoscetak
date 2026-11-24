@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "kind": "OWNER_APPROVAL_REQUEST_NOT_AN_APPROVAL",
+  "status": "PREPARED_CONDITIONAL_NOT_APPROVED",
+  "approved": false,
+  "target_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "source_commit": "8d817c2ba92b89d03eaa4d680173925361ce0a36",
+  "plugin_digest": "f21bcd20f5bdb8013d1a939d09761d4af3a0b2b96b4ef4790fd09616600d63d2",
+  "archive_sha256": "ca55c23ef3b13408e45d4b011a7d47be3676aec7da6e2d3e906508873ae66afd",
+  "manifest_sha256": "d77c4d63807cc0fc72d359b311dd883805c607735cc82d3ab8caa649d620f7dc",
+  "installer_source_commit": "8d817c2ba92b89d03eaa4d680173925361ce0a36",
+  "pinned_tools_sha256": {
+    "tools/studio-staging-install.py": "ec07c3cc62bad1eb464805a7d4e53a610ad0b1fef3247fbcbc52e52990b51e72",
+    "tools/studio-install-transaction.py": "ec1e90a2be49112dc355bd4d84774bf23f4390573b964e1f53b3ed434dd8ae61",
+    "tools/studio-candidate-preflight.py": "162e5218b4e4d095a7070f3569fb7a788afe501707041d663a0ed8434240d501"
+  },
+  "requested_action": "replace_existing_staging_plugin_only_after_verified_preconditions",
+  "preserve": [
+    "existing activation",
+    "product settings",
+    "private paths",
+    "order database"
+  ],
+  "writers": {
+    "DTF": "OFF",
+    "Drive": "OFF",
+    "storage_GC": "OFF"
+  },
+  "existing_plugin_digest": null,
+  "php_fpm_verified": false,
+  "runtime_flags_verified": false,
+  "preconditions": [
+    "Complete remaining FreeType/ctype/fileinfo/private-path/all-flags/cache proof; observed PHP8.3.37/LiteSpeed/int64/GD2.3.3 versions are already recorded",
+    "Exact existing plugin tree digest and no unresolved installer journal",
+    "Owner explicit approval bound to candidate source/archive/plugin/manifest/target",
+    "Recheck runtime proof and current tree immediately before apply"
+  ],
+  "excluded_actions": [
+    "merge",
+    "production changes",
+    "automatic activation/reinstall/seed",
+    "order database mutation",
+    "synthetic order or payment",
+    "actual email send",
+    "DTF/Drive/GC activation"
+  ],
+  "e2e_write_scope": "NOT_AUTHORIZED; separate explicit scope before draft/upload/cart/order/payment writes",
+  "approval_text_to_review": "Setujui penggantian plugin SANRO Studio yang sudah aktif hanya di https://saddlebrown-peafowl-616656.hostingersite.com, source 8d817c2ba92b89d03eaa4d680173925361ce0a36, ZIP SHA256 ca55c23ef3b13408e45d4b011a7d47be3676aec7da6e2d3e906508873ae66afd, manifest SHA256 d77c4d63807cc0fc72d359b311dd883805c607735cc82d3ab8caa649d620f7dc. Kandidat memusatkan menu Studio di root independen. Eksekusi hanya setelah seluruh kapabilitas web runtime, flags OFF, private storage dan exact existing-plugin digest terbukti aman. Tanpa merge, production, activation/seed, perubahan database pesanan atau aktivasi DTF/Drive/GC. E2E tulis/pesanan sintetis belum termasuk.",
+  "machine_apply_approval_file": "NOT_CREATED; this request is deliberately rejected by installer.approve",
+  "web_runtime_observed": {
+    "source": "Authenticated WordPress Site Health Info",
+    "url": "https://saddlebrown-peafowl-616656.hostingersite.com/wp-admin/site-health.php?tab=debug",
+    "wordpress": "7.1.5",
+    "php_version": "8.3.37",
+    "supports_64bit": true,
+    "web_server": "LiteSpeed",
+    "php_sapi": "litespeed",
+    "memory_limit": "1536M",
+    "php_time_limit_seconds": 360,
+    "max_input_variables": 5000,
+    "upload_max_filesize": "1536M",
+    "post_max_size": "1536M",
+    "gd_version": "2.3.3",
+    "gd_formats": [
+      "GIF",
+      "JPEG",
+      "PNG",
+      "WebP",
+      "BMP",
+      "AVIF",
+      "XPM"
+    ],
+    "imagick": "3.8.1",
+    "opcache": "enabled; not full",
+    "fpm_claim": "not made; observed SAPI is litespeed",
+    "scope": "read-only server diagnostics; no settings or order changes"
+  },
+  "runtime_proof_complete": false,
+  "runtime_proof_note": "Actual web PHP/GD/version/int64/limits are observed. Full capability/private-storage/flags/tree proof remains incomplete; SAPI is LiteSpeed, not FPM. No apply-ready approval file.",
+  "supersedes_candidate": "f45b43ba191ce49ffad67070e0643918765fe719",
+  "menu_correction": "One independent SANRO Studio root with settings/status/storage; existing capabilities and Woo order panels retained",
+  "menu_runtime_verified": false
+}

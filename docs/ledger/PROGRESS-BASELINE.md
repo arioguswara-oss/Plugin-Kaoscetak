@@ -34,3 +34,5 @@ PASS terarah:64 native functional/security,13 variant checkout/admin integrity (
 Blocker sign-off: Hostinger FPM/current SHA/CORS/private dirs/cache, SMTP, full buyer→checkout/admin E2E pada kandidat baru, gateway/Drive/print. HTTP422 runtime NOT VERIFIED. Generator/Drive/GC defaultOFF, tidak ada deploy/merge/production/order mutation atau worker Hermes/Codex.
 
 **GO** persiapan kandidat/preflight; **NO-GO** final release/automatic apply/deploy/merge/writer activation. [Paket E2E staging](../qa/studio-audit-staging-packet-20261124.md); [Checkpoint Hermes](../qa/studio-hermes-handoff-20261124.md).
+
+Kandidat pengganti terverifikasi: source `8d817c2ba92b89d03eaa4d680173925361ce0a36`; ZIP SHA256 `ca55c23ef3b13408e45d4b011a7d47be3676aec7da6e2d3e906508873ae66afd`. Manifest/checksum dan request baru: `artifacts/studio-v1/8d817c2`; pointer `artifacts/studio-v1/CURRENT.json`. Semua approval/deploy tetapfalse; runtime corrected menu NOT TESTED.

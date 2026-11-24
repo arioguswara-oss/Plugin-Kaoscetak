@@ -27,3 +27,5 @@ VERIFIED is offline with WordPress contracts. Live corrected-menu rendering, can
 ## Progress and handoff
 
 90.50→90.50%, delta0. Seven fixed weights/stage estimates unchanged; menu correction is a defect fix, not a second feature credit. New clean-source ZIP, commit marker, manifest and SHA256SUMS replace the old approval candidate. The prior candidate stays available as historical evidence but its request is marked superseded. New request remains unapproved/conditional until runtime gates and explicit Owner authorization. GO new source/candidate review; NO-GO automatic install/deploy/merge/production/order changes/writer activation. No Jack/Hermes/Codex launched.
+
+Kandidat pengganti terverifikasi: source `8d817c2ba92b89d03eaa4d680173925361ce0a36`; ZIP SHA256 `ca55c23ef3b13408e45d4b011a7d47be3676aec7da6e2d3e906508873ae66afd`. Manifest/checksum dan request baru: `artifacts/studio-v1/8d817c2`; pointer `artifacts/studio-v1/CURRENT.json`. Semua approval/deploy tetapfalse; runtime corrected menu NOT TESTED.
