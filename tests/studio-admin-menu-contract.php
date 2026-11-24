@@ -25,7 +25,7 @@ foreach($roles as $role=>$caps){
         ss_assert($entry[0]==='sanro-studio','no Studio child remains under WooCommerce: '.$role);
         if(current_user_can($entry[3]))$visible[]=$entry[4];
     }
-    $expected=$role==='admin'?['sanro-studio','sanro-studio-status','sanro-studio-storage']:($role==='settings_only'?['sanro-studio']:($role==='shop_manager'?['sanro-studio-status','sanro-studio-storage']:[]));
+    $expected=$role==='admin'?['sanro-studio','sanro-studio-status','sanro-studio-storage','sanro-studio-drive']:($role==='settings_only'?['sanro-studio','sanro-studio-drive']:($role==='shop_manager'?['sanro-studio-status','sanro-studio-storage']:[]));
     ss_assert($visible===$expected,'subpage permissions preserved: '.$role);
     ob_start();$denied=false;
     try{sanro_studio_admin_landing();}catch(SS_Denied $e){$denied=$e->getCode()===403;}
@@ -40,6 +40,7 @@ foreach($roles as $role=>$caps){
     }
 }
 $children=[];foreach($GLOBALS['ss_submenus'] as $entry)$children[$entry[4]]=$entry;
+ss_assert($children['sanro-studio-drive'][3]==='manage_options','Drive setup is Administrator only');
 ss_assert($children['sanro-studio'][3]==='manage_options','settings capability unchanged');
 ss_assert($children['sanro-studio-status'][3]==='manage_woocommerce'&&$children['sanro-studio-status'][5]==='sanro_studio_bootstrap_admin_page','old status slug/callback/capability preserved');
 ss_assert($children['sanro-studio-storage'][3]==='manage_woocommerce'&&$children['sanro-studio-storage'][5]==='sanro_studio_storage_admin','storage slug/callback/capability preserved');

@@ -247,6 +247,10 @@ function sanro_studio_rest_pricing_draft_cart($request) {
 /** Hook registrations are gated by the independent adapter flag, default OFF. */
 function sanro_studio_register_pricing_integration_hooks() {
     if (!sanro_studio_pricing_wc_enabled()) return;
+    add_filter('woocommerce_cart_item_price','sanro_studio_pricing_display_line',20,3);
+    add_filter('woocommerce_cart_item_subtotal','sanro_studio_pricing_display_line',20,3);
+    add_filter('woocommerce_cart_subtotal','sanro_studio_pricing_display_total',20);
+    add_filter('woocommerce_cart_totals_order_total_html','sanro_studio_pricing_display_total',20);
     add_filter('woocommerce_get_item_data','sanro_studio_pricing_cart_item_data',20,2);
     add_filter('sanro_studio_pricing_authorized_design', 'sanro_studio_pricing_authorized_design', 10, 4);
     add_action('woocommerce_review_order_before_submit', 'sanro_studio_pricing_checkout_field', 5);

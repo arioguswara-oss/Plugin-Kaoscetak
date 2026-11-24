@@ -1,5 +1,13 @@
 # SANRO Studio — satu baseline resmi development
 
+## Owner scope revision f415ec55 — implementation milestone
+
+Live Google Cloud/OAuth/consent/upload/readback **DEFERRED BY OWNER**, no longer a mandatory V1 blocker. Configuration remains NOT CONFIGURED. Native Administrator controls now include settings-tab navigation, Connect/Disconnect, Test Connection, existing folder, status and auto-export preference. Positive lifecycle uses HTTP doubles; disconnected operations make no Google call. Permission/CSRF/encryption/disconnect tests and59 menu assertions PASS. Native auto preference supplements explicit server gates and cannot override OFF.
+
+Expired-cart price display now suppresses invalid catalog fallback; checkout still fails closed. Source-level valid/invalid pricing and same-order recovery checks PASS. Actual normal buyer validation will be stopped before a second order/payment, reusing original order56 creation/binding evidence. [Revised gate](../qa/studio-v1-final-release-gate.md).
+
+**94,00% →94,00%, delta0,00** at code milestone: changed UI/runtime and release installation still pending, no credit for directive alone. No credentials requested, no DTF regeneration, production or merge.
+
 ## Active checkpoint —8846097 installed; OAuth Owner action required
 
 **94,00% →94,00%, delta0,00.** Kandidat8846097 installed/active, fresh web gate/private roots PASS, installed tree7e85b128ecfa20a3d92db43b9f36f97b74d37bc1eaa1bbb7a05dbdca410cfa1c matches ZIP independently. Two builds/CRC/package exclusion checks PASS. Temporary writer configuration restored with original hashes; DTF/Drive/GC OFF. Native OAuth settings page loads, client/consent missing.

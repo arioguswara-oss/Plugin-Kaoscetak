@@ -9,7 +9,8 @@ require_once __DIR__.'/drive-order-layout.php';
  * Requires an existing trusted OAuth filter; does not implement OAuth itself.
  */
 function sanro_studio_auto_drive_enabled() {
-    return defined('SANRO_STUDIO_ENABLE_DRIVE_AUTO_PROVISION')
+    return (!function_exists('sanro_studio_drive_oauth_auto_allowed')||sanro_studio_drive_oauth_auto_allowed())
+        && defined('SANRO_STUDIO_ENABLE_DRIVE_AUTO_PROVISION')
         && SANRO_STUDIO_ENABLE_DRIVE_AUTO_PROVISION === true
         && defined('SANRO_STUDIO_ENABLE_VERIFIED_DRIVE_ATTACHMENT')
         && SANRO_STUDIO_ENABLE_VERIFIED_DRIVE_ATTACHMENT === true

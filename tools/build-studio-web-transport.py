@@ -3,11 +3,11 @@
 import argparse,hashlib,json,pathlib,zipfile
 p=argparse.ArgumentParser();p.add_argument('--candidate',required=True);p.add_argument('--out',required=True);a=p.parse_args()
 repo=pathlib.Path(__file__).resolve().parents[1];candidate=pathlib.Path(a.candidate);out=pathlib.Path(a.out);out.mkdir(parents=True,exist_ok=True)
-manifest=(candidate/'candidate-manifest.json').read_bytes();m=json.loads(manifest);archive=(candidate/'sanro-studio-staging-candidate.zip').read_bytes()
+manifest=(candidate/('release-manifest.json' if (candidate/'release-manifest.json').exists() else 'candidate-manifest.json')).read_bytes();m=json.loads(manifest);archive=(candidate/m.get('archive_name','sanro-studio-staging-candidate.zip')).read_bytes()
 if hashlib.sha256(archive).hexdigest()!=m['archive_sha256']:raise SystemExit('candidate checksum mismatch')
 binding='<?php\n'+''.join("const SSWR_%s='%s';\n"%(key,value) for key,value in [('SOURCE',m['source_commit']),('ARCHIVE',m['archive_sha256']),('MANIFEST',hashlib.sha256(manifest).hexdigest())])
 data={'candidate.zip':archive,'candidate-manifest.json':manifest,'binding.php':binding.encode()}
-for name in ['sanro-studio-staging-release.php','transaction.php','acceptance.php','config-lease.php']:data[name]=(repo/'tools/staging-web-release'/name).read_bytes()
+for name in ['sanro-studio-staging-release.php','transaction.php','acceptance.php','config-lease.php','checkout-acceptance.php']:data[name]=(repo/'tools/staging-web-release'/name).read_bytes()
 with zipfile.ZipFile(out/'sanro-studio-staging-release.zip','w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
  for name,content in sorted(data.items()):
   info=zipfile.ZipInfo('sanro-studio-staging-release/'+name,(1980,1,1,0,0,0));info.external_attr=0o100644<<16;info.compress_type=zipfile.ZIP_DEFLATED;z.writestr(info,content)

@@ -34,12 +34,14 @@ function pricing_line($size = 'L', $quantity = 1) {
 }
 
 sanro_studio_register_pricing_wc_hooks();
+function esc_html($s){return htmlspecialchars($s,ENT_QUOTES,'UTF-8');}
 $callback=$GLOBALS['hooks']['woocommerce_before_calculate_totals'][0];
 if($callback!=='sanro_studio_pricing_calculate_totals')throw new RuntimeException('unsafe throwing totals hook remains');
 $cart=new PricingCart();$product=new PricingProduct();$product->price='62000';$line=pricing_line('S',1);$line['data']=$product;$cart->cart_contents=['stale'=>$line];$GLOBALS['cart']=$cart;
 $GLOBALS['resolver_enabled']=false;$GLOBALS['notices']=[];
 $callback($cart);
 if(count($GLOBALS['notices'])!==1||$GLOBALS['notices'][0][1]!=='error'||$cart->cart_contents['stale']['data']!==$product||$product->price!=='62000')throw new RuntimeException('stale cart failed to render safely or price mutated');
+if(sanro_studio_pricing_display_line('Rp65.000',$line)!=='Desain perlu diverifikasi'||strpos(sanro_studio_pricing_display_total('Rp195.000'),'Rp')!==false||sanro_studio_pricing_display_line('Rp65.000',['product_id'=>9])!=='Rp65.000')throw new RuntimeException('rejected cart misleading price display');
 $GLOBALS['notices']=[];sanro_studio_pricing_checkout();if(count($GLOBALS['notices'])!==1)throw new RuntimeException('stale cart checkout allowed');
 $GLOBALS['resolver_enabled']=true;$GLOBALS['master_ready']=true;$GLOBALS['notices']=[];$callback($cart);if($GLOBALS['notices']||$cart->cart_contents['stale']['data']===$product)throw new RuntimeException('valid cart repricing broken');
 echo "PASS: actual totals hook handles stale resolver without HTTP500; product untouched; independent checkout still blocked; valid repricing retained\n";

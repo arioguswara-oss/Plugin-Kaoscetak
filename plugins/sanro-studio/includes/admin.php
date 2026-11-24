@@ -81,6 +81,7 @@ function sanro_studio_render_settings() {
     $options = $legacy_compat ? sanro_studio_options() : ['admin_preview' => false];
     $native = sanro_studio_native_capabilities();
     echo '<div class="wrap"><h1>SANRO Studio</h1>';
+    echo '<nav class="nav-tab-wrapper"><a class="nav-tab nav-tab-active" aria-current="page" href="'.esc_url(admin_url('admin.php?page=sanro-studio')).'">Pengaturan Umum</a><a class="nav-tab" href="'.esc_url(admin_url('admin.php?page=sanro-studio-drive')).'">Google Drive</a></nav>';
     echo '<p>Editor SANRO Studio native dan integrasi WooCommerce. Fitur penulisan checkout, produksi, dan Drive tetap mengikuti konfigurasi server.</p>';
     echo '<table class="widefat striped"><tbody>';
     $rows = [

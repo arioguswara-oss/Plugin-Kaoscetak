@@ -2,8 +2,8 @@
 /**
  * Plugin Name: SANRO Studio
  * Description: SANRO Studio native editor and WooCommerce integration, disabled by default.
- * Version: 0.1.0-dev
- * Requires PHP: 7.4
+ * Version: 1.0.0
+ * Requires PHP: 8.1
  * Requires Plugins: woocommerce
  * Text Domain: sanro-studio
  * License: GPL-2.0-or-later
@@ -11,7 +11,7 @@
 defined('ABSPATH') || exit;
 
 if (!defined('SANRO_STUDIO_VERSION')) {
-    define('SANRO_STUDIO_VERSION', '0.1.0-dev');
+    define('SANRO_STUDIO_VERSION', '1.0.0');
 }
 
 if (!function_exists('sanro_studio_bootstrap_status')) {

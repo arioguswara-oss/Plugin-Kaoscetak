@@ -91,24 +91,83 @@ function sanro_studio_drive_oauth_guard($action){
     check_admin_referer('sanro_drive_'.$action);
 }
 function sanro_studio_drive_oauth_redirect($result){wp_safe_redirect(add_query_arg('drive_result',$result,admin_url('admin.php?page=sanro-studio-drive')),303);exit;}
+/** Validates complete admin configuration without requesting consent or enabling exports. */
+function sanro_studio_drive_oauth_apply_config($input){
+    $old=sanro_studio_drive_oauth_settings();
+    foreach(['client_id','client_secret','parent_id','picker_key'] as $key)if(isset($input[$key])&&!is_string($input[$key]))return 'invalid_client';
+    $id=trim($input['client_id']??'');$secret=trim($input['client_secret']??'');$parent=trim($input['parent_id']??'');$picker=trim($input['picker_key']??'');
+    if(strlen($id)>256||!preg_match('/^[0-9]+-[A-Za-z0-9_-]+\.apps\.googleusercontent\.com$/D',$id))return 'invalid_client';
+    if(!preg_match('/^[A-Za-z0-9_-]{10,128}$/D',$parent)||($picker!==''&&!preg_match('/^[A-Za-z0-9_-]{20,128}$/D',$picker)))return 'invalid_folder';
+    if(defined('SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID')&&SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID!==$parent)return 'invalid_folder';
+    if($secret===''&&($old['client_id']??null)===$id&&!empty($old['secret'])){
+        $next=$old;$next['requested_parent_id']=$parent;$next['picker_key']=$picker;
+        if(($old['requested_parent_id']??'')!==$parent){unset($next['parent_id'],$next['last_test']);$next['auto_export']=false;}
+    }else{
+        if(strlen($secret)<16||strlen($secret)>256||!preg_match('/^[A-Za-z0-9_-]+$/D',$secret))return 'invalid_client';
+        $sealed=sanro_studio_drive_oauth_seal(['secret'=>$secret],'client');if(!$sealed)return 'crypto_unavailable';
+        $next=['schema'=>1,'origin'=>sanro_studio_drive_oauth_origin(),'client_id'=>$id,'secret'=>$sealed,'requested_parent_id'=>$parent,'picker_key'=>$picker,'auto_export'=>false];
+    }
+    $next['revision']=bin2hex(random_bytes(16));
+    update_option('sanro_studio_drive_oauth',$next,false);
+    return get_option('sanro_studio_drive_oauth',[])===$next?'saved':'storage_failed';
+}
 function sanro_studio_drive_oauth_save(){
     sanro_studio_drive_oauth_guard('save');$lock=sanro_studio_drive_oauth_lock();if(!$lock)sanro_studio_drive_oauth_redirect('storage_or_busy');
-    $id=isset($_POST['client_id'])&&is_string($_POST['client_id'])?trim(wp_unslash($_POST['client_id'])):'';
-    $secret=isset($_POST['client_secret'])&&is_string($_POST['client_secret'])?trim(wp_unslash($_POST['client_secret'])):'';$old=sanro_studio_drive_oauth_settings();
-    if(!preg_match('/^[0-9]+-[A-Za-z0-9_-]+\.apps\.googleusercontent\.com$/D',$id)||strlen($id)>256)sanro_studio_drive_oauth_redirect('invalid_client');
-    $parent=isset($_POST['parent_id'])&&is_string($_POST['parent_id'])?trim(wp_unslash($_POST['parent_id'])):'';
-    $picker_key=isset($_POST['picker_key'])&&is_string($_POST['picker_key'])?trim(wp_unslash($_POST['picker_key'])):'';
-    if(!preg_match('/^[A-Za-z0-9_-]{10,128}$/D',$parent)||($picker_key!==''&&!preg_match('/^[A-Za-z0-9_-]{20,128}$/D',$picker_key)))sanro_studio_drive_oauth_redirect('invalid_folder');
-    if(defined('SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID')&&SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID!==$parent)sanro_studio_drive_oauth_redirect('invalid_folder');
-    if($secret===''&&($old['client_id']??null)===$id&&!empty($old['secret'])){
-        if(($old['requested_parent_id']??'')!==$parent)unset($old['parent_id']);
-        $old['requested_parent_id']=$parent;$old['picker_key']=$picker_key;$old['revision']=bin2hex(random_bytes(16));
-        update_option('sanro_studio_drive_oauth',$old,false);sanro_studio_drive_oauth_redirect('saved');
-    }
-    if(strlen($secret)<16||strlen($secret)>256||!preg_match('/^[A-Za-z0-9_-]+$/D',$secret))sanro_studio_drive_oauth_redirect('invalid_client');
-    $sealed=sanro_studio_drive_oauth_seal(['secret'=>$secret],'client');if(!$sealed)sanro_studio_drive_oauth_redirect('crypto_unavailable');
-    update_option('sanro_studio_drive_oauth',['schema'=>1,'origin'=>sanro_studio_drive_oauth_origin(),'client_id'=>$id,'secret'=>$sealed,'requested_parent_id'=>$parent,'picker_key'=>$picker_key,'revision'=>bin2hex(random_bytes(16))],false);
-    sanro_studio_drive_oauth_redirect('saved');
+    $input=[];foreach(['client_id','client_secret','parent_id','picker_key'] as $key)$input[$key]=isset($_POST[$key])&&is_string($_POST[$key])?wp_unslash($_POST[$key]):null;
+    sanro_studio_drive_oauth_redirect(sanro_studio_drive_oauth_apply_config($input));
+}
+/** Disconnect locally first, invalidate pending state, then attempt official token revocation. */
+function sanro_studio_drive_oauth_disconnect_config(){
+    $s=sanro_studio_drive_oauth_settings();if(!$s)return 'disconnected';
+    $tokens=sanro_studio_drive_oauth_open($s['tokens']??null,'tokens');
+    unset($s['tokens'],$s['parent_id'],$s['last_test']);$s['auto_export']=false;$s['revision']=bin2hex(random_bytes(16));
+    update_option('sanro_studio_drive_oauth',$s,false);
+    if(get_option('sanro_studio_drive_oauth',[])!==$s)return 'storage_failed';
+    if(!sanro_studio_drive_oauth_valid_token($tokens['refresh_token']??null))return 'disconnected';
+    $r=wp_remote_post('https://oauth2.googleapis.com/revoke',['timeout'=>10,'redirection'=>0,'sslverify'=>true,'limit_response_size'=>4096,'body'=>['token'=>$tokens['refresh_token']]]);
+    return !is_wp_error($r)&&in_array(wp_remote_retrieve_response_code($r),[200,400],true)?'disconnected':'disconnected_local';
+}
+function sanro_studio_drive_oauth_disconnect(){
+    sanro_studio_drive_oauth_guard('disconnect');$lock=sanro_studio_drive_oauth_lock();if(!$lock)sanro_studio_drive_oauth_redirect('storage_or_busy');
+    sanro_studio_drive_oauth_redirect(sanro_studio_drive_oauth_disconnect_config());
+}
+function sanro_studio_drive_oauth_status(){
+    $s=sanro_studio_drive_oauth_settings();
+    if(!$s)return 'NOT CONFIGURED';
+    if(empty($s['tokens']))return 'NOT CONNECTED';
+    if(($s['last_test']['state']??null)==='ERROR')return 'CONNECTION ERROR';
+    return !empty($s['parent_id'])?'CONFIGURED — live status requires Test Connection':'FOLDER NOT VERIFIED';
+}
+/** Read-only live check when configured; unconfigured installations make no Google request. */
+function sanro_studio_drive_oauth_test_config(){
+    $s=sanro_studio_drive_oauth_settings();if(!$s)return 'configure_client';
+    $token=sanro_studio_drive_oauth_token(false);if($token==='')return 'consent_required';
+    $lock=sanro_studio_drive_oauth_lock();if(!$lock)return 'storage_or_busy';
+    try{
+        if((sanro_studio_drive_oauth_settings()['revision']??null)!==$s['revision'])return 'invalid_state';
+        $parent=sanro_studio_drive_oauth_private_root($token);$s=sanro_studio_drive_oauth_settings();
+        $s['last_test']=['state'=>$parent?'CONNECTED':'ERROR','checked_at'=>time()];
+        if($parent)$s['parent_id']=$parent;else{unset($s['parent_id']);$s['auto_export']=false;}
+        update_option('sanro_studio_drive_oauth',$s,false);
+        return get_option('sanro_studio_drive_oauth',[])===$s?($parent?'test_pass':'root_pending'):'storage_failed';
+    }finally{flock($lock,LOCK_UN);fclose($lock);}
+}
+function sanro_studio_drive_oauth_test(){sanro_studio_drive_oauth_guard('test');sanro_studio_drive_oauth_redirect(sanro_studio_drive_oauth_test_config());}
+/** Administrator preference supplements, never overrides, explicit server safety gates. */
+function sanro_studio_drive_oauth_auto_allowed(){
+    $raw=get_option('sanro_studio_drive_oauth',null);if($raw===null)return true; // Existing explicitly configured external provider.
+    $s=sanro_studio_drive_oauth_settings();
+    return $s&&($s['auto_export']??false)===true&&!empty($s['tokens'])&&!empty($s['parent_id']);
+}
+function sanro_studio_drive_oauth_set_auto($enabled){
+    $s=sanro_studio_drive_oauth_settings();if(!$s)return $enabled?'configure_client':'auto_off';
+    if($enabled&&(empty($s['tokens'])||empty($s['parent_id'])||($s['last_test']['state']??null)!=='CONNECTED'))return 'test_required';
+    $s['auto_export']=$enabled===true;$s['revision']=bin2hex(random_bytes(16));update_option('sanro_studio_drive_oauth',$s,false);
+    return get_option('sanro_studio_drive_oauth',[])===$s?($enabled?'auto_on':'auto_off'):'storage_failed';
+}
+function sanro_studio_drive_oauth_auto(){
+    sanro_studio_drive_oauth_guard('auto');$lock=sanro_studio_drive_oauth_lock();if(!$lock)sanro_studio_drive_oauth_redirect('storage_or_busy');
+    sanro_studio_drive_oauth_redirect(sanro_studio_drive_oauth_set_auto(($_POST['auto_export']??null)==='1'));
 }
 function sanro_studio_drive_oauth_start(){
     sanro_studio_drive_oauth_guard('connect');$s=sanro_studio_drive_oauth_settings();if(!$s||!sanro_studio_drive_oauth_open($s['secret']??null,'client'))sanro_studio_drive_oauth_redirect('configure_client');
@@ -143,15 +202,20 @@ function sanro_studio_drive_oauth_validate_root(){
 }
 function sanro_studio_drive_oauth_page(){
     if(!current_user_can('manage_options'))return;$s=sanro_studio_drive_oauth_settings();
-    echo '<div class="wrap"><h1>SANRO Studio — Koneksi Google Drive</h1><p>Koneksi ini tidak mengaktifkan writer Drive, DTF atau GC. Client secret dan refresh token disimpan terenkripsi; tidak ditampilkan kembali. Scope hanya file/folder yang dibuat atau diberikan kepada aplikasi.</p>';
-    $messages=['saved'=>'Konfigurasi client tersimpan. Lanjutkan Sambungkan Google Drive.','connected'=>'OAuth terhubung dan folder produksi privat telah diverifikasi. Writer tetap OFF.','root_pending'=>'OAuth tersimpan. Pilih folder existing melalui Google Picker, lalu validasi akses privat.','invalid_folder'=>'Folder ID atau konfigurasi Picker belum valid, atau berbeda dari konfigurasi server.','invalid_client'=>'Client ID/secret web OAuth belum valid.','configure_client'=>'Isi client web OAuth terlebih dahulu.','crypto_unavailable'=>'Penyimpanan credential aman tidak tersedia.','storage_or_busy'=>'Pastikan storage master privat siap dan tidak ada proses koneksi lain, lalu ulangi.','invalid_state'=>'Sesi OAuth tidak valid atau telah dipakai. Mulai koneksi baru.','consent_required'=>'Persetujuan Google diperlukan.','token_failed'=>'Pertukaran OAuth gagal. Periksa client, callback dan persetujuan offline.'];$result=$_GET['drive_result']??'';
-    if(is_string($result)&&isset($messages[$result]))echo '<p role="status">'.esc_html($messages[$result]).'</p>';
-    echo '<p>Status: '.esc_html(!empty($s['parent_id'])?'folder terkonfigurasi; gunakan validasi untuk memeriksa akses terkini':'belum terhubung').'</p><p>Callback web OAuth yang harus didaftarkan:</p><code>'.esc_html(sanro_studio_drive_oauth_callback_url()).'</code>';
-    echo '<p>Gunakan OAuth Client jenis Web application milik Owner, Google Drive API aktif, scope drive.file. Masukkan credential langsung pada halaman HTTPS ini, bukan lewat chat/GitHub. Persetujuan akun dilakukan pada halaman resmi Google.</p>';
+    echo '<div class="wrap"><h1>SANRO Studio — Pengaturan Google Drive</h1>';
+    echo '<nav class="nav-tab-wrapper"><a class="nav-tab" href="'.esc_url(admin_url('admin.php?page=sanro-studio')).'">Pengaturan Umum</a><a class="nav-tab nav-tab-active" aria-current="page" href="'.esc_url(admin_url('admin.php?page=sanro-studio-drive')).'">Google Drive</a></nav>';
+    echo '<p>Google Drive bersifat opsional. Editor, checkout dan produksi lokal tetap berfungsi saat Drive belum dikonfigurasi atau dinonaktifkan. Credential dapat disiapkan Administrator setelah instalasi.</p>';
+    $messages=['saved'=>'Konfigurasi tersimpan. Koneksi belum dilakukan otomatis.','connected'=>'OAuth dan folder privat terkonfigurasi. Gunakan Test Connection untuk memeriksa akses terkini.','root_pending'=>'Folder belum dapat diverifikasi. Periksa pilihan folder, izin individual dan akses aplikasi; gunakan Google Picker bila diperlukan.','invalid_folder'=>'Folder ID atau API key tidak valid, atau folder dikunci berbeda oleh konfigurasi server.','invalid_client'=>'Client ID/secret web OAuth tidak valid. Konfigurasi lama dipertahankan.','configure_client'=>'NOT CONFIGURED — isi konfigurasi terlebih dahulu; tidak ada permintaan ke Google.','crypto_unavailable'=>'Enkripsi credential aman tidak tersedia pada server.','storage_or_busy'=>'Storage privat belum siap atau sedang digunakan. Ulangi setelah tersedia.','storage_failed'=>'Konfigurasi tidak dapat disimpan. Periksa storage server.','invalid_state'=>'Sesi OAuth tidak valid, kedaluwarsa atau telah dipakai. Mulai koneksi baru.','consent_required'=>'NOT CONNECTED — konfigurasi tersimpan, tetapi belum ada koneksi OAuth yang dapat digunakan.','token_failed'=>'Pertukaran OAuth gagal. Periksa client, Redirect URI dan izin offline.','disconnected'=>'Koneksi diputus. Token lokal dihapus dan ekspor otomatis OFF.','disconnected_local'=>'Koneksi lokal diputus dan ekspor otomatis OFF. Jika perlu cabut akses aplikasi melalui akun Google.','test_pass'=>'Test Connection PASS: akses tulis dan izin folder privat terverifikasi. Tidak ada upload file pengujian.','test_required'=>'Aktivasi ekspor memerlukan koneksi dan Test Connection yang berhasil.','auto_on'=>'Preferensi ekspor otomatis ON. Eksekusi tetap memerlukan semua izin dan safety gate server.','auto_off'=>'Ekspor otomatis OFF.'];$result=$_GET['drive_result']??'';
+    if(is_string($result)&&isset($messages[$result]))echo '<div class="notice notice-info"><p role="status">'.esc_html($messages[$result]).'</p></div>';
+    echo '<p><strong>Status koneksi: '.esc_html(sanro_studio_drive_oauth_status()).'</strong></p><p>Ekspor otomatis: '.esc_html(!empty($s['auto_export'])?'ON (preferensi Administrator)':'OFF').'; runtime: '.esc_html(function_exists('sanro_studio_auto_drive_enabled')&&sanro_studio_auto_drive_enabled()?'aktif':'nonaktif; safety gate dan koneksi tetap berlaku').'.</p>';
+    echo '<p>Redirect URI (OAuth Web application):</p><code>'.esc_html(sanro_studio_drive_oauth_callback_url()).'</code>';
+    echo '<p>Client secret dan refresh token disimpan terenkripsi, tidak ditampilkan kembali. Scope drive.file membatasi akses ke file/folder yang diberikan ke aplikasi. API key Picker harus dibatasi ke website dan API Google yang digunakan.</p>';
     echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'"><input type="hidden" name="action" value="sanro_studio_drive_oauth_save">';wp_nonce_field('sanro_drive_save');
-    echo '<p><label>Folder produksi existing (ID)<br><input class="large-text" name="parent_id" value="'.esc_attr($s['requested_parent_id']??(defined('SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID')?SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID:'')).'" required></label></p><p><label>Google Picker API key (batasi referrer dan API)<br><input class="large-text" name="picker_key" value="'.esc_attr($s['picker_key']??'').'"></label></p>';
-    echo '<p><label>Google OAuth Client ID<br><input class="large-text" name="client_id" autocomplete="off" value="'.esc_attr($s['client_id']??'').'" required></label></p><p><label>Google OAuth Client Secret<br><input class="large-text" type="password" name="client_secret" autocomplete="new-password" value=""></label><br>Kosongkan hanya untuk mempertahankan client yang sama.</p>';submit_button('Simpan client OAuth','primary','sanro_drive_save');echo '</form>';
-    if(!empty($s['secret']))foreach(['connect'=>['sanro_studio_drive_oauth_start','Sambungkan Google Drive'],'root'=>['sanro_studio_drive_oauth_root','Validasi folder privat']] as $kind=>$action){echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'"><input type="hidden" name="action" value="'.esc_attr($action[0]).'">';wp_nonce_field('sanro_drive_'.$kind);submit_button($action[1],'secondary','sanro_drive_'.$kind);echo '</form>';}
+    echo '<p><label>Folder penyimpanan produksi existing (ID)<br><input class="large-text" name="parent_id" value="'.esc_attr($s['requested_parent_id']??(defined('SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID')?SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID:'')).'" required></label></p><p><label>Google Picker API key (opsional; batasi referrer dan API)<br><input class="large-text" name="picker_key" value="'.esc_attr($s['picker_key']??'').'"></label></p>';
+    echo '<p><label>Google OAuth Client ID<br><input class="large-text" name="client_id" autocomplete="off" value="'.esc_attr($s['client_id']??'').'" required></label></p><p><label>Google OAuth Client Secret<br><input class="large-text" type="password" name="client_secret" autocomplete="new-password" value=""></label><br>Kosongkan hanya untuk mempertahankan client yang sama.</p>';submit_button('Simpan konfigurasi Google Drive','primary','sanro_drive_save');echo '</form>';
+    foreach(['connect'=>['sanro_studio_drive_oauth_start','Connect Google Drive'],'disconnect'=>['sanro_studio_drive_oauth_disconnect','Disconnect Google Drive'],'test'=>['sanro_studio_drive_oauth_test','Test Connection'],'root'=>['sanro_studio_drive_oauth_root','Validasi folder privat']] as $kind=>$action){echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'"><input type="hidden" name="action" value="'.esc_attr($action[0]).'">';wp_nonce_field('sanro_drive_'.$kind);submit_button($action[1],'secondary','sanro_drive_'.$kind);echo '</form>';}
+    echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'"><input type="hidden" name="action" value="sanro_studio_drive_oauth_auto">';wp_nonce_field('sanro_drive_auto');
+    echo '<p><label><input type="checkbox" name="auto_export" value="1"'.(!empty($s['auto_export'])?' checked':'').'> Aktifkan ekspor otomatis setelah dibayar atau disetujui produksi</label></p>';submit_button('Simpan pengaturan ekspor','secondary','sanro_drive_auto');echo '</form>';
     if(!empty($s['tokens'])&&!empty($s['picker_key'])){
         echo '<button type="button" class="button" id="sanro-drive-pick">Pilih folder existing melalui Google</button><p id="sanro-drive-pick-status" role="status"></p>';
         wp_enqueue_script('sanro-drive-picker',plugins_url('../assets/drive-picker.js',__FILE__),[],SANRO_STUDIO_VERSION,true);
@@ -172,6 +236,6 @@ function sanro_studio_register_drive_oauth(){
     add_action('wp_ajax_sanro_studio_drive_picker','sanro_studio_drive_oauth_picker');
     $s=sanro_studio_drive_oauth_settings();if(!defined('SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID')&&!empty($s['parent_id'])&&is_string($s['parent_id'])&&preg_match('/^[A-Za-z0-9_-]{10,128}$/D',$s['parent_id']))define('SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID',$s['parent_id']);
     add_filter('sanro_studio_drive_access_token',static function($existing){return is_string($existing)&&$existing!==''?$existing:sanro_studio_drive_oauth_token();});
-    add_action('admin_menu',static function(){add_submenu_page('sanro-studio','Koneksi Google Drive','Koneksi Google Drive','manage_options','sanro-studio-drive','sanro_studio_drive_oauth_page');});
-    foreach(['save'=>'sanro_studio_drive_oauth_save','start'=>'sanro_studio_drive_oauth_start','callback'=>'sanro_studio_drive_oauth_callback','root'=>'sanro_studio_drive_oauth_validate_root'] as $action=>$function)add_action('admin_post_sanro_studio_drive_oauth_'.$action,$function);
+    add_action('admin_menu',static function(){add_submenu_page('sanro-studio','Pengaturan Google Drive','Google Drive','manage_options','sanro-studio-drive','sanro_studio_drive_oauth_page');});
+    foreach(['save'=>'sanro_studio_drive_oauth_save','start'=>'sanro_studio_drive_oauth_start','callback'=>'sanro_studio_drive_oauth_callback','root'=>'sanro_studio_drive_oauth_validate_root','disconnect'=>'sanro_studio_drive_oauth_disconnect','test'=>'sanro_studio_drive_oauth_test','auto'=>'sanro_studio_drive_oauth_auto'] as $action=>$function)add_action('admin_post_sanro_studio_drive_oauth_'.$action,$function);
 }

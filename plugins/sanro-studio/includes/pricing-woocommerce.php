@@ -86,7 +86,8 @@ function sanro_studio_pricing_cart_plan($cart, $replacement_key = null, $replace
 
 function sanro_studio_pricing_notice($error) {
     // Do not expose resolver exceptions, tokens or private paths in customer notices.
-    wc_add_notice('SANRO Studio: please reopen your design to verify its price and quantity.', 'error');
+    $message='SANRO Studio: please reopen your design to verify its price and quantity.';
+    if(!function_exists('wc_has_notice')||!wc_has_notice($message,'error'))wc_add_notice($message,'error');
 }
 
 function sanro_studio_pricing_add_validation($passed, $product_id, $quantity, $variation_id = 0, $variation = [], $data = []) {
@@ -126,8 +127,8 @@ function sanro_studio_pricing_totals($cart) {
  * revalidates independently and the Woo error notice prevents order submission.
  */
 function sanro_studio_pricing_calculate_totals($cart) {
-    try { sanro_studio_pricing_totals($cart); }
-    catch (Throwable $error) { sanro_studio_pricing_notice($error); }
+    try { sanro_studio_pricing_totals($cart); $GLOBALS['sanro_studio_invalid_cart']=false; }
+    catch (Throwable $error) { $GLOBALS['sanro_studio_invalid_cart']=true; sanro_studio_pricing_notice($error); }
 }
 
 function sanro_studio_pricing_checkout() {
@@ -142,4 +143,12 @@ function sanro_studio_register_pricing_wc_hooks() {
     add_action('woocommerce_before_calculate_totals', 'sanro_studio_pricing_calculate_totals', 1000, 1);
     add_action('woocommerce_check_cart_items', 'sanro_studio_pricing_checkout', 20);
     add_action('woocommerce_checkout_process', 'sanro_studio_pricing_checkout', 20);
+}
+
+/** Never present catalog fallback amounts as accepted Studio quotes after rejection. */
+function sanro_studio_pricing_display_line($html,$line,$key='') {
+    return !empty($GLOBALS['sanro_studio_invalid_cart'])&&sanro_studio_pricing_is_line($line)?esc_html('Desain perlu diverifikasi'):$html;
+}
+function sanro_studio_pricing_display_total($html) {
+    return !empty($GLOBALS['sanro_studio_invalid_cart'])?esc_html('Belum dapat dihitung — verifikasi desain'):$html;
 }

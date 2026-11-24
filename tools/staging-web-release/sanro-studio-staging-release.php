@@ -13,6 +13,7 @@ const SSWR_BEFORE='60c8b0f3a272b024537e152fe46763c31b1beafcb36933fa2e57bb115c132
 require __DIR__.'/binding.php';
 require_once __DIR__.'/acceptance.php';
 require_once __DIR__.'/config-lease.php';
+require_once __DIR__.'/checkout-acceptance.php';
 function sswr_identity() {
     if (rtrim(home_url('/'),'/')!==SSWR_TARGET || rtrim(site_url('/'),'/')!==SSWR_TARGET || is_multisite()
         || realpath(ABSPATH)!==SSWR_DOCROOT || realpath($_SERVER['DOCUMENT_ROOT']??'')!==SSWR_DOCROOT
@@ -134,6 +135,7 @@ function sswr_page() {
         if(!$gate['installed']) {echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'">';submit_button('Install approved staging candidate','primary','sswr_install');echo '</form>';}
         if(function_exists('sanro_studio_runtime_readiness'))echo '<h2>Runtime readiness</h2><pre>'.esc_html(wp_json_encode(sanro_studio_runtime_readiness(24),JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)).'</pre>';
         echo '<h2>Read-only configuration declaration inventory</h2><pre>'.esc_html(wp_json_encode(sswr_config_inventory(),JSON_PRETTY_PRINT)).'</pre>';
+        sswr_normal_checkout_evidence();
         sswr_acceptance_page();
     } catch(Throwable $e) {error_log('SANRO staging release gate: '.get_class($e));echo '<p>NO-GO: '.esc_html($e instanceof RuntimeException?$e->getMessage():'release_validation_failed').'</p>';}
     echo '</div>';
