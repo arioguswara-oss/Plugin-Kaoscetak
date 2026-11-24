@@ -4,11 +4,20 @@ function sswr_dtf_config_flags(){return ['DTF_ADMIN_GENERATE','DTF_ORDER_BATCH',
 function sswr_false_flag_offsets($source) {
     $tokens=[];$offset=0;
     foreach(token_get_all($source,TOKEN_PARSE) as $t){$text=is_array($t)?$t[1]:$t;$kind=is_array($t)?$t[0]:null;if(!in_array($kind,[T_WHITESPACE,T_COMMENT,T_DOC_COMMENT],true))$tokens[]=[$kind,$text,$offset];$offset+=strlen($text);}
+    $known=[];foreach($tokens as $t)if($t[0]===T_CONSTANT_ENCAPSED_STRING){$name=substr($t[1],1,-1);foreach(sswr_dtf_config_flags() as $flag)if($name===$flag||$name==='SANRO_STUDIO_ENABLE_'.$flag)$known[$flag]=true;}
     $matches=[];
     for($i=0;$i+5<count($tokens);$i++){
-        if($tokens[$i][0]!==T_STRING||strtolower($tokens[$i][1])!=='define'||$tokens[$i+1][1]!=='('||$tokens[$i+2][0]!==T_CONSTANT_ENCAPSED_STRING||$tokens[$i+3][1]!==','||$tokens[$i+4][0]!==T_STRING||strtolower($tokens[$i+4][1])!=='false'||$tokens[$i+5][1]!==')')continue;
-        $name=substr($tokens[$i+2][1],1,-1);$flag=substr($name,strlen('SANRO_STUDIO_ENABLE_'));
-        if($name==='SANRO_STUDIO_ENABLE_'.$flag&&in_array($flag,sswr_dtf_config_flags(),true))$matches[]=['flag'=>$flag,'offset'=>$tokens[$i+4][2],'bytes'=>strlen($tokens[$i+4][1])];
+        if($tokens[$i][0]!==T_STRING||strtolower($tokens[$i][1])!=='define'||$tokens[$i+1][1]!=='(')continue;
+        $j=$i+2;$argument='';$parts=[];
+        while($j<count($tokens)&&$j<$i+16&&$tokens[$j][1]!==','){
+            if(!in_array($tokens[$j][0],[T_VARIABLE,T_CONSTANT_ENCAPSED_STRING],true)&&$tokens[$j][1]!=='.')break;
+            $parts[]=$tokens[$j];$argument.=$tokens[$j][1];$j++;
+        }
+        if(!$parts||($tokens[$j][1]??null)!==','||($tokens[$j+1][0]??null)!==T_STRING||strtolower($tokens[$j+1][1])!=='false'||($tokens[$j+2][1]??null)!==')')continue;
+        $flags=[];
+        if(count($parts)===1&&$parts[0][0]===T_CONSTANT_ENCAPSED_STRING){$name=substr($parts[0][1],1,-1);foreach(sswr_dtf_config_flags() as $flag)if($name==='SANRO_STUDIO_ENABLE_'.$flag)$flags[]=$flag;}
+        elseif(array_filter($parts,static function($t){return $t[0]===T_VARIABLE;}))$flags=array_keys($known);
+        if($flags)$matches[]=['flags'=>$flags,'name_expression'=>$argument,'offset'=>$tokens[$j+1][2],'bytes'=>strlen($tokens[$j+1][1])];
     }return $matches;
 }
 function sswr_config_lease($record=null) {
@@ -40,7 +49,11 @@ function sswr_arm_dtf_config() {
         $before=file_get_contents($actual);$matches=sswr_false_flag_offsets($before);if(!$matches)continue;
         $after=$before;usort($matches,static function($a,$b){return $b['offset']<=>$a['offset'];});
         $expression="(time() < ".$expires." && (\$_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && (\$_SERVER['SCRIPT_NAME'] ?? '') === '/wp-admin/tools.php' && (\$_GET['page'] ?? '') === 'sanro-staging-release' && (\$_POST['acceptance'] ?? '') === 'dtf')";
-        foreach($matches as $match){$seen[$match['flag']]=true;$after=substr_replace($after,$expression,$match['offset'],$match['bytes']);}
+        foreach($matches as $match){foreach($match['flags'] as $flag)$seen[$flag]=true;
+            $allow=var_export(array_map(static function($flag){return 'SANRO_STUDIO_ENABLE_'.$flag;},sswr_dtf_config_flags()),true);
+            $bounded='(in_array(('.$match['name_expression'].'),'.$allow.',true) && '.$expression.')';
+            $after=substr_replace($after,$bounded,$match['offset'],$match['bytes']);
+        }
         token_get_all($after,TOKEN_PARSE);$hash=hash('sha256',$before);$backup='config-backup-'.$hash.'.php';$backupPath=sswr_private_root().'/'.$backup;
         if(is_file($backupPath)){if(!hash_equals($hash,hash_file('sha256',$backupPath)))throw new RuntimeException('config_backup_changed');}else sswr_write($backupPath,$before);
         $files[]=['path'=>$actual,'backup'=>$backup,'before'=>$hash,'after'=>hash('sha256',$after),'mode'=>fileperms($actual)&0777,'new_bytes'=>$after];

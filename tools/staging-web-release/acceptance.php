@@ -87,11 +87,11 @@ function sswr_acceptance_page() {
     $record=sswr_acceptance_record();
     if($record){
         echo '<pre>'.esc_html(wp_json_encode($record,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)).'</pre>';
-        if(!empty($record['order_id'])){echo '<a href="'.esc_url(wc_get_order($record['order_id'])->get_edit_order_url()).'">Open synthetic WooCommerce order</a>';echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'"><input type="hidden" name="acceptance" value="dtf">';submit_button('Generate private DTF and PDF for this order');echo '</form>';
-            foreach(['arm_dtf'=>'Arm bounded DTF configuration for this order','restore_dtf'=>'Restore original DTF configuration'] as $action=>$label){echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'"><input type="hidden" name="acceptance" value="'.esc_attr($action).'">';submit_button($label);echo '</form>';}
+        if(!empty($record['order_id'])){echo '<a href="'.esc_url(wc_get_order($record['order_id'])->get_edit_order_url()).'">Open synthetic WooCommerce order</a>';echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'"><input type="hidden" name="acceptance" value="dtf">';submit_button('Generate private DTF and PDF for this order','primary','sswr_generate');echo '</form>';
+            foreach(['arm_dtf'=>'Arm bounded DTF configuration for this order','restore_dtf'=>'Restore original DTF configuration'] as $action=>$label){echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'"><input type="hidden" name="acceptance" value="'.esc_attr($action).'">';submit_button($label,'primary','sswr_'.$action);echo '</form>';}
         }
         return;
     }
-    sswr_acceptance_cart();echo '<form method="post" class="checkout">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'"><input type="hidden" name="acceptance" value="create_unpaid">';sanro_studio_pricing_checkout_field();submit_button('Create the single synthetic unpaid order');echo '</form>';
+    sswr_acceptance_cart();echo '<form method="post" class="checkout">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'"><input type="hidden" name="acceptance" value="create_unpaid">';sanro_studio_pricing_checkout_field();submit_button('Create the single synthetic unpaid order','primary','sswr_create');echo '</form>';
     wp_enqueue_script('sanro-acceptance-auth',plugins_url('sanro-studio/assets/checkout-auth.js'),['jquery'],'0.1.0',true);
 }

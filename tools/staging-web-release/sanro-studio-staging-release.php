@@ -2,7 +2,7 @@
 /*
 Plugin Name: SANRO Studio Staging Release Transport
 Description: Exact-target, hash-bound administrator release transport. No shell, public API, scheduled writer or automatic installation.
-Version: 0.3.0
+Version: 0.3.1
 */
 defined('ABSPATH') || exit;
 require_once __DIR__.'/transaction.php';
@@ -131,7 +131,7 @@ function sswr_page() {
         $pendingRoot=sswr_private_root();$pending=is_dir($pendingRoot)?sswr_journal($pendingRoot):null;
         if($pending&&!in_array($pending['phase'],['committed','rolled_back'],true)){echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'">';submit_button('Recover interrupted installation');echo '</form>';return;}
         $gate=sswr_preflight();echo '<pre>'.esc_html(wp_json_encode($gate,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)).'</pre>';
-        if(!$gate['installed']) {echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'">';submit_button('Install approved staging candidate');echo '</form>';}
+        if(!$gate['installed']) {echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'">';submit_button('Install approved staging candidate','primary','sswr_install');echo '</form>';}
         if(function_exists('sanro_studio_runtime_readiness'))echo '<h2>Runtime readiness</h2><pre>'.esc_html(wp_json_encode(sanro_studio_runtime_readiness(24),JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)).'</pre>';
         sswr_acceptance_page();
     } catch(Throwable $e) {error_log('SANRO staging release gate: '.get_class($e));echo '<p>NO-GO: '.esc_html($e instanceof RuntimeException?$e->getMessage():'release_validation_failed').'</p>';}
