@@ -1,0 +1,9 @@
+# SANRO Studio V1 candidate — native OAuth and checkout recovery
+
+**Not Final Release.** Source8846097f359bc56dec1c5638a5b04c9a31ab884c is installed and active on authorized staging. Runtime evidence and SHA256SUMS accompany this ZIP. Build twice from this clean source using `python tools/build-studio-candidate.py --out /tmp/sanro-candidate`; both ZIP and manifest must match the committed checksums. Tests and staging transport are outside the application ZIP.
+
+Changes: native confidential Google OAuth/refresh with encrypted credentials; Google Picker for explicitly granting access to the existing private folder; no duplicate root fallback; readable size/Design ID cart labels and correct three-item preview summary; expired/nonrecoverable carts show an error instead of HTTP500 and remain blocked from checkout.
+
+Installation/configuration: application remains a candidate; preserve existing private storage and configuration. The authorized exact-target staging transport has installed this package and independently verifies its tree digest. Do not apply to production or merge. Native setup is SANRO Studio → Koneksi Google Drive; follow docs/qa/studio-drive-owner-configuration-20261124.md. Enter OAuth client credentials only into the HTTPS staging admin form; finish official Google consent and select the existing folder. Client secret and refresh tokens remain encrypted server-side; Picker uses a short-lived access token on an administrator no-cache POST. No credential is bundled.
+
+DTF/Drive writers and storage GC remain OFF. Native Drive upload and normal buyer Place-order acceptance remain incomplete; payment gateway work and real payment are outside scope. Existing order56 remains unpaid240000IDR and must be reused for Drive acceptance. No second order was created. See runtime-evidence.json for PASS/FAIL/NOT TESTED distinctions.

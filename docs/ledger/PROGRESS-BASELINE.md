@@ -1,5 +1,13 @@
 # SANRO Studio — satu baseline resmi development
 
+## Active checkpoint —8846097 installed; OAuth Owner action required
+
+**94,00% →94,00%, delta0,00.** Kandidat8846097 installed/active, fresh web gate/private roots PASS, installed tree7e85b128ecfa20a3d92db43b9f36f97b74d37bc1eaa1bbb7a05dbdca410cfa1c matches ZIP independently. Two builds/CRC/package exclusion checks PASS. Temporary writer configuration restored with original hashes; DTF/Drive/GC OFF. Native OAuth settings page loads, client/consent missing.
+
+Checkout500 self-fix VERIFIED: page renders recovery error and Woo blocks invalid cart; size/Design ID labels and order56 three-item/private-preview summary PASS. This is negative-path acceptance, not normal buyer Place-order success. Stale cart catalog fallback195000IDR is not an accepted quote; locked unpaid order56 remains240000IDR. No new order or payment.
+
+[Runtime evidence and candidate](../../artifacts/studio-v1/8846097/README.md); CURRENT points here. Native Drive folder/upload/metadata/links/idempotency and normal buyer checkout still OPEN. Final Release **NO-GO** pending those gates. [One-session Owner OAuth setup](../qa/studio-drive-owner-configuration-20261124.md). No new consent scope or credential collection through chat.
+
 ## Final takeover milestone — checkout500 source fix and native OAuth installed
 
 Native OAuth candidate dbf3d15 installed; active authenticated web gate/private storage/installed digest PASS. OAuth admin page is available and not connected; Owner client/consent required. Checkout GET revealed HTTP500 from an uncaught price authorization rejection on expired/nonrecoverable cart. Source self-fix keeps page renderable with sanitized error and preserves fail-closed checkout; actual-hook local regression and same-order recovery PASS. Updated runtime pending at this milestone. Temporary diagnostic removed from transport source. Successor package detection and restored historical config-lease read compatibility fixed/tested without changing production configuration.
