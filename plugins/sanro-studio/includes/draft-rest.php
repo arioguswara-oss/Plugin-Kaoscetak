@@ -322,12 +322,15 @@ function sanro_studio_rest_upload_master($request) {
             return new WP_Error('sanro_draft_conflict', 'Draft changed. Reload before upload.', ['status' => 409]);
         }
         $budget_key = 'sanro_master_budget_' . hash('sha256', strtolower($id));
-        $count = get_transient($budget_key);
-        if ($count !== false && (!is_int($count) || $count >= 10)) {
+        $count = sanro_studio_normalize_master_budget_count(get_transient($budget_key));
+        // Some persistent object-cache backends return serialized integer
+        // transients as decimal strings. Normalize that representation while
+        // keeping malformed, negative, or exhausted values fail-closed.
+        if ($count === null || $count >= 10) {
             return new WP_Error('sanro_master_rate_limited', 'Upload limit reached.', ['status' => 429]);
         }
         // Reserve before writing, fail closed if quota storage fails.
-        if (!set_transient($budget_key, $count === false ? 1 : $count + 1, HOUR_IN_SECONDS)) {
+        if (!set_transient($budget_key, $count + 1, HOUR_IN_SECONDS)) {
             return new WP_Error('sanro_master_unavailable', 'Upload unavailable.', ['status' => 503]);
         }
         $stored = sanro_studio_store_owned_draft_master($id, $token, $side, $bytes);
@@ -345,6 +348,18 @@ function sanro_studio_rest_upload_master($request) {
     ]);
     $response->header('Cache-Control', 'private, no-store, max-age=0');
     return $response;
+}
+
+/** Normalize the bounded per-draft master-upload counter across WP cache backends. */
+function sanro_studio_normalize_master_budget_count($value) {
+    if ($value === false) return 0;
+    if (is_int($value)) return $value >= 0 ? $value : null;
+    if (is_string($value) && strlen($value) <= 9
+        && preg_match('/^[0-9]+$/D', $value)) {
+        $count = (int) $value;
+        return $count >= 0 ? $count : null;
+    }
+    return null;
 }
 
 function sanro_studio_rest_draft_nonce($request) {
