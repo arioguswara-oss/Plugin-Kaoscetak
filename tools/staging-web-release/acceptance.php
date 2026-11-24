@@ -54,19 +54,19 @@ function sswr_create_synthetic_order() {
     }finally{flock($lock,LOCK_UN);fclose($lock);}
 }
 function sswr_generate_synthetic_dtf() {
-    sswr_preflight();$record=sswr_acceptance_record();
+    $leased=sswr_config_lease_live();sswr_preflight($leased);$record=sswr_acceptance_record();
     if(!is_array($record)||empty($record['order_id']))throw new RuntimeException('synthetic_order_required');
     $order=wc_get_order($record['order_id']);sswr_acceptance_order_summary($order);
     if(!sanro_studio_auto_drive_order_eligible($order))throw new RuntimeException('explicit_production_ready_required');
     $flags=['DTF_ADMIN_GENERATE','DTF_ORDER_BATCH','DTF_IMAGE_RASTER','DTF_LAYER_RASTER','DTF_PRIVATE_ARTIFACTS'];
-    foreach($flags as $flag)if(defined('SANRO_STUDIO_ENABLE_'.$flag))throw new RuntimeException('explicit_runtime_flag_requires_server_configuration_'.$flag);
+    foreach($flags as $flag)if(defined('SANRO_STUDIO_ENABLE_'.$flag)&&!($leased&&constant('SANRO_STUDIO_ENABLE_'.$flag)===true))throw new RuntimeException('explicit_runtime_flag_requires_server_configuration_'.$flag);
     if(defined('SANRO_STUDIO_DTF_ARTIFACT_DIR'))throw new RuntimeException('existing_artifact_configuration_requires_review');
     $dir=sswr_private_root().'/dtf-acceptance';if(!is_dir($dir)&&!mkdir($dir,0700))throw new RuntimeException('artifact_root_create_failed');
     if(is_link($dir)||realpath($dir)!==$dir||(fileperms($dir)&0077))throw new RuntimeException('unsafe_artifact_root');
     define('SANRO_STUDIO_DTF_ARTIFACT_DIR',$dir);
     // Request-local opt-in only AFTER capability, nonce, installed hash and exact synthetic order checks.
     // No configuration file/option is changed; the next HTTP request has all writers OFF again.
-    foreach($flags as $flag)define('SANRO_STUDIO_ENABLE_'.$flag,true);
+    foreach($flags as $flag)if(!defined('SANRO_STUDIO_ENABLE_'.$flag))define('SANRO_STUDIO_ENABLE_'.$flag,true);
     $results=[];
     foreach($order->get_items() as $id=>$item){
         $generated=sanro_studio_dtf_admin_generate_candidates($order,$id);
@@ -83,10 +83,13 @@ function sswr_generate_synthetic_dtf() {
 function sswr_acceptance_page() {
     echo '<h2>One synthetic unpaid acceptance order</h2><p>No gateway, payment, customer profile update or shipment. Same native Studio checkout authorization/order hooks. Maximum one order; ambiguous attempts fail closed.</p>';
     $status=sswr_private_root().'/acceptance-status.json';if(is_file($status)&&!is_link($status)&&filesize($status)<4096)echo '<pre>'.esc_html(file_get_contents($status)).'</pre>';
+    $lease=sswr_config_lease();if($lease)echo '<pre>'.esc_html(wp_json_encode(['dtf_config_lease'=>$lease['state'],'expires'=>$lease['expires'],'default_and_get_writers'=>'OFF'])).'</pre>';
     $record=sswr_acceptance_record();
     if($record){
         echo '<pre>'.esc_html(wp_json_encode($record,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)).'</pre>';
-        if(!empty($record['order_id'])){echo '<a href="'.esc_url(wc_get_order($record['order_id'])->get_edit_order_url()).'">Open synthetic WooCommerce order</a>';echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'"><input type="hidden" name="acceptance" value="dtf">';submit_button('Generate private DTF and PDF for this order');echo '</form>';}
+        if(!empty($record['order_id'])){echo '<a href="'.esc_url(wc_get_order($record['order_id'])->get_edit_order_url()).'">Open synthetic WooCommerce order</a>';echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'"><input type="hidden" name="acceptance" value="dtf">';submit_button('Generate private DTF and PDF for this order');echo '</form>';
+            foreach(['arm_dtf'=>'Arm bounded DTF configuration for this order','restore_dtf'=>'Restore original DTF configuration'] as $action=>$label){echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'"><input type="hidden" name="acceptance" value="'.esc_attr($action).'">';submit_button($label);echo '</form>';}
+        }
         return;
     }
     sswr_acceptance_cart();echo '<form method="post" class="checkout">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'"><input type="hidden" name="acceptance" value="create_unpaid">';sanro_studio_pricing_checkout_field();submit_button('Create the single synthetic unpaid order');echo '</form>';

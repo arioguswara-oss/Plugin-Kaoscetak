@@ -4,7 +4,8 @@ require __DIR__.'/../tools/staging-web-release/transaction.php';
 $root=sys_get_temp_dir().'/sswr-acceptance-'.bin2hex(random_bytes(8));mkdir($root,0700);
 function sswr_private_root(){return $GLOBALS['root'];}
 function wp_json_encode($v,$flags=0){return json_encode($v,$flags);}
-function sswr_preflight(){return ['installed'=>true];}
+function sswr_preflight($lease=false){return ['installed'=>true];}
+function sswr_config_lease_live(){return false;}
 function current_user_can($v){return true;}
 function wc_load_cart(){throw new RuntimeException('unexpected_cart_or_order_creation');}
 function WC(){throw new RuntimeException('unexpected_cart_or_order_creation');}

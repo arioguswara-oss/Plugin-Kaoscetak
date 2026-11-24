@@ -2,7 +2,7 @@
 /*
 Plugin Name: SANRO Studio Staging Release Transport
 Description: Exact-target, hash-bound administrator release transport. No shell, public API, scheduled writer or automatic installation.
-Version: 0.2.0
+Version: 0.3.0
 */
 defined('ABSPATH') || exit;
 require_once __DIR__.'/transaction.php';
@@ -12,6 +12,7 @@ const SSWR_BEFORE='60c8b0f3a272b024537e152fe46763c31b1beafcb36933fa2e57bb115c132
 // Populated by the reproducible transport builder, never by an HTTP parameter.
 require __DIR__.'/binding.php';
 require_once __DIR__.'/acceptance.php';
+require_once __DIR__.'/config-lease.php';
 function sswr_identity() {
     if (rtrim(home_url('/'),'/')!==SSWR_TARGET || rtrim(site_url('/'),'/')!==SSWR_TARGET || is_multisite()
         || realpath(ABSPATH)!==SSWR_DOCROOT || realpath($_SERVER['DOCUMENT_ROOT']??'')!==SSWR_DOCROOT
@@ -26,10 +27,11 @@ function sswr_manifest() {
     if (!hash_equals($m['plugin_digest'],hash('sha256',json_encode($pairs,JSON_UNESCAPED_SLASHES|JSON_THROW_ON_ERROR)))) throw new RuntimeException('manifest_digest_mismatch');
     return $m;
 }
-function sswr_flags() {
+function sswr_flags($dtfLease=false) {
+    if($dtfLease&&!sswr_config_lease_live())throw new RuntimeException('dtf_configuration_lease_required');
     $flags=[]; foreach(['STORAGE_GC','STAGING_CHECKOUT_HOOK','DTF_GENERATOR','DTF_ADMIN_GENERATE','DTF_ORDER_BATCH','DTF_IMAGE_RASTER','DTF_LAYER_RASTER','DTF_PRIVATE_ARTIFACTS','DRIVE_MASTER_EXPORT','DRIVE_AUTO_PROVISION','VERIFIED_DRIVE_ATTACHMENT','DRIVE_PACKAGE_EXPORT','DRIVE_DTF_CANDIDATES'] as $key) {
         $name='SANRO_STUDIO_ENABLE_'.$key; $flags[$key]=defined($name)?constant($name):false;
-        if($flags[$key]!==false) throw new RuntimeException('writer_not_off');
+        if($flags[$key]!==false && !($dtfLease&&in_array($key,sswr_dtf_config_flags(),true)&&$flags[$key]===true)) throw new RuntimeException('writer_not_off');
     } return $flags;
 }
 function sswr_private_root() {
@@ -67,8 +69,8 @@ function sswr_prior_journals($target) {
     if(!$matches)throw new RuntimeException('installed_transaction_not_found');
     return count($matches);
 }
-function sswr_preflight() {
-    sswr_identity();$m=sswr_manifest();$flags=sswr_flags();$target=realpath(WP_PLUGIN_DIR).'/sanro-studio';
+function sswr_preflight($dtfLease=false) {
+    sswr_identity();$m=sswr_manifest();$flags=sswr_flags($dtfLease);$target=realpath(WP_PLUGIN_DIR).'/sanro-studio';
     $active=(array)get_option('active_plugins',[]);
     if(!in_array('sanro-studio/sanro-studio.php',$active,true)||!in_array('woocommerce/woocommerce.php',$active,true))throw new RuntimeException('active_studio_and_woocommerce_required');
     $before=sswr_tree($target);$root=sswr_private_root();
@@ -119,7 +121,7 @@ function sswr_apply() {
 }
 function sswr_page() {
     if(!current_user_can('install_plugins')||!current_user_can('manage_options'))wp_die('Forbidden',403);
-    echo '<div class="wrap"><h1>SANRO staging release</h1><p>Exact staging only. No payment, order, flag or activation changes.</p>';
+    echo '<div class="wrap"><h1>SANRO staging release</h1><p>Exact staging only. Installation preserves activation/data/flags; explicit one-order acceptance actions are below. No payment or GC.</p>';
     try {
         if($_SERVER['REQUEST_METHOD']==='POST') {
             check_admin_referer('sswr-'.SSWR_SOURCE);
@@ -145,7 +147,15 @@ add_action('admin_init',static function(){
     if(($_POST['source']??null)!==SSWR_SOURCE)wp_die('Source mismatch',409);
     try{
         if($_POST['acceptance']==='create_unpaid')$result=sswr_create_synthetic_order();
-        elseif($_POST['acceptance']==='dtf')$result=sswr_generate_synthetic_dtf();
+        elseif(in_array($_POST['acceptance'],['arm_dtf','dtf','restore_dtf'],true)){
+            $path=sswr_private_root().'/dtf-config.lock';if(is_link($path))throw new RuntimeException('unsafe_config_lock');
+            $lock=fopen($path,'c+');if(!$lock||!flock($lock,LOCK_EX|LOCK_NB))throw new RuntimeException('configuration_busy');chmod($path,0600);
+            try{
+                if($_POST['acceptance']==='arm_dtf')$result=sswr_arm_dtf_config();
+                elseif($_POST['acceptance']==='restore_dtf')$result=sswr_restore_dtf_config();
+                else try{$result=sswr_generate_synthetic_dtf();}finally{sswr_restore_dtf_config();}
+            }finally{flock($lock,LOCK_UN);fclose($lock);}
+        }
         else throw new RuntimeException('unsupported_acceptance_action');
         sswr_write(sswr_private_root().'/acceptance-status.json',wp_json_encode(['state'=>'PASS','action'=>$_POST['acceptance']]));
     }catch(Throwable $e){$code=$e instanceof RuntimeException&&preg_match('/^[A-Za-z0-9_]{1,160}$/D',$e->getMessage())?$e->getMessage():'acceptance_failed_requires_readback';sswr_write(sswr_private_root().'/acceptance-status.json',wp_json_encode(['state'=>'NO_GO','error'=>$code]));}
