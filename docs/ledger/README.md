@@ -1,6 +1,6 @@
 # SANRO Studio — ledger aktif
 
-Terbaru: [Hostinger runtime integration](../qa/studio-hostinger-runtime-integration-20261124.md). SSH staging verified; docroot/production separation, active plugins, installed digest, private storage, feature flags and menu cause checked read-only. LiteSpeed SAPI gate is fixed in installer. Candidate is pinned; approval remains false and installation NO-GO. Baseline 90,50%, delta0.
+Terbaru: [installation gate refusal](../qa/studio-installation-attempt-20261124.md). Runtime identity, LiteSpeed SAPI, private storage, flags and clean journal/lock state PASS; official installer refuses because the active plugin array has sparse numeric keys and JSON-encodes as an object. Approved candidate remains uninstalled and unchanged. Fix/rebuild requires new hashes and Owner reapproval. Baseline90,50%, delta0.
 
 - [Perbaikan menu dan evidence](../qa/studio-admin-menu-correction-20261124.md)
 - [Staging runtime preflight dan blocker](../qa/studio-runtime-preflight-20261124.md)
