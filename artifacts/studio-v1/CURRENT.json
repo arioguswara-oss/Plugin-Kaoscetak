@@ -2,7 +2,7 @@
   "schema": 1,
   "release_version": "1.0.0",
   "release_source": "4f5d31ee2a1244674a8a7111cd43f3e695bbf218",
-  "candidate_source": "4f5d31ee2a1244674a8a7111cd43f3e695bbf218",
+  "candidate_source": "12b2c043cc6ccbb3e7c828949bf524ff6f2e84b1",
   "artifact_directory": "artifacts/studio-v1/1.0.0",
   "archive": "sanro-studio-1.0.0.zip",
   "archive_sha256": "c1a9d56a8e11a000cde9eb215595ec257a5f3cb70098dbb2cce6fd43775fbcce",
@@ -10,11 +10,12 @@
   "plugin_digest": "cab430b9a596823c01b675882c46fc0d966d5705c02e97d4c2eadb9daf28525f",
   "deployment_authorized": false,
   "staging_installation_authorized": true,
-  "runtime_e2e": "PASS_REVISED_V1_SCOPE; LIVE_DRIVE_DEFERRED_BY_OWNER; NO_SECOND_ORDER_OR_PAYMENT",
-  "staging_installation_state": "FINAL_RELEASE_INSTALLED_ACTIVE_VERIFIED",
-  "currently_installed_source": "4f5d31ee2a1244674a8a7111cd43f3e695bbf218",
-  "installed_tree_digest": "c3524d76a6992179716946b9c353e98d9baad11e13feb8bfa24d387fe383db61",
-  "execution_evidence": "artifacts/studio-v1/1.0.0/runtime-evidence.json",
+  "runtime_e2e": "V1.1.0 install and read-only runtime smoke PASS; no checkout/order/payment test; visual acceptance pending",
+  "staging_installation_state": "V1.1.0_UI_INSTALLED_ACTIVE_OWNER_BROWSER_ACCEPTANCE_PENDING",
+  "staging_installed_version": "1.1.0",
+  "currently_installed_source": "12b2c043cc6ccbb3e7c828949bf524ff6f2e84b1",
+  "installed_tree_digest": "0c7900e3b5779b19897ad8f1443f4e0bee8fd0b377ffa35f27bb993b68116301",
+  "execution_evidence": "artifacts/studio-v1/1.1.0-ui/installation-execution.json",
   "owner_scope_revision": "f415ec55dd5b360da89b76804512624a3611288d",
   "drive_configuration": "NOT CONFIGURED",
   "final_release": true,
@@ -24,8 +25,8 @@
     "artifact_directory": "artifacts/studio-v1/1.1.0-ui",
     "archive": "sanro-studio-staging-candidate.zip",
     "archive_sha256": "991f53c93ad6ae7c8c73bad1af4bd1b5406beac93ca7c64d6b0365a289e7896b",
-    "state": "IMPLEMENTED_NOT_INSTALLED_BROWSER_ACCEPTANCE_PENDING",
+    "state": "INSTALLED_ACTIVE_RUNTIME_GATE_PASS_OWNER_BROWSER_ACCEPTANCE_PENDING",
     "final_release": false,
-    "blocker": "Direct Browser control tools unavailable; fresh runtime gate and visual interaction acceptance pending"
+    "blocker": "Owner browser visual and interaction acceptance pending"
   }
 }
