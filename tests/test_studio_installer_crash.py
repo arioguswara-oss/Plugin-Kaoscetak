@@ -59,7 +59,7 @@ class CrashTests(unittest.TestCase):
   result=subprocess.run([sys.executable,'-c',kill,str(TOOL),str(self.root)],capture_output=True,text=True);self.assertEqual(result.returncode,91,result.stderr)
   state={'url':installer.TARGET,'plugin_dir':str(target.parent),'active':['sanro-studio/sanro-studio.php','woocommerce/woocommerce.php'],'flags':dict.fromkeys(installer.FLAGS,False),'multisite':False}
   fake_wp=self.root/'fake-wp';fake_wp.write_text('#!'+sys.executable+'\nprint('+repr(json.dumps(state))+')\n');fake_wp.chmod(0o700)
-  approval={'approved':True,'action':'replace_existing_staging_plugin','target_url':installer.TARGET,'source_commit':self.m['source_commit'],'plugin_digest':self.m['plugin_digest'],'archive_sha256':self.m['archive_sha256'],'existing_plugin_digest':self.before,'php_fpm_verified':True,'generator':'OFF','drive':'OFF','order_database_changes':False}
+  approval={'approved':True,'action':'replace_existing_staging_plugin','target_url':installer.TARGET,'source_commit':self.m['source_commit'],'plugin_digest':self.m['plugin_digest'],'archive_sha256':self.m['archive_sha256'],'existing_plugin_digest':self.before,'web_runtime_verified':True,'web_php_sapi':'litespeed','generator':'OFF','drive':'OFF','order_database_changes':False}
   a=self.root/'synthetic-approval.json';a.write_text(json.dumps(approval))
   cmd=[sys.executable,str(TOOL),'--recover','--zip',str(self.root/'candidate.zip'),'--manifest',str(self.root/'manifest.json'),'--php',sys.executable,'--wp',str(fake_wp),'--wp-root',str(wp_root),'--document-root',str(wp_root),'--rollback-root',str(self.rollback),'--approval',str(a)]
   for _ in range(2):

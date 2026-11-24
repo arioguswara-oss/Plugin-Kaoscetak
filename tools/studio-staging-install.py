@@ -28,7 +28,8 @@ def probe(wp,wp_root):
 def approve(approval,manifest,before):
  required={'approved':True,'action':'replace_existing_staging_plugin','target_url':TARGET,
   'source_commit':manifest['source_commit'],'plugin_digest':manifest['plugin_digest'],'archive_sha256':manifest['archive_sha256'],
-  'existing_plugin_digest':before,'php_fpm_verified':True,'generator':'OFF','drive':'OFF','order_database_changes':False}
+  'existing_plugin_digest':before,'web_runtime_verified':True,'web_php_sapi':'litespeed',
+  'generator':'OFF','drive':'OFF','order_database_changes':False}
  if not isinstance(approval,dict) or any(approval.get(k)!=v or type(approval.get(k)) is not type(v) for k,v in required.items()):raise ValueError('exact_owner_approval_required')
 
 def main():

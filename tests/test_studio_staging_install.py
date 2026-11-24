@@ -35,7 +35,7 @@ class InstallTest(unittest.TestCase):
   with installer.install_lock(self.target.parent):
    with self.assertRaisesRegex(ValueError,'another_installer_running'):installer.replace_existing(self.z,self.m,self.target,self.back,self.before)
  def test_approval_cannot_use_wrong_source_target_or_flags(self):
-  a={'approved':True,'action':'replace_existing_staging_plugin','target_url':installer.TARGET,'source_commit':self.m['source_commit'],'plugin_digest':self.m['plugin_digest'],'archive_sha256':self.m['archive_sha256'],'existing_plugin_digest':self.before,'php_fpm_verified':True,'generator':'OFF','drive':'OFF','order_database_changes':False}
+  a={'approved':True,'action':'replace_existing_staging_plugin','target_url':installer.TARGET,'source_commit':self.m['source_commit'],'plugin_digest':self.m['plugin_digest'],'archive_sha256':self.m['archive_sha256'],'existing_plugin_digest':self.before,'web_runtime_verified':True,'web_php_sapi':'litespeed','generator':'OFF','drive':'OFF','order_database_changes':False}
   installer.approve(a,self.m,self.before)
   for key,bad in [('approved',False),('target_url','https://kaoscetak.id'),('source_commit','d'*40),('existing_plugin_digest','d'*64),('drive','ON'),('order_database_changes',0)]:
    with self.subTest(key=key),self.assertRaisesRegex(ValueError,'exact_owner_approval_required'):installer.approve(dict(a,**{key:bad}),self.m,self.before)
