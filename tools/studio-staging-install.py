@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Default plan-only, existing-plugin replacement. Apply requires exact Owner approval; never activates or seeds."""
-import argparse,contextlib,fcntl,hashlib,importlib.util,json,os,pathlib,subprocess,sys,tempfile,zipfile
+import argparse,contextlib,fcntl,hashlib,importlib.util,json,os,pathlib,re,subprocess,sys,tempfile,zipfile
 sys.dont_write_bytecode=True
 spec=importlib.util.spec_from_file_location('candidate_preflight',pathlib.Path(__file__).with_name('studio-candidate-preflight.py'))
 preflight=importlib.util.module_from_spec(spec);spec.loader.exec_module(preflight)
@@ -12,6 +12,20 @@ transaction=importlib.util.module_from_spec(transaction_spec);transaction_spec.l
 canonical=transaction.canonical;tree_digest=transaction.tree_digest;install_lock=transaction.install_lock
 replace_existing=transaction.replace_existing;recover_existing=transaction.recover_existing
 
+def normalize_active_plugins(value):
+ # WordPress can serialize sparse numeric PHP arrays as JSON objects. Accept only
+ # bounded, numeric keys and string plugin paths; fail closed on malformed data.
+ if isinstance(value,list):entries=value
+ elif isinstance(value,dict) and len(value)<=512:
+  keyed=[]
+  for key,item in value.items():
+   if not isinstance(key,str) or not re.fullmatch(r'(0|[1-9][0-9]*)',key):raise ValueError('invalid_active_plugins')
+   keyed.append((int(key),item))
+  entries=[item for _,item in sorted(keyed)]
+ else:raise ValueError('invalid_active_plugins')
+ if len(entries)>512 or any(not isinstance(item,str) or not item or '\x00' in item for item in entries) or len(set(entries))!=len(entries):raise ValueError('invalid_active_plugins')
+ return entries
+
 def probe(wp,wp_root):
  # Fixed PHP source, no request values interpolated. Skip plugin code; MU flags remain loaded.
  code="""$f=[];foreach(['STORAGE_GC','STAGING_CHECKOUT_HOOK','DTF_ADMIN_GENERATE','DTF_ORDER_BATCH','DTF_IMAGE_RASTER','DTF_LAYER_RASTER','DTF_PRIVATE_ARTIFACTS','DRIVE_MASTER_EXPORT','DRIVE_AUTO_PROVISION','VERIFIED_DRIVE_ATTACHMENT','DRIVE_PACKAGE_EXPORT','DRIVE_DTF_CANDIDATES'] as $k){$n='SANRO_STUDIO_ENABLE_'.$k;$f[$k]=defined($n)?constant($n):false;}echo json_encode(['url'=>home_url('/'),'plugin_dir'=>WP_PLUGIN_DIR,'active'=>get_option('active_plugins',[]),'flags'=>$f,'multisite'=>is_multisite()]);"""
@@ -21,8 +35,9 @@ def probe(wp,wp_root):
  except (ValueError,TypeError):raise ValueError('wp_probe_invalid')
  if not isinstance(data,dict) or data.get('url','').rstrip('/')!=TARGET or data.get('multisite') is not False:raise ValueError('staging_identity_mismatch')
  if not isinstance(data.get('flags'),dict) or any(data['flags'].get(k) is not False for k in FLAGS):raise ValueError('writer_flag_not_off')
- active=data.get('active',[])
- if not isinstance(active,list) or any(p not in active for p in ('sanro-studio/sanro-studio.php','woocommerce/woocommerce.php')):raise ValueError('existing_active_plugins_required')
+ active=normalize_active_plugins(data.get('active',[]))
+ data['active']=active
+ if any(p not in active for p in ('sanro-studio/sanro-studio.php','woocommerce/woocommerce.php')):raise ValueError('existing_active_plugins_required')
  return data
 
 def approve(approval,manifest,before):

@@ -50,4 +50,14 @@ class InstallTest(unittest.TestCase):
   for bad in [dict(good,url='https://kaoscetak.id'),dict(good,flags=dict.fromkeys(installer.FLAGS,True)),dict(good,active=[]),dict(good,multisite=True)]:
    with patch.object(installer.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout=json.dumps(bad))),self.assertRaises(ValueError):installer.probe('never-executed',self.root)
   with patch.object(installer.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout=json.dumps(good))):self.assertEqual(installer.probe('never-executed',self.root),good)
+ def test_probe_normalizes_sanitized_hostinger_sparse_php_array(self):
+  # Sanitized staging capture: PHP keys [0,1,2,3,4,6,7] encode as a JSON object.
+  active={'0':'akismet/akismet.php','1':'classic-editor/classic-editor.php','2':'hello-dolly/hello.php','3':'litespeed-cache/litespeed-cache.php','4':'woocommerce/woocommerce.php','6':'sanro-studio/sanro-studio.php','7':'hostinger/hostinger.php'}
+  raw={'url':installer.TARGET+'/','plugin_dir':'/not-used','active':active,'flags':dict.fromkeys(installer.FLAGS,False),'multisite':False}
+  with patch.object(installer.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout=json.dumps(raw))):
+   result=installer.probe('never-executed',self.root)
+  self.assertEqual(result['active'],[active[str(i)] for i in (0,1,2,3,4,6,7)])
+ def test_active_plugin_normalization_fails_closed(self):
+  for malformed in [{'x':'woocommerce/woocommerce.php'},{'01':'woocommerce/woocommerce.php'},{'0':None},['duplicate','duplicate']]:
+   with self.subTest(malformed=malformed),self.assertRaisesRegex(ValueError,'invalid_active_plugins'):installer.normalize_active_plugins(malformed)
 if __name__=='__main__':unittest.main()
