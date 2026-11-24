@@ -1,16 +1,16 @@
 {
   "schema": 1,
-  "candidate_source": "081a63f78b88a3139327af6a545be1993b48506f",
-  "artifact_directory": "artifacts/studio-v1/081a63f",
-  "archive_sha256": "f66cdc28e3b2b1914df94ca4b4f6e40c7a84fb2da60fc01884a231ffbd903800",
-  "manifest_sha256": "7452cbc476266cd3d36454445ebacbd0bb06dd1add80a6fe91277755501b9177",
-  "plugin_digest": "f21bcd20f5bdb8013d1a939d09761d4af3a0b2b96b4ef4790fd09616600d63d2",
-  "supersedes": "793784f5c33c885dfd9f1b7a52a5e0786f072194",
-  "reason": "Exact Owner-approved candidate installed on staging through locked journaled transaction; rollback retained; post-install smoke PASS without orders or writers",
+  "candidate_source": "fad47c6f508258d594f92daca79c337d6911b404",
+  "artifact_directory": "artifacts/studio-v1/fad47c6",
+  "archive_sha256": "b83c1b03d18e0633d502aff09d9b1d40f01eb216a22850a7c990fc40c78a5723",
+  "manifest_sha256": "8664f584c4b746120c98ed50b337fc9616508f3b390eca3fa2a8429a370f8309",
+  "plugin_digest": "6d65fde1ceda80b1551da51817ccef14f0d618f1d5dffdcfcb412a8c129cc2bb",
+  "supersedes": "081a63f78b88a3139327af6a545be1993b48506f",
+  "reason": "Fixes Hostinger string transient handling; app master-upload quota remains 10/hour and fail-closed",
   "deployment_authorized": false,
+  "staging_installation_authorized": false,
   "runtime_e2e": "NOT_TESTED",
-  "staging_installation_authorized": true,
-  "installation_state": "files_replaced",
-  "installed_tree_digest": "8d560cdb95611da98dc4a739737dff30ab9ac35f4ec6866defb8093808fd37db",
-  "owner_approval": "explicit conversation approval for exact candidate and staging only"
+  "staging_installation_state": "NOT_INSTALLED_OWNER_APPROVAL_REQUIRED",
+  "currently_installed_source": "081a63f78b88a3139327af6a545be1993b48506f",
+  "installed_tree_digest": "8d560cdb95611da98dc4a739737dff30ab9ac35f4ec6866defb8093808fd37db"
 }

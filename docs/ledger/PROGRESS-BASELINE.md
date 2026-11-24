@@ -46,3 +46,5 @@ Blocker sign-off: Hostinger FPM/current SHA/CORS/private dirs/cache, SMTP, full 
 **GO** persiapan kandidat/preflight; **NO-GO** final release/automatic apply/deploy/merge/writer activation. [Paket E2E staging](../qa/studio-audit-staging-packet-20261124.md); [Checkpoint Hermes](../qa/studio-hermes-handoff-20261124.md).
 
 Kandidat pengganti terverifikasi: source `8d817c2ba92b89d03eaa4d680173925361ce0a36`; ZIP SHA256 `ca55c23ef3b13408e45d4b011a7d47be3676aec7da6e2d3e906508873ae66afd`. Manifest/checksum dan request baru: `artifacts/studio-v1/8d817c2`; pointer `artifacts/studio-v1/CURRENT.json`. Semua approval/deploy tetapfalse; runtime corrected menu NOT TESTED.
+
+Fix transient Hostinger sudah dikomit (`fad47c6f508258d594f92daca79c337d6911b404`) dan candidate baru dibuat di `artifacts/studio-v1/fad47c6`: ZIP `b83c1b03d18e0633d502aff09d9b1d40f01eb216a22850a7c990fc40c78a5723`, manifest `8664f584c4b746120c98ed50b337fc9616508f3b390eca3fa2a8429a370f8309`. Targeted REST counter/preview/master tests dan PLAN_ONLY preflight PASS. Approval file tetap `approved:false`; runtime complete buyer QA menunggu approval untuk candidate baru. Baseline90,50%, delta0.
