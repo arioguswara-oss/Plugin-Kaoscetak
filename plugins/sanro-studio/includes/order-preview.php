@@ -28,6 +28,11 @@ function sanro_studio_admin_order_preview_status($order) {
     $inventory = sanro_studio_order_preview_inventory($order);
     if (empty($inventory['valid'])) return;
     echo '<div class="sanro-studio-order-preview"><h3>' . esc_html('SANRO Studio — Preview desain') . '</h3>';
+    if($inventory['front']===null&&$inventory['back']===null&&method_exists($order,'get_items')){
+        $items=$order->get_items('line_item');$count=0;
+        foreach(is_array($items)?$items:[] as $item_id=>$item){$native=sanro_studio_order_item_preview_inventory($order,$item_id);if(!empty($native['valid'])&&!empty($native['front'])&&!empty($native['back']))$count++;}
+        if($count){echo '<p>'.esc_html('Referensi preview privat depan/belakang tercatat pada '.$count.' item. Gunakan tautan preview pada setiap item pesanan di bawah.').'</p></div>';return;}
+    }
     foreach (['front' => 'Depan', 'back' => 'Belakang'] as $side => $label) {
         $state = $inventory[$side] === null
             ? 'Belum tersedia'

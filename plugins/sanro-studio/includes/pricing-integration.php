@@ -247,6 +247,7 @@ function sanro_studio_rest_pricing_draft_cart($request) {
 /** Hook registrations are gated by the independent adapter flag, default OFF. */
 function sanro_studio_register_pricing_integration_hooks() {
     if (!sanro_studio_pricing_wc_enabled()) return;
+    add_filter('woocommerce_get_item_data','sanro_studio_pricing_cart_item_data',20,2);
     add_filter('sanro_studio_pricing_authorized_design', 'sanro_studio_pricing_authorized_design', 10, 4);
     add_action('woocommerce_review_order_before_submit', 'sanro_studio_pricing_checkout_field', 5);
     add_action('wp_enqueue_scripts', 'sanro_studio_pricing_enqueue_checkout_auth', 30);
@@ -256,6 +257,17 @@ function sanro_studio_register_pricing_integration_hooks() {
     add_action('woocommerce_checkout_order_created', 'sanro_studio_pricing_lock_order', 10, 1);
     add_action('woocommerce_before_pay_action','sanro_studio_pricing_before_pay_order',10,1);
     add_action('woocommerce_pre_payment_complete','sanro_studio_pricing_before_payment_complete',5,1);
+}
+
+/** Friendly cart/checkout labels; never display tokens, private refs or browser prices. */
+function sanro_studio_pricing_cart_item_data($data,$line){
+    if(!is_array($data)||!is_array($line))return $data;
+    $id=$line['sanro_studio_design_id']??null;$size=$line['sanro_studio_size']??null;
+    if(!is_array($data)||!is_array($line)||($line['sanro_studio_pricing_version']??null)!==1
+        ||!is_string($id)||!preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD',$id)
+        ||!is_string($size)||!in_array($size,['S','M','L','XL','2XL','3XL','4XL','5XL'],true))return $data;
+    $data[]=['key'=>'Ukuran','value'=>$size,'display'=>esc_html($size)];
+    $data[]=['key'=>'Design ID','value'=>$id,'display'=>esc_html($id)];return $data;
 }
 
 function sanro_studio_pricing_checkout_field() {
