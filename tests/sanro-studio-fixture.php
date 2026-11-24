@@ -40,7 +40,7 @@ function update_option($key, $value, $autoload = null) {
     if ($key !== 'sanro_studio_options' || $autoload !== false) throw new RuntimeException('Unexpected option write');
     $GLOBALS['ss_writes'][] = [$key, $value]; $GLOBALS['ss_options'][$key] = $value;
 }
-function current_user_can($cap) { return $GLOBALS['ss_cap'] && $cap === 'manage_options'; }
+function current_user_can($cap) { return isset($GLOBALS['ss_caps']) ? !empty($GLOBALS['ss_caps'][$cap]) : ($GLOBALS['ss_cap'] && $cap === 'manage_options'); }
 function is_admin() { return $GLOBALS['ss_admin']; }
 class SS_Denied extends RuntimeException {}
 class SS_Redirect extends RuntimeException {}
@@ -65,8 +65,8 @@ function esc_attr($text) { return htmlspecialchars((string)$text, ENT_QUOTES, 'U
 function sanitize_key($text) { return preg_replace('/[^a-z0-9_\\-]/', '', strtolower((string)$text)); }
 function wp_unslash($value) { return $value; }
 function submit_button($label) { echo '<button>' . esc_html($label) . '</button>'; }
-function add_submenu_page(...$args) { $GLOBALS['ss_menu'] = $args; }
-function add_menu_page(...$args) { $GLOBALS['ss_menu'] = $args; }
+function add_submenu_page(...$args) { $GLOBALS['ss_submenus'][] = $args; }
+function add_menu_page(...$args) { $GLOBALS['ss_menu'] = $args; $GLOBALS['ss_menus'][] = $args; }
 function wp_remote_request(...$args) { throw new RuntimeException('Network forbidden'); }
 function ss_assert($condition, $label) {
     if (!$condition) throw new RuntimeException('FAIL: ' . $label);

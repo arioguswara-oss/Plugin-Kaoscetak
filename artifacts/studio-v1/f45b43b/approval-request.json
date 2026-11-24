@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "kind": "OWNER_APPROVAL_REQUEST_NOT_AN_APPROVAL",
-  "status": "PREPARED_CONDITIONAL_NOT_APPROVED",
+  "status": "SUPERSEDED_PREINSTALL_MENU_CORRECTION",
   "approved": false,
   "target_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
   "source_commit": "f45b43ba191ce49ffad67070e0643918765fe719",
@@ -76,5 +76,6 @@
     "scope": "read-only server diagnostics; no settings or order changes"
   },
   "runtime_proof_complete": false,
-  "runtime_proof_note": "Actual web PHP/GD/version/int64/limits are observed. Full capability/private-storage/flags/tree proof remains incomplete; SAPI is LiteSpeed, not FPM. No apply-ready approval file."
+  "runtime_proof_note": "Actual web PHP/GD/version/int64/limits are observed. Full capability/private-storage/flags/tree proof remains incomplete; SAPI is LiteSpeed, not FPM. No apply-ready approval file.",
+  "superseded_reason": "Owner requires one independent admin root; old source has status/storage under WooCommerce"
 }

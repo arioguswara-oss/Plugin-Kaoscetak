@@ -1,3 +1,5 @@
+> SUPERSEDED: pre-install admin menu correction. Do not install/approve this historical candidate; use ../CURRENT.json for its replacement once published.
+
 # SANRO Studio — pinned direct staging candidate
 
 Source `f45b43ba191ce49ffad67070e0643918765fe719`; feature `e9fb9c4`. Immutable plugin ZIP and manifest are copied byte-for-byte from the previously verified candidate; no rebuild or repeated application test was required. Readiness documentation/artefact commit can be newer than this deliberately pinned source. Only application code at this source is proposed for installation.

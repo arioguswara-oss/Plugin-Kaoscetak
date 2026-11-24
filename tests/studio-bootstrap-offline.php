@@ -21,7 +21,7 @@ check(in_array('sanro_studio_bootstrap_admin_menu', $GLOBALS['hooks']['admin_men
 check(in_array('sanro_studio_admin_menu', $GLOBALS['hooks']['admin_menu'] ?? array(), true), 'native settings admin hook');
 sanro_studio_bootstrap_admin_menu();
 check($GLOBALS['menu']['cap'] === 'manage_woocommerce', 'admin capability');
-check($GLOBALS['menu']['parent'] === 'woocommerce', 'WooCommerce menu');
+check($GLOBALS['menu']['parent'] === 'sanro-studio', 'status belongs to the independent Studio root');
 $status = sanro_studio_bootstrap_status();
 check(count($status) === 7, 'inventory plus gate/source fields');
 foreach (array('editor', 'cart', 'checkout', 'production') as $key) {

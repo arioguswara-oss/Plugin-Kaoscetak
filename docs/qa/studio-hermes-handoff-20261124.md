@@ -1,5 +1,7 @@
 # SANRO Studio — checkpoint setelah final native gap closure
 
+PRE-INSTALL CORRECTION terbaru: [Satu admin root independen](studio-admin-menu-correction-20261124.md). Kandidatf45b43b tidak lagi ditargetkan untuk apply. Gunakan artifacts/studio-v1/CURRENT.json setelah build pengganti; tidak perlu worker Hermes. Menu admin belum dideploy; order panels dan semua flags defaultOFF dipertahankan.
+
 Checkpoint strategi terbaru: [Direct staging readiness](studio-direct-staging-readiness-20261124.md). Lanjutkan langsung melalui Work/available connectors. Jack/Hermes bukan dependency dan file ini bukan trigger worker. Kandidat deployment tetap immutable sourcef45b43b; HEAD dokumentasi/artefak boleh lebih baru. Approval request dan plan422 ada di artifacts/studio-v1/f45b43b.
 
 24 November 2026 WIB. Draft PR52 / `work/studio-mobile-checkout-integration-20261123`, parent `591bf1b91bbbd5a29088f0123a5b0906d11f5cec`. Exact SHA hasil = HEAD yang membawa checkpoint ini dan `source_commit` di candidate-manifest.json/PR52. Baseline resmi tetap **90,50%, delta0**; bobot25/10/15/10/10/20/10, tahap95/94/96/96/98/97/40, subtotal90,35 + historical carry0,15. Jangan kalibrasi atau memberi kredit ulang atas scope historis.

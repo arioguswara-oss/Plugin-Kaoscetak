@@ -92,3 +92,8 @@ ChatGPT Work melanjutkan langsung via GitHub + WordPress MCP + Cloud Browser; Ja
 
 
 Direct follow-up: Owner secure browser login berhasil, Work membaca Site Health Info (PHP8.3.37/LiteSpeed64-bit/GD2.3.3,1536M limits) dan legacy Studio status saja. Tidak mengubah hosting/config/order atau menjalankan worker. Candidate sourcef45b43b immutable; request tetapapproved=false karena proof flags/private paths/full tree/capabilities belum lengkap.
+
+
+## Owner pre-install menu correction24 November2026
+
+Work mengubah hanya native menu registrations/guarded landing dan affected tests/docs. Root sanro-studio independen; status/storage pindah dari WooCommerce ke root; settings capabilitymanage_options dan operational capabilitymanage_woocommerce tetap. Order/product hooks tidak dihapus. Candidatef45b43b superseded; new source pin/ZIP/approval setelah build. Tidak ada staging plugin change, deploy, merge, order database, Jack/Hermes/Codex. Baseline90.50 tetap.

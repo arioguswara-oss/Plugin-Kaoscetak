@@ -43,9 +43,9 @@ if (!function_exists('sanro_studio_bootstrap_admin_page')) {
 if (!function_exists('sanro_studio_bootstrap_admin_menu')) {
     function sanro_studio_bootstrap_admin_menu() {
         add_submenu_page(
-            'woocommerce',
-            __('SANRO Studio', 'sanro-studio'),
-            __('SANRO Studio', 'sanro-studio'),
+            'sanro-studio',
+            __('Status Integrasi SANRO Studio', 'sanro-studio'),
+            __('Status Integrasi', 'sanro-studio'),
             'manage_woocommerce',
             'sanro-studio-status',
             'sanro_studio_bootstrap_admin_page'
@@ -108,8 +108,9 @@ if (defined('SANRO_STUDIO_ENABLE_LEGACY_COMPAT')
     add_filter('lumise_settings', 'sanro_studio_filter_settings', 100);
     add_action('plugins_loaded', 'sanro_studio_boot_runtime', 20);
 }
-add_action('admin_menu', 'sanro_studio_bootstrap_admin_menu');
+// Register the root before children so WordPress resolves stable page hooks.
 add_action('admin_menu', 'sanro_studio_admin_menu');
+add_action('admin_menu', 'sanro_studio_bootstrap_admin_menu');
 add_action('admin_post_sanro_studio_save', 'sanro_studio_save_settings');
 
 // Product configuration is editable only through WooCommerce product admin.

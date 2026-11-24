@@ -1,5 +1,9 @@
 # SANRO Studio — ledger aktif
 
+Terbaru: pre-install admin menu correction; satu root SANRO Studio di luar WooCommerce, seluruh child Studio dikonsolidasikan. Kandidat lamaf45b43b superseded; gunakan artifacts/studio-v1/CURRENT.json untuk kandidat pengganti.90,50% tetap; belum deploy.
+
+- [Perbaikan menu dan evidence](../qa/studio-admin-menu-correction-20261124.md)
+
 24 November2026 WIB: **90,50 →90,50%, delta0,00**, bobot tetap. Final native gap closure H04/H05/M06/M07 selesai pada kode. Full Audit tidak diulang; sign-off runtime/rilis **NO-GO** sampai E2E kandidat baru terverifikasi.
 
 Direct staging readiness telah menambah bukti real browser dan WordPress MCP. Cart/checkout klasik PASS; source runtime masih lama. Kandidat immutable f45b43b, request approval bersyarat dan plan422 tersedia di artifacts/studio-v1/f45b43b. Jack/Hermes bukan dependency.

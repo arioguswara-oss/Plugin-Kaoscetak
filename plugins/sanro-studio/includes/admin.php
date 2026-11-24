@@ -1,9 +1,26 @@
 <?php
 defined('ABSPATH') || exit;
 
+/** One independent root; retain both settings-admin and Woo manager access. */
 function sanro_studio_admin_menu() {
-    add_menu_page('SANRO Studio', 'SANRO Studio', 'manage_options',
-        'sanro-studio', 'sanro_studio_render_settings', 'dashicons-art', 56);
+    $capability = current_user_can('manage_options') ? 'manage_options' : 'manage_woocommerce';
+    add_menu_page('SANRO Studio', 'SANRO Studio', $capability,
+        'sanro-studio', 'sanro_studio_admin_landing', 'dashicons-art', 56);
+    add_submenu_page('sanro-studio', 'Pengaturan SANRO Studio', 'Pengaturan',
+        'manage_options', 'sanro-studio', 'sanro_studio_admin_landing');
+}
+
+/** Stable root URL: settings for administrators, status for Woo managers. */
+function sanro_studio_admin_landing() {
+    if (current_user_can('manage_options')) {
+        sanro_studio_render_settings();
+        return;
+    }
+    if (current_user_can('manage_woocommerce')) {
+        sanro_studio_bootstrap_admin_page();
+        return;
+    }
+    wp_die('Akses ditolak.', '', ['response' => 403]);
 }
 
 function sanro_studio_save_settings() {
