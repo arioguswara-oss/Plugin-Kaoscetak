@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "kind": "STAGING_INSTALL_REQUEST_CONDITIONAL",
+  "status": "OWNER_DIRECTIVE_AUTHORIZES_BUT_FRESH_GATES_BLOCK_APPLY",
+  "approved": false,
+  "target_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "source_commit": "c0413fdc477c1370435a20a3160fa4460f95fcf7",
+  "plugin_digest": "cc2be076c1fd6ca8a8768c1a785728616dcb079ad4605f605041f02acae95ea1",
+  "archive_sha256": "b0ce3263452ccc3ee7c3e6ef20bb22e25ced9c4a9463cb218977c27d339d2738",
+  "manifest_sha256": "a033a48595c8e17762f4b291b9d4a720e10dfcefbaa70ad0052c56da0d38bb4c",
+  "expected_existing_tree_digest_from_prior_approval": "e58d3cd03d3dba87ce17d8121e19720ab2dc9939394130c9fcd142ce8fd7bab9",
+  "existing_tree_digest_freshly_verified": false,
+  "fresh_staging_identity": "NOT_VERIFIED; SSH authentication failed",
+  "production_isolation": "NOT_VERIFIED_IN_THIS_EXECUTION",
+  "mandatory_gate": "BLOCKED; no apply attempted",
+  "writers": {"checkout": "OFF", "DTF": "OFF", "Drive": "OFF", "storage_GC": "OFF"},
+  "excluded": ["production", "merge", "real payment", "existing order mutation", "gateway configuration"],
+  "apply_contract": "Use the pinned official installer only after fresh staging identity, production isolation, installed digest, journal/lock/recovery, private storage and all required flags are verified. Preserve activation and data; abort on any mismatch."
+}

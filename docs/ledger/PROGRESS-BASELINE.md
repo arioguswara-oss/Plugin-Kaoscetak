@@ -1,5 +1,11 @@
 # SANRO Studio — satu baseline resmi development
 
+## Milestone: candidate V1 dibangun; final install terblokir — 24 November 2026
+
+Source `c0413fdc477c1370435a20a3160fa4460f95fcf7`; paket kandidat 77 file dibangun dua kali dengan ZIP dan manifest identik. PHP CLI lint + candidate PLAN_ONLY preflight PASS; menu/admin contract 54 assertions PASS. Artefak ada di [paket c0413fd](../../artifacts/studio-v1/c0413fd/README.md), termasuk ZIP, manifest, SHA256SUMS, evidence dan request kondisional. Checksum ZIP `b0ce3263452ccc3ee7c3e6ef20bb22e25ced9c4a9463cb218977c27d339d2738`; manifest `a033a48595c8e17762f4b291b9d4a720e10dfcefbaa70ad0052c56da0d38bb4c`.
+
+**Belum Final Release dan belum terinstal.** Fresh SSH staging identity gagal autentikasi di sandbox dan escalation resmi. Akibatnya current existing-tree digest, production isolation, web SAPI, installer journal/lock/crash state, flags/private roots, installed candidate, live admin, synthetic checkout/order, dan DTF order output NOT TESTED. Tidak ada remote mutation. OAuth/provider Drive dan private folder staging belum tersedia; konfigurasi yang dibutuhkan tercantum pada [instruksi Drive Owner](../qa/studio-drive-owner-configuration-20261124.md). Baseline resmi tetap **92,00% (+0,00)**: candidate packaging dan status UI bukan live acceptance baru.
+
 ## Milestone: admin status clarification dan release gate — 24 November 2026
 
 Dashboard independen SANRO Studio kini membedakan kode checkout WooCommerce yang tersedia dari writer staging yang masih OFF; deskripsi preferensi native diperjelas. Panel order tetap dipertahankan. Regression contract **54 assertions PASS**, PHP lint dan `git diff --check` PASS. Baseline resmi tetap **92,00% (+0,00)** karena perubahan copy/status bukan bukti E2E baru.
