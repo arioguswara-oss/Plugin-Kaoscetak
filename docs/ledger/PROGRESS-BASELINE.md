@@ -1,5 +1,12 @@
 # SANRO Studio — satu baseline resmi development
 
+## Takeover milestone — kandidat terpasang, runtime gate PASS
+
+Source `79e0a93f77bd03be0760ca179383375426284b8f` terpasang lewat konektor WordPress dan transport instalasi exact-target. Fresh authenticated web gate PASS, PHP8.3.37 LiteSpeed, hash terpasang `33f481d937aca3d9533bb02995524929326809ad92ec5c60b94efeaddcf53936` cocok dengan ZIP yang dihitung independen, journal committed dan backup lama retained terverifikasi. Setelah sesi browser pulih, kandidat sudah terpasang sehingga tidak diinstal ulang. Semua flag checkout legacy/DTF/Drive/GC OFF; private roots PASS. Evidence: `artifacts/studio-v1/79e0a93/installation-execution.json`.
+
+Simpan draft pengguna login kini PASS pada kandidat baru; temuan403 sebelumnya teratasi untuk skenario ini. Preview/quote/cart/order/DTF/Drive acceptance masih berlangsung, belum ada order atau pembayaran. Baseline **92,00% →92,00%, delta0,00**: instalasi tidak dihitung dua kali. Belum Final Release.
+
+
 ## Takeover Work — 24 November 2026, gate instalasi via WordPress
 
 Owner mengotorisasi instalasi staging dan maksimal satu order sintetis tanpa pembayaran nyata. Checkpoint `887fe96`, kandidat awal `c0413fd`, dan live source `fad47c6` telah dibaca ulang. Sesi admin Cloud Browser terautentikasi; menu independen dan storage GC OFF teramati. Tidak memakai SSH Codex, tidak memulai Full Audit atau worker lain.

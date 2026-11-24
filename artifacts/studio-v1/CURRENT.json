@@ -9,10 +9,10 @@
   "reason": "Candidate includes admin status clarification; not installed; fresh SSH staging gates currently blocked",
   "deployment_authorized": false,
   "staging_installation_authorized": true,
-  "runtime_e2e": "NOT_TESTED_FOR_THIS_CANDIDATE",
-  "staging_installation_state": "PENDING_WORDPRESS_TRANSPORT_FRESH_GATE",
-  "currently_installed_source": "fad47c6f508258d594f92daca79c337d6911b404",
-  "installed_tree_digest": "NOT_VERIFIED_FOR_CURRENT_CANDIDATE",
+  "runtime_e2e": "IN_PROGRESS",
+  "staging_installation_state": "INSTALLED_FRESH_WEB_GATE_PASS",
+  "currently_installed_source": "79e0a93f77bd03be0760ca179383375426284b8f",
+  "installed_tree_digest": "33f481d937aca3d9533bb02995524929326809ad92ec5c60b94efeaddcf53936",
   "execution_evidence": "artifacts/studio-v1/c0413fd/readiness-evidence.json",
   "final_release": false
 }
