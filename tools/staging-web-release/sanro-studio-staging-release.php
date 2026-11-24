@@ -2,7 +2,7 @@
 /*
 Plugin Name: SANRO Studio Staging Release Transport
 Description: Exact-target, hash-bound administrator release transport. No shell, public API, scheduled writer or automatic installation.
-Version: 0.1.0
+Version: 0.2.0
 */
 defined('ABSPATH') || exit;
 require_once __DIR__.'/transaction.php';
@@ -11,6 +11,7 @@ const SSWR_DOCROOT='/home/u606139982/domains/saddlebrown-peafowl-616656.hostinge
 const SSWR_BEFORE='60c8b0f3a272b024537e152fe46763c31b1beafcb36933fa2e57bb115c132273';
 // Populated by the reproducible transport builder, never by an HTTP parameter.
 require __DIR__.'/binding.php';
+require_once __DIR__.'/acceptance.php';
 function sswr_identity() {
     if (rtrim(home_url('/'),'/')!==SSWR_TARGET || rtrim(site_url('/'),'/')!==SSWR_TARGET || is_multisite()
         || realpath(ABSPATH)!==SSWR_DOCROOT || realpath($_SERVER['DOCUMENT_ROOT']??'')!==SSWR_DOCROOT
@@ -130,7 +131,23 @@ function sswr_page() {
         $gate=sswr_preflight();echo '<pre>'.esc_html(wp_json_encode($gate,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)).'</pre>';
         if(!$gate['installed']) {echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'">';submit_button('Install approved staging candidate');echo '</form>';}
         if(function_exists('sanro_studio_runtime_readiness'))echo '<h2>Runtime readiness</h2><pre>'.esc_html(wp_json_encode(sanro_studio_runtime_readiness(24),JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)).'</pre>';
+        sswr_acceptance_page();
     } catch(Throwable $e) {error_log('SANRO staging release gate: '.get_class($e));echo '<p>NO-GO: '.esc_html($e instanceof RuntimeException?$e->getMessage():'release_validation_failed').'</p>';}
     echo '</div>';
 }
 add_action('admin_menu',static function(){if(rtrim(home_url('/'),'/')===SSWR_TARGET)add_management_page('SANRO staging release','SANRO staging release','install_plugins','sanro-staging-release','sswr_page');});
+
+add_action('admin_init',static function(){
+    if(($_GET['page']??null)!=='sanro-staging-release'||($_SERVER['REQUEST_METHOD']??'')!=='POST'||!isset($_POST['acceptance']))return;
+    sswr_identity();
+    if(!current_user_can('manage_options')||!current_user_can('install_plugins')||!current_user_can('manage_woocommerce'))wp_die('Forbidden',403);
+    check_admin_referer('sswr-'.SSWR_SOURCE);
+    if(($_POST['source']??null)!==SSWR_SOURCE)wp_die('Source mismatch',409);
+    try{
+        if($_POST['acceptance']==='create_unpaid')$result=sswr_create_synthetic_order();
+        elseif($_POST['acceptance']==='dtf')$result=sswr_generate_synthetic_dtf();
+        else throw new RuntimeException('unsupported_acceptance_action');
+        sswr_write(sswr_private_root().'/acceptance-status.json',wp_json_encode(['state'=>'PASS','action'=>$_POST['acceptance']]));
+    }catch(Throwable $e){$code=$e instanceof RuntimeException&&preg_match('/^[A-Za-z0-9_]{1,160}$/D',$e->getMessage())?$e->getMessage():'acceptance_failed_requires_readback';sswr_write(sswr_private_root().'/acceptance-status.json',wp_json_encode(['state'=>'NO_GO','error'=>$code]));}
+    wp_safe_redirect(admin_url('tools.php?page=sanro-staging-release'),303);exit;
+});
