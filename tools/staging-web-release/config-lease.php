@@ -29,6 +29,11 @@ function sswr_false_flag_offsets($source) {
         if(count($parts)===1&&$parts[0][0]===T_CONSTANT_ENCAPSED_STRING){$name=substr($parts[0][1],1,-1);foreach(sswr_dtf_config_flags() as $flag)if($name==='SANRO_STUDIO_ENABLE_'.$flag)$flags[]=$flag;}
         elseif(array_filter($parts,static function($t){return $t[0]===T_VARIABLE;}))$flags=array_keys($known);
         if($flags)$matches[]=['flags'=>$flags,'name_expression'=>$argument,'offset'=>$tokens[$j+1][2],'bytes'=>strlen($tokens[$j+1][1])];
+    }
+    // Hostinger's existing SANRO MU preset uses an explicit flag=>false map.
+    // Only the five known DTF keys are changed; no other array entry is eligible.
+    foreach($tokens as $i=>$t)if($t[0]===T_CONSTANT_ENCAPSED_STRING&&($tokens[$i+1][0]??null)===T_DOUBLE_ARROW&&($tokens[$i+2][0]??null)===T_STRING&&strtolower($tokens[$i+2][1])==='false'){
+        $name=substr($t[1],1,-1);foreach(sswr_dtf_config_flags() as $flag)if($name===$flag||$name==='SANRO_STUDIO_ENABLE_'.$flag)$matches[]=['flags'=>[$flag],'name_expression'=>var_export('SANRO_STUDIO_ENABLE_'.$flag,true),'offset'=>$tokens[$i+2][2],'bytes'=>strlen($tokens[$i+2][1])];
     }return $matches;
 }
 function sswr_config_lease($record=null) {

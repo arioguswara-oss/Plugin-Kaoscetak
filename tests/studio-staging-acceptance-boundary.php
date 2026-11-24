@@ -7,6 +7,7 @@ function wp_json_encode($v,$flags=0){return json_encode($v,$flags);}
 function sswr_preflight($lease=false){return ['installed'=>true];}
 function sswr_config_lease_live(){return false;}
 function current_user_can($v){return true;}
+function add_action(...$args){}
 function wc_load_cart(){throw new RuntimeException('unexpected_cart_or_order_creation');}
 function WC(){throw new RuntimeException('unexpected_cart_or_order_creation');}
 function wc_get_order($id){return new class($id){private $id;function __construct($id){$this->id=$id;}function get_id(){return $this->id;}function is_paid(){return false;}function get_currency(){return 'IDR';}function get_total(){return '240000';}function get_status(){return 'pending';}function get_customer_id(){return 0;}function get_items(){return [];}};}

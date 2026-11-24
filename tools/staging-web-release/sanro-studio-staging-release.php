@@ -2,7 +2,7 @@
 /*
 Plugin Name: SANRO Studio Staging Release Transport
 Description: Exact-target, hash-bound administrator release transport. No shell, public API, scheduled writer or automatic installation.
-Version: 0.3.2
+Version: 0.3.3
 */
 defined('ABSPATH') || exit;
 require_once __DIR__.'/transaction.php';

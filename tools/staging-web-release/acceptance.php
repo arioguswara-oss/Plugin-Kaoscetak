@@ -94,7 +94,9 @@ function sswr_acceptance_page() {
     $record=sswr_acceptance_record();
     if($record){
         echo '<pre>'.esc_html(wp_json_encode($record,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)).'</pre>';
-        if(!empty($record['order_id'])){echo '<a href="'.esc_url(wc_get_order($record['order_id'])->get_edit_order_url()).'">Open synthetic WooCommerce order</a>';echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'"><input type="hidden" name="acceptance" value="dtf">';submit_button('Generate private DTF and PDF for this order','primary','sswr_generate');echo '</form>';
+        if(!empty($record['order_id'])){echo '<a href="'.esc_url(wc_get_order($record['order_id'])->get_edit_order_url()).'">Open synthetic WooCommerce order</a>';
+            if(!empty($record['local_package']))echo '<p><a href="'.esc_url(wp_nonce_url(admin_url('admin-post.php?action=sswr_download_package'),'sswr-download-'.SSWR_SOURCE)).'">Download private order56 acceptance package</a></p>';
+            echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'"><input type="hidden" name="acceptance" value="dtf">';submit_button('Generate private DTF and PDF for this order','primary','sswr_generate');echo '</form>';
             foreach(['arm_dtf'=>'Arm bounded DTF configuration for this order','restore_dtf'=>'Restore original DTF configuration','package_local'=>'Build private PDF and manifest without DTF'] as $action=>$label){echo '<form method="post">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'"><input type="hidden" name="acceptance" value="'.esc_attr($action).'">';submit_button($label,'primary','sswr_'.$action);echo '</form>';}
         }
         return;
@@ -102,3 +104,16 @@ function sswr_acceptance_page() {
     sswr_acceptance_cart();echo '<form method="post" class="checkout">';wp_nonce_field('sswr-'.SSWR_SOURCE);echo '<input type="hidden" name="source" value="'.esc_attr(SSWR_SOURCE).'"><input type="hidden" name="acceptance" value="create_unpaid">';sanro_studio_pricing_checkout_field();submit_button('Create the single synthetic unpaid order','primary','sswr_create');echo '</form>';
     wp_enqueue_script('sanro-acceptance-auth',plugins_url('sanro-studio/assets/checkout-auth.js'),['jquery'],'0.1.0',true);
 }
+add_action('admin_post_sswr_download_package',static function(){
+    if(!current_user_can('manage_options')||!current_user_can('manage_woocommerce'))wp_die('Forbidden',403);
+    check_admin_referer('sswr-download-'.SSWR_SOURCE);sswr_preflight();$r=sswr_acceptance_record();if(($r['order_id']??null)!==56||empty($r['local_package']))wp_die('Package unavailable',409);sswr_acceptance_order_summary(wc_get_order(56));
+    $root=sswr_private_root();$path=$root.'/order-56-acceptance.zip';if(is_link($path))wp_die('Unsafe package',409);$zip=new ZipArchive();if($zip->open($path,ZipArchive::CREATE|ZipArchive::OVERWRITE)!==true)wp_die('Package unavailable',500);
+    $count=0;$size=0;
+    foreach(['production-package','dtf-acceptance'] as $kind){$dir=$root.'/'.$kind;if(!is_dir($dir))continue;
+        foreach(new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir,FilesystemIterator::SKIP_DOTS)) as $file){
+            if($file->isLink()||!$file->isFile()||++$count>100||($size+=$file->getSize())>33554432){$zip->close();wp_die('Package boundary refused',409);}
+            $relative=substr($file->getPathname(),strlen($dir)+1);if(!preg_match('~^[A-Za-z0-9_./-]+$~D',$relative)||strpos($relative,'..')!==false){$zip->close();wp_die('Package boundary refused',409);}
+            $zip->addFile($file->getPathname(),$kind.'/'.$relative);
+        }
+    }$zip->close();chmod($path,0600);nocache_headers();header('Content-Type: application/zip');header('Content-Disposition: attachment; filename="sanro-studio-order-56-acceptance.zip"');header('Content-Length: '.filesize($path));readfile($path);exit;
+});

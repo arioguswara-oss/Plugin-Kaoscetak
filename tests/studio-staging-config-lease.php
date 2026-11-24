@@ -7,6 +7,7 @@ $base=sys_get_temp_dir().'/sswr-config-'.bin2hex(random_bytes(8));mkdir($base,07
 function sswr_identity(){}function sswr_private_root(){return $GLOBALS['base'].'/private';}function wp_json_encode($v,$flags=0){return json_encode($v,$flags);}
 $code="<?php\n// define('SANRO_STUDIO_ENABLE_DTF_ADMIN_GENERATE', false);\n\$sample=\"define('SANRO_STUDIO_ENABLE_DTF_ADMIN_GENERATE', false)\";\ndefine('SANRO_STUDIO_ENABLE_DTF_ADMIN_GENERATE', false);\ndefine('SANRO_STUDIO_ENABLE_STORAGE_GC', false);\n";
 $matches=sswr_false_flag_offsets($code);if(count($matches)!==1||substr($code,$matches[0]['offset'],$matches[0]['bytes'])!=='false')throw new RuntimeException('unsafe_parser_match');
+$mapped='<?php $flags=["DTF_ADMIN_GENERATE"=>false,"STORAGE_GC"=>false,"DRIVE_MASTER_EXPORT"=>false];';$mm=sswr_false_flag_offsets($mapped);if(count($mm)!==1||$mm[0]['flags']!==['DTF_ADMIN_GENERATE']||substr($mapped,$mm[0]['offset'],$mm[0]['bytes'])!=='false')throw new RuntimeException('map_allowlist_failed');
 $dynamic="<?php $"."flags=['DTF_ADMIN_GENERATE','STORAGE_GC'];foreach($"."flags as $"."key)define('SANRO_STUDIO_ENABLE_'.$"."key,false);";
 $dm=sswr_false_flag_offsets($dynamic);if(count($dm)!==1||$dm[0]['flags']!==['DTF_ADMIN_GENERATE']||$dm[0]['name_expression']!=="'SANRO_STUDIO_ENABLE_'.".'$key')throw new RuntimeException('dynamic_declaration_invalid');
 $bounded="(in_array((".$dm[0]['name_expression']."),['SANRO_STUDIO_ENABLE_DTF_ADMIN_GENERATE'],true) && (\$_SERVER['REQUEST_METHOD']??'')==='POST')";
