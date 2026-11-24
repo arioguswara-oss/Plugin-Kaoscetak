@@ -1,8 +1,9 @@
 # SANRO Studio — ledger aktif
 
-Terbaru: koreksi menu admin independen terverifikasi ulang di isolated PR #52 HEAD `e5c7d1e`; kandidat `8d817c2` dan ZIP SHA tetap valid.48 menu assertions, bootstrap, foundation/settings, lint, checksum dan 78-member preflight PASS.90,50% tetap; runtime staging/E2E belum teruji, belum deploy.
+Terbaru: staging runtime preflight diblokir oleh kebijakan remote SSH (`SANRO_AGENT_BLOCKED`); tidak ada remote command yang berjalan. Candidate/installer hashes tetap terikat, approval hanya kondisional dan tidak disetujui. Production separation, current runtime/private storage/plugins/source digest dan flags belum terverifikasi.90,50% tetap; instalasi NO-GO.
 
 - [Perbaikan menu dan evidence](../qa/studio-admin-menu-correction-20261124.md)
+- [Staging runtime preflight dan blocker](../qa/studio-runtime-preflight-20261124.md)
 
 24 November2026 WIB: **90,50 →90,50%, delta0,00**, bobot tetap. Final native gap closure H04/H05/M06/M07 selesai pada kode. Full Audit tidak diulang; sign-off runtime/rilis **NO-GO** sampai E2E kandidat baru terverifikasi.
 
