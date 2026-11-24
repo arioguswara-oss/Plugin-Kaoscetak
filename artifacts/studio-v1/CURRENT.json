@@ -8,9 +8,10 @@
   "supersedes": "081a63f78b88a3139327af6a545be1993b48506f",
   "reason": "Fixes Hostinger string transient handling; app master-upload quota remains 10/hour and fail-closed",
   "deployment_authorized": false,
-  "staging_installation_authorized": false,
-  "runtime_e2e": "NOT_TESTED",
-  "staging_installation_state": "NOT_INSTALLED_OWNER_APPROVAL_REQUIRED",
-  "currently_installed_source": "081a63f78b88a3139327af6a545be1993b48506f",
-  "installed_tree_digest": "8d560cdb95611da98dc4a739737dff30ab9ac35f4ec6866defb8093808fd37db"
+  "staging_installation_authorized": true,
+  "runtime_e2e": "PASS_BUYER_SYNTHETIC_FRONT_BACK_PREVIEW_MULTI_SIZE_QUOTE",
+  "staging_installation_state": "INSTALLED_AND_VERIFIED",
+  "currently_installed_source": "fad47c6f508258d594f92daca79c337d6911b404",
+  "installed_tree_digest": "60c8b0f3a272b024537e152fe46763c31b1beafcb36933fa2e57bb115c132273",
+  "execution_evidence": "artifacts/studio-v1/fad47c6/installation-execution.json"
 }

@@ -6,7 +6,7 @@
 - Plugin digest: `6d65fde1ceda80b1551da51817ccef14f0d618f1d5dffdcfcb412a8c129cc2bb`
 - Existing installed tree digest: `8d560cdb95611da98dc4a739737dff30ab9ac35f4ec6866defb8093808fd37db`
 - Target: `https://saddlebrown-peafowl-616656.hostingersite.com`
-- Status: built and local PLAN_ONLY preflight PASS; **not installed**; Owner approval required.
+- Status: exact Owner-approved candidate installed on the approved staging site; post-install runtime and buyer functional QA PASS. See `installation-execution.json`.
 - Fix: normalize only bounded nonnegative decimal transient counters returned as strings; malformed/exhausted values still fail closed and the ten-per-hour limit is unchanged.
-- Scope excludes install, production, merge, checkout/order/payment and feature-flag changes. DTF, Drive, storage GC and checkout writer remain OFF.
-- Read `approval-request.json`; it is a request, not authorization. Text-only preview and multi-size quote PASS on staging. Image-backed master/preview/quote QA remains open; the historical HTTP 422 root cause is unverified. The package is not installed and requires exact Owner approval.
+- Scope excludes production, merge, order/payment and feature-flag changes. DTF, Drive, storage GC and checkout writer remain OFF; checkout/order/payment flows were not exercised.
+- `approval-request.json` records Owner authorization and exact installed hashes. Image-backed front/back masters, private previews, multi-size quote, and desktop/mobile browser verification PASS. HTTP 422 did not recur; the historical response body was not retained, so its original root cause is not asserted. Four screenshots remain private under Hermes `owner-private/`.

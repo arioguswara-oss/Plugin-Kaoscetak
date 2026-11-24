@@ -1,5 +1,9 @@
 # SANRO Studio — satu baseline resmi development
 
+## Checkpoint terbaru — staging update dan buyer completion
+
+[Evidence instalasi dan QA buyer](../qa/studio-staging-update-buyer-completion-20261124.md). Kandidat Owner-approved `fad47c6` sudah terpasang di staging melalui installer terkunci, journal `committed`, rollback tepat dan terverifikasi. Plugin aktif, satu menu top-level independen, asset fingerprints, master/preview privat depan-belakang, multi-size M=2/L=1, quote IDR 393.000, dan browser desktop/mobile **PASS**. DTF, Drive, storage GC, checkout writer, order/payment dan production tetap OFF/tidak disentuh. Screenshot admin **NOT TESTED** karena sesi autentikasi browser tidak tersedia. Baseline tetap **90,50% → 90,50%, delta 0,00**; tidak ada bobot subfitur QA resmi untuk kredit persentase baru.
+
 Checkpoint aktif: [Pre-install menu correction](../qa/studio-admin-menu-correction-20261124.md). Satu root independen SANRO Studio; Pengaturan, Status Integrasi dan Storage Privat seluruhnya di bawah root. Capability, settings dan Woo order panels dipertahankan.48 targeted checks + affected settings/bootstrap/lint PASS. Baseline tetap90,50%; kandidatf45b43b superseded dan diganti ZIP/source manifest baru yang ditunjuk artifacts/studio-v1/CURRENT.json setelah build. Tidak ada instalasi/staging mutation.
 
 Checkpoint runtime berikutnya: [Live staging functional QA](../qa/studio-live-staging-functional-qa-20261124.md). Playwright Chromium desktop/mobile, asset fingerprint, editor layout and synthetic front/back geometry PASS. One staging-only synthetic draft and front private master upload/readback PASS; the second master was stopped by HTTP429 per-draft rate limit. Preview, complete quote and historic HTTP422 root cause remain unresolved; no cart/order/payment or production writer was used. Admin menu registration remains one independent root, but authenticated admin screenshot NOT TESTED. Official progress remains90,50%, delta0.

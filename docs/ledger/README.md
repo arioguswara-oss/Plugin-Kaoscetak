@@ -1,6 +1,6 @@
 # SANRO Studio — ledger aktif
 
-Terbaru: [staging installation and post-install smoke](../qa/studio-staging-installation-20261124.md). Exact Owner-approved `081a63f` candidate installed through the official locked, journaled installer; rollback retained. Installed digest, active plugin/WooCommerce, menu hierarchy, integration hooks, editor GET and served asset hashes PASS. Browser screenshot/JS, checkout/order/payment E2E NOT TESTED; DTF/Drive/GC remain OFF. No production/merge/order mutation. Development baseline90,50%, delta0.
+Terbaru: [staging update dan buyer completion](../qa/studio-staging-update-buyer-completion-20261124.md). Exact Owner-approved `fad47c6` candidate installed through the official locked, journaled installer; exact rollback retained. Installed digest, active plugin/WooCommerce, one SANRO menu root, asset fingerprints, synthetic front/back masters and previews, multi-size quote and desktop/mobile browser verification PASS. Admin screenshot and checkout/order/payment remain NOT TESTED; DTF/Drive/GC/checkout writer remain OFF. No production/merge/order mutation. Development baseline **90,50% → 90,50%, delta 0,00**; no unapproved QA weighting added.
 
 - [Perbaikan menu dan evidence](../qa/studio-admin-menu-correction-20261124.md)
 - [Staging runtime preflight dan blocker](../qa/studio-runtime-preflight-20261124.md)
