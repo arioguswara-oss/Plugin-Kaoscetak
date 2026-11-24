@@ -1,6 +1,6 @@
 # SANRO Studio — ledger aktif
 
-Terbaru: [installer self-fix and full dry-run](../qa/studio-installer-dry-run-20261124.md). Sparse WordPress active-plugin JSON is normalized by the official probe with sanitized actual-runtime regression coverage. Targeted tests, local preflight and Hostinger plan-only PASS; identity, LiteSpeed SAPI, private storage, writer flags, lock/journal and crash-recovery checks PASS. Final package: `artifacts/studio-v1/081a63f`; exact approval request remains `approved:false`. GO to request approval; no install/deploy/merge/production/order write. Baseline90,50%, delta0.
+Terbaru: [staging installation and post-install smoke](../qa/studio-staging-installation-20261124.md). Exact Owner-approved `081a63f` candidate installed through the official locked, journaled installer; rollback retained. Installed digest, active plugin/WooCommerce, menu hierarchy, integration hooks, editor GET and served asset hashes PASS. Browser screenshot/JS, checkout/order/payment E2E NOT TESTED; DTF/Drive/GC remain OFF. No production/merge/order mutation. Development baseline90,50%, delta0.
 
 - [Perbaikan menu dan evidence](../qa/studio-admin-menu-correction-20261124.md)
 - [Staging runtime preflight dan blocker](../qa/studio-runtime-preflight-20261124.md)

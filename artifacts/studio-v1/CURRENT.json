@@ -6,7 +6,11 @@
   "manifest_sha256": "7452cbc476266cd3d36454445ebacbd0bb06dd1add80a6fe91277755501b9177",
   "plugin_digest": "f21bcd20f5bdb8013d1a939d09761d4af3a0b2b96b4ef4790fd09616600d63d2",
   "supersedes": "793784f5c33c885dfd9f1b7a52a5e0786f072194",
-  "reason": "Installer probe normalized actual sparse WordPress active_plugins JSON-object shape; official Hostinger plan-only dry-run PASS; candidate remains unapproved",
+  "reason": "Exact Owner-approved candidate installed on staging through locked journaled transaction; rollback retained; post-install smoke PASS without orders or writers",
   "deployment_authorized": false,
-  "runtime_e2e": "NOT_TESTED"
+  "runtime_e2e": "NOT_TESTED",
+  "staging_installation_authorized": true,
+  "installation_state": "files_replaced",
+  "installed_tree_digest": "8d560cdb95611da98dc4a739737dff30ab9ac35f4ec6866defb8093808fd37db",
+  "owner_approval": "explicit conversation approval for exact candidate and staging only"
 }
