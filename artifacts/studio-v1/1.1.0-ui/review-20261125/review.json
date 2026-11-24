@@ -1,0 +1,153 @@
+{
+  "date": "2026-11-25",
+  "mode": "REVIEW_ONLY_NO_SOURCE_OR_INSTALL_CHANGES",
+  "checkpoint": "0c34acaa51cf00f738ce31cea8e39777fa8f1d43",
+  "installed_source": "12b2c043cc6ccbb3e7c828949bf524ff6f2e84b1",
+  "version": "1.1.0",
+  "target": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "functional_baseline_before": 96.5,
+  "functional_baseline_after": 96.5,
+  "delta": 0,
+  "decision": "NO_GO_VISUAL_ACCEPTANCE",
+  "coverage": {
+    "desktop_css": [
+      1363,
+      936
+    ],
+    "narrow_desktop_probe_css": [
+      454,
+      312
+    ],
+    "narrow_method": "Native browser zoom300%, restored100% afterward",
+    "phone_portrait": "NOT_TESTED",
+    "touch": "NOT_TESTED",
+    "reason": "Browser policy denies DevTools. No supported viewport/touch API advertised. No policy bypass. Full-page screenshots timed out twice; viewport captures used."
+  },
+  "scores": {
+    "method": "Human-style heuristic against primary references; observed desktop only. Responsiveness15% withheld. Normalized observed index = weighted subtotal /85 *100, not a completed100%-coverage total.",
+    "buyer": {
+      "visual_35": 55,
+      "interaction_desktop_25": 78,
+      "usability_20": 52,
+      "responsiveness_15": null,
+      "consistency_5": 65,
+      "weighted_subtotal_out_of_85": 52.4,
+      "normalized_observed_index_out_of_100": 62,
+      "final_full_coverage_score": null
+    },
+    "administrator": {
+      "visual_35": 68,
+      "interaction_desktop_25": 82,
+      "usability_20": 62,
+      "responsiveness_15": null,
+      "consistency_5": 68,
+      "weighted_subtotal_out_of_85": 60.1,
+      "normalized_observed_index_out_of_100": 71,
+      "final_full_coverage_score": null
+    }
+  },
+  "tests": [
+    {
+      "test": "Catalog search match and no-result state",
+      "result": "PASS"
+    },
+    {
+      "test": "Text insertion / drag / resize22to34px / D-pad1% / center",
+      "result": "PASS_DESKTOP",
+      "limit": "No FPS measurement or touch claim"
+    },
+    {
+      "test": "Front/back independent text retained",
+      "result": "PASS"
+    },
+    {
+      "test": "Upload synthetic RGB PNG180x180 and private master readback",
+      "result": "PASS",
+      "limit": "Manual save then Upload original required"
+    },
+    {
+      "test": "Background removal on opaque white fixture",
+      "result": "PASS_WITH_P1_STATE_BUG",
+      "detail": "Disabled immediately after verified master upload; front/back toggle then enabled; removal succeeded"
+    },
+    {
+      "test": "Image drag / resize60to69% / D-pad / center / local delete",
+      "result": "PASS_DESKTOP",
+      "detail": "Local unsaved deletion reverted by reload; saved review draft reopened successfully"
+    },
+    {
+      "test": "Color black, preview sizeL, S/M/Lqty1",
+      "result": "PASS"
+    },
+    {
+      "test": "A5 save rejects too-large text",
+      "result": "PASS_VALIDATION_UX_GAP",
+      "detail": "Error displayed in save status, no field/side guidance; validation hidden in advanced panel"
+    },
+    {
+      "test": "A3+ two-side draft save and reopen",
+      "result": "PASS",
+      "review_draft_prefix": "46d10141"
+    },
+    {
+      "test": "Estimate and official server quote for saved review draft",
+      "result": "PASS",
+      "total_IDR": 390000,
+      "items": {
+        "S": 127000,
+        "M": 130000,
+        "L": 133000
+      },
+      "quantity_each": 1,
+      "payment_tested": false
+    },
+    {
+      "test": "Collection view / load session without verified collection credentials",
+      "result": "PARTIAL",
+      "detail": "Access form observed; no authenticated collection cards. Reopen/PesanLagi/share not tested; no OTP/email requested"
+    },
+    {
+      "test": "Admin summary single-render requirement",
+      "result": "FAIL",
+      "observed_shell_count": 2
+    },
+    {
+      "test": "Admin settings/products/mockup/variants/prices/storage/orders navigation",
+      "result": "PASS_DESKTOP"
+    },
+    {
+      "test": "Admin print-zone drag/resize and keyboard",
+      "result": "PASS_UNSAVED",
+      "detail": "x27to31.5,y22to24.5; size46x54to49.6x57.2; reload restoresx27; no product save"
+    },
+    {
+      "test": "Drive setup visual disconnected state",
+      "result": "PASS_VISUAL_ONLY",
+      "detail": "Client ID/secret/folder/Picker fields empty. Connection NOT CONFIGURED and auto export OFF. No OAuth/test/upload performed"
+    },
+    {
+      "test": "Existing order56 preview front/back and PDF download",
+      "result": "PASS",
+      "detail": "3 Studio item panels; first item two preview images; native guide PDF download completed"
+    },
+    {
+      "test": "Private production Drive folder/download",
+      "result": "DEFERRED_BY_OWNER_NOT_A_BLOCKER"
+    },
+    {
+      "test": "Document horizontal overflow at measured desktop/narrow pages",
+      "result": "PASS_SPOT_CHECK_ONLY",
+      "detail": "Measured scrollWidth<=innerWidth at editor, collection, summary, settings, Drive, area. Not a mobile acceptance"
+    },
+    {
+      "test": "Phone portrait, touch, populated collection actions",
+      "result": "NOT_TESTED"
+    },
+    {
+      "test": "Payment / new order / DTF generation / installation / source modification",
+      "result": "NOT_PERFORMED_BY_SCOPE"
+    }
+  ],
+  "privacy": "Only concept references and cropped credential-free screenshots; no auth state, nonce URLs, tokens, private contacts or PDF files published. Sources original JPEG despite upload .png names; references copied byte-for-byte and renamed .jpg.",
+  "next": "Fix prioritized UI issues in one authorized implementation round, then focused desktop and real phone/touch acceptance."
+}

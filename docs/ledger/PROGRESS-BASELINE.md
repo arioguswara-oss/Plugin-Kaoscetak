@@ -1,6 +1,11 @@
 # SANRO Studio — satu baseline resmi development
 
-## ACTIVE — Owner approved UI refinement in progress
+## ACTIVE — UI1.1.0 live review, refinement required
+
+25 November2026: remote checkpoint0c34aca confirms installed1.1.0/source12b2c04. Direct Cloud Browser desktop review completed; old browser-unavailable/install-pending entry below is historical and superseded. Functional baseline **96,50%→96,50%, delta0**. NO-GO visual acceptance: duplicate Ringkasan, theme chrome, collection form layout and save/upload/background state gaps. Observed UI indices buyer62/admin71 out of100 normalize85% tested weighting; full responsiveness15%, portrait/touch and populated collection actions NOT TESTED. Server estimate/quote390000IDR, draft save/reopen, synthetic master/background, admin area drag/resize (unsaved), existing order56 previews/PDF PASS within documented limits. No source/install/product-save/order/payment/DTF/Drive-live changes. [Independent review](../qa/studio-ui-1.1.0-independent-review-20261125.md).
+
+## Historical checkpoint — prior UI implementation
+
 
 25 November2026: primary buyer/admin concept references now implemented in source for staging acceptance. Functional baseline96.50%→96.50%, delta0; visual browser acceptance and revised package installation pending. Direct browser control is unavailable in the current tool inventory; live WordPress readback confirms1.0.0 still ACTIVE and transport/QA INACTIVE. NO-GO for UI release; no fresh runtime/digest claim. No full audit, DTF regeneration, payment or live Drive requests. [Visual gap/implementation evidence](../qa/studio-ui-owner-reference-20261125.md). The prior1.0.0 installation below is the unchanged functional checkpoint.
 

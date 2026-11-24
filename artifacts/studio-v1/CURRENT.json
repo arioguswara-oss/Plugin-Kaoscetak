@@ -28,5 +28,17 @@
     "state": "INSTALLED_ACTIVE_RUNTIME_GATE_PASS_OWNER_BROWSER_ACCEPTANCE_PENDING",
     "final_release": false,
     "blocker": "Owner browser visual and interaction acceptance pending"
+  },
+  "visual_review": {
+    "checkpoint": "0c34acaa51cf00f738ce31cea8e39777fa8f1d43",
+    "report": "docs/qa/studio-ui-1.1.0-independent-review-20261125.md",
+    "evidence": "artifacts/studio-v1/1.1.0-ui/review-20261125",
+    "decision": "NO_GO_VISUAL_ACCEPTANCE",
+    "buyer_observed_index": 62,
+    "admin_observed_index": 71,
+    "score_weight_coverage_percent": 85,
+    "phone_touch": "NOT_TESTED",
+    "source_modified": false,
+    "installation_changed": false
   }
 }
