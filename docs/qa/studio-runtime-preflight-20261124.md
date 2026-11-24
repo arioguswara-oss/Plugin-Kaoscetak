@@ -2,7 +2,9 @@
 
 24 November 2026 WIB. Continues PR #52 checkpoint `006b1aecbf6b50ebfb9a3f73430e0aa62e238566`. The earlier independent-menu correction, targeted CI, and candidate ZIP checks are reused; none were rerun. No Full Audit, install, deploy, merge, production change, or order database operation was performed.
 
-## CLI access result
+**Checkpoint status: superseded.** Its first CLI attempt was blocked, then the separate runtime integration follow-up obtained the Codex CLI SSH identity and read-only staging evidence. Use [the current integration report](studio-hostinger-runtime-integration-20261124.md) and [current candidate pointer](../../artifacts/studio-v1/CURRENT.json) for present status.
+
+## Initial CLI access result (historical)
 
 GitHub/PR checkpoint was confirmed from the isolated PR worktree. SSH alias `sanro-hosting` reached the configured remote boundary, which returned `SANRO_AGENT_BLOCKED: command not permitted` before running the requested read-only identity command. A restricted escalation attempt returned the same remote-policy block. No credential or SSH configuration value was printed. The available Hostinger connector in this session exposes mail tools only, not hosting/runtime access. Therefore live SSH identity, WordPress files, PHP, plugin inventory, production separation, private storage, flags, and installed tree were **NOT TESTED in this run**.
 
@@ -14,7 +16,7 @@ The duplicate menu cause is the old native plugin registering the settings root 
 
 Production separation, current private paths/permissions/capacity, all runtime flags, current full plugin digest, cache/lease behavior, and unresolved transaction journal state remain **NOT TESTED**. DTF generator, Drive, and storage GC remain required OFF; source defaults are not evidence of current runtime flags.
 
-## Candidate and installer binding
+## Historical candidate and installer binding
 
 The existing candidate stays pinned to source `8d817c2ba92b89d03eaa4d680173925361ce0a36`, plugin digest `f21bcd20f5bdb8013d1a939d09761d4af3a0b2b96b4ef4790fd09616600d63d2`, ZIP SHA256 `ca55c23ef3b13408e45d4b011a7d47be3676aec7da6e2d3e906508873ae66afd`, manifest SHA256 `d77c4d63807cc0fc72d359b311dd883805c607735cc82d3ab8caa649d620f7dc`. These previous PASS results are reused.
 
@@ -35,7 +37,7 @@ The installer gate was too specific: this staging site runs web PHP on LiteSpeed
 5. Only after approval, use the same pinned installer’s apply path, which takes the lock, rechecks runtime state, writes a durable intent journal, retains the old tree, verifies candidate digest, and supports recovery. Preserve activation/settings/private paths; do not seed, alter orders, activate writers, or touch production.
 6. Read back installed source/member hashes and menu hierarchy. Keep DTF, Drive, and GC OFF.
 
-No installation is authorized by this checkpoint. Current verdict: **GO** for read-only access restoration and preflight preparation; **NO-GO** for staging installation until the blocker set is closed and Owner approval is explicit.
+No installation was authorized by this checkpoint. Its read-only-access blocker is closed in the follow-up; its old candidate and approval data are superseded. Current verdict is recorded in the integration report: **NO-GO** for staging installation until remaining gates close and Owner approval is explicit.
 
 ## Official development progress
 

@@ -1,6 +1,6 @@
 # SANRO Studio — ledger aktif
 
-Terbaru: staging runtime preflight diblokir oleh kebijakan remote SSH (`SANRO_AGENT_BLOCKED`); tidak ada remote command yang berjalan. Candidate/installer hashes tetap terikat, approval hanya kondisional dan tidak disetujui. Production separation, current runtime/private storage/plugins/source digest dan flags belum terverifikasi.90,50% tetap; instalasi NO-GO.
+Terbaru: [Hostinger runtime integration](../qa/studio-hostinger-runtime-integration-20261124.md). SSH staging verified; docroot/production separation, active plugins, installed digest, private storage, feature flags and menu cause checked read-only. LiteSpeed SAPI gate is fixed in installer. Candidate is pinned; approval remains false and installation NO-GO. Baseline 90,50%, delta0.
 
 - [Perbaikan menu dan evidence](../qa/studio-admin-menu-correction-20261124.md)
 - [Staging runtime preflight dan blocker](../qa/studio-runtime-preflight-20261124.md)
