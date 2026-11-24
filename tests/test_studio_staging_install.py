@@ -52,7 +52,7 @@ class InstallTest(unittest.TestCase):
   with patch.object(installer.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout=json.dumps(good))):self.assertEqual(installer.probe('never-executed',self.root),good)
  def test_probe_normalizes_sanitized_hostinger_sparse_php_array(self):
   # Sanitized staging capture: PHP keys [0,1,2,3,4,6,7] encode as a JSON object.
-  active={'0':'akismet/akismet.php','1':'classic-editor/classic-editor.php','2':'hello-dolly/hello.php','3':'litespeed-cache/litespeed-cache.php','4':'woocommerce/woocommerce.php','6':'sanro-studio/sanro-studio.php','7':'hostinger/hostinger.php'}
+  active={'0':'classic-editor/classic-editor.php','1':'hostinger-easy-onboarding/hostinger-easy-onboarding.php','2':'hostinger-reach/hostinger-reach.php','3':'hostinger/hostinger.php','4':'jetpack/jetpack.php','6':'sanro-studio/sanro-studio.php','7':'woocommerce/woocommerce.php'}
   raw={'url':installer.TARGET+'/','plugin_dir':'/not-used','active':active,'flags':dict.fromkeys(installer.FLAGS,False),'multisite':False}
   with patch.object(installer.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout=json.dumps(raw))):
    result=installer.probe('never-executed',self.root)
