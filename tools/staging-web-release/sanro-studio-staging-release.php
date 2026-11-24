@@ -8,7 +8,7 @@ defined('ABSPATH') || exit;
 require_once __DIR__.'/transaction.php';
 const SSWR_TARGET='https://saddlebrown-peafowl-616656.hostingersite.com';
 const SSWR_DOCROOT='/home/u606139982/domains/saddlebrown-peafowl-616656.hostingersite.com/public_html';
-const SSWR_BEFORE='60c8b0f3a272b024537e152fe46763c31b1beafcb36933fa2e57bb115c132273';
+const SSWR_BEFORE='@VERIFIED_EXISTING_TREE_DIGEST@';
 // Populated by the reproducible transport builder, never by an HTTP parameter.
 require __DIR__.'/binding.php';
 require_once __DIR__.'/acceptance.php';
@@ -77,7 +77,8 @@ function sswr_preflight($dtfLease=false) {
     $before=sswr_tree($target);$root=sswr_private_root();
     $journal=is_dir($root)?sswr_journal($root):null;
     if($journal && $journal['phase']==='committed' && $before===$journal['candidate_digest']) {
-        sswr_recover($target,$root,$journal);$prior='new_transport_committed';
+        if(sswr_tree($root.'/'.$journal['backup'])!==$journal['before_digest'])throw new RuntimeException('prior_backup_mismatch');
+        $prior='new_transport_committed';
     } else {
         if($before!==SSWR_BEFORE)throw new RuntimeException('existing_tree_digest_mismatch');
         $prior=sswr_prior_journals($target);
@@ -141,6 +142,29 @@ function sswr_page() {
     echo '</div>';
 }
 add_action('admin_menu',static function(){if(rtrim(home_url('/'),'/')===SSWR_TARGET)add_management_page('SANRO staging release','SANRO staging release','install_plugins','sanro-staging-release','sswr_page');});
+
+/** Authenticated HTTPS bridge for the existing exact-target gate and its single install action. */
+function sswr_rest_permission($request) {
+    if(!current_user_can('install_plugins')||!current_user_can('manage_options'))return new WP_Error('sswr_forbidden','Forbidden',['status'=>403]);
+    if($request->get_method()==='POST'&&!wp_verify_nonce($request->get_header('X-WP-Nonce'),'wp_rest'))return new WP_Error('sswr_nonce_required','Forbidden',['status'=>403]);
+    return true;
+}
+function sswr_register_rest_routes() {
+    if(rtrim(home_url('/'),'/')!==SSWR_TARGET)return;
+    register_rest_route('sanro-studio-staging-release/v1','/gate',['methods'=>'GET','permission_callback'=>'sswr_rest_permission','callback'=>static function(){
+        try{
+            sswr_identity();
+            $runtime=function_exists('sanro_studio_runtime_readiness')?sanro_studio_runtime_readiness(0):null;
+            return rest_ensure_response(['gate'=>sswr_preflight(),'runtime_readiness'=>$runtime]);
+        } catch(Throwable $e){return new WP_Error('sswr_gate_blocked',$e instanceof RuntimeException&&preg_match('/^[A-Za-z0-9_]{1,120}$/D',$e->getMessage())?$e->getMessage():'release_validation_failed',['status'=>409]);}
+    }]);
+    register_rest_route('sanro-studio-staging-release/v1','/install',['methods'=>'POST','permission_callback'=>'sswr_rest_permission','callback'=>static function($request){
+        if($request->get_param('source')!==SSWR_SOURCE)return new WP_Error('sswr_source_mismatch','Source confirmation required',['status'=>409]);
+        try{sswr_identity();return rest_ensure_response(sswr_apply());}
+        catch(Throwable $e){return new WP_Error('sswr_install_refused','Candidate, staging gate, lock or transaction validation refused the operation',['status'=>409]);}
+    }]);
+}
+add_action('rest_api_init','sswr_register_rest_routes');
 
 add_action('admin_init',static function(){
     if(($_GET['page']??null)!=='sanro-staging-release'||($_SERVER['REQUEST_METHOD']??'')!=='POST'||!isset($_POST['acceptance']))return;
