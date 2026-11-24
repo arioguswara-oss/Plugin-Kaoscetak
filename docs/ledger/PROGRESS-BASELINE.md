@@ -2,6 +2,12 @@
 
 ## Checkpoint terbaru — staging update dan buyer completion
 
+## Checkpoint: V1 accelerated completion sprint
+
+[Matriks status, rubrik QA, dan paket E2E satu sesi](../qa/studio-v1-completion-sprint-20261124.md). Source review tidak menemukan gap implementasi pada checkout/order WooCommerce, DTF candidate generation, atau Drive workflow; ketiganya memiliki implementasi dan fixture lokal, sedangkan integrasi staging nyata belum diuji. Menu independen sudah terdaftar secara live; screenshot admin terautentikasi belum tersedia. Paket approval terpadu yang terikat pada kandidat terpasang ada di `artifacts/studio-v1/fad47c6/integrated-staging-e2e-approval.json`; status pending, writer tetap OFF.
+
+Rubrik QA/release tahap7 terukur kini memberi 55/100: 15 targeted regression/package, 15 install/runtime identity, 25 browser buyer PASS; admin screenshot 0/10, checkout/order 0/15, DTF runtime 0/10, Drive runtime 0/10. Tidak menghitung implementasi tahap1–6 dua kali. Tahap7 berubah40→55; total terkalibrasi **90,50→92,00% (+1,50 poin)**, termasuk saldo Owner historis0,15 tetap. Angka ini menggantikan estimasi tahap7 lama yang tidak memiliki subrubrik.
+
 [Evidence instalasi dan QA buyer](../qa/studio-staging-update-buyer-completion-20261124.md). Kandidat Owner-approved `fad47c6` sudah terpasang di staging melalui installer terkunci, journal `committed`, rollback tepat dan terverifikasi. Plugin aktif, satu menu top-level independen, asset fingerprints, master/preview privat depan-belakang, multi-size M=2/L=1, quote IDR 393.000, dan browser desktop/mobile **PASS**. DTF, Drive, storage GC, checkout writer, order/payment dan production tetap OFF/tidak disentuh. Screenshot admin **NOT TESTED** karena sesi autentikasi browser tidak tersedia. Baseline tetap **90,50% → 90,50%, delta 0,00**; tidak ada bobot subfitur QA resmi untuk kredit persentase baru.
 
 Checkpoint aktif: [Pre-install menu correction](../qa/studio-admin-menu-correction-20261124.md). Satu root independen SANRO Studio; Pengaturan, Status Integrasi dan Storage Privat seluruhnya di bawah root. Capability, settings dan Woo order panels dipertahankan.48 targeted checks + affected settings/bootstrap/lint PASS. Baseline tetap90,50%; kandidatf45b43b superseded dan diganti ZIP/source manifest baru yang ditunjuk artifacts/studio-v1/CURRENT.json setelah build. Tidak ada instalasi/staging mutation.

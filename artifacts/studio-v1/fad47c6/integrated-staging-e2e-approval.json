@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "kind": "OWNER_APPROVAL_REQUEST",
+  "status": "PENDING_OWNER_APPROVAL",
+  "approved": false,
+  "activation_authorized": false,
+  "deployment_authorized": false,
+  "target": {
+    "url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+    "ssh_alias": "kaoscetak-staging",
+    "environment": "staging",
+    "production_access": false
+  },
+  "installed_candidate": {
+    "source_commit": "fad47c6f508258d594f92daca79c337d6911b404",
+    "plugin_digest": "6d65fde1ceda80b1551da51817ccef14f0d618f1d5dffdcfcb412a8c129cc2bb",
+    "zip_sha256": "b83c1b03d18e0633d502aff09d9b1d40f01eb216a22850a7c990fc40c78a5723",
+    "manifest_sha256": "8664f584c4b746120c98ed50b337fc9616508f3b390eca3fa2a8429a370f8309",
+    "installed_tree_digest": "60c8b0f3a272b024537e152fe46763c31b1beafcb36933fa2e57bb115c132273"
+  },
+  "scope": {
+    "synthetic_order_limit": 1,
+    "checkout_writer": "ENABLE_FOR_THIS_APPROVED_SESSION_ONLY",
+    "dtf_generator": "ENABLE_FOR_THIS_APPROVED_SESSION_ONLY",
+    "google_drive": "ENABLE_FOR_THIS_APPROVED_SESSION_ONLY",
+    "storage_gc": "REMAIN_OFF",
+    "payment": "STAGING_SANDBOX_ONLY_NO_LIVE_SETTLEMENT",
+    "production_print": "NO_PHYSICAL_PRINT_OR_PRESS",
+    "cleanup": "NO_ORDER_OR_ARTIFACT_DELETION_WITHOUT_SEPARATE_OWNER_SCOPE",
+    "merge_or_new_install": false
+  },
+  "preconditions": [
+    "Fresh read-only gates confirm exact staging host, installed tree digest, active SANRO Studio/WooCommerce, private storage, and no access to production.",
+    "Fresh read-only check confirms installer journal is committed, lock is free, and current feature flags are OFF before the session.",
+    "Exactly one identified synthetic design, cart line, and WooCommerce order; no customer or existing order is eligible.",
+    "Staging sandbox gateway is configured to prevent external settlement; if absent, stop before checkout/order creation.",
+    "Google OAuth identity is verified for the staging-only target folder; no customer or production Drive folder may be used.",
+    "A tested rollback/disable procedure is ready; after the session all three writers return to OFF and readback proves OFF."
+  ],
+  "integrated_sequence": [
+    "Capture authenticated admin screenshot and verify exactly one independent top-level SANRO Studio menu outside WooCommerce.",
+    "Re-read candidate/runtime identity, private storage and all writer flags.",
+    "Submit the already verified synthetic front/back design and server quote to classic WooCommerce checkout.",
+    "Create at most one pending synthetic order; verify locked DesignID, size quantities, server price, shipping/tax/discount guards, and admin WooCommerce detail panel.",
+    "Use only the staging sandbox gateway, then verify same-order retry/payment-complete idempotency and that no second order is created.",
+    "Generate private DTF candidate assets from that order; verify provenance, dimensions, hashes and human-approval gate; do not release to physical production.",
+    "Provision/upload the same order package to the verified staging Drive folder; verify remote identity/permissions and idempotent recovery without public sharing.",
+    "Capture sanitized evidence, verify order/artifact binding and all writer flags OFF after the session."
+  ],
+  "stop_conditions": [
+    "Any hash, host, installed digest, source marker, menu count, private-storage boundary or feature flag differs from the exact approved values.",
+    "Any live payment gateway, external settlement, production host/path, customer order, unbounded order creation, or Drive target mismatch is detected.",
+    "Any non-synthetic item, unapproved tax/fee/coupon behavior, stale quote, missing provenance, unsafe artifact permission, or writer recovery failure occurs."
+  ],
+  "owner_approval_text": "Saya menyetujui satu sesi E2E SANRO Studio khusus staging saddlebrown-peafowl-616656.hostingersite.com untuk source fad47c6f508258d594f92daca79c337d6911b404, ZIP SHA256 b83c1b03d18e0633d502aff09d9b1d40f01eb216a22850a7c990fc40c78a5723, manifest SHA256 8664f584c4b746120c98ed50b337fc9616508f3b390eca3fa2a8429a370f8309, installed tree digest 60c8b0f3a272b024537e152fe46763c31b1beafcb36933fa2e57bb115c132273. Dalam satu sesi ini saja, izinkan checkout writer, satu order sintetis maksimal, pembayaran melalui sandbox tanpa settlement nyata, generator DTF untuk artefak kandidat, dan upload Drive ke folder staging privat yang terverifikasi. Storage GC tetap OFF. Tidak ada cetak fisik, order pelanggan, production, merge, instalasi baru, atau penghapusan data. Persetujuan berhenti otomatis bila identitas/hash/gate berubah atau sandbox/Drive target tidak dapat dipastikan."
+}
