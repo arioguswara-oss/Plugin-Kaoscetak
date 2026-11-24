@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "result": "BLOCKED_NO_INSTALL",
+  "repository": "arioguswara-oss/Plugin-Kaoscetak",
+  "pr": 52,
+  "checkpoint": "af71d0397b183967c5b20965ad8676990aafe16c",
+  "candidate_source": "12b2c043cc6ccbb3e7c828949bf524ff6f2e84b1",
+  "candidate_version": "1.1.0",
+  "candidate_sha256": "991f53c93ad6ae7c8c73bad1af4bd1b5406beac93ca7c64d6b0365a289e7896b",
+  "candidate_manifest_sha256": "a822f0312b8183b98ac37e35c2189e12149e6d55a4e7a5b9bf7950fd15a91d0f",
+  "release_transport_sha256": "a8778a0cc0ac4c689135ca8deed87a587ab47127b99a40690d00e87520d25357",
+  "release_transport_expected_existing_tree": "60c8b0f3a272b024537e152fe46763c31b1beafcb36933fa2e57bb115c132273",
+  "ssh_alias": "kaoscetak-staging",
+  "ssh_identity": "PASS; u606139982 on id-dci-web1631.main-hosting.eu",
+  "staging_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "wordpress_identity": "PASS; exact site URL; multisite=false; canonical staging docroot confirmed",
+  "production_isolation": "PASS; production was not accessed",
+  "active_plugins": {
+    "sanro_studio": "1.0.0 active",
+    "woocommerce": "11.3.1 active"
+  },
+  "writer_flags": "PASS; checkout, DTF, Drive and storage GC all OFF",
+  "private_master_and_preview_roots": "PASS; read-only WP-CLI checks",
+  "installed_plugin_tree_digest": "c3524d76a6992179716946b9c353e98d9baad11e13feb8bfa24d387fe383db61",
+  "mandatory_gate": "BLOCKED; installed digest does not match the source-bound release transport baseline",
+  "web_php_sapi": "NOT freshly verified in this execution; SSH PHP reports CLI and is not treated as web SAPI evidence",
+  "installation": "NOT ATTEMPTED; no package/plugin files or activation state changed",
+  "visual_acceptance": "OWNER ACTION; not performed",
+  "production_or_merge": "NONE"
+}
