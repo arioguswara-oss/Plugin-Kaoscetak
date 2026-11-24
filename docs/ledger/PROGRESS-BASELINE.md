@@ -1,5 +1,14 @@
 # SANRO Studio — satu baseline resmi development
 
+## Takeover milestone — DTF/PDF order56 terverifikasi, konfigurasi dipulihkan
+
+Native generator memproses order56 yang sudah disetujui produksi: enam PNG kandidat (depan/belakang item2/3/4) dan tiga PDF panduan/manifest PASS. ZIP acceptance privat diunduh melalui admin ber-nonce; verifikasi independen CRC,12 asset hashes,6 PNG RGBA/transparansi300DPI,3 PDF dua halaman dengan font tertanam dan Design ID PASS. PNG1643×632, hash8e63515c3f601e93529b28d9f49ecf80e46f2d376615f552b10f6ec4fc2023b6; teks sama di semua sisi/ukuran sehingga byte identik sesuai desain, bukan kredit fitur ganda. Package ZIP SHA256146b6a40d942e696cfd9ec641ad216566c28725b1ec3dfe3023c3cc771eeb105. Hasil tetap UNAPPROVED untuk kualitas cetak/font parity, tanpa klaim uji cetak fisik.
+
+Read-only inventory membuktikan preset SANRO MU berupa flag=>false map. Opt-in hanya lima key DTF, request admin tertentu/order56, berakhir300detik; normal/default/GET tetapOFF. Native generator dijalankan setelah capability+nonce+hash/order checks, lalu original config bytes dipulihkan dalam finally. Fresh gate PASS membuktikan semua writer DTF/Drive/GC/legacy checkout OFF lagi. Tidak ada aktivasi cron, pembayaran, order kedua atau production. Evidence `artifacts/studio-v1/79e0a93/production-verification.json` dan `runtime-gate-after-dtf.json`.
+
+Rubrik resmi menambah10poin DTF runtime yang sebelumnya0. Sepanjang takeover: visual admin10 + DTF10; stage7 **55→75**, kontribusi7,50, total resmi **92,00→94,00% (+2,00)**. Bobot1–6 dan saldo0,15 tetap. Checkout/payment15 dan native Drive10 belum dikreditkan. Koneksi OAuth runtime Drive masih OPEN; belum Final Release.
+
+
 ## Takeover milestone — satu order sintetis56 dan visual admin PASS
 
 Buyer login: simpan draft, preview privat depan/belakang, server quote dan cart S/M/L masing-masing1pcs PASS, totalRp240.000. HTTP409 cart berasal dari item test lama65k; setelah pengeluaran recoverable item itu, native cart PASS. HTTP422 historis tidak direproduksi dan akar historisnya tidak diklaim selesai.
@@ -78,10 +87,10 @@ Checkpoint terbaru: [Direct staging readiness](../qa/studio-direct-staging-readi
 | 4. Harga server/quote |10%|96%|96%|9,60|0,00|
 | 5. Simpan/ownership/share |10%|98%|98%|9,80|0,00|
 | 6. Checkout/produksi/Drive |20%|97%|97%|19,40|0,00|
-| 7. QA/rilis/mobile |10%|55%|65%|6,50|1,00|
-| **Subtotal tujuh tahap** |**100%**|—|—|**92,85**|**1,00**|
+| 7. QA/rilis/mobile |10%|55%|75%|7,50|2,00|
+| **Subtotal tujuh tahap** |**100%**|—|—|**93,85**|**2,00**|
 | Saldo Owner historis belum teralokasi |—|—|—|0,15|0,00|
-| **Total baseline development** |—|**92,00%**|**93,00%**|**93,00**|**1,00**|
+| **Total baseline development** |—|**92,00%**|**94,00%**|**94,00**|**2,00**|
 
 Saldo0,15 tetap rekonsiliasi historis72,10 vs71,95 checkpoint2d945be. Tabel adalah baseline estimasi scope historis, **bukan persentase jumlah fitur wajib yang sudah PASS**. Audit sebelumnya menemukan gap nativeH04/H05/M06/M07 yang kini ditutup pada kode; khususnya nilai historis tahap5 tidak boleh dibaca sebagai bukti koleksi/share native sudah lengkap. Tanpa rubrik subfitur resmi, tidak mengarang kalibrasi baru atau menyembunyikan gap dengan kenaikan QA. Matriks audit menjadi syarat GO yang lebih kuat daripada angka ini.
 

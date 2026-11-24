@@ -1,3 +1,17 @@
+# TAKEOVER CHECKPOINT — Writer OFF, satu order56 sudah terpakai
+
+Aktif: source aplikasi79e0a93f77bd03be0760ca179383375426284b8f, kandidat artifacts/studio-v1/79e0a93, tree terpasang33f481d937aca3d9533bb02995524929326809ad92ec5c60b94efeaddcf53936. PR52. Gunakan ledger resmi94,00% (bobot SANRO7 tetap). Jangan menginstal ulang kandidat yang sama. Jangan menjalankan Hermes/Jack/Codex agent tanpa izin Owner.
+
+Tepat satu order sintetis #56 sudah dibuat pending/unpaid, customer0, design4233e0e2-7c89-408f-b36b-fb76ce5adbc2; items2/3/4 S/M/L1pcs,77k/80k/83k,total240k. Jangan buat order kedua. Native admin production-ready sudah disetujui tanpa payment. Buyer save login403 diperbaiki pada79e; cart409 karena ordinary test cart ditangani dengan recoverable removal; server quote/cart/checkout form PASS. Paid Place-order flow NOT TESTED; jangan ubah gateway.
+
+Native DTF6PNG RGBA300DPI +3PDF/manifest actualorder PASS, hash/ZIP download diverifikasi independen. Files tetap privat di server; print quality/font parity belum disetujui otomatis. Konfigurasi MU asli telah dipulihkan dan fresh gate semua writer/GC OFF. Utility WordPress staging-release0.3.3 aktif untuk sisa acceptance; setelah selesai nonaktifkan utility kecuali diperlukan konfigurasi, jangan tinggalkan testwriterON. Detail evidence ada diartifacts/studio-v1/79e0a93/{installation-execution,acceptance-execution,production-verification,runtime-gate-after-dtf}.json.
+
+OPEN: native Drive OAuth/provider/private production-root configuration dan real export/readback. Google Drive MCP bisa membaca/membuat folder privat, tetapi token connector tidak boleh diekstrak/dianggap provider WordPress. Hostinger hosting MCP belum configured di environment; tidak ditambah karena larangan Owner, Cloud Browser Hostinger sign-in terbatasi. Tidak mengandalkan SSH. Tidak ada produksi/merge/gatewaychanges.
+
+Known visual fixes to finish if updating application: cart checkout shows three distinct prices without friendly Size/Design ID metadata; top legacy order-preview summary says unavailable while native per-item links work. Native per-itempreview/status/quantity/prices verified. Native OAuth setup UI/provider may be added if needed to give Owner one secure setup/consent flow, never request secrets in chat. Any new candidate needs new source/hash and retained-backup gate. Existing transport preflight must compare journal source/archive with new manifest before treating a previous committed tree as already installed; current installed79e verification is independently proved, no false claim.
+
+Previous historical handoff follows:
+
 # SANRO Studio — checkpoint setelah final native gap closure
 
 PRE-INSTALL CORRECTION terbaru: [Satu admin root independen](studio-admin-menu-correction-20261124.md). Kandidatf45b43b tidak lagi ditargetkan untuk apply. Gunakan artifacts/studio-v1/CURRENT.json setelah build pengganti; tidak perlu worker Hermes. Menu admin belum dideploy; order panels dan semua flags defaultOFF dipertahankan.

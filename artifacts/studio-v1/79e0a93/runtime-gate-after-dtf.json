@@ -1,0 +1,27 @@
+{
+  "gate": "PASS",
+  "source": "79e0a93f77bd03be0760ca179383375426284b8f",
+  "archive_sha256": "b7d08cc98a453a53feb0a50ea6458964fdb769f21525e8309c903aa1d83a8b60",
+  "manifest_sha256": "53c3737c0b2dc92def1955e2d856ca7a658e345f20075edb114577bd0a29c052",
+  "existing_tree_digest": "33f481d937aca3d9533bb02995524929326809ad92ec5c60b94efeaddcf53936",
+  "prior_journal_verified": "new_transport_committed",
+  "web_php": "8.3.37",
+  "sapi": "litespeed",
+  "private_roots": "PASS",
+  "writer_flags": {
+    "STORAGE_GC": false,
+    "STAGING_CHECKOUT_HOOK": false,
+    "DTF_GENERATOR": false,
+    "DTF_ADMIN_GENERATE": false,
+    "DTF_ORDER_BATCH": false,
+    "DTF_IMAGE_RASTER": false,
+    "DTF_LAYER_RASTER": false,
+    "DTF_PRIVATE_ARTIFACTS": false,
+    "DRIVE_MASTER_EXPORT": false,
+    "DRIVE_AUTO_PROVISION": false,
+    "VERIFIED_DRIVE_ATTACHMENT": false,
+    "DRIVE_PACKAGE_EXPORT": false,
+    "DRIVE_DTF_CANDIDATES": false
+  },
+  "installed": true
+}
