@@ -50,7 +50,7 @@ def main():
  pending=journal is not None and journal['phase'] not in ('committed','rolled_back')
  before=journal['before_digest'] if journal and (args.recover or pending) else (tree_digest(target) if target.exists() else None)
  if not args.apply and not args.recover:
-  print(json.dumps({'mode':'PLAN_ONLY','source_commit':manifest['source_commit'],'archive_sha256':manifest['archive_sha256'],'existing_plugin_digest':before,'writer_flags':'OFF','php_lint':candidate['lint'],'recovery_required':pending,'apply_authorized':False,'php_fpm':'NOT_TESTED'},indent=2));return
+  print(json.dumps({'mode':'PLAN_ONLY','source_commit':manifest['source_commit'],'archive_sha256':manifest['archive_sha256'],'existing_plugin_digest':before,'writer_flags':'OFF','php_lint':candidate['lint'],'recovery_required':pending,'apply_authorized':False,'web_php_sapi':'NOT_TESTED_PLAN_ONLY'},indent=2));return
  if not args.approval:raise ValueError('exact_owner_approval_required')
  approve(json.loads(pathlib.Path(args.approval).read_text()),manifest,before)
  # Re-probe after lint and approval validation; do not replace if site/gates/activation changed.

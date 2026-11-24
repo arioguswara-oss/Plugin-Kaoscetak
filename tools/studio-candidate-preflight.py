@@ -56,7 +56,7 @@ def validate(archive,manifest,target,php=None):
                     if result.returncode:raise ValueError('php_lint_failed:'+name)
             lint='PASS'
     return {'source_commit':m['source_commit'],'archive_sha256':m['archive_sha256'],'target':target,'mode':'PLAN_ONLY','php_cli':version,'lint':lint,
-        'remote_php_fpm':'NOT_TESTED','remote_flags':'NOT_TESTED','runtime_e2e':'NOT_TESTED','deployment_authorized':False,
+        'remote_web_php_sapi':'NOT_TESTED','remote_flags':'NOT_TESTED','runtime_e2e':'NOT_TESTED','deployment_authorized':False,
         'required_apply_contract':['Owner approval bound to source/archive SHA and staging URL','verify the actual web PHP SAPI (LiteSpeed LSAPI on this staging site), feature flags and same build identity','preserve existing activation, private paths and product metadata','refuse generator/Drive enabled; do not overwrite flags','atomic existing plugin replacement, rollback on failure; no reinstall/seed/order writes']}
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--zip',required=True);parser.add_argument('--manifest',required=True);parser.add_argument('--target-url',required=True);parser.add_argument('--php');args=parser.parse_args()
