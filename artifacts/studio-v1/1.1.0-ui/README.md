@@ -2,6 +2,8 @@
 
 **NOT INSTALLED / NOT FINAL ACCEPTANCE.** Native plugin1.0.0 remains active on staging. This package implements the Owner reference in source; visual/interaction conformity is NOT VERIFIED.
 
+The source-bound staging transport was rebuilt from installer source commit `faa1323f31230fc10ff50d54784ab1cbc051447a` after independently matching the live staging tree digest to the previously approved Final Release 1.0.0 manifest. Transport SHA256: `a4a441b60d2b3d376cbe71e336d0359f7ddda26bb37feae9c76954842b5262da`. The HTTPS diagnostic/install routes require authenticated administrator capability; POST additionally requires the WordPress REST nonce and exact candidate source. The diagnostic GET is read-only. Installation state remains pending the live HTTPS gate.
+
 Source12b2c043cc6ccbb3e7c828949bf524ff6f2e84b1, PR52. Plugin ZIP and manifest are reproducible byte-for-byte across two builds. SHA256SUMS covers plugin, manifest, separate exact-target transport and readback. No credentials, QA utility or staging transport inside plugin ZIP. Before desktop screenshots are in evidence/. After screenshots unavailable until direct Browser access returns.
 
 Changes: black/yellow buyer catalog/editor, preserved multi-size native controls, selection/resize handle and D-pad, separate collection view and reopen/reorder fork actions. Independent six-section admin navigation, product/mockup/price interfaces, draggable/keyboard visual areas and physical cm/category presets; grouped Drive setup and order previews with secured guide-PDF action. Existing pricing, ownership, private storage, DTF and Drive gates preserved. Original vector fallback garment only; merchant images are preferred.
