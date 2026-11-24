@@ -89,3 +89,6 @@ ChatGPT Work hanya menulis isolated branch PR52 dari expected parent591bf1b. Sco
 ## Direct staging readiness — Owner strategy update24 November2026
 
 ChatGPT Work melanjutkan langsung via GitHub + WordPress MCP + Cloud Browser; Jack Developer/Hermes stabilisasi di SANRO AI Workforce tidak menjadi dependency Studio. Tidak menjalankan worker Jack/Hermes/Codex. Source kandidat dikunci f45b43b (fiture9fb9c4); commit baru hanya koordinasi/artefak, tanpa app code atau ref sumber#50/#51. Read-only staging membuktikan classic cart/checkout dan editor lama; runtime belum kandidat. Approval request bersyarat, FPM/flags/current-tree digest belum verified, no apply. Pertahankan expected-SHA nonforce publish dan baseline90.50.
+
+
+Direct follow-up: Owner secure browser login berhasil, Work membaca Site Health Info (PHP8.3.37/LiteSpeed64-bit/GD2.3.3,1536M limits) dan legacy Studio status saja. Tidak mengubah hosting/config/order atau menjalankan worker. Candidate sourcef45b43b immutable; request tetapapproved=false karena proof flags/private paths/full tree/capabilities belum lengkap.

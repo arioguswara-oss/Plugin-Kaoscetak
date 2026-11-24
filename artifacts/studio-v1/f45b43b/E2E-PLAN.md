@@ -6,7 +6,7 @@ Cloud Browser reached HTTPS custom-2 picker and product24 editor, typed unsaved 
 
 ## Gates before a write
 
-Verify current FPM/extensions/int64/private directories/flags/cache semantics and exact installed plugin digest using authenticated operator tooling. Obtain Owner source-bound installation approval; keep generator/Drive/GC OFF. Install only after those checks. Re-read candidate build identity and installed member hashes. No Jack/Hermes/Codex invocation is needed. Then obtain explicit staging draft/upload/cart/synthetic-order/email scope before each class of server write; use synthetic nonpersonal data only.
+Authenticated Site Health already confirms webPHP8.3.37/LiteSpeed/int64/GD2.3.3/memory1536M/upload-post1536M. Finish FreeType/ctype/fileinfo/private directories/all-flags/cache semantics and exact installed plugin digest using authorized operator tooling; do not repeat version readback without a change. Obtain Owner source-bound installation approval; keep generator/Drive/GC OFF. Install only after those checks. Re-read candidate build identity and installed member hashes. No Jack/Hermes/Codex invocation is needed. Then obtain explicit staging draft/upload/cart/synthetic-order/email scope before each class of server write; use synthetic nonpersonal data only.
 
 ## Buyer cases after approved installation
 

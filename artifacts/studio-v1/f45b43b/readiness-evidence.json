@@ -58,7 +58,8 @@
     "candidate_runtime_match": "FAIL",
     "http422": "NOT_REPRODUCED_READ_ONLY; no draft/cart POST attempted",
     "console_note": "422 filter returned no entries; extension telemetry errors are not REST server evidence",
-    "admin": "WordPress login required; no credential entry"
+    "admin": "AUTHENTICATED_READ_ONLY; secure browserAuth submitted then WordPress dashboard confirmed",
+    "old_admin_status": "legacy integration status labels all four modules not_integrated; contradicted as an availability label by working buyer editor; not candidate diagnostics"
   },
   "providers": {
     "tinyfish": "NEGATIVE_WALLET; no run started or top-up",
@@ -74,14 +75,41 @@
     "previous_targeted_lint_tests": "REUSED_UNCHANGED_NO_FULL_AUDIT"
   },
   "runtime_unverified": [
-    "PHP_FPM",
-    "GD_FreeType_ctype_fileinfo_int64",
-    "private_roots_and_permissions",
-    "writer_flags",
+    "FreeType_ctype_fileinfo_functions",
+    "private_roots_and_permissions_and_capacity",
+    "all_runtime_writer_flags",
     "full_existing_plugin_tree_digest",
     "object_cache_lease_semantics",
     "actual_CORS",
     "current_live_source_SHA"
   ],
-  "deployment_authorized": false
+  "deployment_authorized": false,
+  "web_runtime": {
+    "source": "Authenticated WordPress Site Health Info",
+    "url": "https://saddlebrown-peafowl-616656.hostingersite.com/wp-admin/site-health.php?tab=debug",
+    "wordpress": "7.1.5",
+    "php_version": "8.3.37",
+    "supports_64bit": true,
+    "web_server": "LiteSpeed",
+    "php_sapi": "litespeed",
+    "memory_limit": "1536M",
+    "php_time_limit_seconds": 360,
+    "max_input_variables": 5000,
+    "upload_max_filesize": "1536M",
+    "post_max_size": "1536M",
+    "gd_version": "2.3.3",
+    "gd_formats": [
+      "GIF",
+      "JPEG",
+      "PNG",
+      "WebP",
+      "BMP",
+      "AVIF",
+      "XPM"
+    ],
+    "imagick": "3.8.1",
+    "opcache": "enabled; not full",
+    "fpm_claim": "not made; observed SAPI is litespeed",
+    "scope": "read-only server diagnostics; no settings or order changes"
+  }
 }
