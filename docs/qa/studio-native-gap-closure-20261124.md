@@ -24,7 +24,9 @@ DECIDED: `docs/business-rules/kaoscetak-lite-designer-v1.md`, termasuk guest edi
 
 PASS: 64 new native collection/storage/BG/mapping checks, 13 per-size checkout/admin/order checks (17 existing checkout fixture prerequisites), 11 affected verification-route gates, 31 merchant mockup controls, 15 actual buyer DOM startup/variant handlers, 10 preview/master-binding, 18 print-zone geometry, 9 cleanup assertions, default-OFF bootstrap dan buyer asset fingerprint. WP/Woo/mail persistence disimulasikan; file I/O dan GD pixel processing nyata. Tidak ada email nyata, HTTP provider, order SQL atau writer produksi.
 
-Changed-source lint **25 PHP / 3 JS / 4 CJS** dan `git diff --check` PASS. Source menggunakan fungsi yang kompatibel dengan batas PHP7.4; eksekusi nyata baru pada PHP8.4.24, bukan bukti FPM7.4.
+Installer source-bound probe juga menolak GC ON/missing/invalid proof;4 focused mocked-probe checks PASS, tanpa memutar ulang crash suite yang tidak berubah.
+
+Changed-source lint **25 PHP / 3 JS / 4 CJS**, ditambah2 Python parse checks dan `git diff --check` PASS. Source menggunakan fungsi yang kompatibel dengan batas PHP7.4; eksekusi nyata baru pada PHP8.4.24, bukan bukti FPM7.4.
 
 Self-fix: initial test fixtures menuntut dua admin scripts dan tidak menyediakan document.fonts; diperbarui untuk mapping script dan font contract. Duplicate require pada test integration diganti require_once. Pemeriksaan implementasi juga memisahkan durable collection identity dari auth salts, menambahkan server logout, memulihkan aspek preview dan mempertahankan PHP7.4-compatible source functions. Tidak ada confirmed FAIL tersisa pada tes yang berhasil dijalankan.
 

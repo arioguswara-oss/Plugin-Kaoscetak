@@ -5,7 +5,7 @@ sys.dont_write_bytecode=True
 spec=importlib.util.spec_from_file_location('candidate_preflight',pathlib.Path(__file__).with_name('studio-candidate-preflight.py'))
 preflight=importlib.util.module_from_spec(spec);spec.loader.exec_module(preflight)
 TARGET='https://saddlebrown-peafowl-616656.hostingersite.com'
-FLAGS=['STAGING_CHECKOUT_HOOK','DTF_ADMIN_GENERATE','DTF_ORDER_BATCH','DTF_IMAGE_RASTER','DTF_LAYER_RASTER','DTF_PRIVATE_ARTIFACTS','DRIVE_MASTER_EXPORT','DRIVE_AUTO_PROVISION','VERIFIED_DRIVE_ATTACHMENT','DRIVE_PACKAGE_EXPORT','DRIVE_DTF_CANDIDATES']
+FLAGS=['STORAGE_GC','STAGING_CHECKOUT_HOOK','DTF_ADMIN_GENERATE','DTF_ORDER_BATCH','DTF_IMAGE_RASTER','DTF_LAYER_RASTER','DTF_PRIVATE_ARTIFACTS','DRIVE_MASTER_EXPORT','DRIVE_AUTO_PROVISION','VERIFIED_DRIVE_ATTACHMENT','DRIVE_PACKAGE_EXPORT','DRIVE_DTF_CANDIDATES']
 
 transaction_spec=importlib.util.spec_from_file_location('studio_install_transaction',pathlib.Path(__file__).with_name('studio-install-transaction.py'))
 transaction=importlib.util.module_from_spec(transaction_spec);transaction_spec.loader.exec_module(transaction)
@@ -14,7 +14,7 @@ replace_existing=transaction.replace_existing;recover_existing=transaction.recov
 
 def probe(wp,wp_root):
  # Fixed PHP source, no request values interpolated. Skip plugin code; MU flags remain loaded.
- code="""$f=[];foreach(['STAGING_CHECKOUT_HOOK','DTF_ADMIN_GENERATE','DTF_ORDER_BATCH','DTF_IMAGE_RASTER','DTF_LAYER_RASTER','DTF_PRIVATE_ARTIFACTS','DRIVE_MASTER_EXPORT','DRIVE_AUTO_PROVISION','VERIFIED_DRIVE_ATTACHMENT','DRIVE_PACKAGE_EXPORT','DRIVE_DTF_CANDIDATES'] as $k){$n='SANRO_STUDIO_ENABLE_'.$k;$f[$k]=defined($n)?constant($n):false;}echo json_encode(['url'=>home_url('/'),'plugin_dir'=>WP_PLUGIN_DIR,'active'=>get_option('active_plugins',[]),'flags'=>$f,'multisite'=>is_multisite()]);"""
+ code="""$f=[];foreach(['STORAGE_GC','STAGING_CHECKOUT_HOOK','DTF_ADMIN_GENERATE','DTF_ORDER_BATCH','DTF_IMAGE_RASTER','DTF_LAYER_RASTER','DTF_PRIVATE_ARTIFACTS','DRIVE_MASTER_EXPORT','DRIVE_AUTO_PROVISION','VERIFIED_DRIVE_ATTACHMENT','DRIVE_PACKAGE_EXPORT','DRIVE_DTF_CANDIDATES'] as $k){$n='SANRO_STUDIO_ENABLE_'.$k;$f[$k]=defined($n)?constant($n):false;}echo json_encode(['url'=>home_url('/'),'plugin_dir'=>WP_PLUGIN_DIR,'active'=>get_option('active_plugins',[]),'flags'=>$f,'multisite'=>is_multisite()]);"""
  result=subprocess.run([wp,'--path='+str(wp_root),'--skip-plugins','--skip-themes','eval',code],capture_output=True,text=True,timeout=60)
  if result.returncode:raise ValueError('wp_probe_failed') # Never echo stderr, paths or credential-bearing plugin output.
  try:data=json.loads(result.stdout)
