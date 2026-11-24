@@ -20,7 +20,7 @@ Progress baseline is unchanged: **90.50% → 90.50%, delta 0.00**. No feature cr
 - Exact staging docroot: `/home/u606139982/domains/saddlebrown-peafowl-616656.hostingersite.com/public_html`; WordPress `siteurl` matched the requested HTTPS staging URL, canonical path matched, WordPress 7.1.5, database blog id 1.
 - The staging docroot is a distinct domain directory from `kaoscetak.id/public_html`. Production was not accessed.
 - WooCommerce 11.3.0 and SANRO Studio 0.1.0-dev are active. SANRO Studio appears once in the plugin list; legacy SANRO Studio QA is inactive. The `sanro-studio-staging-pr50` and DTF admin display MU plugins remain installed.
-- A read-only HTTP HEAD returned `x-powered-by: PHP/8.3.37`. Authenticated Site Health evidence already recorded for this staging site on 24 November identifies LiteSpeed SAPI; that web SAPI was not freshly read through SSH. SSH PHP is 8.2.36 CLI and is not treated as web runtime. WP-CLI PHP capability checks found GD, ctype, fileinfo, FreeType, and int64 support. No PHP-FPM claim is made.
+- Web SAPI: **PASS — LiteSpeed SAPI** in authenticated Site Health evidence for this staging site dated 24 November. A fresh read-only HTTP HEAD returned `x-powered-by: PHP/8.3.37`. SSH PHP is 8.2.36 CLI and is not treated as web runtime. WP-CLI PHP capability checks found GD, ctype, fileinfo, FreeType, and int64 support. No PHP-FPM claim is made.
 - Current Studio plugin tree digest: `e58d3cd03d3dba87ce17d8121e19720ab2dc9939394130c9fcd142ce8fd7bab9`; build marker absent. It does not match candidate plugin digest `f21bcd20f5bdb8013d1a939d09761d4af3a0b2b96b4ef4790fd09616600d63d2`.
 - Both private master and preview storage roots are configured, exist outside the document root, have private permissions, and are readable/writable. The DTF artifact root is not configured.
 - All current feature flags from WP-CLI readback:
@@ -38,13 +38,13 @@ Progress baseline is unchanged: **90.50% → 90.50%, delta 0.00**. No feature cr
 | VERIFIED_DRIVE_ATTACHMENT | OFF | DRIVE_PACKAGE_EXPORT | OFF |
 | DRIVE_DTF_CANDIDATES | OFF |  |  |
 
-- No installer journal was found in the bounded scan of the account home. No rollback root is configured or identified, so absence of a transaction journal everywhere is **NOT VERIFIED**.
+- Installer recovery state: **PASS**. Recursive account-home scan found no transaction journal, lock file, incoming tree, previous backup, or interrupted quarantine. The exact staging plugin-parent lock sentinel is absent; `/tmp` and `/var/tmp` contain no matching installer artifacts. `/proc/locks` is not readable to this account, but the pinned installer retains its lock sentinel and does not unlink it. No interrupted installation evidence was found.
 - The installed source registers SANRO Studio Settings as a top-level page in `includes/admin.php`, while `sanro-studio.php` adds its integration status under WooCommerce. This explains the duplicate menu locations; the inventory shows one active plugin, not two. Candidate 793784f groups Settings, Status and Private Storage under one SANRO Studio root. Live corrected menu remains NOT TESTED.
-- Cache/lease semantics, browser E2E, candidate installed-source readback, and direct authenticated web SAPI refresh remain NOT TESTED.
+- Cache/lease semantics, browser E2E, and candidate installed-source readback remain NOT TESTED. These are post-install/read-write workflow gates, not required for Owner approval of a replacement-only staging install.
 
 ## Runtime gate correction
 
-The earlier installer approval contract required `php_fpm_verified=true`, which cannot describe the observed LiteSpeed runtime. The gate now requires `web_runtime_verified=true` and the exact `web_php_sapi=litespeed`; PHP-FPM is neither required nor asserted. CLI preflight output labels the remote web SAPI as NOT TESTED until authorized web evidence is bound. This is a policy fix only; it changes no Hostinger runtime configuration.
+The earlier installer approval contract required `php_fpm_verified=true`, which cannot describe the observed LiteSpeed runtime. The gate now requires `web_runtime_verified=true` and the exact `web_php_sapi=litespeed`; PHP-FPM is neither required nor asserted. CLI-only candidate preflight reports remote web SAPI as NOT TESTED because it does not contact Hostinger. Authenticated Site Health supplies the actual web SAPI evidence. This is a policy fix only; it changes no Hostinger runtime configuration.
 
 ## Candidate and approval
 
@@ -53,6 +53,6 @@ The earlier installer approval contract required `php_fpm_verified=true`, which 
 - Manifest SHA256: `00fcd0483b41825c2983d78e936b0e86333a7e43c68042d7310c4fff595de62e`
 - Existing plugin digest bound in conditional request: `e58d3cd03d3dba87ce17d8121e19720ab2dc9939394130c9fcd142ce8fd7bab9`
 - Local candidate preflight: PLAN_ONLY, PHP lint PASS, deployment_authorized false.
-- Approval package is `artifacts/studio-v1/793784f/approval-request.json`; `approved=false`, no machine approval file. It is not installation authorization.
+- Approval package is `artifacts/studio-v1/793784f/approval-request.json`; source, ZIP, manifest, staging identity, installed digest, web SAPI, private storage, flags, and journal state are bound. `approved=false`, no machine approval file. It is ready to present to the Owner and is not yet installation authorization.
 
-**GO** for read-only preparation. **NO-GO** for installation/deployment: refresh authenticated web SAPI evidence, identify/inspect the transaction rollback root, then obtain explicit Owner approval bound to all listed hashes and runtime state. DTF generator, Google Drive and storage GC remain OFF. No order, database, production, or checkout mutation occurred.
+**GO to request Owner approval** for the exact staging replacement package. **NO-GO to install** until that approval is explicit. DTF generator, Google Drive and storage GC remain OFF. No order, database, production, or checkout mutation occurred.

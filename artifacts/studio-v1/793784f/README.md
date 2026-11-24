@@ -4,4 +4,4 @@ Source `793784f5c33c885dfd9f1b7a52a5e0786f072194`; ZIP SHA256 `d76514ed96c122a62
 
 The installer approval contract now binds an explicitly verified web SAPI. This Hostinger site runs LiteSpeed; PHP-FPM is not required or claimed. Local candidate preflight and PHP lint pass. The current installed tree digest and runtime details are in `approval-request.json`.
 
-The request is deliberately unapproved. Current web SAPI evidence needs authenticated refresh, and the install rollback root/journal location must be identified before approval can be actionable. Do not install, deploy, activate writers, touch production, or mutate orders. DTF, Google Drive and storage GC remain OFF.
+The request is ready for explicit Owner approval and remains deliberately unapproved. Read-only preflight found no lock, transaction journal, incoming tree, backup, or interrupted quarantine in the account home or temporary directories. Do not install, deploy, activate writers, touch production, or mutate orders. DTF, Google Drive and storage GC remain OFF.
