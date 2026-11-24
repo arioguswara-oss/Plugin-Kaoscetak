@@ -81,14 +81,19 @@ function sanro_studio_render_settings() {
     $options = $legacy_compat ? sanro_studio_options() : ['admin_preview' => false];
     $native = sanro_studio_native_capabilities();
     echo '<div class="wrap"><h1>SANRO Studio</h1>';
-    echo '<p>Fondasi editor SANRO Studio. Integrasi harga Kaoscetak dan Drive belum diaktifkan.</p>';
+    echo '<p>Editor SANRO Studio native dan integrasi WooCommerce. Fitur penulisan checkout, produksi, dan Drive tetap mengikuti konfigurasi server.</p>';
     echo '<table class="widefat striped"><tbody>';
     $rows = [
         'WooCommerce' => $state['woocommerce'] ? 'Terdeteksi' : 'Belum aktif',
         'Mode core' => $legacy_compat ? 'Kompatibilitas lama (opt-in)' : 'SANRO Studio native',
         'Editor buyer' => sanro_studio_frontend_enabled() ? 'Aktif melalui konfigurasi server' : 'Nonaktif (default)',
         'Draft API' => sanro_studio_draft_rest_enabled() ? 'Aktif melalui konfigurasi server' : 'Nonaktif (default)',
-        'Checkout' => 'Belum tersedia',
+        'Checkout WooCommerce' => function_exists('sanro_studio_pricing_wc_enabled')
+            && sanro_studio_pricing_wc_enabled()
+            ? 'Aktif melalui konfigurasi server'
+            : (function_exists('sanro_studio_pricing_lock_order')
+                ? 'Kode tersedia; writer menunggu aktivasi server'
+                : 'Komponen checkout belum dimuat'),
     ];
     // Expose only operational state, never the private absolute filesystem path.
     $private_path = defined('SANRO_STUDIO_PRIVATE_MASTER_DIR')
@@ -162,7 +167,7 @@ function sanro_studio_render_settings() {
         ? $preferences['studio_label'] : 'SANRO Studio';
     $default_side = ($preferences['default_side'] ?? 'front') === 'back' ? 'back' : 'front';
     echo '<h2>Preferensi Studio Native</h2>';
-    echo '<p class="description">Preferensi tersimpan untuk integrasi editor berikutnya. Tidak mengaktifkan checkout atau mengubah produk.</p>';
+    echo '<p class="description">Preferensi sesi editor buyer. Menyimpan preferensi tidak mengaktifkan writer checkout atau mengubah produk.</p>';
     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
     echo '<input type="hidden" name="action" value="sanro_studio_save">';
     echo '<input type="hidden" name="settings_type" value="native_preferences">';

@@ -32,7 +32,12 @@ foreach($roles as $role=>$caps){
     $html=ob_get_clean();
     if($role==='subscriber')ss_assert($denied&&$html==='','unauthorized root denied');
     elseif($role==='shop_manager')ss_assert(!$denied&&strpos($html,'Integration Status')!==false&&strpos($html,'<form')===false,'manager root opens status without settings form');
-    else ss_assert(!$denied&&strpos($html,'settings_type')!==false,'settings owner still gets original settings forms: '.$role);
+    else {
+        ss_assert(!$denied&&strpos($html,'settings_type')!==false,'settings owner still gets original settings forms: '.$role);
+        ss_assert(strpos($html,'Kode tersedia; writer menunggu aktivasi server')!==false,'checkout dashboard distinguishes implementation from disabled staging writer: '.$role);
+        ss_assert(strpos($html,'Preferensi sesi editor buyer')!==false,'native preference description reflects its actual role: '.$role);
+        ss_assert(strpos($html,'integrasi editor berikutnya')===false,'stale future-integration claim removed: '.$role);
+    }
 }
 $children=[];foreach($GLOBALS['ss_submenus'] as $entry)$children[$entry[4]]=$entry;
 ss_assert($children['sanro-studio'][3]==='manage_options','settings capability unchanged');

@@ -1,5 +1,11 @@
 # SANRO Studio — satu baseline resmi development
 
+## Milestone: admin status clarification dan release gate — 24 November 2026
+
+Dashboard independen SANRO Studio kini membedakan kode checkout WooCommerce yang tersedia dari writer staging yang masih OFF; deskripsi preferensi native diperjelas. Panel order tetap dipertahankan. Regression contract **54 assertions PASS**, PHP lint dan `git diff --check` PASS. Baseline resmi tetap **92,00% (+0,00)** karena perubahan copy/status bukan bukti E2E baru.
+
+Final release/install **NO-GO** saat ini: dua percobaan SSH read-only (sandbox dan escalation resmi) ke alias `kaoscetak-staging` gagal `Permission denied (publickey,password)`. Tidak ada aktivasi writer, order, file atau perubahan staging/production. Drive dan storage GC OFF. Setelah akses pulih, tetap perlu fresh staging gate, satu order sintetis unpaid, validasi DTF lokal, serta paket final terinstal dan terverifikasi. OAuth Drive/folder privat belum disediakan; kebutuhan Owner ada pada [panduan konfigurasi Drive](../qa/studio-drive-owner-configuration-20261124.md).
+
 ## Checkpoint terbaru — staging update dan buyer completion
 
 ## Checkpoint: scope correction dan function completion
