@@ -1,10 +1,11 @@
 {
   "schema": 1,
   "kind": "OWNER_APPROVAL_REQUEST",
-  "status": "PENDING_OWNER_APPROVAL",
-  "approved": false,
-  "activation_authorized": false,
+  "status": "OWNER_APPROVED_BUT_GATE_BLOCKED",
+  "approved": true,
+  "activation_authorized": true,
   "deployment_authorized": false,
+  "owner_approval_evidence": "Explicit Owner approval in conversation on 2026-11-24, bound to this exact staging target and installed candidate. Authorization is conditional on all preconditions; no writer may be enabled while any gate is blocked.",
   "target": {
     "url": "https://saddlebrown-peafowl-616656.hostingersite.com",
     "ssh_alias": "kaoscetak-staging",

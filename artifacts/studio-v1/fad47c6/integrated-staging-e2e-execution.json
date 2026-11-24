@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "result": "BLOCKED_BEFORE_WRITES",
+  "checked_at_utc": "2026-11-24T08:15:39Z",
+  "owner_approval": "GRANTED_FOR_EXACT_PACKAGE",
+  "target": {
+    "url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+    "ssh_alias": "kaoscetak-staging",
+    "ssh_hostname": "id-dci-web1631.main-hosting.eu",
+    "account": "u606139982",
+    "document_root": "/home/u606139982/domains/saddlebrown-peafowl-616656.hostingersite.com/public_html",
+    "wordpress_home_and_site_url": "PASS_EXACT_STAGING",
+    "production_accessed": false
+  },
+  "candidate": {
+    "source_commit": "fad47c6f508258d594f92daca79c337d6911b404",
+    "plugin_digest": "6d65fde1ceda80b1551da51817ccef14f0d618f1d5dffdcfcb412a8c129cc2bb",
+    "zip_sha256": "b83c1b03d18e0633d502aff09d9b1d40f01eb216a22850a7c990fc40c78a5723",
+    "manifest_sha256": "8664f584c4b746120c98ed50b337fc9616508f3b390eca3fa2a8429a370f8309",
+    "installed_tree_digest": "60c8b0f3a272b024537e152fe46763c31b1beafcb36933fa2e57bb115c132273",
+    "result": "PASS_EXACT_MATCH"
+  },
+  "fresh_read_only_gates": {
+    "active_sanro_studio_and_woocommerce": "PASS",
+    "private_master_and_preview_storage_outside_document_root_mode_0700": "PASS",
+    "checkout_flags": "PASS_OFF",
+    "dtf_flags": "PASS_OFF",
+    "drive_flags": "PASS_OFF",
+    "storage_gc": "PASS_OFF",
+    "primary_installer_journal": "PASS_COMMITTED_EXACT_CANDIDATE",
+    "additional_old_journal_under_ssh_directory": "COMMITTED_OLD_SOURCE_081A63F; NOT_USED_FOR_CURRENT_INSTALL_TRANSACTION",
+    "staging_sandbox_payment_gateway": "FAIL_NO_ENABLED_PAYMENT_GATEWAYS",
+    "drive_parent_folder": "FAIL_NOT_CONFIGURED",
+    "drive_oauth_provider": "FAIL_NOT_REGISTERED",
+    "admin_visual_screenshot": "NOT_TESTED_NO_AUTHENTICATED_ADMIN_BROWSER_SESSION",
+    "installer_lock": "NOT_TESTED_NO_INSTALLER_OPERATION"
+  },
+  "actions": {
+    "checkout_writer_enabled": false,
+    "dtf_writer_enabled": false,
+    "drive_writer_enabled": false,
+    "storage_gc_enabled": false,
+    "order_created": false,
+    "payment_attempted": false,
+    "dtf_artifact_created": false,
+    "drive_folder_or_upload_created": false,
+    "production_accessed": false,
+    "source_modified": false
+  },
+  "stop_reason": [
+    "No enabled staging sandbox payment gateway was present; the approved one-order limit could not be safely exercised.",
+    "SANRO Studio Drive parent folder is absent and no trusted OAuth token provider is registered; the staging-only private destination cannot be verified.",
+    "No authenticated browser session was available to capture the requested visual admin menu."
+  ],
+  "recovery": "All checkout, DTF, Drive, and storage GC writer flags were freshly read as OFF and were never changed. No rollback was needed.",
+  "progress": {
+    "baseline_before": "92.00%",
+    "baseline_after": "92.00%",
+    "delta": "0.00",
+    "rubric_credit": "No new release milestone passed; blocked integrations and screenshot receive no credit."
+  }
+}

@@ -2,6 +2,10 @@
 
 ## Checkpoint terbaru — staging update dan buyer completion
 
+## Checkpoint: integrated staging E2E gate
+
+Owner menyetujui paket terpadu `fad47c6`. Pemeriksaan fresh read-only mengonfirmasi staging/candidate/tree digest dan private roots; semua writer/GC OFF. Eksekusi berhenti sebelum write karena tidak ada payment gateway sandbox aktif, Drive parent folder/OAuth provider tidak dikonfigurasi, dan sesi browser admin terautentikasi tidak tersedia. Tidak ada order, payment, file DTF/Drive, perubahan konfigurasi atau source. Rincian: [hasil E2E gate](../qa/studio-integrated-staging-e2e-20261124.md) dan [evidence](../../artifacts/studio-v1/fad47c6/integrated-staging-e2e-execution.json). Baseline **92,00% → 92,00%, delta 0,00**; tidak ada kredit rubrik baru.
+
 ## Checkpoint: V1 accelerated completion sprint
 
 [Matriks status, rubrik QA, dan paket E2E satu sesi](../qa/studio-v1-completion-sprint-20261124.md). Source review tidak menemukan gap implementasi pada checkout/order WooCommerce, DTF candidate generation, atau Drive workflow; ketiganya memiliki implementasi dan fixture lokal, sedangkan integrasi staging nyata belum diuji. Menu independen sudah terdaftar secara live; screenshot admin terautentikasi belum tersedia. Paket approval terpadu yang terikat pada kandidat terpasang ada di `artifacts/studio-v1/fad47c6/integrated-staging-e2e-approval.json`; status pending, writer tetap OFF.
