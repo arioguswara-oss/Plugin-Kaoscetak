@@ -1,0 +1,87 @@
+{
+  "date_wib": "2026-11-24",
+  "target_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "site_id": 258754643,
+  "candidate_source": "f45b43ba191ce49ffad67070e0643918765fe719",
+  "code_feature_commit": "e9fb9c46c11ba03b5382949f73ddbe1cf5f363b9",
+  "four_source_gaps": {
+    "H04": "CLOSED_CODE_LOCAL_EVIDENCE",
+    "H05": "CLOSED_CODE_LOCAL_EVIDENCE",
+    "M06": "CLOSED_CODE_LOCAL_EVIDENCE",
+    "M07": "CLOSED_CODE_LOCAL_EVIDENCE"
+  },
+  "wordpress_mcp": {
+    "access": "PASS",
+    "platform": "jetpack",
+    "plugins_live": {
+      "sanro-studio": "0.1.0-dev ACTIVE",
+      "woocommerce": "11.3.0 ACTIVE",
+      "legacy-staging-qa": "0.1.0 INACTIVE"
+    },
+    "classic_cart": {
+      "id": 16,
+      "status": "publish",
+      "content": "[woocommerce_cart]"
+    },
+    "classic_checkout": {
+      "id": 17,
+      "status": "publish",
+      "content": "[woocommerce_checkout]"
+    },
+    "runtime_or_filesystem_abilities": "core/woocommerce abilities not offered; published reviewed abilities only Jetpack Forms"
+  },
+  "browser": {
+    "surface": "Cloud Browser",
+    "mode": "read-only server state; unsaved local input only",
+    "entry": "https://saddlebrown-peafowl-616656.hostingersite.com/custom-2/",
+    "editor": "https://saddlebrown-peafowl-616656.hostingersite.com/custom-2/?sanro_studio_editor=1&product_id=24",
+    "https_load": "PASS",
+    "side_colour_input": "PASS",
+    "case": {
+      "front": "SANRO text / A5",
+      "back": "blank",
+      "quantity": {
+        "S": 1,
+        "M": 1,
+        "L": 1
+      },
+      "client_estimate_idr": 195000,
+      "server_quote": "NOT_TESTED"
+    },
+    "runtime_buyer_asset": "ccf75da12b01",
+    "candidate_buyer_asset": "9573ce5cdcb9",
+    "candidate_controls_on_live": {
+      "collection": false,
+      "remove_background": false,
+      "mockup_size": false
+    },
+    "candidate_runtime_match": "FAIL",
+    "http422": "NOT_REPRODUCED_READ_ONLY; no draft/cart POST attempted",
+    "console_note": "422 filter returned no entries; extension telemetry errors are not REST server evidence",
+    "admin": "WordPress login required; no credential entry"
+  },
+  "providers": {
+    "tinyfish": "NEGATIVE_WALLET; no run started or top-up",
+    "hostinger_hosting": "not exposed; provider discovery returned only Hostinger Mail",
+    "jack_hermes_codex": "NOT_RUN; not a dependency"
+  },
+  "artifact_validation": {
+    "archive_members": 78,
+    "all_member_sha256": "PASS",
+    "manifest_matches_candidate_source": "PASS",
+    "SHA256SUMS": "PASS",
+    "installer_pinned_source": "f45b43ba191ce49ffad67070e0643918765fe719",
+    "previous_targeted_lint_tests": "REUSED_UNCHANGED_NO_FULL_AUDIT"
+  },
+  "runtime_unverified": [
+    "PHP_FPM",
+    "GD_FreeType_ctype_fileinfo_int64",
+    "private_roots_and_permissions",
+    "writer_flags",
+    "full_existing_plugin_tree_digest",
+    "object_cache_lease_semantics",
+    "actual_CORS",
+    "current_live_source_SHA"
+  ],
+  "deployment_authorized": false
+}

@@ -2,6 +2,8 @@
 
 24 November2026 WIB. Checkpoint final native feature gap closure melanjutkan audit HEAD `591bf1b91bbbd5a29088f0123a5b0906d11f5cec`. **90,50% →90,50%, delta0,00**. Empat gap native H04/H05/M06/M07 telah ditutup pada kode dan tes lokal terarah. Bobot SANRO-7-v1 dan saldo historis tetap; scope ini sebelumnya sudah masuk estimasi historis, sehingga tidak diberi kredit kedua atau kalibrasi baru. Runtime/E2E belum sign-off.
 
+Checkpoint terbaru: [Direct staging readiness](../qa/studio-direct-staging-readiness-20261124.md). Real Cloud Browser + WordPress MCP preflight membuktikan entry/editor lama dan classic cart/checkout; asset runtimeccf75da12b01 berbeda dari kandidat9573ce5cdcb9. ZIP immutable sourcef45b43b kini disimpan beserta manifest/checksum/approval request di artifacts/studio-v1/f45b43b. Runtime FPM/flags/tree digest dan E2E kandidat tetapNOT TESTED; no admin credit/progress increase. Jack/Hermes bukan dependency; approval request bukan izin deploy.
+
 | Tahap | Bobot | Sebelumnya | Sekarang | Kontribusi sekarang | Delta berbobot |
 |---|---:|---:|---:|---:|---:|
 | 1. Fondasi/core |25%|95%|95%|23,75|0,00|
