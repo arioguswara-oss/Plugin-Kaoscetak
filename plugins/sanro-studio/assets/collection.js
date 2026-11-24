@@ -10,7 +10,7 @@
  function remember(token){session=token;try{sessionStorage.setItem('sanro-collection-session',token);}catch(_error){}}
  async function api(path,body,share){
   const response=await fetch(base+path,{method:body===undefined?'GET':'POST',credentials:'same-origin',cache:'no-store',
-   headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Collection-Token':session,'X-Sanro-Share-Token':share||''},body:body===undefined?undefined:JSON.stringify(body)});
+   headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),'X-Sanro-Collection-Token':session,'X-Sanro-Share-Token':share||''},body:body===undefined?undefined:JSON.stringify(body)});
   const value=await window.SanroStudioTransport.readJson(response);
   if(!response.ok||!value.valid)throw new Error(value.message||'Koleksi belum dapat diakses ('+response.status+').');return value;
  }
@@ -44,7 +44,7 @@
  q('[data-logout]').addEventListener('click',()=>run(async()=>{await api('/collection/logout',{});remember('');list.replaceChildren();status.textContent='Akses koleksi pada sesi ini telah dicabut.';}));
  q('[data-save]').addEventListener('click',()=>run(async()=>{
   if(typeof root.sanroCollectionReady!=='function')throw new Error('Editor belum siap.');const credentials=await root.sanroCollectionReady();
-  const response=await fetch(base+'/drafts/'+credentials.id+'/collection',{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':credentials.token},body:JSON.stringify({title:q('[data-title]').value||'Desain saya'})});
+  const response=await fetch(base+'/drafts/'+credentials.id+'/collection',{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),'X-Sanro-Owner-Token':credentials.token},body:JSON.stringify({title:q('[data-title]').value||'Desain saya'})});
   const value=await window.SanroStudioTransport.readJson(response);if(!response.ok||!value.valid)throw new Error(value.message||'Verifikasi email pemilik desain dan simpan draft terbaru terlebih dahulu.');remember(value.collection_token);await load();status.textContent='Snapshot tersimpan permanen. Share lama otomatis dicabut.';
  }));
  // Fragment secrets are removed from browser history and never sent as query/referrer parameters.

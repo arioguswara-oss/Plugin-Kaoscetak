@@ -1,5 +1,13 @@
 # SANRO Studio — satu baseline resmi development
 
+## Takeover Work — 24 November 2026, gate instalasi via WordPress
+
+Owner mengotorisasi instalasi staging dan maksimal satu order sintetis tanpa pembayaran nyata. Checkpoint `887fe96`, kandidat awal `c0413fd`, dan live source `fad47c6` telah dibaca ulang. Sesi admin Cloud Browser terautentikasi; menu independen dan storage GC OFF teramati. Tidak memakai SSH Codex, tidak memulai Full Audit atau worker lain.
+
+Temuan runtime baru: simpan draft valid pada sesi admin mendapat HTTP403. Source editor tidak mengirim `X-WP-Nonce`, sehingga autentikasi cookie REST WordPress dapat melepas identitas sebelum nonce draft diperiksa. Bootstrap dan seluruh transport buyer/koleksi kini mengirim nonce REST sambil mempertahankan nonce draft dan token ownership. Fix source IMPLEMENTED; runtime setelah instalasi masih NOT TESTED. Node targeted regression PASS (9 cart termasuk identitas login, 15 startup, 10 image/master, 18 geometry), lint JS/PHP dan diff PASS. Transport instalasi PHP terbatas untuk exact staging disiapkan: paket/source/checksum terikat, fresh digest/flags/private roots, lock bersama installer lama, journal, backup privat dipertahankan dan recovery idempotent. Enam skenario transaksi lokal PASS termasuk process death tepat setelah kedua rename. Tidak ada perubahan kode fitur selain perbaikan autentikasi ini.
+
+Folder Drive staging baru dibuat privat (owner individual saja, shared=false); bukan bukti OAuth runtime atau upload produksi. Gate server, instalasi baru, satu order, DTF lokal dan OAuth Drive masih pending. Baseline resmi **92,00% → 92,00%, delta0,00**; belum ada kredit acceptance tambahan.
+
 ## Milestone: candidate V1 dibangun; final install terblokir — 24 November 2026
 
 Source `c0413fdc477c1370435a20a3160fa4460f95fcf7`; paket kandidat 77 file dibangun dua kali dengan ZIP dan manifest identik. PHP CLI lint + candidate PLAN_ONLY preflight PASS; menu/admin contract 54 assertions PASS. Artefak ada di [paket c0413fd](../../artifacts/studio-v1/c0413fd/README.md), termasuk ZIP, manifest, SHA256SUMS, evidence dan request kondisional. Checksum ZIP `b0ce3263452ccc3ee7c3e6ef20bb22e25ced9c4a9463cb218977c27d339d2738`; manifest `a033a48595c8e17762f4b291b9d4a720e10dfcefbaa70ad0052c56da0d38bb4c`.
@@ -54,10 +62,10 @@ Checkpoint terbaru: [Direct staging readiness](../qa/studio-direct-staging-readi
 | 4. Harga server/quote |10%|96%|96%|9,60|0,00|
 | 5. Simpan/ownership/share |10%|98%|98%|9,80|0,00|
 | 6. Checkout/produksi/Drive |20%|97%|97%|19,40|0,00|
-| 7. QA/rilis/mobile |10%|40%|40%|4,00|0,00|
-| **Subtotal tujuh tahap** |**100%**|—|—|**90,35**|**0,00**|
+| 7. QA/rilis/mobile |10%|55%|55%|5,50|0,00|
+| **Subtotal tujuh tahap** |**100%**|—|—|**91,85**|**0,00**|
 | Saldo Owner historis belum teralokasi |—|—|—|0,15|0,00|
-| **Total baseline development** |—|**90,50%**|**90,50%**|**90,50**|**0,00**|
+| **Total baseline development** |—|**92,00%**|**92,00%**|**92,00**|**0,00**|
 
 Saldo0,15 tetap rekonsiliasi historis72,10 vs71,95 checkpoint2d945be. Tabel adalah baseline estimasi scope historis, **bukan persentase jumlah fitur wajib yang sudah PASS**. Audit sebelumnya menemukan gap nativeH04/H05/M06/M07 yang kini ditutup pada kode; khususnya nilai historis tahap5 tidak boleh dibaca sebagai bukti koleksi/share native sudah lengkap. Tanpa rubrik subfitur resmi, tidak mengarang kalibrasi baru atau menyembunyikan gap dengan kenaikan QA. Matriks audit menjadi syarat GO yang lebih kuat daripada angka ini.
 

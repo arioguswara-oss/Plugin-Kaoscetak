@@ -277,7 +277,7 @@
   const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(id)
    +'/master-read/'+name,{
    method:'GET',credentials:'same-origin',cache:'no-store',
-   headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':token}
+   headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),'X-Sanro-Owner-Token':token}
   });
   if(!response.ok)throw new Error('Master privat '+name+' tidak tersedia ('+response.status+').');
   const data=await response.json();
@@ -373,7 +373,7 @@
   if(typeof credentials.id!=='string'||typeof credentials.token!=='string'
    ||!/^[a-f0-9-]{36}$/i.test(credentials.id)||!/^[a-f0-9]{64}$/.test(credentials.token))return false;
   const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(credentials.id),{
-   method:'GET',headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':credentials.token},
+   method:'GET',headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),'X-Sanro-Owner-Token':credentials.token},
    credentials:'same-origin',cache:'no-store'});
   if(response.status===410){
    try{sessionStorage.removeItem(draftStorageKey)}catch(_error){}
@@ -582,7 +582,7 @@
    if(saving||uploadingMaster||!savedId||savedRevision!==editRevision||!boundMasterRefs[side]){status.textContent='Unggah master dan simpan draft terbaru dahulu.';return;}
    const name=side,source=sides[name].url;uploadingMaster=true;button.disabled=true;status.textContent='Memproses gambar secara lokal…';
    try{
-    const response=await fetch(config.draft_api.url+'/'+savedId+'/remove-background/'+name,{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken},body:JSON.stringify({expected_design_hash:lastKnownDesignHash,restore,tolerance:Number(q('#sanro-background-tolerance').value)})});
+    const response=await fetch(config.draft_api.url+'/'+savedId+'/remove-background/'+name,{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),'X-Sanro-Owner-Token':ownerToken},body:JSON.stringify({expected_design_hash:lastKnownDesignHash,restore,tolerance:Number(q('#sanro-background-tolerance').value)})});
     const value=await window.SanroStudioTransport.readJson(response);if(!response.ok||!value.valid)throw new Error(value.message||'Pemrosesan gambar ditolak.');
     const url=await readDraftMaster(savedId,ownerToken,name,value.file_id);
     if(sides[name].url!==source){URL.revokeObjectURL(url);throw new Error('Gambar editor berubah. Simpan ulang atau buka draft server.');}
@@ -603,7 +603,7 @@
     requestEmail.disabled=confirmEmail.disabled=true;
     try{
      const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/owner-email/'+operation,{
-      method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken},
+      method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),'X-Sanro-Owner-Token':ownerToken},
       body:JSON.stringify(operation==='request'?{email:email.value.trim()}:{code:code.value.trim()})
      });
      const result=await response.json();
@@ -634,7 +634,7 @@
     try{
      const draftResponse=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId),{
       method:'GET',credentials:'same-origin',cache:'no-store',
-      headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken}
+      headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),'X-Sanro-Owner-Token':ownerToken}
      });
      if(!draftResponse.ok)throw new Error('Draft tidak dapat diverifikasi ('+draftResponse.status+').');
      const currentDraft=await draftResponse.json();
@@ -690,7 +690,7 @@
        throw new Error('Desain berubah selama persiapan upload.');
       const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/masters/'+name,{
        method:'POST',credentials:'same-origin',cache:'no-store',
-       headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,
+       headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),
         'X-Sanro-Owner-Token':ownerToken},
        body:JSON.stringify({image_base64:encoded,design_hash:designHash})
       });
@@ -702,7 +702,7 @@
       const readback=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)
        +'/master-read/'+name,{
        method:'GET',credentials:'same-origin',cache:'no-store',
-       headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken}
+       headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),'X-Sanro-Owner-Token':ownerToken}
       });
       if(!readback.ok)throw new Error('Verifikasi master '+name+' gagal ('+readback.status+').');
       const verified=await readback.json();
@@ -743,7 +743,7 @@
      if(editRevision!==revisionAtStart)throw new Error('Desain berubah sebelum metadata disimpan.');
      const commit=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId),{
       method:'POST',credentials:'same-origin',cache:'no-store',
-      headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,
+      headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),
        'X-Sanro-Owner-Token':ownerToken},
       body:JSON.stringify({design,expected_design_hash:designHash})
      });
@@ -752,7 +752,7 @@
       throw new Error('Master terunggah, tetapi metadata gambar belum tersimpan ('+commit.status+').');
      const fresh=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId),{
       method:'GET',credentials:'same-origin',cache:'no-store',
-      headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken}
+      headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),'X-Sanro-Owner-Token':ownerToken}
      });
      if(!fresh.ok)throw new Error('Metadata tersimpan, tetapi verifikasi revisi gagal.');
      const updated=await fresh.json();
@@ -791,7 +791,7 @@
       if(editRevision!==revisionAtStart)throw new Error('Desain berubah. Simpan ulang sebelum upload.');
       const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/previews/'+name,{
        method:'POST',credentials:'same-origin',cache:'no-store',
-       headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken},
+       headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),'X-Sanro-Owner-Token':ownerToken},
        body:JSON.stringify({image_base64:encoded,expected_design_hash:lastKnownDesignHash})
       });
       if(response.status===410)throw new Error('Draft kedaluwarsa. Simpan draft baru.');
@@ -803,7 +803,7 @@
       const readback=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)
        +'/preview-read/'+name,{
        method:'GET',credentials:'same-origin',cache:'no-store',
-       headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken}
+       headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),'X-Sanro-Owner-Token':ownerToken}
       });
       const verified=await window.SanroStudioTransport.readJson(readback);
       if(!verified.valid||verified.file_id!==result.file_id||verified.image_base64!==encoded
@@ -816,7 +816,7 @@
       for(const input of qtyInputs.filter(input=>Number(input.value)>0))for(const name of ['front','back']){
        const encoded=await makeDesignPreview(name,input.dataset.size);if(!encoded)continue;
        if(editRevision!==revisionAtStart)throw new Error('Desain berubah selama preview ukuran.');
-       const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/previews/'+name+'/variant/'+encodeURIComponent(input.dataset.size),{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken},body:JSON.stringify({image_base64:encoded,expected_design_hash:lastKnownDesignHash})});
+       const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/previews/'+name+'/variant/'+encodeURIComponent(input.dataset.size),{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),'X-Sanro-Owner-Token':ownerToken},body:JSON.stringify({image_base64:encoded,expected_design_hash:lastKnownDesignHash})});
        const value=await window.SanroStudioTransport.readJson(response);if(!response.ok||!value.valid)throw new Error('Preview ukuran '+input.dataset.size+' gagal.');
       }
      }
@@ -839,7 +839,7 @@
    quoteStatus.textContent='Memeriksa harga server…';
    try{
     const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/quote',{
-     method:'GET',headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken},
+     method:'GET',headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),'X-Sanro-Owner-Token':ownerToken},
      credentials:'same-origin',cache:'no-store'
     });
     if(response.status===410){
@@ -921,7 +921,7 @@
      status.textContent='Memvalidasi draft dan harga server…';
      const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/cart',{
       method:'POST',credentials:'same-origin',cache:'no-store',
-      headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken}
+      headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),'X-Sanro-Owner-Token':ownerToken}
      });
      const result=await response.json();
      if(!response.ok||!result.valid)throw new Error('Keranjang belum siap ('+response.status+').');
@@ -946,7 +946,7 @@
    const revisionAtSave=editRevision;
    saving=true;saveButton.disabled=true;saveStatus.textContent='Menyimpan metadata teks…';
    try{
-    const headers={'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce};
+    const headers={'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{})};
     if(savedId&&ownerToken)headers['X-Sanro-Owner-Token']=ownerToken;
     const endpoint=savedId?config.draft_api.url+'/'+encodeURIComponent(savedId):config.draft_api.url;
     const payload=savedId?{design,expected_design_hash:lastKnownDesignHash}:{product_id:Number(config.product_id),design};
@@ -956,7 +956,7 @@
     if(!savedId){savedId=result.design_id;ownerToken=result.owner_token}
     const verify=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId),{
      method:'GET',credentials:'same-origin',cache:'no-store',
-     headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken}
+     headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),'X-Sanro-Owner-Token':ownerToken}
     });
     if(!verify.ok)throw new Error('Draft tersimpan tetapi verifikasi revisi gagal. Muat ulang sebelum mengedit.');
     const verified=await verify.json();

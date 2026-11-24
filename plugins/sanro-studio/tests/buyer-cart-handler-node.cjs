@@ -29,7 +29,7 @@ function createHarness(options = {}) {
     },
     contains(node) { return node === visibleButton; }
   };
-  const config = {draft_api: {url:'https://staging.invalid/drafts', nonce:'qa-nonce'}};
+  const config = {draft_api: {url:'https://staging.invalid/drafts', nonce:'qa-nonce', rest_nonce:options.restNonce}};
   const context = {
     root, config,
     q(selector) {
@@ -79,6 +79,14 @@ function createHarness(options = {}) {
   assert.equal(replaced.redirect(), 'https://staging.invalid/cart/');
   assert.equal(replaced.visibleButton.disabled, false);
   assert.equal(replaced.oldButton.disabled, false);
+  pass();
+
+  assert.equal(replaced.requests[0].request.headers['X-WP-Nonce'],undefined,'Legacy guest configuration remains supported');
+  const signedIn=createHarness({restNonce:'signed-in-rest-nonce'});
+  await signedIn.click();
+  assert.equal(signedIn.requests[0].request.headers['X-WP-Nonce'],'signed-in-rest-nonce');
+  assert.equal(signedIn.requests[0].request.headers['X-Sanro-Draft-Nonce'],'qa-nonce');
+  assert.equal(signedIn.requests[0].request.headers['X-Sanro-Owner-Token'],'local-test-token');
   pass();
 
   const unrelated = createHarness();

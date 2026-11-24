@@ -159,6 +159,8 @@ function sanro_studio_render_buyer_editor() {
         $config['draft_api'] = [
             'url' => esc_url_raw(rest_url('sanro-studio/v1/drafts')),
             'nonce' => wp_create_nonce('sanro_studio_draft'),
+            // Preserve signed-in identity through WordPress REST cookie authentication.
+            'rest_nonce' => wp_create_nonce('wp_rest'),
         ];
     }
     if (!empty($config['draft_api']) && defined('SANRO_STUDIO_ENABLE_MASTER_UPLOAD')
