@@ -1,5 +1,17 @@
 # SANRO Studio — satu baseline resmi development
 
+## ACTIVE — V1 Final Release1.0.0 installed and verified on staging
+
+Owner revisionf415ec55 applied. **94,00% →96,50%, delta+2,50** under the existing stage7 rubric: native Administrator Drive setup+10 and allowed normal buyer checkout/order boundary+15; stage7 now100/100. No duplicate credit, stages1–6 and Owner0,15 balance remain. Mandatory revised V1 checklist complete; old broad historical estimate is not artificially rounded to100.
+
+Source4f5d31ee2a1244674a8a7111cd43f3e695bbf218 installed/active1.0.0 via official staging transport. Fresh gate/private roots PASS; installed treec3524d76a6992179716946b9c353e98d9baad11e13feb8bfa24d387fe383db61 independently matches ZIP. Reproducible ZIP/manifest, CRC and credential/temporary-file exclusion PASS. Utility/checkout safety guard deactivated; final native cart3sizes/240000IDR PASS afterward. DTF/Drive temporary writer configuration restored, GC OFF.
+
+Drive setup feature IMPLEMENTED / VERIFIED. Runtime configuration **NOT CONFIGURED**; export OFF. Live Google Cloud/OAuth/consent/upload/readback **DEFERRED BY OWNER**, not blockers or false PASS. Complete required admin controls and offline crypto/lifecycle/permission tests plus live unconfigured controls PASS.
+
+Normal buyer draft7a3205c7/SML private preview/cart/form and Place-order reached real Woo after-validation; native authorization and quote240000 PASS. Only upstream codepayment (no gateway configured). Temporary guard stopped BEFORE second order/payment/profile creation. Existing unpaid order56 creation/binding/preview/DTF evidence retained, no regeneration. No full new-order/payment E2E claim.
+
+**GO — Final Release for authorized staging under revised V1 scope. Production/merge remain unauthorized.** [Final acceptance](../qa/studio-v1-final-acceptance.md), [release package/evidence](../../artifacts/studio-v1/1.0.0/README.md). Earlier NO-GO/live-Drive checkpoints below are historical and superseded by this entry.
+
 ## Owner scope revision f415ec55 — implementation milestone
 
 Live Google Cloud/OAuth/consent/upload/readback **DEFERRED BY OWNER**, no longer a mandatory V1 blocker. Configuration remains NOT CONFIGURED. Native Administrator controls now include settings-tab navigation, Connect/Disconnect, Test Connection, existing folder, status and auto-export preference. Positive lifecycle uses HTTP doubles; disconnected operations make no Google call. Permission/CSRF/encryption/disconnect tests and59 menu assertions PASS. Native auto preference supplements explicit server gates and cannot override OFF.
@@ -117,10 +129,10 @@ Checkpoint terbaru: [Direct staging readiness](../qa/studio-direct-staging-readi
 | 4. Harga server/quote |10%|96%|96%|9,60|0,00|
 | 5. Simpan/ownership/share |10%|98%|98%|9,80|0,00|
 | 6. Checkout/produksi/Drive |20%|97%|97%|19,40|0,00|
-| 7. QA/rilis/mobile |10%|55%|75%|7,50|2,00|
-| **Subtotal tujuh tahap** |**100%**|—|—|**93,85**|**2,00**|
+| 7. QA/rilis/mobile |10%|75%|100%|10,00|2,50|
+| **Subtotal tujuh tahap** |**100%**|—|—|**96,35**|**2,50**|
 | Saldo Owner historis belum teralokasi |—|—|—|0,15|0,00|
-| **Total baseline development** |—|**92,00%**|**94,00%**|**94,00**|**2,00**|
+| **Total baseline development** |—|**94,00%**|**96,50%**|**96,50**|**2,50**|
 
 Saldo0,15 tetap rekonsiliasi historis72,10 vs71,95 checkpoint2d945be. Tabel adalah baseline estimasi scope historis, **bukan persentase jumlah fitur wajib yang sudah PASS**. Audit sebelumnya menemukan gap nativeH04/H05/M06/M07 yang kini ditutup pada kode; khususnya nilai historis tahap5 tidak boleh dibaca sebagai bukti koleksi/share native sudah lengkap. Tanpa rubrik subfitur resmi, tidak mengarang kalibrasi baru atau menyembunyikan gap dengan kenaikan QA. Matriks audit menjadi syarat GO yang lebih kuat daripada angka ini.
 

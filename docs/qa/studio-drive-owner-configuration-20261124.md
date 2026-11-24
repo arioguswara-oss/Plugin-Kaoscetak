@@ -1,3 +1,7 @@
+# Optional post-release Owner setup — live OAuth/upload DEFERRED BY OWNER
+
+This guide is for configuration after release, not an outstanding release blocker. Setup controls are complete in1.0.0; no credentials are requested now. Administrator path: SANRO Studio → Pengaturan → Google Drive. Test Connection, Disconnect and auto-export controls are provided. Explicit server safety gates remain authoritative.
+
 # Native SANRO Studio Google Drive configuration
 
 The plugin now includes its own confidential web OAuth provider. No external token-provider plugin is required. Connection never enables Drive/DTF/GC writers.

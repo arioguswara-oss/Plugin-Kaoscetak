@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "source": "4f5d31ee2a1244674a8a7111cd43f3e695bbf218",
+  "state": "STUDIO_VALIDATION_PASS_STOPPED_BEFORE_NEW_ORDER",
+  "normal_woocommerce_validation_hook": true,
+  "native_authorization": true,
+  "quote_total": 240000,
+  "currency": "IDR",
+  "woo_validation_codes": [
+    "payment"
+  ],
+  "existing_order": {
+    "id": 56,
+    "total": "240000",
+    "paid": false
+  },
+  "order_creation_invoked": false,
+  "payment_invoked": false,
+  "customer_profile_updated": false,
+  "boundary_added_before_order_creation": true,
+  "buyer_design_fixture": "7a3205c7-c355-4efe-a9d1-8bb4eecc8d2b",
+  "browser_form": "NORMAL_WOO_CHECKOUT_PLACE_ORDER_SUBMITTED_TO_VALIDATION",
+  "new_order_creation": "NOT_RUN_OWNER_SINGLE_ORDER_CONSTRAINT",
+  "original_order56_creation_evidence": "artifacts/studio-v1/79e0a93/acceptance-execution.json"
+}
