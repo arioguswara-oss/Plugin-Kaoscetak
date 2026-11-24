@@ -1,6 +1,6 @@
 # SANRO Studio integrated staging E2E — 24 November 2026
 
-Owner approved the exact `fad47c6` integrated E2E package. Fresh pre-write probes ran over the approved SSH alias and halted before checkout/order, DTF, or Drive writes when required external prerequisites failed.
+Owner approved the exact `fad47c6` integrated E2E package. The later scope correction removes payment-gateway availability from mandatory SANRO Studio gates and keeps Drive OFF until Owner configuration. The initial probe stopped before checkout/order and DTF because the earlier package incorrectly required a sandbox; that condition is superseded. Follow-up SSH attempts now fail authentication, so staging isolation could not be freshly revalidated for a write.
 
 ## Gate results
 
@@ -13,15 +13,15 @@ Owner approved the exact `fad47c6` integrated E2E package. Fresh pre-write probe
 | Private master/preview roots | PASS — outside document root, mode 0700 |
 | Checkout/DTF/Drive/GC flags before action | PASS — all OFF |
 | Current installer journal | PASS — committed journal matches `fad47c6`; no installer operation was attempted |
-| Sandbox payment | FAIL — no enabled payment gateway is configured |
-| Private Drive target/OAuth | FAIL — parent folder is not configured and trusted access-token provider is not registered |
+| Payment gateway | NOT REQUIRED — no gateway configuration will be changed or used |
+| Private Drive target/OAuth | NOT CONFIGURED — remains OFF per Owner scope |
 | Authenticated visual admin screenshot | NOT TESTED — no authenticated admin browser session was available |
 
 The unrelated committed journal under `~/.ssh` refers to old source `081a63f`; it was not used for this candidate or modified. The current transaction journal is in the private installer directory and matches the installed `fad47c6` candidate.
 
 ## Outcome
 
-The E2E stopped before the first write. No order, payment attempt, production artifact, Drive folder/upload, or configuration change occurred. Checkout, DTF, Drive, and storage GC remained OFF throughout, so no rollback was needed. No source defect was observed; source and candidate hashes remain unchanged. No plugin ZIP rebuild or regression rerun was warranted.
+The initial E2E stopped before the first write. No order, payment attempt, production artifact, Drive folder/upload, or configuration change occurred. Checkout, DTF, Drive, and storage GC remained OFF throughout, so no rollback was needed. Its sandbox-payment gate is superseded by the Owner's scope correction; current SSH authentication failure prevents any fresh staging write.
 
 Fresh gate evidence: [integrated-staging-e2e-execution.json](../../artifacts/studio-v1/fad47c6/integrated-staging-e2e-execution.json). Exact Owner authorization and scope: [integrated-staging-e2e-approval.json](../../artifacts/studio-v1/fad47c6/integrated-staging-e2e-approval.json).
 

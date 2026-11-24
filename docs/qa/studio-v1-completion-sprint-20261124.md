@@ -17,7 +17,7 @@ No unfinished V1 implementation gap was found in checkout, order binding, DTF pa
 
 ## One integrated staging approval
 
-The approval request is [integrated-staging-e2e-approval.json](../../artifacts/studio-v1/fad47c6/integrated-staging-e2e-approval.json). It binds one staging host, the already-installed candidate hashes and tree digest, one synthetic order maximum, sandbox-only payment, private staging Drive upload and DTF candidate generation. GC stays OFF; no install, production access, physical print, merge or customer data is in scope. Approval is pending and no writer has been activated. If the sandbox gateway or staging-only Drive identity cannot be verified, checkout/order creation stops before the first write.
+The approval request is [integrated-staging-e2e-approval.json](../../artifacts/studio-v1/fad47c6/integrated-staging-e2e-approval.json). Owner's scope correction removes payment gateway configuration and sandbox payment from SANRO Studio gates. One unpaid/pending WooCommerce order may be created after fresh staging isolation checks; it may be marked production-ready through the existing authorized WooCommerce action for local DTF generation. Drive and GC remain OFF until Owner configures and authorizes the private Drive target.
 
 The current installed package identities are reused from [the installation record](../../artifacts/studio-v1/fad47c6/approval-request.json). No new plugin ZIP is needed because this sprint found no plugin-source defect and does not change plugin files.
 
@@ -43,5 +43,5 @@ This evidence-based release rubric replaces the undocumented historical stage-7 
 - Implementation gap: **none found** in the requested checkout/Woo/DTF/Drive V1 paths; source behavior is present and guarded.
 - Untested runtime: checkout/order/sandbox payment, order-bound DTF output, real Drive permissions/upload/recovery and authenticated admin screenshot.
 - Writers: checkout, DTF and Drive **OFF**; GC **OFF**.
-- Integrated activation: **NO-GO until one Owner approval** of the attached exact-scope request and successful fresh pre-write gates.
+- Integrated activation: the one-session approval is granted; fresh staging isolation must pass before any order write. Payment, Drive and GC remain outside the checkout/DTF run.
 - Production, new install, merge, live payment and customer/order data: **out of scope**.

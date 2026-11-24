@@ -1,7 +1,9 @@
 {
   "schema": 1,
-  "result": "BLOCKED_BEFORE_WRITES",
+  "result": "BLOCKED_BEFORE_WRITES; GATE_SUPERSEDED_BY_SCOPE_CORRECTION",
   "checked_at_utc": "2026-11-24T08:15:39Z",
+  "scope_corrected_at_utc": "2026-11-24T08:36:31Z",
+  "current_ssh_followup": "FAIL_PUBLICKEY_AUTHENTICATION; NO_REMOTE_WRITE",
   "owner_approval": "GRANTED_FOR_EXACT_PACKAGE",
   "target": {
     "url": "https://saddlebrown-peafowl-616656.hostingersite.com",
@@ -29,9 +31,9 @@
     "storage_gc": "PASS_OFF",
     "primary_installer_journal": "PASS_COMMITTED_EXACT_CANDIDATE",
     "additional_old_journal_under_ssh_directory": "COMMITTED_OLD_SOURCE_081A63F; NOT_USED_FOR_CURRENT_INSTALL_TRANSACTION",
-    "staging_sandbox_payment_gateway": "FAIL_NO_ENABLED_PAYMENT_GATEWAYS",
-    "drive_parent_folder": "FAIL_NOT_CONFIGURED",
-    "drive_oauth_provider": "FAIL_NOT_REGISTERED",
+    "staging_payment_gateway": "NOT_REQUIRED_NO_PAYMENT_ATTEMPT_BY_OWNER_DECISION",
+    "drive_parent_folder": "NOT_CONFIGURED_REMAINS_OFF",
+    "drive_oauth_provider": "NOT_REGISTERED_REMAINS_OFF",
     "admin_visual_screenshot": "NOT_TESTED_NO_AUTHENTICATED_ADMIN_BROWSER_SESSION",
     "installer_lock": "NOT_TESTED_NO_INSTALLER_OPERATION"
   },
@@ -48,8 +50,9 @@
     "source_modified": false
   },
   "stop_reason": [
-    "No enabled staging sandbox payment gateway was present; the approved one-order limit could not be safely exercised.",
-    "SANRO Studio Drive parent folder is absent and no trusted OAuth token provider is registered; the staging-only private destination cannot be verified.",
+    "This earlier attempt applied an incorrect sandbox-payment prerequisite; Owner has since removed that gate.",
+    "SANRO Studio Drive parent folder/provider are not configured and Drive remains OFF per corrected Owner scope.",
+    "The later staging SSH connection attempts failed public-key authentication, preventing fresh isolation verification for any order write.",
     "No authenticated browser session was available to capture the requested visual admin menu."
   ],
   "recovery": "All checkout, DTF, Drive, and storage GC writer flags were freshly read as OFF and were never changed. No rollback was needed.",

@@ -8,7 +8,7 @@ $good = [
  'environment'=>'staging', 'user'=>'u606139982',
  'root'=>'/home/u606139982/domains/saddlebrown-peafowl-616656.hostingersite.com/public_html',
  'approval'=>'ONE_SYNTHETIC_CHECKOUT_ORDER_APPROVED','mode'=>'create',
- 'existing_qa_orders'=>0,'payment_gateways'=>0,'currency'=>'IDR',
+ 'existing_qa_orders'=>0,'currency'=>'IDR',
  'server_quote'=>130000,'order_total'=>130000,'quantity'=>1,'size'=>'M','product_id'=>24,
  'design_id'=>'123e4567-e89b-42d3-a456-426614174000',
  'owner_authorized'=>true,'server_quote_verified'=>true,'all_items_bound'=>true,

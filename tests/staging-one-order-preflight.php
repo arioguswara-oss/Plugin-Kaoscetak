@@ -21,8 +21,7 @@ function sanro_studio_qa_one_order_preflight($context) {
     }
     if (($context['approval'] ?? null) !== 'ONE_SYNTHETIC_CHECKOUT_ORDER_APPROVED'
         || ($context['mode'] ?? null) !== 'create'
-        || ($context['existing_qa_orders'] ?? null) !== 0
-        || ($context['payment_gateways'] ?? null) !== 0) {
+        || ($context['existing_qa_orders'] ?? null) !== 0) {
         return $deny('approval_or_idempotence_missing');
     }
     if (($context['currency'] ?? null) !== 'IDR'

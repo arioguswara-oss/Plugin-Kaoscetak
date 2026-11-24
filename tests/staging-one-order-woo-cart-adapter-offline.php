@@ -26,7 +26,7 @@ $context = [
     'environment' => 'staging', 'user' => 'u606139982',
     'root' => '/home/u606139982/domains/saddlebrown-peafowl-616656.hostingersite.com/public_html',
     'approval' => 'ONE_SYNTHETIC_CHECKOUT_ORDER_APPROVED',
-    'mode' => 'create', 'existing_qa_orders' => 0, 'payment_gateways' => 0,
+    'mode' => 'create', 'existing_qa_orders' => 0,
     'currency' => 'IDR', 'server_quote' => 130000, 'order_total' => 130000,
     'quantity' => 1, 'size' => 'M', 'product_id' => 24, 'design_id' => $id,
     'owner_authorized' => true, 'server_quote_verified' => true,
@@ -50,6 +50,8 @@ $run = static function ($lines, $ctx) {
     return sanro_studio_qa_one_order_cart_readiness(new SanroQaCart($lines), $ctx);
 };
 qa_assert('valid synthetic cart passes pure readiness', $run([$line], $context)['ready'], true);
+$gatewayIndependent = $context; $gatewayIndependent['payment_gateways'] = 3;
+qa_assert('gateway configuration does not gate cart readiness', $run([$line], $gatewayIndependent)['ready'], true);
 foreach ([
     'wrong product' => ['product_id', 25],
     'wrong quantity' => ['quantity', 2],
@@ -73,7 +75,7 @@ qa_assert('two lines rejected', $run([$line, $line], $context)['ready'], false);
 qa_assert('missing cart rejected', sanro_studio_qa_one_order_cart_readiness(null, $context)['ready'], false);
 foreach ([
     'approval' => 'NOT_APPROVED', 'owner_authorized' => false,
-    'verified_checkout_nonce' => false, 'payment_gateways' => 1,
+    'verified_checkout_nonce' => false,
     'order_write_cap' => 0, 'host' => 'kaoscetak.id',
 ] as $key => $value) {
     $changed = $context;

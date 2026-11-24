@@ -2,6 +2,10 @@
 
 ## Checkpoint terbaru — staging update dan buyer completion
 
+## Checkpoint: scope correction dan function completion
+
+Payment gateway/sandbox bukan gate SANRO Studio. Preflight satu-order telah diubah agar tidak bergantung pada jumlah gateway; runtime check mengandalkan API status WooCommerce standar. Owner Drive setup tercatat di [instruksi konfigurasi](../qa/studio-drive-owner-configuration-20261124.md). Upaya SSH terbaru gagal autentikasi, sehingga isolasi staging tidak bisa direfresh; tidak ada order/writer yang dijalankan. Lihat [hasil scope correction](../qa/studio-scope-correction-functional-completion-20261124.md). Buyer/install checks tidak diulang; baseline **92,00% → 92,00%, delta 0,00**.
+
 ## Checkpoint: integrated staging E2E gate
 
 Owner menyetujui paket terpadu `fad47c6`. Pemeriksaan fresh read-only mengonfirmasi staging/candidate/tree digest dan private roots; semua writer/GC OFF. Eksekusi berhenti sebelum write karena tidak ada payment gateway sandbox aktif, Drive parent folder/OAuth provider tidak dikonfigurasi, dan sesi browser admin terautentikasi tidak tersedia. Tidak ada order, payment, file DTF/Drive, perubahan konfigurasi atau source. Rincian: [hasil E2E gate](../qa/studio-integrated-staging-e2e-20261124.md) dan [evidence](../../artifacts/studio-v1/fad47c6/integrated-staging-e2e-execution.json). Baseline **92,00% → 92,00%, delta 0,00**; tidak ada kredit rubrik baru.
