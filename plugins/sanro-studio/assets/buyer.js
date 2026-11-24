@@ -7,10 +7,17 @@
  sides.front=make();sides.back=make();let side=(config.safe_areas[config.default_side]?config.default_side:(config.safe_areas.front?'front':'back'));
  const image=q('.sanro-safe img'),text=q('.sanro-text'),safe=q('.sanro-safe');
  const categories=config.categories;
- const shirtColors=new Set(['#ffffff','#171717','#b91c1c','#1d4ed8','#166534']);
+ const shirtColors=new Set(config.palette&&Object.keys(config.palette).length?Object.keys(config.palette):['#ffffff','#171717','#b91c1c','#1d4ed8','#166534']);
+ const mockupSize=q('#sanro-mockup-size');
+ if(mockupSize)mockupSize.addEventListener('change',()=>render());
+ function mappedMockup(name,size){
+  const matrix=config.mockup_matrix;
+  if(matrix&&Object.keys(matrix).length){const color=matrix[shirtColor.value]||{};return (color[size]||color['*']||{})[name]||null;}
+  return config.mockups&&config.mockups[name]||null;
+ }
  const shirtColor=q('#sanro-shirt-color');
  shirtColor.addEventListener('change',()=>{
-  if(shirtColors.has(shirtColor.value)){editRevision++;q('.sanro-shirt').style.setProperty('--sanro-shirt-color',shirtColor.value);}
+  if(shirtColors.has(shirtColor.value)){editRevision++;q('.sanro-shirt').style.setProperty('--sanro-shirt-color',shirtColor.value);render();}
  });
  q('.sanro-shirt').style.setProperty('--sanro-shirt-color',shirtColor.value);
  const qtyInputs=Array.from(root.querySelectorAll('[data-size]'));
@@ -75,8 +82,7 @@
   const d=sides[side];
   // Merchant-selected WooCommerce Media Library mockup; presentation only.
   // Design geometry, authoritative area and DTF master bindings are unchanged.
-  const mockup = config.mockups && Object.prototype.hasOwnProperty.call(config.mockups,side)
-    ? config.mockups[side] : null;
+  const mockup=mappedMockup(side,mockupSize?mockupSize.value:'S');
   const shirt=q('.sanro-shirt');
   shirt.setAttribute('data-side',side);
   shirt.setAttribute('data-mockup',String(typeof mockup==='string' && /^https?:\/\//i.test(mockup)));
@@ -100,6 +106,7 @@
   root.querySelectorAll('[data-side]').forEach(b=>{b.disabled=!config.safe_areas[b.dataset.side];b.setAttribute('aria-pressed',String(b.dataset.side===side))});
   q('#sanro-side-summary').textContent=['front','back'].map(name=>(name==='front'?'Depan':'Belakang')+': '+(sides[name].url||sides[name].text.trim()?'ada desain ('+sides[name].category+')':'kosong')).join(' · ');
   updateEstimate();requestAnimationFrame(validate);
+  if(typeof refreshBackgroundControl==='function')refreshBackgroundControl();
  }
  function validate(){
   const area=config.safe_areas[side],d=sides[side],rect=safe.getBoundingClientRect(),objects=[];
@@ -394,7 +401,7 @@
    Object.values(masterUrls).forEach(url=>URL.revokeObjectURL(url));
    throw error;
   }
-  Object.assign(boundMasterRefs,result.master_refs||{});
+  Object.assign(boundMasterRefs,result.master_refs||{});refreshBackgroundControl();
   savedId=credentials.id;ownerToken=credentials.token;savedRevision=editRevision;
   lastKnownDesignHash=typeof result.design_hash==='string'?result.design_hash:null;
   saveStatus.textContent='Draft berhasil dibuka kembali. Design ID: '+savedId;
@@ -480,12 +487,12 @@
  }
  // Derived private JPEG preview, not original print-resolution artwork.
  // Require the owner-bound master before previewing an uploaded image.
- async function makeDesignPreview(name){
+ async function makeDesignPreview(name,variantSize){
   await ensureProductionFont();
   const d=sides[name],area=config.safe_areas[name];
   // A blank garment side still needs an owner-bound preview for the native
   // order. It remains absent from design.objects and adds no print surcharge.
-  if(!area)return null;
+  if(!area&&(d.url||d.text.trim()))throw new Error('Sisi cetak tidak dikonfigurasi.');
   if(d.pending||d.file||(d.url&&!boundMasterRefs[name]))
    throw new Error('Unggah dan simpan master '+name+' sebelum membuat preview.');
   const bounds=withPrintZone(name,()=>safe.getBoundingClientRect());
@@ -500,30 +507,43 @@
     probe.src=d.url;
    });
   }
+  const mockupUrl=mappedMockup(name,variantSize||(mockupSize?mockupSize.value:'S'));
+  let garment=null;
+  if(mockupUrl){
+   garment=await new Promise((resolve,reject)=>{const img=new Image();img.crossOrigin='anonymous';img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('Mockup produk gagal dimuat.'));img.src=mockupUrl;});
+  }
   // Fit the private 50 KiB server cap by reducing resolution, then quality.
   // Source/master image bytes are never serialized into this preview payload.
   for(const size of [640,480,360,256]){
    const canvas=document.createElement('canvas');
-   canvas.width=size;canvas.height=size;
+   canvas.width=size;canvas.height=Math.round(size*bounds.height/bounds.width);
    const ctx=canvas.getContext('2d');
    if(!ctx)throw new Error('Canvas tidak tersedia.');
-   ctx.fillStyle=shirtColor.value;ctx.fillRect(0,0,size,size);
+   ctx.clearRect(0,0,size,size);
    if(imagePreview){
     const width=d.imageSize/100*size;
-    const height=width*bounds.width/bounds.height
-     *imagePreview.naturalHeight/imagePreview.naturalWidth;
-    ctx.drawImage(imagePreview,d.imageX/100*size,d.imageY/100*size,width,height);
+    const height=width*imagePreview.naturalHeight/imagePreview.naturalWidth;
+    ctx.drawImage(imagePreview,d.imageX/100*size,d.imageY/100*canvas.height,width,height);
    }
    if(d.text.trim()){
     const fontPx=Math.max(8,Math.round(d.fontSize*size/bounds.width));
-    const x=d.textX/100*size,y=d.textY/100*size;
+    const x=d.textX/100*size,y=d.textY/100*canvas.height;
     ctx.fillStyle=d.textColor;
     ctx.font=fontPx+'px SanroProduction';ctx.textBaseline='top';
     d.text.split('\n').forEach((line,i)=>
      ctx.fillText(line,x,y+i*fontPx*1.2,Math.max(0,size-x)));
    }
+   const output=document.createElement('canvas');output.width=size;output.height=Math.round(size*420/390);
+   const view=output.getContext('2d');if(!view)throw new Error('Canvas preview tidak tersedia.');
+   view.fillStyle='#f5f7fb';view.fillRect(0,0,output.width,output.height);
+   if(garment){const ratio=Math.min(output.width/garment.naturalWidth,output.height/garment.naturalHeight);const w=garment.naturalWidth*ratio,h=garment.naturalHeight*ratio;view.drawImage(garment,(output.width-w)/2,(output.height-h)/2,w,h);}
+   else{
+    view.fillStyle=shirtColor.value;view.beginPath();const points=[[30,5],[40,1],[60,1],[70,5],[100,22],[86,43],[75,37],[75,99],[25,99],[25,37],[14,43],[0,22]];
+    points.forEach(([x,y],i)=>i?view.lineTo(x/100*output.width,y/100*output.height):view.moveTo(x/100*output.width,y/100*output.height));view.closePath();view.fill();
+   }
+   const zone=visualPrintZone(name);view.drawImage(canvas,zone.x/100*output.width,zone.y/100*output.height,zone.width/100*output.width,zone.height/100*output.height);
    for(const quality of [0.75,0.55,0.35,0.2]){
-    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
+    const blob=await new Promise(resolve=>output.toBlob(resolve,'image/jpeg',quality));
     if(blob&&blob.size>=100&&blob.size<=51200){
      return await new Promise((resolve,reject)=>{
       const reader=new FileReader();
@@ -535,6 +555,41 @@
    }
   }
   throw new Error('Preview melebihi batas 50 KB.');
+ }
+ let backgroundScan=0;
+ async function refreshBackgroundControl(){
+  const button=q('#sanro-remove-background');if(!button)return;button.disabled=true;
+  const url=sides[side].url,scan=++backgroundScan;if(!url||sides[side].file||!boundMasterRefs[side])return;
+  try{const img=await new Promise((resolve,reject)=>{const probe=new Image();probe.onload=()=>resolve(probe);probe.onerror=reject;probe.src=url;});
+   const canvas=document.createElement('canvas');canvas.width=img.naturalWidth;canvas.height=Math.min(32,img.naturalHeight);const ctx=canvas.getContext('2d',{willReadFrequently:true});if(!ctx)return;
+   for(let y=0;y<img.naturalHeight;y+=32){
+    if(scan!==backgroundScan||sides[side].url!==url)return;
+    const h=Math.min(32,img.naturalHeight-y);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,y,img.naturalWidth,h,0,0,img.naturalWidth,h);
+    const rgba=ctx.getImageData(0,0,canvas.width,h).data;for(let i=3;i<rgba.length;i+=4)if(rgba[i]<255)return;
+    if(y%512===0)await new Promise(resolve=>setTimeout(resolve,0));
+   }
+   if(scan===backgroundScan)button.disabled=false;
+  }catch(_error){}
+ }
+ root.sanroCollectionReady=async()=>{
+  if(saving||uploadingMaster||!savedId||!ownerToken||savedRevision!==editRevision)throw new Error('Simpan draft terbaru terlebih dahulu.');
+  if(typeof root.sanroUploadCurrentPreviews==='function')await root.sanroUploadCurrentPreviews();
+  return {id:savedId,token:ownerToken};
+ };
+ for(const [selector,restore] of [['#sanro-remove-background',false],['#sanro-restore-background',true]]){
+  const button=q(selector);if(!button)continue;button.addEventListener('click',async()=>{
+   const status=q('#sanro-background-status');
+   if(saving||uploadingMaster||!savedId||savedRevision!==editRevision||!boundMasterRefs[side]){status.textContent='Unggah master dan simpan draft terbaru dahulu.';return;}
+   const name=side,source=sides[name].url;uploadingMaster=true;button.disabled=true;status.textContent='Memproses gambar secara lokal…';
+   try{
+    const response=await fetch(config.draft_api.url+'/'+savedId+'/remove-background/'+name,{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken},body:JSON.stringify({expected_design_hash:lastKnownDesignHash,restore,tolerance:Number(q('#sanro-background-tolerance').value)})});
+    const value=await window.SanroStudioTransport.readJson(response);if(!response.ok||!value.valid)throw new Error(value.message||'Pemrosesan gambar ditolak.');
+    const url=await readDraftMaster(savedId,ownerToken,name,value.file_id);
+    if(sides[name].url!==source){URL.revokeObjectURL(url);throw new Error('Gambar editor berubah. Simpan ulang atau buka draft server.');}
+    if(source)URL.revokeObjectURL(source);sides[name].url=url;sides[name].file=null;boundMasterRefs[name]=value.file_id;render();
+    status.textContent=restore?'Gambar asli dipulihkan. Perbarui preview sebelum checkout.':'Latar polos dihapus. Gambar asli tetap tersedia; perbarui preview sebelum checkout.';
+   }catch(error){status.textContent=error.message;}finally{uploadingMaster=false;refreshBackgroundControl();}
+  });
  }
  if(saveButton&&config.draft_api){
   const requestEmail=q('#sanro-request-owner-email'),confirmEmail=q('#sanro-confirm-owner-email');
@@ -704,7 +759,7 @@
      if(!updated.valid||typeof updated.design_hash!=='string'
       ||!updated.master_refs||completed.some(name=>!updated.master_refs[name]))
       throw new Error('Metadata gambar tidak terikat ke master privat.');
-     Object.assign(boundMasterRefs,updated.master_refs);
+     Object.assign(boundMasterRefs,updated.master_refs);refreshBackgroundControl();
      // A successful server readback turns the local file into a bound master.
      // Do not accidentally upload the same source again on the next click.
      for(const name of completed)sides[name].file=null;
@@ -756,6 +811,14 @@
       completed.push(name);
       if(editRevision!==revisionAtStart)
        throw new Error('Desain berubah selama upload. Simpan draft dan unggah preview terbaru.');
+     }
+     if(config.mockup_matrix&&Object.keys(config.mockup_matrix).length){
+      for(const input of qtyInputs.filter(input=>Number(input.value)>0))for(const name of ['front','back']){
+       const encoded=await makeDesignPreview(name,input.dataset.size);if(!encoded)continue;
+       if(editRevision!==revisionAtStart)throw new Error('Desain berubah selama preview ukuran.');
+       const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/previews/'+name+'/variant/'+encodeURIComponent(input.dataset.size),{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,'X-Sanro-Owner-Token':ownerToken},body:JSON.stringify({image_base64:encoded,expected_design_hash:lastKnownDesignHash})});
+       const value=await window.SanroStudioTransport.readJson(response);if(!response.ok||!value.valid)throw new Error('Preview ukuran '+input.dataset.size+' gagal.');
+      }
      }
      if(!completed.length)throw new Error('Tidak ada desain yang dapat dipratinjau.');
      if(editRevision!==revisionAtStart)throw new Error('Desain berubah setelah preview disimpan. Simpan ulang.');

@@ -126,7 +126,7 @@ function sanro_studio_repeat_complete_verification($id,$owner_token,$code) {
     });
 }
 function sanro_studio_repeat_register_routes() {
-    if(!sanro_studio_draft_rest_enabled()||!sanro_studio_pricing_wc_enabled())return;
+    if(!sanro_studio_draft_rest_enabled())return;
     foreach(['request','complete'] as $operation)register_rest_route('sanro-studio/v1','/drafts/(?P<id>[a-fA-F0-9-]{36})/owner-email/'.$operation,[
         'methods'=>'POST','permission_callback'=>'sanro_studio_rest_draft_nonce','callback'=>static function($request)use($operation){
             $id=$request->get_param('id');$token=$request->get_header('X-Sanro-Owner-Token');

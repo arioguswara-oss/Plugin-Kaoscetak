@@ -144,7 +144,7 @@ function sanro_studio_update_draft($id, $token, $design, $expected_design_hash =
     $record['design'] = $design;
     // Any geometry/text change invalidates both lightweight previews.
     // Buyer must regenerate them from the saved design before checkout.
-    unset($record['preview_refs'], $record['preview_design_hash']);
+    unset($record['preview_refs'], $record['preview_refs_by_size'], $record['preview_variant_required'], $record['preview_design_hash']);
     // Retain a master only when the new design actually contains an image
     // on that side. A removed image must not leave an active master binding.
     $record['master_refs'] = [];
@@ -157,6 +157,7 @@ function sanro_studio_update_draft($id, $token, $design, $expected_design_hash =
             }
         }
     }
+    if(isset($record['original_master_refs']))$record['original_master_refs']=array_intersect_key($record['original_master_refs'],$record['master_refs']);
     $record['updated_at'] = max(time(), (int) ($before['updated_at'] ?? $before['created_at'] ?? 0) + 1);
     // Compare serialized bytes exactly. wpdb->update() uses the column's
     // collation, which can be case-insensitive and is unsafe for CAS.

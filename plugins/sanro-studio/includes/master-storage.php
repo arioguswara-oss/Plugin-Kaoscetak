@@ -59,6 +59,11 @@ function sanro_studio_store_private_master($design_id, $side, $bytes) {
     $extension = $checked['mime'] === 'image/png' ? 'png' : 'jpg';
     $filename = strtolower($design_id) . '-' . $side . '-' . $checked['sha256'] . '.' . $extension;
     $path = $directory . DIRECTORY_SEPARATOR . $filename;
+    if (function_exists('sanro_studio_storage_transaction') && !sanro_studio_storage_writing($path)) {
+        return sanro_studio_storage_transaction($path, strlen($bytes), static function() use ($design_id, $side, $bytes) {
+            return sanro_studio_store_private_master($design_id, $side, $bytes);
+        });
+    }
     $handle = @fopen($path, 'x');
     if ($handle === false) {
         if (is_link($path) || !is_file($path) || !is_readable($path)
@@ -188,6 +193,7 @@ function sanro_studio_read_owned_draft_master($design_id, $owner_token, $side, $
  * No REST route is registered; upload quotas and buyer API remain prerequisites.
  */
 function sanro_studio_bind_owned_draft_master($design_id, $owner_token, $side, $file_id, $expected_design_hash = null) {
+    if (function_exists('sanro_studio_storage_transaction') && !sanro_studio_storage_inside()) return sanro_studio_storage_transaction(null,0,static function() use($design_id,$owner_token,$side,$file_id,$expected_design_hash){return sanro_studio_bind_owned_draft_master($design_id,$owner_token,$side,$file_id,$expected_design_hash);});
     if (!in_array($side, ['front', 'back'], true)) {
         return ['valid' => false, 'error' => 'invalid_master_target'];
     }
@@ -224,6 +230,9 @@ function sanro_studio_bind_owned_draft_master($design_id, $owner_token, $side, $
         $after['master_refs'] = [];
     }
     $after['master_refs'][$side] = $file_id;
+    if (($before['master_refs'][$side] ?? null) !== $file_id) {
+        unset($after['original_master_refs'][$side], $after['preview_refs'], $after['preview_refs_by_size'], $after['preview_variant_required'], $after['preview_design_hash']);
+    }
     $after['updated_at'] = max(time(), (int) ($before['updated_at'] ?? $before['created_at'] ?? 0) + 1);
     $changed = $wpdb->query($wpdb->prepare(
         "UPDATE `{$wpdb->options}` SET option_value = %s WHERE option_name = %s AND BINARY option_value = BINARY %s",

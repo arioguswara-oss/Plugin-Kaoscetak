@@ -115,6 +115,7 @@ function sanro_studio_enqueue_product_mockup_admin($hook) {
         plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/admin-mockups.js',
         ['jquery'], SANRO_STUDIO_VERSION, true
     );
+    wp_enqueue_script('sanro-studio-mockup-mapping', plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/admin-mockup-mapping.js', ['sanro-studio-mockup-admin'], SANRO_STUDIO_VERSION . '-' . substr(hash_file('sha256', dirname(__DIR__).'/assets/admin-mockup-mapping.js'),0,12), true);
     wp_enqueue_script(
         'sanro-studio-print-zone-admin',
         plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/admin-print-zones.js',

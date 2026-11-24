@@ -133,6 +133,15 @@ function sanro_studio_pricing_preview_bundle($draft, $token) {
         )['valid'])) return ['valid'=>false];
         $refs[$side] = $ref;
     }
+    if (function_exists('sanro_studio_mockup_matrix') && sanro_studio_mockup_matrix($record['product_id'])) {
+        foreach ($record['design']['quantities'] ?? [] as $size => $quantity) {
+            if ($quantity < 1) continue;
+            foreach (['front','back'] as $side) {
+                $ref = $record['preview_refs_by_size'][$size][$side] ?? null;
+                if (!is_string($ref) || empty(sanro_studio_read_owned_draft_preview($draft['design_id'], $token, $side, $ref)['valid'])) return ['valid'=>false];
+            }
+        }
+    }
     return ['valid'=>true, 'refs'=>$refs];
 }
 

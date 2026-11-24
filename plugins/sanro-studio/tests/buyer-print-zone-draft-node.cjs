@@ -11,7 +11,7 @@ const draftEnd=source.indexOf(' // Derived private JPEG preview',draftStart);
 assert(start>=0&&middle>start&&draftStart>middle&&draftEnd>draftStart,
  'Source geometry/draft functions must be present');
 const factory=new Function('env',
- 'const {config,safe,text,sides,categories,qtyInputs,shirtColor,q,boundMasterRefs,Image}=env;'
+ 'const {config,safe,text,sides,categories,qtyInputs,shirtColor,q,boundMasterRefs,Image,document}=env;'
  +source.slice(start,middle)+source.slice(draftStart,draftEnd)
  +'\nreturn {visualPrintZone,withPrintZone,exportTextDraft,exportBoundDraft};');
 const initial={left:'27%',top:'22%',width:'46%',height:'54%'};
@@ -50,7 +50,7 @@ class ImageProbe{
 const runtime=factory({config,safe,text,sides,categories,
  qtyInputs:[{dataset:{size:'M'},value:'1'}],
  shirtColor:{value:'#ffffff'},q:()=>({value:'short'}),
- boundMasterRefs,Image:ImageProbe});
+ boundMasterRefs,Image:ImageProbe,document:{fonts:{load:async()=>[{}]}}});
 let checks=0;
 const check=(ok,label)=>{assert(ok,label);checks++};
 const equal=(actual,expected,label)=>{

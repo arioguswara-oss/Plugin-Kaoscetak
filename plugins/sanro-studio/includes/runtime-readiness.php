@@ -19,7 +19,7 @@ function sanro_studio_storage_health($directory) {
 }
 function sanro_studio_runtime_readiness($product_id=0) {
     $flags=[];
-    foreach(['BUYER_EDITOR','DRAFT_API','PRIVATE_PREVIEWS','PREVIEW_UPLOAD','PRIVATE_MASTERS','MASTER_UPLOAD','WC_PRICING','STAGING_CHECKOUT_HOOK','DTF_IMAGE_RASTER','DTF_LAYER_RASTER','DTF_PRIVATE_ARTIFACTS','DRIVE_MASTER_EXPORT','DTF_ADMIN_GENERATE','DTF_ORDER_BATCH','DRIVE_AUTO_PROVISION','VERIFIED_DRIVE_ATTACHMENT','DRIVE_PACKAGE_EXPORT','DRIVE_DTF_CANDIDATES'] as $key){$name='SANRO_STUDIO_ENABLE_'.$key;$flags[$key]=defined($name)&&constant($name)===true;}
+    foreach(['BUYER_EDITOR','DRAFT_API','STORAGE_GC','PRIVATE_PREVIEWS','PREVIEW_UPLOAD','PRIVATE_MASTERS','MASTER_UPLOAD','WC_PRICING','STAGING_CHECKOUT_HOOK','DTF_IMAGE_RASTER','DTF_LAYER_RASTER','DTF_PRIVATE_ARTIFACTS','DRIVE_MASTER_EXPORT','DTF_ADMIN_GENERATE','DTF_ORDER_BATCH','DRIVE_AUTO_PROVISION','VERIFIED_DRIVE_ATTACHMENT','DRIVE_PACKAGE_EXPORT','DRIVE_DTF_CANDIDATES'] as $key){$name='SANRO_STUDIO_ENABLE_'.$key;$flags[$key]=defined($name)&&constant($name)===true;}
     $extensions=[];foreach(['gd','ctype','json','fileinfo'] as $ext)$extensions[$ext]=extension_loaded($ext);
     return ['build'=>sanro_studio_build_identity(),'php'=>['version'=>PHP_VERSION,'sapi'=>PHP_SAPI,'minimum_met'=>version_compare(PHP_VERSION,'7.4','>='),'memory_limit'=>ini_get('memory_limit'),'extensions'=>$extensions,'int64'=>PHP_INT_SIZE>=8,'gd_freetype'=>function_exists('imagettftext')],
         'woocommerce_loaded'=>class_exists('WooCommerce',false),'flags'=>$flags,

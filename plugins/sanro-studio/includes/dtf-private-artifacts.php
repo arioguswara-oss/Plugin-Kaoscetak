@@ -229,6 +229,10 @@ function sanro_studio_dtf_verify_private_artifact($order, $item_id, $side) {
 
 /** x-mode prevents overwrite or symlink-following, even under contention. */
 function sanro_studio_dtf_artifact_write_exclusive($path, $bytes) {
+    if (function_exists('sanro_studio_storage_transaction') && !sanro_studio_storage_writing($path)) {
+        $result=sanro_studio_storage_transaction($path,strlen($bytes),static function() use ($path,$bytes){return ['valid'=>sanro_studio_dtf_artifact_write_exclusive($path,$bytes)];});
+        return !empty($result['valid']);
+    }
     $handle = @fopen($path, 'xb');
     if ($handle === false) return false;
     $ok = @chmod($path, 0600);

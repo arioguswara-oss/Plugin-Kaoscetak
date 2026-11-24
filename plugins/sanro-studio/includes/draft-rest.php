@@ -178,6 +178,8 @@ function sanro_studio_rest_upload_preview($request) {
         $status = $error === 'draft_expired' ? 410
             : (in_array($error, ['invalid_credentials', 'not_found'], true) ? 404
             : (in_array($error, ['draft_conflict', 'draft_locked', 'preview_conflict'], true) ? 409 : 400));
+        if ($error === 'storage_capacity') $status = 507;
+        if ($error === 'storage_busy') $status = 503;
         return new WP_Error('sanro_' . $error, 'Preview upload rejected.', ['status' => $status]);
     }
     if (function_exists('nocache_headers')) nocache_headers();
@@ -359,6 +361,8 @@ function sanro_studio_rest_draft_response($result) {
     $status = in_array($error, ['invalid_product', 'invalid_design'], true) ? 400 : 409;
     if (in_array($error, ['invalid_credentials', 'not_found'], true)) $status = 404;
     if ($error === 'draft_expired') $status = 410;
+    if ($error === 'storage_capacity') $status = 507;
+    if ($error === 'storage_busy') $status = 503;
     return new WP_Error('sanro_' . $error, 'Draft operation rejected.', ['status' => $status]);
 }
 

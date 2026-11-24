@@ -44,14 +44,16 @@ function sanro_studio_saved_order_context($order, $require_previews = true) {
         if($snapshot!==$expected_snapshot)return ['valid'=>false,'error'=>'order_design_snapshot_mismatch'];
         if($require_previews){
             if(($record['preview_design_hash']??null)!==$hash)return ['valid'=>false,'error'=>'order_preview_revision_mismatch'];
+            $preview_refs=function_exists('sanro_studio_record_preview_refs')?sanro_studio_record_preview_refs($record,$item->get_meta('_sanro_studio_size',true)):($record['preview_refs']??[]);
             foreach(['front','back'] as $side){$ref=$item->get_meta('_sanro_studio_preview_'.$side.'_ref',true);
-                if(!is_string($ref)||$ref!==($record['preview_refs'][$side]??null)||empty(sanro_studio_bound_order_preview_bytes($order,$side,$item_id)['valid']))return ['valid'=>false,'error'=>'order_preview_mismatch'];
+                if(!is_string($ref)||$ref!==($preview_refs[$side]??null)||empty(sanro_studio_bound_order_preview_bytes($order,$side,$item_id)['valid']))return ['valid'=>false,'error'=>'order_preview_mismatch'];
             }
         }
         $lines[$item_id]=['size'=>$item->get_meta('_sanro_studio_size',true),'quantity'=>sanro_studio_pricing_quantity($item->get_quantity()),'subtotal'=>(string)$item->get_subtotal(),'total'=>(string)$item->get_total(),
             'name'=>method_exists($item,'get_name')?(string)$item->get_name():''];
     }
     $payload=[1,$order->get_id(),method_exists($order,'get_order_number')?(string)$order->get_order_number():(string)$order->get_id(),$id,$record['product_id'],$record['design'],$record['master_refs']??[],$record['preview_refs']??[],$record['checkout_quote'],$record['shipping_total']??0,$lines];
+    if(!empty($record['preview_refs_by_size']))$payload['preview_refs_by_size']=$record['preview_refs_by_size'];
     return ['valid'=>true,'studio'=>true,'design_id'=>$id,'record'=>$record,'item_ids'=>$ids,'contract'=>$contract,
         'fingerprint'=>hash('sha256',maybe_serialize($payload))];
 }

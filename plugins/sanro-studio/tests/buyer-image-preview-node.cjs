@@ -9,7 +9,7 @@ const source=fs.readFileSync(path.join(__dirname,'../assets/buyer.js'),'utf8');
 const zoneStart=source.indexOf(' function visualPrintZone(name){');
 const zoneEnd=source.indexOf(' function render(){',zoneStart);
 const start=source.indexOf(' async function ensureProductionFont(){');
-const end=source.indexOf(' if(saveButton&&config.draft_api){',start);
+const end=source.indexOf(' let backgroundScan=0;',start);
 assert(zoneStart>=0&&zoneEnd>zoneStart&&start>=0&&end>start,
  'SANRO buyer image and print-zone helper functions missing');
 let drawCalls=0,textCalls=0,previewWidth=0,canvasWrites=0;
@@ -32,13 +32,13 @@ const env={
   boundMasterRefs:refs,
   safe:{style:{left:'27%',top:'22%',width:'46%',height:'54%'},
    getBoundingClientRect:()=>({width:200,height:200})},
-  shirtColor:{value:'#ffffff'},
+  shirtColor:{value:'#ffffff'},mockupSize:{value:'M'},mappedMockup:()=>null,
   exportTextDraft:()=>({quantities:{M:1},shirt_color:'#ffffff',long_sleeve:false}),
   Image:ImageProbe,FileReader:FakeReader,
   document:{createElement:()=>{
     const canvas={width:0,height:0};
     canvas.getContext=()=>({
-      fillRect(){},drawImage(){drawCalls++;},fillText(){textCalls++;}
+      fillRect(){},clearRect(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){},drawImage(){drawCalls++;},fillText(){textCalls++;}
     });
     canvas.toBlob=cb=>{
       canvasWrites++;previewWidth=canvas.width;
@@ -76,6 +76,7 @@ function check(ok,message){assert(ok,message);checks++;}
   const previousTextCalls=textCalls;
   check(typeof await built.makeDesignPreview('front')==='string' && textCalls===previousTextCalls,
     'blank side creates a private garment preview without inventing printed text');
+  check(typeof await built.makeDesignPreview('back')==='string','non-printable blank back still has garment preview for a front-only product');
   env.document.fonts={load:async()=>[]};
   await assert.rejects(()=>built.ensureProductionFont(),/Font produksi belum tersedia/);checks++;
   let loaded=false;env.document.fonts.load=async()=>{loaded=true;return [{}]};

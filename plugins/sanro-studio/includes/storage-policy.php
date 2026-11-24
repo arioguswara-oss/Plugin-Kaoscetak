@@ -76,6 +76,11 @@ function sanro_studio_store_private_preview($design_id, $side, $bytes) {
     $filename = strtolower($design_id) . '-' . $side . '-' . $checked['sha256'] . '.' . $extension;
     $path = $directory . DIRECTORY_SEPARATOR . $filename;
     // Exclusive creation: no overwrite or symlink traversal of an existing file.
+    if (function_exists('sanro_studio_storage_transaction') && !sanro_studio_storage_writing($path)) {
+        return sanro_studio_storage_transaction($path, strlen($bytes), static function() use ($design_id, $side, $bytes) {
+            return sanro_studio_store_private_preview($design_id, $side, $bytes);
+        });
+    }
     $handle = @fopen($path, 'x');
     if ($handle === false) {
         // Repeated uploads of identical content are safe and idempotent.
@@ -120,6 +125,7 @@ function sanro_studio_store_private_preview($design_id, $side, $bytes) {
  * alongside preview bytes or returned in a preview reference.
  */
 function sanro_studio_store_owned_draft_preview($design_id, $owner_token, $side, $bytes, $expected_design_hash = null) {
+    if (function_exists('sanro_studio_storage_transaction') && !sanro_studio_storage_inside()) return sanro_studio_storage_transaction(null,0,static function() use($design_id,$owner_token,$side,$bytes,$expected_design_hash){return sanro_studio_store_owned_draft_preview($design_id,$owner_token,$side,$bytes,$expected_design_hash);});
     if (!function_exists('sanro_studio_read_draft')) {
         return ['valid' => false, 'error' => 'draft_store_unavailable'];
     }

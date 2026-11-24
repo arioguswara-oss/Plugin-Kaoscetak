@@ -21,6 +21,7 @@ function sanro_studio_public_editor_config($product_id) {
     if (empty($pricing['valid'])) {
         return ['valid' => false, 'error' => 'product_unavailable'];
     }
+    if(function_exists('sanro_studio_mockup_matrix_public') && sanro_studio_mockup_matrix_public($product_id)===false)return ['valid'=>false,'error'=>'mockup_mapping_invalid'];
     $config = sanro_studio_editor_area_config($product_id);
     if (empty($config['valid'])) return ['valid' => false, 'error' => 'product_unavailable'];
     return [
@@ -32,6 +33,8 @@ function sanro_studio_public_editor_config($product_id) {
         'print_zones' => function_exists('sanro_studio_product_print_zones')
             ? sanro_studio_product_print_zones($product_id) : [],
         'categories' => $config['categories'],
+        'mockup_matrix' => function_exists('sanro_studio_mockup_matrix_public') ? sanro_studio_mockup_matrix_public($product_id) : [],
+        'palette' => function_exists('sanro_studio_mockup_palette') ? sanro_studio_mockup_palette($product_id) : [],
         'pricing_profile' => $pricing['profile'],
         'pricing' => isset($pricing['table'])?array_intersect_key($pricing,array_flip(['table','sizes','sleeve_extra','fixed_sleeve','revision'])):null,
         // Public, verified Media Library image URLs only. Never private DTF masters.

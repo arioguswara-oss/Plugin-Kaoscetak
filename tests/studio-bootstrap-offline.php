@@ -40,4 +40,6 @@ try {
     $denied = strpos($e->getMessage(), 'Insufficient permissions') !== false;
 }
 check($denied, 'non-admin cannot access status page');
-echo "PASS: SANRO Studio isolated admin bootstrap contract\n";
+check(!defined('SANRO_STUDIO_ENABLE_STORAGE_GC') && sanro_studio_storage_gc()['error']==='storage_gc_disabled', 'new GC writer defaults OFF');
+
+echo "PASS: SANRO Studio isolated admin bootstrap contract, including GC default OFF\n";

@@ -66,6 +66,7 @@ require_once __DIR__ . '/includes/pricing-profiles.php';
 require_once __DIR__ . '/includes/repeat-discount.php';
 require_once __DIR__ . '/includes/product-pricing.php';
 require_once __DIR__ . '/includes/product-mockups.php';
+require_once __DIR__ . '/includes/mockup-mapping.php';
 require_once __DIR__ . '/includes/editor-config.php';
 require_once __DIR__ . '/includes/pricing.php';
 require_once __DIR__ . '/includes/pricing-quote.php';
@@ -79,6 +80,7 @@ require_once __DIR__ . '/includes/cart-adapter.php';
 require_once __DIR__ . '/includes/checkout-bridge.php';
 require_once __DIR__ . '/includes/checkout-batch-lock.php';
 require_once __DIR__ . '/includes/draft.php';
+require_once __DIR__ . '/includes/storage-management.php';
 require_once __DIR__ . '/includes/storage-policy.php';
 require_once __DIR__ . '/includes/master-storage.php';
 require_once __DIR__ . '/includes/order-preview.php';
@@ -194,3 +196,15 @@ add_filter('rest_post_dispatch','sanro_studio_rest_source_header',10,3);
 
 add_action('rest_api_init','sanro_studio_repeat_register_routes');
 if(sanro_studio_pricing_wc_enabled())add_action('woocommerce_checkout_update_order_review','sanro_studio_repeat_billing_context',5,1);
+
+add_action('admin_menu', 'sanro_studio_storage_admin_menu');
+
+require_once __DIR__ . '/includes/design-collection.php';
+add_action('rest_api_init', 'sanro_studio_collection_routes');
+
+require_once __DIR__ . '/includes/background-removal.php';
+add_action('rest_api_init', 'sanro_studio_background_routes');
+
+add_action('woocommerce_product_options_general_product_data', 'sanro_studio_mockup_matrix_fields');
+add_action('woocommerce_admin_process_product_object', 'sanro_studio_mockup_matrix_save');
+add_action('rest_api_init', 'sanro_studio_mockup_variant_routes');

@@ -632,7 +632,10 @@ function sanro_studio_checkout_bind_existing_item_previews($order, $design_id, $
             || $candidate->get_meta('_sanro_studio_design_id', true) !== $design_id) {
             return ['valid' => false, 'error' => 'order_design_mismatch'];
         }
+        $refs = function_exists('sanro_studio_record_preview_refs') ? sanro_studio_record_preview_refs($record, $candidate->get_meta('_sanro_studio_size', true)) : $refs;
+        if (count($refs) !== 2) return ['valid'=>false, 'error'=>'incomplete_preview_refs'];
         foreach ($refs as $side => $ref) {
+            if (empty(sanro_studio_read_owned_draft_preview($design_id, $owner_token, $side, $ref)['valid'])) return ['valid'=>false, 'error'=>'incomplete_preview_refs'];
             $existing = $candidate->get_meta('_sanro_studio_preview_' . $side . '_ref', true);
             if ($existing !== '' && $existing !== $ref) {
                 return ['valid' => false, 'error' => 'preview_reference_conflict'];
@@ -642,6 +645,7 @@ function sanro_studio_checkout_bind_existing_item_previews($order, $design_id, $
     $bound = 0;
     foreach ($item_ids as $item_id) {
         $item = $items[$item_id];
+        $refs = function_exists('sanro_studio_record_preview_refs') ? sanro_studio_record_preview_refs($record, $item->get_meta('_sanro_studio_size', true)) : $refs;
         $changed = false;
         foreach ($refs as $side => $ref) {
             $key = '_sanro_studio_preview_' . $side . '_ref';

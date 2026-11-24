@@ -150,6 +150,7 @@ function sanro_studio_render_buyer_editor() {
     wp_enqueue_script('sanro-studio-transport', $asset . 'transport.js', [], SANRO_STUDIO_VERSION, true);
     wp_enqueue_script('sanro-studio-cart-redirect', $asset . 'cart-redirect.js', [], SANRO_STUDIO_VERSION, true);
     wp_enqueue_script('sanro-studio-buyer', $asset . 'buyer.js', ['sanro-studio-estimate', 'sanro-studio-cart-redirect', 'sanro-studio-transport'], sanro_studio_buyer_script_version(), true);
+    wp_enqueue_script('sanro-studio-collection', $asset . 'collection.js', ['sanro-studio-buyer'], SANRO_STUDIO_VERSION . '-' . substr(hash_file('sha256', dirname(__DIR__).'/assets/collection.js'),0,12), true);
     // Supply API bootstrap only on explicitly enabled staging; no owner token
     // is ever included in page HTML or a shared JavaScript configuration.
     if (function_exists('sanro_studio_draft_rest_enabled') && sanro_studio_draft_rest_enabled()) {
@@ -196,7 +197,11 @@ function sanro_studio_render_buyer_editor() {
     echo '<p id="sanro-side-summary" role="status">Depan: kosong · Belakang: kosong</p>';
     echo '<p class="sanro-hint">Geser gambar atau teks. Ukuran cetak dihitung dalam cm.</p></section>';
     echo '<section class="sanro-controls" id="sanro-design-controls"><h2>Atur desain</h2>';
-    echo '<label>Warna kaos<select id="sanro-shirt-color"><option value="#ffffff">Putih</option><option value="#171717">Hitam</option><option value="#b91c1c">Merah</option><option value="#1d4ed8">Biru</option><option value="#166534">Hijau</option></select></label>';
+    echo '<label>Warna kaos<select id="sanro-shirt-color">';
+    foreach ((($config['palette']??[]) ?: ['#ffffff'=>'Putih','#171717'=>'Hitam','#b91c1c'=>'Merah','#1d4ed8'=>'Biru','#166534'=>'Hijau']) as $color=>$label) echo '<option value="'.esc_attr($color).'">'.esc_html($label).'</option>';
+    echo '</select></label><label>Ukuran pratinjau<select id="sanro-mockup-size">';
+    foreach (($config['pricing']['sizes']??['S','M','L','XL','2XL','3XL','4XL','5XL']) as $size) echo '<option>'.esc_html($size).'</option>';
+    echo '</select></label>';
     echo '<fieldset class="sanro-size-qty"><legend>Jumlah per ukuran</legend>';
     foreach (($config['pricing']['sizes']??['S','M','L','XL','2XL','3XL','4XL','5XL']) as $size) {
         echo '<label>' . esc_html($size) . '<input type="number" data-size="' . esc_attr($size) . '" min="0" max="999" step="1" value="0" inputmode="numeric"></label>';
@@ -225,17 +230,19 @@ function sanro_studio_render_buyer_editor() {
         echo '<p id="sanro-reopen-status" role="status" aria-live="polite">Draft milik sesi browser ini dapat dibuka kembali.</p>';
         if (!empty($config['master_upload_enabled'])) {
             echo '<button type="button" id="sanro-upload-master">Unggah gambar asli</button>';
+            echo '<label>Toleransi latar<input id="sanro-background-tolerance" type="range" min="0" max="96" value="24"></label><button type="button" id="sanro-remove-background" disabled>Hapus latar polos</button><button type="button" id="sanro-restore-background">Pulihkan gambar asli</button><p id="sanro-background-status" role="status">Pemrosesan lokal untuk latar polos yang terhubung ke tepi; PNG transparan tidak diproses ulang. Gambar asli tetap utuh.</p>';
             echo '<p id="sanro-master-upload-status" role="status" aria-live="polite">Simpan desain sebelum mengunggah gambar.</p>';
         }
         if (!empty($config['preview_upload_enabled'])) {
             echo '<button type="button" id="sanro-upload-previews">Perbarui preview desain</button>';
             echo '<p id="sanro-preview-upload-status" role="status" aria-live="polite"></p>';
         }
-        if(function_exists('sanro_studio_pricing_wc_enabled')&&sanro_studio_pricing_wc_enabled()){
+        if(function_exists('sanro_studio_repeat_register_routes')){
             echo '<fieldset><legend>Verifikasi email pemilik desain</legend><label>Email<input id="sanro-owner-email" type="email" autocomplete="email" maxlength="254"></label>';
             echo '<button type="button" id="sanro-request-owner-email">Kirim kode verifikasi</button><label>Kode dari email<input id="sanro-owner-email-code" type="text" autocomplete="one-time-code" maxlength="64" spellcheck="false"></label>';
             echo '<button type="button" id="sanro-confirm-owner-email">Verifikasi kode</button><p id="sanro-owner-email-status" role="status">Simpan desain terlebih dahulu. Repeat 5% dihitung server bila email checkout sama dan riwayat pesanan berbayar terverifikasi.</p></fieldset>';
         }
+        echo '<fieldset id="sanro-collection"><legend>Desain Saya — koleksi permanen</legend><label>Nama desain<input data-title maxlength="120"></label><button type="button" data-save>Simpan ke koleksi</button><label>Email koleksi<input data-email type="email" autocomplete="email" maxlength="254"></label><button type="button" data-request>Kirim kode akses koleksi</button><label>Kode akses<input data-code autocomplete="one-time-code" maxlength="32" spellcheck="false"></label><button type="button" data-verify>Buka koleksi dengan kode</button><button type="button" data-open>Muat koleksi sesi ini</button><button type="button" data-logout>Keluar koleksi</button><p data-status role="status">Verifikasi email pemilik pada draft untuk menyimpan permanen. Akses koleksi dari browser lain memakai kode email.</p><div data-list></div><button type="button" data-more hidden>Halaman berikutnya</button></fieldset>';
         echo '<button type="button" id="sanro-server-quote">Cek harga resmi draft tersimpan</button>';
         echo '<p id="sanro-server-quote-status" role="status" aria-live="polite">Simpan desain sebelum meminta harga server.</p>';
         echo '<p id="sanro-save-status" role="status">Simpan desain untuk melanjutkan pemesanan.</p>';

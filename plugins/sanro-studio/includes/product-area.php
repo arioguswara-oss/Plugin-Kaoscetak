@@ -33,7 +33,7 @@ function sanro_studio_validate_product_design($product_id, $design) {
     if (!is_array($design)) return ['valid' => false, 'error' => 'invalid_design'];
     // Order preferences are draft metadata only, never trusted for checkout pricing.
     if (isset($design['shirt_color']) && (!is_string($design['shirt_color'])
-        || !in_array($design['shirt_color'], ['#ffffff', '#171717', '#b91c1c', '#1d4ed8', '#166534'], true))) {
+        || !in_array($design['shirt_color'], (function_exists('sanro_studio_mockup_palette') ? array_keys(sanro_studio_mockup_palette($product_id)) : ['#ffffff', '#171717', '#b91c1c', '#1d4ed8', '#166534']), true))) {
         return ['valid' => false, 'error' => 'invalid_shirt_color'];
     }
     if (isset($design['long_sleeve']) && !is_bool($design['long_sleeve'])) {
