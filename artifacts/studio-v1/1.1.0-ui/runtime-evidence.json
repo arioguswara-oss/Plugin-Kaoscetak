@@ -1,0 +1,28 @@
+{
+  "source": "WordPress Connector live plugin-list",
+  "date": "2026-11-25",
+  "target": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "native_plugin": {
+    "version": "1.0.0",
+    "active": true
+  },
+  "temporary_release_transport": {
+    "version": "0.3.3",
+    "active": false,
+    "pinned_source": "ff93166f8d8476c764dc166f8b2f08aff56ac0c5",
+    "applied": false
+  },
+  "temporary_qa_active": false,
+  "site_reachable": true,
+  "ui_source": "12b2c043cc6ccbb3e7c828949bf524ff6f2e84b1",
+  "ui_installed": false,
+  "runtime_gate": "NOT_TESTED",
+  "installed_digest": "NOT_REVERIFIED",
+  "visual_after_desktop_mobile": "NOT_TESTED",
+  "drag_resize_touch_overflow": "NOT_TESTED",
+  "reason": "Direct browser control tools unavailable in active session; official connector has no reviewed existing runtime-gate ability. No alternate authentication or gate bypass attempted.",
+  "live_drive": "DEFERRED_BY_OWNER",
+  "payment_or_second_order": "NOT_PERFORMED",
+  "writer_config_modified": false,
+  "transport_deactivated": true
+}

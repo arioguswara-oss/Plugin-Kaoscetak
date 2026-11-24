@@ -17,5 +17,15 @@
   "execution_evidence": "artifacts/studio-v1/1.0.0/runtime-evidence.json",
   "owner_scope_revision": "f415ec55dd5b360da89b76804512624a3611288d",
   "drive_configuration": "NOT CONFIGURED",
-  "final_release": true
+  "final_release": true,
+  "pending_ui_revision": {
+    "version": "1.1.0",
+    "source": "12b2c043cc6ccbb3e7c828949bf524ff6f2e84b1",
+    "artifact_directory": "artifacts/studio-v1/1.1.0-ui",
+    "archive": "sanro-studio-staging-candidate.zip",
+    "archive_sha256": "991f53c93ad6ae7c8c73bad1af4bd1b5406beac93ca7c64d6b0365a289e7896b",
+    "state": "IMPLEMENTED_NOT_INSTALLED_BROWSER_ACCEPTANCE_PENDING",
+    "final_release": false,
+    "blocker": "Direct Browser control tools unavailable; fresh runtime gate and visual interaction acceptance pending"
+  }
 }
