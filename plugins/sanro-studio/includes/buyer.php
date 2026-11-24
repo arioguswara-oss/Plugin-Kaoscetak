@@ -63,10 +63,11 @@ function sanro_studio_render_product_picker($page_url) {
     $label = is_array($preferences) && isset($preferences['studio_label'])
         && is_string($preferences['studio_label']) && trim($preferences['studio_label']) !== ''
         ? $preferences['studio_label'] : 'SANRO Studio';
-    echo '<header><h1>' . esc_html($label) . '</h1><p>Pilih produk untuk mulai mendesain.</p></header>';
+    sanro_studio_ui_header($label);
+    echo '<div class="sanro-catalog-heading"><h2>Mau cetak apa?</h2><p>Pilih produk, lalu unggah desainmu.</p></div>';
     echo '<nav class="sanro-workflow" aria-label="Tahapan desain"><span class="sanro-workflow-current" aria-current="step">1. Pilih Produk</span><span class="sanro-workflow-pending">2. Atur Desain</span><span class="sanro-workflow-pending">3. Desain Saya</span></nav>';
-    echo '<label for="sanro-product-search">Cari produk</label> ';
-    echo '<input id="sanro-product-search" type="search" placeholder="Cari nama produk" autocomplete="off">';
+    echo '<div class="sanro-catalog-search"><label for="sanro-product-search">Cari produk</label> ';
+    echo '<input id="sanro-product-search" type="search" placeholder="Cari nama produk" autocomplete="off"></div>';
     echo '<div class="sanro-product-grid">';
     $shown = 0;
     foreach ($ids as $id) {
@@ -77,7 +78,7 @@ function sanro_studio_render_product_picker($page_url) {
         $name = $product->get_name();
         $url = add_query_arg(['sanro_studio_editor' => '1', 'product_id' => (int) $id], $page_url);
         echo '<a class="sanro-product-card" href="' . esc_url($url) . '" data-name="' . esc_attr(strtolower($name)) . '">';
-        echo $product->get_image('woocommerce_thumbnail', ['loading' => 'lazy']);
+        echo $product->get_image_id() ? $product->get_image('woocommerce_thumbnail', ['loading' => 'lazy']) : '<img loading="lazy" src="'.esc_url(plugin_dir_url(__DIR__.'/../sanro-studio.php').'assets/garment.svg').'" alt="'.esc_attr($name).'">';
         echo '<strong>' . esc_html($name) . '</strong>';
         $minimum=function_exists('sanro_studio_minimum_configured_price')?sanro_studio_minimum_configured_price($editor_config):null;
         echo '<span>'.($minimum===null?esc_html('Harga dihitung server sesuai desain'):esc_html('Mulai ').wp_kses_post(wc_price($minimum))).'</span></a>';
@@ -85,7 +86,7 @@ function sanro_studio_render_product_picker($page_url) {
     }
     echo '</div>';
     if (!$shown) echo '<p>Belum ada produk yang siap didesain. Administrator perlu mengatur area cetak dan profil harga produk.</p>';
-    echo '<p id="sanro-product-empty" hidden>Tidak ada produk yang cocok.</p>';
+    echo '<p id="sanro-product-empty" hidden>Tidak ada produk yang cocok.</p><div class="sanro-catalog-footer">'.sanro_studio_ui_icon('shirt').'Pilih produk, lalu unggah desainmu</div>';
     echo '</main>';
 
     echo '<script>document.addEventListener("DOMContentLoaded",function(){var input=document.getElementById("sanro-product-search"),cards=[].slice.call(document.querySelectorAll(".sanro-product-card")),empty=document.getElementById("sanro-product-empty");if(!input)return;input.addEventListener("input",function(){var q=input.value.toLocaleLowerCase().trim(),count=0;cards.forEach(function(card){var match=card.dataset.name.includes(q);card.hidden=!match;if(match)count++});if(empty)empty.hidden=count>0||cards.length===0})});</script>';
@@ -101,6 +102,7 @@ function sanro_studio_print_buyer_viewport_meta() {
     echo '<meta name="viewport" content="width=device-width, initial-scale=1">' . "\n";
 }
 function sanro_studio_register_buyer_viewport_meta() {
+    add_filter('body_class','sanro_studio_ui_theme_scope');
     if (!has_action('wp_head', 'sanro_studio_print_buyer_viewport_meta')) {
         add_action('wp_head', 'sanro_studio_print_buyer_viewport_meta', 1);
     }
@@ -151,6 +153,7 @@ function sanro_studio_render_buyer_editor() {
     wp_enqueue_script('sanro-studio-cart-redirect', $asset . 'cart-redirect.js', [], SANRO_STUDIO_VERSION, true);
     wp_enqueue_script('sanro-studio-buyer', $asset . 'buyer.js', ['sanro-studio-estimate', 'sanro-studio-cart-redirect', 'sanro-studio-transport'], sanro_studio_buyer_script_version(), true);
     wp_enqueue_script('sanro-studio-collection', $asset . 'collection.js', ['sanro-studio-buyer'], SANRO_STUDIO_VERSION . '-' . substr(hash_file('sha256', dirname(__DIR__).'/assets/collection.js'),0,12), true);
+    wp_enqueue_script('sanro-studio-ui', $asset . 'studio-ui.js', ['sanro-studio-buyer','sanro-studio-collection'], SANRO_STUDIO_VERSION . '-' . substr(hash_file('sha256',dirname(__DIR__).'/assets/studio-ui.js'),0,12), true);
     // Supply API bootstrap only on explicitly enabled staging; no owner token
     // is ever included in page HTML or a shared JavaScript configuration.
     if (function_exists('sanro_studio_draft_rest_enabled') && sanro_studio_draft_rest_enabled()) {
@@ -179,18 +182,10 @@ function sanro_studio_render_buyer_editor() {
     sanro_studio_register_buyer_viewport_meta();
     get_header();
     echo '<main id="sanro-studio-buyer" class="sanro-buyer" aria-label="SANRO Studio">';
-    echo '<header><h1>' . esc_html($studio_label) . '</h1><p>Editor kaos — desain, simpan, dan lanjutkan ke keranjang</p>';
-    // Keep the standalone catalog reachable without losing the selected editor page.
-    if ($on_selected_page) {
-        echo '<p><a class="sanro-back-to-products" href="' . esc_url(get_permalink($editor_page_id)) . '">← Kembali pilih produk</a></p>';
-    } elseif ($on_product) {
-        $catalog_page_id = (int) get_option('sanro_studio_editor_page_id', 0);
-        if ($catalog_page_id > 0 && get_post_type($catalog_page_id) === 'page'
-            && get_post_status($catalog_page_id) === 'publish') {
-            echo '<p><a class="sanro-back-to-products" href="' . esc_url(get_permalink($catalog_page_id)) . '">← Kembali pilih produk</a></p>';
-        }
-    }
-    echo '</header>';
+    $back_id=(int)get_option('sanro_studio_editor_page_id',0);
+    sanro_studio_ui_header($studio_label,$back_id?get_permalink($back_id):'');
+    $display_product=wc_get_product($product_id);
+    echo '<h2 class="sanro-editor-product">'.esc_html($display_product?$display_product->get_name():'Atur Desain').'</h2>';
     echo '<nav class="sanro-workflow" aria-label="Tahapan desain"><span class="sanro-workflow-done">1. Pilih Produk</span><span class="sanro-workflow-current" aria-current="step">2. Atur Desain</span><span class="sanro-workflow-pending">3. Desain Saya</span></nav>';
     echo '<nav class="sanro-mobile-jumps" aria-label="Navigasi editor"><a href="#sanro-design-preview">Lihat kaos</a><a href="#sanro-design-controls">Atur desain</a></nav>';
     echo '<div class="sanro-layout"><section class="sanro-preview" id="sanro-design-preview" aria-label="Pratinjau desain">';

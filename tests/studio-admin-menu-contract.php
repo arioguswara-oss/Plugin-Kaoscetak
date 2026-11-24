@@ -9,7 +9,7 @@ $menu_hooks=array_column($GLOBALS['ss_hooks']['admin_menu'][10],0);
 ss_assert(array_search('sanro_studio_admin_menu',$menu_hooks,true)<array_search('sanro_studio_bootstrap_admin_menu',$menu_hooks,true),'root registered before status page hook resolution');
 ss_assert(array_search('sanro_studio_admin_menu',$menu_hooks,true)<array_search('sanro_studio_storage_admin_menu',$menu_hooks,true),'root registered before storage page');
 $roles=[
-    'admin'=>['manage_options'=>true,'manage_woocommerce'=>true],
+    'admin'=>['manage_options'=>true,'manage_woocommerce'=>true,'edit_products'=>true],
     'settings_only'=>['manage_options'=>true],
     'shop_manager'=>['manage_woocommerce'=>true],
     'subscriber'=>[],
@@ -25,25 +25,19 @@ foreach($roles as $role=>$caps){
         ss_assert($entry[0]==='sanro-studio','no Studio child remains under WooCommerce: '.$role);
         if(current_user_can($entry[3]))$visible[]=$entry[4];
     }
-    $expected=$role==='admin'?['sanro-studio','sanro-studio-status','sanro-studio-storage','sanro-studio-drive']:($role==='settings_only'?['sanro-studio','sanro-studio-drive']:($role==='shop_manager'?['sanro-studio-status','sanro-studio-storage']:[]));
+    $expected=$role==='admin'?['sanro-studio','sanro-studio-settings','sanro-studio-products','sanro-studio-prices','sanro-studio-orders','sanro-studio-status','sanro-studio-storage','sanro-studio-drive']:($role==='settings_only'?['sanro-studio-settings','sanro-studio-drive']:($role==='shop_manager'?['sanro-studio','sanro-studio-orders','sanro-studio-status','sanro-studio-storage']:[]));
     ss_assert($visible===$expected,'subpage permissions preserved: '.$role);
     ob_start();$denied=false;
     try{sanro_studio_admin_landing();}catch(SS_Denied $e){$denied=$e->getCode()===403;}
     $html=ob_get_clean();
     if($role==='subscriber')ss_assert($denied&&$html==='','unauthorized root denied');
-    elseif($role==='shop_manager')ss_assert(!$denied&&strpos($html,'Integration Status')!==false&&strpos($html,'<form')===false,'manager root opens status without settings form');
-    else {
-        ss_assert(!$denied&&strpos($html,'settings_type')!==false,'settings owner still gets original settings forms: '.$role);
-        ss_assert(strpos($html,'Kode tersedia; writer menunggu aktivasi server')!==false,'checkout dashboard distinguishes implementation from disabled staging writer: '.$role);
-        ss_assert(strpos($html,'Preferensi sesi editor buyer')!==false,'native preference description reflects its actual role: '.$role);
-        ss_assert(strpos($html,'integrasi editor berikutnya')===false,'stale future-integration claim removed: '.$role);
-    }
+    else ss_assert(!$denied&&strpos($html,'Ringkasan SANRO Studio')!==false&&strpos($html,'settings_type')===false,'summary is read-only and independent of settings: '.$role);
 }
 $children=[];foreach($GLOBALS['ss_submenus'] as $entry)$children[$entry[4]]=$entry;
 ss_assert($children['sanro-studio-drive'][3]==='manage_options','Drive setup is Administrator only');
-ss_assert($children['sanro-studio'][3]==='manage_options','settings capability unchanged');
+ss_assert($children['sanro-studio-settings'][3]==='manage_options','settings capability unchanged');
 ss_assert($children['sanro-studio-status'][3]==='manage_woocommerce'&&$children['sanro-studio-status'][5]==='sanro_studio_bootstrap_admin_page','old status slug/callback/capability preserved');
-ss_assert($children['sanro-studio-storage'][3]==='manage_woocommerce'&&$children['sanro-studio-storage'][5]==='sanro_studio_storage_admin','storage slug/callback/capability preserved');
+ss_assert($children['sanro-studio-storage'][3]==='manage_woocommerce'&&$children['sanro-studio-storage'][5]==='sanro_studio_ui_storage','storage slug/callback/capability preserved');
 foreach(['woocommerce_admin_order_data_after_order_details'=>['sanro_studio_admin_order_preview_status','sanro_studio_admin_production_status','sanro_studio_admin_production_ready_action','sanro_studio_admin_drive_retry_action'],
          'woocommerce_after_order_itemmeta'=>['sanro_studio_admin_item_preview_status','sanro_studio_admin_item_dtf_status','sanro_studio_admin_item_dtf_readiness','sanro_studio_admin_item_generate_dtf_action']] as $hook=>$expected){
     $registered=[];foreach($GLOBALS['ss_hooks'][$hook] as $callbacks)$registered=array_merge($registered,array_column($callbacks,0));

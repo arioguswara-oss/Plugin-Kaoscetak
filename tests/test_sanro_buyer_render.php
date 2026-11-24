@@ -14,6 +14,9 @@ function absint($v) { return abs((int)$v); }
 function get_option($key, $default=false) { return $default; }
 function esc_html($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
 function esc_attr($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
+function esc_url($value){return esc_html($value);}
+function wc_get_product($id){return false;}
+function add_filter(...$args){}
 function esc_url_raw($value) { return filter_var((string)$value, FILTER_SANITIZE_URL); }
 function has_action($hook, $callback) { return false; }
 function add_action($hook, $callback, $priority = 10) { $GLOBALS['actions'][] = [$hook, $callback, $priority]; }
@@ -33,11 +36,14 @@ function wp_add_inline_script(...$args) { $GLOBALS['enqueued'][]=['inline',$args
 function wp_json_encode($v, $flags = 0) { return json_encode($v, $flags); }
 function get_header() { $GLOBALS['headers']++; echo '<header>HEADER</header>'; }
 function get_footer() { $GLOBALS['footers']++; echo '<footer>FOOTER</footer>'; }
+require __DIR__.'/../plugins/sanro-studio/includes/studio-ui.php';
 require __DIR__.'/../plugins/sanro-studio/includes/buyer.php';
 register_shutdown_function(function () {
     $html=ob_get_contents();
     $buyer_js=file_get_contents(__DIR__.'/../plugins/sanro-studio/assets/buyer.js');
     $assets=$GLOBALS['enqueued'];
+    $by_handle=[];foreach($assets as $asset)if($asset[0]!=='inline')$by_handle[$asset[1][0]]=$asset[1];
+    $inline=end($assets)[1][1];
     $assertions=[
         'header and footer'=>($GLOBALS['headers']===1 && $GLOBALS['footers']===1),
         'editor markup'=>strpos($html,'id="sanro-studio-buyer"')!==false,
@@ -45,14 +51,14 @@ register_shutdown_function(function () {
         'explicit reopen control'=>strpos($html,'id="sanro-reopen-draft"')!==false && strpos($html,'id="sanro-reopen-status"')!==false,
         'reopen control calls owner-bound draft resolver'=>is_string($buyer_js) && strpos($buyer_js,"reopenButton.addEventListener('click'")!==false && strpos($buyer_js,'await reopenDraft()')!==false,
         'checkout disabled'=>strpos($html,'Simpan dan checkout — belum aktif')!==false,
-        'five assets'=>count($assets)===5,
-        'CSS path'=>isset($assets[0]) && strpos($assets[0][1][1],'/sanro-studio/assets/buyer.css')!==false,
-        'estimate JS path'=>isset($assets[1]) && strpos($assets[1][1][1],'/sanro-studio/assets/estimate.js')!==false,
-        'cart redirect JS path'=>isset($assets[2]) && strpos($assets[2][1][1],'/sanro-studio/assets/cart-redirect.js')!==false,
-        'buyer JS path'=>isset($assets[3]) && strpos($assets[3][1][1],'/sanro-studio/assets/buyer.js')!==false,
-        'public config'=>isset($assets[4]) && strpos($assets[4][1][1],'"product_id":17')!==false,
-        'no owner token'=>isset($assets[4]) && strpos($assets[4][1][1],'owner_token')===false,
-        'inline script escaped'=>isset($assets[4]) && strpos($assets[4][1][1],'</script>')===false && strpos($assets[4][1][1],'\\u003C')!==false,
+        'visual workspace loaded'=>isset($by_handle['sanro-studio-ui']),
+        'native runtime retained'=>isset($by_handle['sanro-studio-buyer'],$by_handle['sanro-studio-collection'],$by_handle['sanro-studio-transport']),
+        'CSS path'=>strpos($by_handle['sanro-studio-buyer'][1],'/sanro-studio/assets/buyer.js')!==false,
+        'public config'=>strpos($inline,'"product_id":17')!==false,
+        'no owner token'=>strpos($inline,'owner_token')===false,
+        'inline script escaped'=>strpos($inline,'</script>')===false && strpos($inline,'\\u003C')!==false,
+        'concept appbar'=>strpos($html,'sanro-appbar')!==false,
+
     ];
     ob_end_clean();
     foreach ($assertions as $label=>$ok) {

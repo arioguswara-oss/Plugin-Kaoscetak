@@ -369,9 +369,11 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
             echo '<p>' . esc_html('Harga DTF / ukuran: belum terverifikasi pada item pesanan') . '</p>';
         }
     }
+    echo '<div class="sanro-order-preview-grid">';
     foreach (['front' => 'Depan', 'back' => 'Belakang'] as $side => $label) {
+        echo '<figure><figcaption>'.esc_html($label).'</figcaption>';
         if (empty($inventory[$side])) {
-            echo '<p>' . esc_html($label . ': Belum tersedia') . '</p>';
+            echo '<p>' . esc_html($label . ': Belum tersedia') . '</p></figure>';
             continue;
         }
         $url = add_query_arg([
@@ -385,7 +387,12 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
             esc_html('Lihat preview ' . $label) . '</a></p>';
         echo '<img loading="lazy" width="160" height="160" style="max-width:100%;object-fit:contain"'
             . ' referrerpolicy="no-referrer" src="' . esc_url($url) . '" alt="'
-            . esc_attr('Preview desain ' . $label) . '">';
+            . esc_attr('Preview desain ' . $label) . '"></figure>';
+    }
+    echo '</div>';
+    if(sanro_studio_auto_drive_order_eligible($order)){
+        $guide_url=wp_nonce_url(add_query_arg(['action'=>'sanro_studio_ui_guide','order_id'=>$order_id,'item_id'=>$item_id],admin_url('admin-post.php')),'sanro_guide_'.$order_id.'_'.$item_id);
+        echo '<a class="sanro-guide-link" href="'.esc_url($guide_url).'">PDF Panduan</a><p>Panduan posisi desain, bukan file siap cetak.</p>';
     }
     if(function_exists('sanro_studio_admin_item_production_readiness'))sanro_studio_admin_item_production_readiness($order,$item_id);
     echo '</div>';

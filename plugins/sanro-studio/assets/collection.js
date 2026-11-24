@@ -16,19 +16,20 @@
  }
  function button(label,action,parent){const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',()=>run(()=>action(b)));parent.append(b);return b;}
  async function run(action){if(busy)return;busy=true;panel.setAttribute('aria-busy','true');try{await action();}catch(error){status.textContent=error.message;}finally{busy=false;panel.removeAttribute('aria-busy');}}
- async function fork(entry,secret){
+ async function fork(entry,secret,reorder=false){
   const fresh=await api('/collection/'+entry.id+'/fork',{},secret);
   sessionStorage.setItem('sanro-studio-draft:'+fresh.product_id,JSON.stringify({id:fresh.design_id,token:fresh.owner_token,collectionTitle:entry.title}));
-  const target=new URL(location.href);target.hash='';target.searchParams.set('sanro_studio_editor','1');target.searchParams.set('product_id',fresh.product_id);location.assign(target.href);
+  const target=new URL(location.href);target.hash=reorder?'sanro-reorder':'';target.searchParams.set('sanro_studio_editor','1');target.searchParams.set('product_id',fresh.product_id);location.assign(target.href);
  }
  async function card(entry,secret){
-  const article=document.createElement('article'),title=document.createElement('h4');title.textContent=entry.title||'Desain saya';article.append(title);list.append(article);
+  const article=document.createElement('article'),title=document.createElement('h4');article.className='sanro-collection-card';title.textContent=entry.title||'Desain saya';article.append(title);list.append(article);
   for(const side of ['front','back']){
    try{const preview=await api('/collection/'+entry.id+'/preview/'+side,undefined,secret);if(!['image/png','image/jpeg','image/webp'].includes(preview.mime))continue;
     const img=document.createElement('img');img.width=160;img.height=172;img.style.objectFit='contain';img.alt=side==='front'?'Preview depan':'Preview belakang';img.src='data:'+preview.mime+';base64,'+preview.image_base64;article.append(img);
    }catch(_error){const p=document.createElement('p');p.textContent='Preview '+side+' belum tersedia.';article.append(p);}
   }
-  button(secret?'Edit/beli salinan':'Buka / gunakan ulang',()=>fork(entry,secret),article);
+  button(secret?'Buka Salinan':'Buka Desain',()=>fork(entry,secret),article);
+  button('Pesan Lagi',()=>fork(entry,secret,true),article);
   if(secret)return;
   button('Bagikan',async()=>{const value=await api('/collection/'+entry.id+'/share',{});const url=new URL(location.href);url.searchParams.set('product_id',entry.product_id);url.hash='sanro-share='+entry.id+'.'+value.share_token;
    const output=document.createElement('input');output.type='text';output.readOnly=true;output.value=url.href;output.setAttribute('aria-label','Tautan berbagi desain');article.append(output);output.select();status.textContent='Salin tautan ini. Hanya pemegang tautan dapat melihat preview dan membuat salinan.';},article);
@@ -49,5 +50,5 @@
  }));
  // Fragment secrets are removed from browser history and never sent as query/referrer parameters.
  const match=location.hash.match(/^#sanro-share=([a-f0-9-]{36})\.([a-f0-9]{64})$/);
- if(match){shared={id:match[1],secret:match[2]};history.replaceState(null,'',location.pathname+location.search);run(async()=>{const value=await api('/collection/'+shared.id,undefined,shared.secret);list.replaceChildren();await card(value.entry,shared.secret);status.textContent='Preview berbagi. Edit/beli akan membuat salinan milik Anda.';panel.scrollIntoView();});}
+ if(match){shared={id:match[1],secret:match[2]};history.replaceState(null,'',location.pathname+location.search);run(async()=>{const value=await api('/collection/'+shared.id,undefined,shared.secret);list.replaceChildren();await card(value.entry,shared.secret);status.textContent='Preview berbagi. Edit/beli akan membuat salinan milik Anda.';root.dispatchEvent(new CustomEvent('sanro:collection'));panel.scrollIntoView();});}
 })();

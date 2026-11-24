@@ -1,6 +1,10 @@
 # SANRO Studio — satu baseline resmi development
 
-## ACTIVE — V1 Final Release1.0.0 installed and verified on staging
+## ACTIVE — Owner approved UI refinement in progress
+
+25 November2026: primary buyer/admin concept references now implemented in source for staging acceptance. Functional baseline96.50%→96.50%, delta0; visual browser acceptance and revised package installation pending. No full audit, DTF regeneration, payment or live Drive requests. [Visual gap/implementation evidence](../qa/studio-ui-owner-reference-20261125.md). The prior1.0.0 installation below is the unchanged functional checkpoint.
+
+## Previous functional release — V1 Final Release1.0.0 installed and verified on staging
 
 Owner revisionf415ec55 applied. **94,00% →96,50%, delta+2,50** under the existing stage7 rubric: native Administrator Drive setup+10 and allowed normal buyer checkout/order boundary+15; stage7 now100/100. No duplicate credit, stages1–6 and Owner0,15 balance remain. Mandatory revised V1 checklist complete; old broad historical estimate is not artificially rounded to100.
 

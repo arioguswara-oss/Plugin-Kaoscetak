@@ -106,6 +106,7 @@
   root.querySelectorAll('[data-side]').forEach(b=>{b.disabled=!config.safe_areas[b.dataset.side];b.setAttribute('aria-pressed',String(b.dataset.side===side))});
   q('#sanro-side-summary').textContent=['front','back'].map(name=>(name==='front'?'Depan':'Belakang')+': '+(sides[name].url||sides[name].text.trim()?'ada desain ('+sides[name].category+')':'kosong')).join(' · ');
   updateEstimate();requestAnimationFrame(validate);
+  root.dispatchEvent(new CustomEvent('sanro:render'));
   if(typeof refreshBackgroundControl==='function')refreshBackgroundControl();
  }
  function validate(){
@@ -265,6 +266,14 @@
   el.addEventListener('pointercancel',finish);
   el.addEventListener('lostpointercapture',()=>{start=null;});
  }
+ // Visual D-pad uses the same bounded geometry as native pointer dragging.
+ root.sanroMoveObject=function(kind,dx,dy){
+  if(!['image','text'].includes(kind))return;const el=kind==='image'?image:text;if(el.hidden)return;
+  const rect=safe.getBoundingClientRect();if(!rect.width||!rect.height)return;
+  const d=sides[side];editRevision++;
+  d[kind+'X']=Math.max(0,Math.min(Math.max(0,100-el.offsetWidth/rect.width*100),d[kind+'X']+dx));
+  d[kind+'Y']=Math.max(0,Math.min(Math.max(0,100-el.offsetHeight/rect.height*100),d[kind+'Y']+dy));render();
+ };
  // Owner-bound draft session; master/preview APIs and checkout use independent server gates.
  const saveButton=q('#sanro-save-draft'),saveStatus=q('#sanro-save-status');
  let savedId=null,ownerToken=null,saving=false,uploadingMaster=false,editRevision=0,savedRevision=-1,lastKnownDesignHash=null;

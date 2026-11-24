@@ -49,7 +49,7 @@ function check_admin_referer($action) {
     if ($action !== 'sanro_studio_settings' || !$GLOBALS['ss_nonce']) throw new SS_Denied('nonce', 403);
 }
 function wp_safe_redirect($url) { throw new SS_Redirect($url); }
-function admin_url($path) { return 'https://example.test/wp-admin/' . $path; }
+function admin_url($path='') { return 'https://example.test/wp-admin/' . $path; }
 function get_permalink($id) { return $id === 52 ? 'https://example.test/custom/' : false; }
 function esc_html($text) { return htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8'); }
 function esc_url($url) { return htmlspecialchars((string)$url, ENT_QUOTES, 'UTF-8'); }

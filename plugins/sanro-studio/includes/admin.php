@@ -6,22 +6,11 @@ function sanro_studio_admin_menu() {
     $capability = current_user_can('manage_options') ? 'manage_options' : 'manage_woocommerce';
     add_menu_page('SANRO Studio', 'SANRO Studio', $capability,
         'sanro-studio', 'sanro_studio_admin_landing', 'dashicons-art', 56);
-    add_submenu_page('sanro-studio', 'Pengaturan SANRO Studio', 'Pengaturan',
-        'manage_options', 'sanro-studio', 'sanro_studio_admin_landing');
-}
-
-/** Stable root URL: settings for administrators, status for Woo managers. */
-function sanro_studio_admin_landing() {
-    if (current_user_can('manage_options')) {
-        sanro_studio_render_settings();
-        return;
+    foreach ([['Ringkasan','manage_woocommerce','sanro-studio','sanro_studio_ui_summary'],['Pengaturan','manage_options','sanro-studio-settings','sanro_studio_ui_settings'],['Produk & Mockup','edit_products','sanro-studio-products','sanro_studio_ui_products'],['Harga','edit_products','sanro-studio-prices','sanro_studio_ui_prices'],['Pesanan','manage_woocommerce','sanro-studio-orders','sanro_studio_ui_orders']] as $entry) {
+        add_submenu_page('sanro-studio',$entry[0],$entry[0],$entry[1],$entry[2],$entry[3]);
     }
-    if (current_user_can('manage_woocommerce')) {
-        sanro_studio_bootstrap_admin_page();
-        return;
-    }
-    wp_die('Akses ditolak.', '', ['response' => 403]);
 }
+function sanro_studio_admin_landing(){sanro_studio_ui_summary();}
 
 function sanro_studio_save_settings() {
     if (!current_user_can('manage_options')) {
@@ -62,7 +51,7 @@ function sanro_studio_save_settings() {
     } else {
         wp_die('Jenis pengaturan tidak valid.', '', ['response' => 400]);
     }
-    wp_safe_redirect(admin_url('admin.php?page=sanro-studio&saved=1'));
+    wp_safe_redirect(admin_url('admin.php?page=sanro-studio-settings&saved=1'));
     exit;
 }
 
@@ -81,7 +70,7 @@ function sanro_studio_render_settings() {
     $options = $legacy_compat ? sanro_studio_options() : ['admin_preview' => false];
     $native = sanro_studio_native_capabilities();
     echo '<div class="wrap"><h1>SANRO Studio</h1>';
-    echo '<nav class="nav-tab-wrapper"><a class="nav-tab nav-tab-active" aria-current="page" href="'.esc_url(admin_url('admin.php?page=sanro-studio')).'">Pengaturan Umum</a><a class="nav-tab" href="'.esc_url(admin_url('admin.php?page=sanro-studio-drive')).'">Google Drive</a></nav>';
+    echo '<nav class="nav-tab-wrapper"><a class="nav-tab nav-tab-active" aria-current="page" href="'.esc_url(admin_url('admin.php?page=sanro-studio-settings')).'">Pengaturan Umum</a><a class="nav-tab" href="'.esc_url(admin_url('admin.php?page=sanro-studio-drive')).'">Google Drive</a></nav>';
     echo '<p>Editor SANRO Studio native dan integrasi WooCommerce. Fitur penulisan checkout, produksi, dan Drive tetap mengikuti konfigurasi server.</p>';
     echo '<table class="widefat striped"><tbody>';
     $rows = [

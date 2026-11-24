@@ -111,7 +111,7 @@ function sanro_studio_storage_gc() {
         return ['valid'=>true,'removed'=>$removed,'bytes'=>$bytes];
     });
 }
-function sanro_studio_storage_admin_menu(){add_submenu_page('sanro-studio','Storage Privat SANRO Studio','Storage Privat','manage_woocommerce','sanro-studio-storage','sanro_studio_storage_admin');}
+function sanro_studio_storage_admin_menu(){add_submenu_page('sanro-studio','Storage Privat SANRO Studio','Penyimpanan','manage_woocommerce','sanro-studio-storage','sanro_studio_ui_storage');}
 function sanro_studio_storage_admin(){
     if(!current_user_can('manage_woocommerce'))return;
     echo '<div class="wrap"><h1>SANRO private storage</h1>';
