@@ -29,3 +29,9 @@ VERIFIED is offline with WordPress contracts. Live corrected-menu rendering, can
 90.50→90.50%, delta0. Seven fixed weights/stage estimates unchanged; menu correction is a defect fix, not a second feature credit. New clean-source ZIP, commit marker, manifest and SHA256SUMS replace the old approval candidate. The prior candidate stays available as historical evidence but its request is marked superseded. New request remains unapproved/conditional until runtime gates and explicit Owner authorization. GO new source/candidate review; NO-GO automatic install/deploy/merge/production/order changes/writer activation. No Jack/Hermes/Codex launched.
 
 Kandidat pengganti terverifikasi: source `8d817c2ba92b89d03eaa4d680173925361ce0a36`; ZIP SHA256 `ca55c23ef3b13408e45d4b011a7d47be3676aec7da6e2d3e906508873ae66afd`. Manifest/checksum dan request baru: `artifacts/studio-v1/8d817c2`; pointer `artifacts/studio-v1/CURRENT.json`. Semua approval/deploy tetapfalse; runtime corrected menu NOT TESTED.
+
+## Codex CLI verification — 24 November 2026
+
+GitHub access verified from this CLI with authenticated `gh`, `git ls-remote`, and `gh pr view`. PR #52 HEAD fetched into an isolated worktree at `e5c7d1e53edbcee28db496678946da187ec9bd99`; the source correction remains `8d817c2ba92b89d03eaa4d680173925361ce0a36`.
+
+Re-run on that HEAD: menu contract48 PASS; bootstrap/GC default-OFF PASS; foundation/settings37 PASS; four runtime prerequisite fixtures5 each PASS; six affected PHP lint PASS; `git diff --check` PASS. Candidate preflight validated all78 ZIP members and build identity, SHA256SUMS PASS, PHP CLI8.5.4 lint PASS, PLAN_ONLY. No source or ZIP change was required. This verification does not establish a live WordPress menu or corrected-candidate runtime E2E; deployment remains unauthorized.

@@ -1,6 +1,6 @@
 # SANRO Studio — ledger aktif
 
-Terbaru: pre-install admin menu correction; satu root SANRO Studio di luar WooCommerce, seluruh child Studio dikonsolidasikan. Kandidat lamaf45b43b superseded; gunakan artifacts/studio-v1/CURRENT.json untuk kandidat pengganti.90,50% tetap; belum deploy.
+Terbaru: koreksi menu admin independen terverifikasi ulang di isolated PR #52 HEAD `e5c7d1e`; kandidat `8d817c2` dan ZIP SHA tetap valid.48 menu assertions, bootstrap, foundation/settings, lint, checksum dan 78-member preflight PASS.90,50% tetap; runtime staging/E2E belum teruji, belum deploy.
 
 - [Perbaikan menu dan evidence](../qa/studio-admin-menu-correction-20261124.md)
 
