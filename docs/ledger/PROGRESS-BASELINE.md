@@ -2,7 +2,7 @@
 
 ## ACTIVE — Owner approved UI refinement in progress
 
-25 November2026: primary buyer/admin concept references now implemented in source for staging acceptance. Functional baseline96.50%→96.50%, delta0; visual browser acceptance and revised package installation pending. No full audit, DTF regeneration, payment or live Drive requests. [Visual gap/implementation evidence](../qa/studio-ui-owner-reference-20261125.md). The prior1.0.0 installation below is the unchanged functional checkpoint.
+25 November2026: primary buyer/admin concept references now implemented in source for staging acceptance. Functional baseline96.50%→96.50%, delta0; visual browser acceptance and revised package installation pending. Direct browser control is unavailable in the current tool inventory; live WordPress readback confirms1.0.0 still ACTIVE and transport/QA INACTIVE. NO-GO for UI release; no fresh runtime/digest claim. No full audit, DTF regeneration, payment or live Drive requests. [Visual gap/implementation evidence](../qa/studio-ui-owner-reference-20261125.md). The prior1.0.0 installation below is the unchanged functional checkpoint.
 
 ## Previous functional release — V1 Final Release1.0.0 installed and verified on staging
 

@@ -19,3 +19,11 @@ No proprietary source/assets copied. Garment.svg is an original UI fallback, act
 Milestone checks: PHP syntax on changed modules; JavaScript syntax; buyer render13 assertions; independent admin navigation/permissions/order hooks69 assertions; product areas16 and pricing7 assertions PASS. Browser acceptance pending installation of this source; no visual PASS claimed yet. Before screenshots are in artifacts/studio-v1/1.1.0-ui/evidence.
 
 Functional baseline remains96.50%, delta0. UI acceptance separate from historic score. Staging still1.0.0 at this checkpoint. New release must pass target/runtime/security gate before install, then desktop/mobile visual and interaction checks. DTF and payment tests are not repeated.
+
+## Execution boundary / live readback
+
+After code milestoneff93166, the active tool inventory no longer exposes Browser.js, CUA, native desktop or equivalent direct interaction. The Browser skill was read and the available tool registry searched; plugin discovery did not restore this capability. The WordPress connector works and its reviewed remote abilities were checked; none executes the existing native release gate. No browser session/cookies were extracted, no new endpoint or AI worker was created, and no security gate was removed.
+
+The source-bound transport forff93166 was uploaded/briefly activated through official WordPress connector, then deactivated when browser gate execution proved unavailable. Candidate application was NOT applied. Fresh live plugin-list readback: SANRO Studio1.0.0 ACTIVE; staging release transport0.3.3 INACTIVE; temporary QA INACTIVE; WooPayments INACTIVE. Site reachable. No writer/config/order/payment changes made. Existing installed source/digest below are inherited from prior verified1.0.0 evidence, not reverified by a fresh runtime gate.
+
+Independent polish: system inventory collapsed in settings; invalid hidden product controls reveal their tab; UI price maximum aligned to existing native1,000,000IDR validator. CSS parser optionalcheck NOT RUN (tinycss2 unavailable); PHP/JS checks below remain PASS. Desktop/mobile after screenshots, drag/resize/touch/overflow, new package installed digest and runtime smoke: NOT TESTED. UI release remains NO-GO until direct Browser capability is restored and these mandatory actions complete. Functional baseline remains96.50%.

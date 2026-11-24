@@ -69,10 +69,10 @@ function sanro_studio_render_settings() {
     $runtime = $legacy_compat ? sanro_studio_runtime_status() : ['state' => 'native_default', 'mode' => 'native'];
     $options = $legacy_compat ? sanro_studio_options() : ['admin_preview' => false];
     $native = sanro_studio_native_capabilities();
-    echo '<div class="wrap"><h1>SANRO Studio</h1>';
+    echo '<div class="wrap"><h1>Pengaturan SANRO Studio</h1>';
     echo '<nav class="nav-tab-wrapper"><a class="nav-tab nav-tab-active" aria-current="page" href="'.esc_url(admin_url('admin.php?page=sanro-studio-settings')).'">Pengaturan Umum</a><a class="nav-tab" href="'.esc_url(admin_url('admin.php?page=sanro-studio-drive')).'">Google Drive</a></nav>';
     echo '<p>Editor SANRO Studio native dan integrasi WooCommerce. Fitur penulisan checkout, produksi, dan Drive tetap mengikuti konfigurasi server.</p>';
-    echo '<table class="widefat striped"><tbody>';
+    echo '<details class="sanro-system-details"><summary>Status sistem dan kapabilitas</summary><table class="widefat striped"><tbody>';
     $rows = [
         'WooCommerce' => $state['woocommerce'] ? 'Terdeteksi' : 'Belum aktif',
         'Mode core' => $legacy_compat ? 'Kompatibilitas lama (opt-in)' : 'SANRO Studio native',
@@ -141,7 +141,7 @@ function sanro_studio_render_settings() {
             . '</td></tr>';
     }
     echo '</tbody></table>';
-    echo '<h2>Pengaturan Umum</h2>';
+    echo '</details><h2>Pengaturan Umum</h2>';
     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
     echo '<input type="hidden" name="action" value="sanro_studio_save">';
     echo '<input type="hidden" name="settings_type" value="editor_page">';
