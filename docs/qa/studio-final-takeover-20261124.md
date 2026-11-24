@@ -19,3 +19,11 @@ PHP8.4.24 CLI targeted OAuth encryption, tamper/purpose/origin isolation, token 
 ## Remaining
 
 Native OAuth credentials/consent and Picker selection not yet available. Upload56 folder/PNG/PDF/hashes/metadata/order links/idempotency NOT TESTED. Normal buyer Place-order E2E remains distinct from existing order creation through native hooks; do not create another order. Payment gateway development/real payment is outside scope. Release still candidate, not Final Release. Baseline94.00% unchanged. No production/merge/payment/GC.
+
+## Runtime checkout self-fix and successor installation
+
+Candidate dbf3d15695d983be8b28108e3441069990d7e133 installed via official WordPress upload and bounded staging transport. Web gate PASS; installed digest a13655949753a6605bab2054f5d6485f3ab47faa9a5b590abff6425f91662386, active plugin, private roots PASS, all writers/GC OFF. Native OAuth page loads and reports not connected; no existing client credentials are configured.
+
+Checkout GET returned500. Targeted administrator-only temporary diagnostic captured RuntimeException at includes/pricing-woocommerce.php37; no arguments/credential values collected. Source matches authorization rejection escaping woocommerce_before_calculate_totals. A safe totals hook now catches rejection, adds a sanitized error and leaves all product prices unchanged. Independent checkout validation still blocks submission. Targeted actual-hook expired cart and valid repricing PASS; same-order recovery17+20 checks PASS. Runtime after fix pending at this milestone. Temporary diagnostic observer removed from transport source. No order or payment created.
+
+Two transport successor defects fixed: installed detection binds current source/archive/plugin/build marker/tree rather than any committed predecessor; historical configuration lease can be read only when state restored and both backup+actual file match original hashes. Foreign armed or unverified restored leases fail closed. Successor binding, six crash/recovery and config lease/restore tests PASS. These utilities are outside the application ZIP.

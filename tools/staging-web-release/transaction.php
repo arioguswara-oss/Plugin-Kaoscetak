@@ -88,3 +88,14 @@ function sswr_replace($target,$root,$incoming,$manifest,$before,$checkpoint=null
         return $r;
     } catch (Throwable $e) { sswr_recover($target,$root,$r); throw $e; }
 }
+
+/** A committed older candidate is a valid predecessor, not proof this package is installed. */
+function sswr_candidate_installed($journal,$current,$manifest) {
+    if(!is_array($journal)||($journal['phase']??null)!=='committed'||($journal['candidate_digest']??null)!==$current)return false;
+    foreach(['source_commit','archive_sha256','plugin_digest'] as $key)if(($journal[$key]??null)!==($manifest[$key]??null))return false;
+    $files=[];
+    foreach(array_merge($manifest['files'],[$manifest['build_marker']]) as $entry)$files[$entry['path']]=$entry['sha256'];
+    ksort($files,SORT_STRING);$pairs=[];foreach($files as $path=>$sha)$pairs[]=[$path,$sha];
+    $expected=hash('sha256',json_encode($pairs,JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR));
+    return hash_equals($expected,$current);
+}

@@ -121,6 +121,15 @@ function sanro_studio_pricing_totals($cart) {
     foreach ($products as $key => $product) $cart->cart_contents[$key]['data'] = $product;
 }
 
+/** Cart/session restoration may encounter expired drafts before checkout validation runs.
+ * Keep the page renderable and leave every product unchanged on rejection. Checkout
+ * revalidates independently and the Woo error notice prevents order submission.
+ */
+function sanro_studio_pricing_calculate_totals($cart) {
+    try { sanro_studio_pricing_totals($cart); }
+    catch (Throwable $error) { sanro_studio_pricing_notice($error); }
+}
+
 function sanro_studio_pricing_checkout() {
     try { sanro_studio_pricing_totals(sanro_studio_pricing_cart()); }
     catch (Throwable $error) { sanro_studio_pricing_notice($error); }
@@ -130,7 +139,7 @@ function sanro_studio_register_pricing_wc_hooks() {
     if (!sanro_studio_pricing_wc_enabled()) return;
     add_filter('woocommerce_add_to_cart_validation', 'sanro_studio_pricing_add_validation', 20, 6);
     add_filter('woocommerce_update_cart_validation', 'sanro_studio_pricing_update_validation', 20, 4);
-    add_action('woocommerce_before_calculate_totals', 'sanro_studio_pricing_totals', 1000, 1);
+    add_action('woocommerce_before_calculate_totals', 'sanro_studio_pricing_calculate_totals', 1000, 1);
     add_action('woocommerce_check_cart_items', 'sanro_studio_pricing_checkout', 20);
     add_action('woocommerce_checkout_process', 'sanro_studio_pricing_checkout', 20);
 }

@@ -84,7 +84,7 @@ function sswr_preflight($dtfLease=false) {
     if(!class_exists('ZipArchive')||!function_exists('fsync')||!defined('TOKEN_PARSE'))throw new RuntimeException('php_release_dependencies_missing');
     if(is_link(WP_PLUGIN_DIR.'/.sanro-studio-install.lock'))throw new RuntimeException('unsafe_installer_lock');
     if((stat(WP_PLUGIN_DIR)['dev']??null)!==(stat(dirname($root))['dev']??null))throw new RuntimeException('rollback_filesystem_mismatch');
-    return ['gate'=>'PASS','source'=>SSWR_SOURCE,'archive_sha256'=>SSWR_ARCHIVE,'manifest_sha256'=>SSWR_MANIFEST,'existing_tree_digest'=>$before,'prior_journal_verified'=>$prior,'web_php'=>PHP_VERSION,'sapi'=>PHP_SAPI,'private_roots'=>'PASS','writer_flags'=>$flags,'installed'=>$journal&&$journal['phase']==='committed'&&$before===$journal['candidate_digest']];
+    return ['gate'=>'PASS','source'=>SSWR_SOURCE,'archive_sha256'=>SSWR_ARCHIVE,'manifest_sha256'=>SSWR_MANIFEST,'existing_tree_digest'=>$before,'prior_journal_verified'=>$prior,'web_php'=>PHP_VERSION,'sapi'=>PHP_SAPI,'private_roots'=>'PASS','writer_flags'=>$flags,'installed'=>sswr_candidate_installed($journal,$before,$m)];
 }
 function sswr_apply() {
     sswr_identity();$lockpath=WP_PLUGIN_DIR.'/.sanro-studio-install.lock';

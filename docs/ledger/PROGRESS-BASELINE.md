@@ -1,5 +1,11 @@
 # SANRO Studio — satu baseline resmi development
 
+## Final takeover milestone — checkout500 source fix and native OAuth installed
+
+Native OAuth candidate dbf3d15 installed; active authenticated web gate/private storage/installed digest PASS. OAuth admin page is available and not connected; Owner client/consent required. Checkout GET revealed HTTP500 from an uncaught price authorization rejection on expired/nonrecoverable cart. Source self-fix keeps page renderable with sanitized error and preserves fail-closed checkout; actual-hook local regression and same-order recovery PASS. Updated runtime pending at this milestone. Temporary diagnostic removed from transport source. Successor package detection and restored historical config-lease read compatibility fixed/tested without changing production configuration.
+
+**94,00% →94,00%, delta0,00.** No duplicate acceptance credit; no second order/payment/production/merge. Final Release remains NO-GO until remaining native Drive and checkout runtime evidence is complete.
+
 ## Final takeover milestone — native OAuth implementation and checkout clarity
 
 Remote57f5310 and ledger read before edits; separate checkout preserves prior executor's uncommitted changes. Fresh browser web gate PASS: existing79e0a93 still installed, PHP8.3.37/LiteSpeed/private storage PASS, writers and GC OFF, order56 unpaid240000IDR unchanged. No reinstall or repeat DTF generation.

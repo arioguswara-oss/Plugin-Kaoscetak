@@ -20,5 +20,9 @@ sswr_config_lease($record);file_put_contents($path,$changed.'// Owner concurrent
 try{sswr_restore_dtf_config();throw new RuntimeException('concurrent_edit_overwritten');}catch(RuntimeException $e){if($e->getMessage()!=='configuration_conflict_original_retained')throw $e;}
 if(!str_contains(file_get_contents($path),'Owner concurrent edit')||hash_file('sha256',sswr_private_root().'/'.$backup)!==$before)throw new RuntimeException('configuration_data_lost');
 $record['expires']=time()-1;sswr_config_lease($record);if(sswr_config_lease_live()!==false)throw new RuntimeException('expired_lease_enabled');
+$historical=$record;$historical['source']=str_repeat('a',40);$historical['state']='restored';file_put_contents($path,$code);sswr_config_lease($historical);
+if(sswr_config_lease()['state']!=='restored'||sswr_config_lease_live()!==false)throw new RuntimeException('historical restoration unreadable or enabled');
+$historical['state']='armed';sswr_config_lease($historical);try{sswr_config_lease();throw new RuntimeException('foreign lease inherited');}catch(RuntimeException $e){if($e->getMessage()!=='foreign_config_lease_active')throw $e;}
+$historical['state']='restored';sswr_config_lease($historical);file_put_contents($path,$changed);try{sswr_config_lease();throw new RuntimeException('unrestored historical accepted');}catch(RuntimeException $e){if($e->getMessage()!=='foreign_config_restoration_unverified')throw $e;}
 foreach(new RecursiveIteratorIterator(new RecursiveDirectoryIterator($base,FilesystemIterator::SKIP_DOTS),RecursiveIteratorIterator::CHILD_FIRST) as $p){if($p->isDir())rmdir($p->getPathname());else unlink($p->getPathname());}rmdir($base);
 echo "PASS: comments/strings/GC untouched, restore exact and idempotent, concurrent edit retained, expiry fail-closed\n";

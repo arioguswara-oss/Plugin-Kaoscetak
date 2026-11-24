@@ -42,11 +42,21 @@ function sswr_config_lease($record=null) {
     if(!file_exists($path))return null;
     if(is_link($path)||!is_file($path)||(fileperms($path)&0077)||filesize($path)>32768)throw new RuntimeException('unsafe_config_lease');
     $r=json_decode(file_get_contents($path),true,32,JSON_THROW_ON_ERROR);
-    if(($r['schema']??null)!==1||($r['order_id']??null)!==56||($r['design_id']??null)!==SSWR_DESIGN||($r['source']??null)!==SSWR_SOURCE||!in_array($r['state']??null,['prepared','armed','restored'],true)||!is_int($r['expires']??null)||!is_array($r['files']??null)||count($r['files'])>10)throw new RuntimeException('invalid_config_lease');
+    if(($r['schema']??null)!==1||($r['order_id']??null)!==56||($r['design_id']??null)!==SSWR_DESIGN||!is_string($r['source']??null)||!preg_match('/^[a-f0-9]{40}$/D',$r['source'])||!in_array($r['state']??null,['prepared','armed','restored'],true)||!is_int($r['expires']??null)||!is_array($r['files']??null)||count($r['files'])>10)throw new RuntimeException('invalid_config_lease');
     foreach($r['files'] as $f){
         if(!is_string($f['path']??null)||is_link($f['path'])||realpath($f['path'])!==$f['path']||strpos($f['path'],realpath(WPMU_PLUGIN_DIR).'/')!==0||!preg_match('/^config-backup-[a-f0-9]{64}\.php$/D',$f['backup']??''))throw new RuntimeException('invalid_config_path');
         foreach(['before','after'] as $key)if(!preg_match('/^[a-f0-9]{64}$/D',$f[$key]??''))throw new RuntimeException('invalid_config_hash');
-    }return $r;
+    }
+    if($r['source']!==SSWR_SOURCE){
+        // Successor packages may read a historical lease only after exact restoration.
+        // Never inherit an armed lease or write/migrate a predecessor's configuration.
+        if($r['state']!=='restored')throw new RuntimeException('foreign_config_lease_active');
+        foreach($r['files'] as $f){
+            $backup=sswr_private_root().'/'.$f['backup'];
+            if(!is_file($backup)||is_link($backup)||!hash_equals($f['before'],hash_file('sha256',$backup))||!hash_equals($f['before'],hash_file('sha256',$f['path'])))throw new RuntimeException('foreign_config_restoration_unverified');
+        }
+    }
+    return $r;
 }
 function sswr_config_lease_live() {
     $r=sswr_config_lease();
