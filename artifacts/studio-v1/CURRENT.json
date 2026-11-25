@@ -55,11 +55,11 @@
     "report": "docs/qa/studio-product-catalog-acceptance-20261125.md",
     "decision": "NO_GO_P1_BLOCKER",
     "add": "FAIL_NO_STUDIO_UI_CONTROL",
-    "edit": "PARTIAL_UI_PRESENT_SAVE_NOT_TESTED",
+    "edit": "PASS_SYNTHETIC_PRODUCT_53_FRONT_PRINT_ZONE_X_SAVED_READ_BACK_RESTORED",
     "archive_or_remove": "FAIL_NO_STUDIO_UI_CONTROL",
     "activate_deactivate": "FAIL_NO_INDEPENDENT_STUDIO_CONTROL",
     "woo_mapping": "PARTIAL_EXISTING_SIMPLE_PRODUCTS_ONLY",
-    "woo_products_changed": false,
+    "synthetic_studio_configuration_restored": true,
     "orders_or_designs_changed": false
   }
 }

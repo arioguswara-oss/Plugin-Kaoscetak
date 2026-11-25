@@ -14,7 +14,13 @@ Staging: `https://saddlebrown-peafowl-616656.hostingersite.com`
 
 Owner's manual finding is confirmed as a **P1 functional release blocker**. Current UI lets an Administrator configure selected WooCommerce products, but cannot manage SANRO Studio catalog membership independently. Final Acceptance is **NO-GO** until the Studio catalog lifecycle and its mapping persistence work through the SANRO Studio UI.
 
-## Direct browser observations
+## Follow-up live acceptance
+
+Cloud Browser reopened synthetic staging product #53. Through Produk & Mockup → Area Cetak → Posisi visual (%), the front X value was changed from 31.1 to 31.2. Simpan Produk redirected with `updated=1`. After the editor rendered again, the X value read 31.2 and the other captured configuration fields matched their initial values. A second save restored X to 31.1. All 17 captured form values matched the original readback.
+
+Edit/save/readback and restoration **PASS for front X**. Persistence of changes to mockup, size/color mapping, physical dimensions, category and pricing remains **NOT TESTED**. The follow-up also verified V01 on staging: Ringkasan rendered one Studio shell and one heading. Add, archive and independent activation remain unavailable.
+
+## Initial browser observations
 
 Opened the live authenticated admin route `SANRO Studio → Produk & Mockup` and selected the existing staging fixture “SANRO Studio Staging QA — Cotton Combed 24s” (Woo product ID 53). The selector also displayed the existing `test` fixture. This was observation only. No save was submitted and no product/order/design was modified.
 
@@ -58,7 +64,7 @@ Therefore the current “Katalog Anda” is a WooCommerce-product configuration 
 | Live admin screen inspected | PASS |
 | Existing-product editor controls inspected | PARTIAL PASS |
 | Add Studio product | FAIL — absent |
-| Persist existing-product edit | NOT TESTED — no-op/save avoided |
+| Persist existing-product edit | PASS for front X on synthetic product #53, with restoration verified |
 | Studio-only product removal | FAIL — absent |
 | Independent Studio activation | FAIL — absent |
 | Configuration UI availability | PASS/PARTIAL by mapping area, see table |
