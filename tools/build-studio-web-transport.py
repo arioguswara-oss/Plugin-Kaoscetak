@@ -15,12 +15,13 @@ INSTALLED_UI_P1={
  'archive_sha256':'cd4c86ec548de7d109b751734c0a30dff55f67bf83594ec4430b276633cf0b9a',
  'version':'1.1.0','channel':'candidate','source_commit':'826c152c3dbf2e35fff74d276e9c2fd00aed2905',
 }
-# Exact simple-catalog candidate currently installed before the follow-up
-# historical-fork guard; acceptance is bound to both immutable artifacts.
+# Exact catalog P1 candidate currently installed on staging; the builder
+# accepts it only after its immutable manifest/archive and live tree digest
+# are revalidated by the source-bound transport.
 INSTALLED_CATALOG_P1={
- 'manifest_sha256':'b388ae26014b6a16e0889579658a125922e573697b4904054f4d913ab87efccc',
- 'archive_sha256':'d14a7f4381dd4b452a376f035bc4a4112da02fa325ef551a187ea7a3eee2975e',
- 'version':'1.1.0','channel':'candidate','source_commit':'7c2d67fd07c52cc6fa210c671e762e4f9f0fdd19',
+ 'manifest_sha256':'ef4926df914907f7b7d1b5e42c49f2038dc0d54e52c4c0236bde187473903e4e',
+ 'archive_sha256':'5a0b02537e8e50a93d975312457140c7b3d6a129a134ad3003cd0a93ff52397d',
+ 'version':'1.1.0','channel':'candidate','source_commit':'3a3a3ea6606608143658a55e998f2bbbdb9be8ee',
 }
 p=argparse.ArgumentParser();p.add_argument('--candidate',required=True);p.add_argument('--out',required=True);p.add_argument('--existing-manifest',required=True);p.add_argument('--existing-archive',required=True);p.add_argument('--verified-existing-tree-digest',required=True);a=p.parse_args()
 repo=pathlib.Path(__file__).resolve().parents[1];candidate=pathlib.Path(a.candidate);out=pathlib.Path(a.out);out.mkdir(parents=True,exist_ok=True)
