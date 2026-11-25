@@ -42,5 +42,6 @@
  showPanel('product',false);if(location.hash==='#sanro-reorder')showPanel('product');
  const collectionLink=root.querySelector('[data-show-collection]');if(collectionLink)collectionLink.addEventListener('click',()=>showPanel('collection'));
  root.addEventListener('sanro:collection',()=>showPanel('collection'));
+ root.addEventListener('sanro:show-panel',event=>{const name=event.detail&&event.detail.name;if(Object.prototype.hasOwnProperty.call(panels,name))showPanel(name);});
  updateSelection();
 })();

@@ -10,6 +10,7 @@ function sanro_studio_ui_header($label,$back=''){
     echo '<header class="sanro-appbar">'.($back?'<a class="sanro-back" aria-label="Kembali pilih produk" href="'.esc_url($back).'">'.sanro_studio_ui_icon('arrow').'</a>':'').'<h1>'.esc_html($label).'</h1><a class="sanro-cart-link" aria-label="Keranjang" href="'.esc_url($cart).'">'.sanro_studio_ui_icon('cart').($count?'<span>'.(int)$count.'</span>':'').'</a></header>';
 }
 function sanro_studio_ui_theme_scope($classes){$classes[]='sanro-studio-page';return $classes;}
+function sanro_studio_ui_admin_body_scope($classes){$page=isset($_GET['page'])&&is_string($_GET['page'])?sanitize_key(wp_unslash($_GET['page'])):'';if(strpos($page,'sanro-studio')===0)$classes.=' sanro-studio-admin';return $classes;}
 function sanro_studio_ui_admin_links(){return ['summary'=>['Ringkasan','sanro-studio','home'],'settings'=>['Pengaturan','sanro-studio-settings','settings'],'products'=>['Produk & Mockup','sanro-studio-products','shirt'],'prices'=>['Harga','sanro-studio-prices','price'],'storage'=>['Penyimpanan','sanro-studio-storage','cloud'],'orders'=>['Pesanan','sanro-studio-orders','orders']];}
 function sanro_studio_ui_admin_begin($active){
     echo '<div class="sanro-admin-shell"><aside class="sanro-admin-nav"><a class="sanro-admin-brand" href="'.esc_url(admin_url('admin.php?page=sanro-studio')).'">'.sanro_studio_ui_icon('mountain').'<strong>SANRO<small>Studio</small></strong></a><nav aria-label="Navigasi SANRO Studio">';
@@ -71,6 +72,7 @@ function sanro_studio_ui_download_guide(){
     wp_die('Panduan belum tersedia.','',['response'=>409]);
 }
 add_action('admin_enqueue_scripts','sanro_studio_ui_admin_assets');
+add_filter('admin_body_class','sanro_studio_ui_admin_body_scope');
 add_action('admin_post_sanro_studio_ui_save_product','sanro_studio_ui_save_product');
 add_action('admin_post_sanro_studio_ui_guide','sanro_studio_ui_download_guide');
 

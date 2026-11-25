@@ -41,6 +41,8 @@ require __DIR__.'/../plugins/sanro-studio/includes/buyer.php';
 register_shutdown_function(function () {
     $html=ob_get_contents();
     $buyer_js=file_get_contents(__DIR__.'/../plugins/sanro-studio/assets/buyer.js');
+    $buyer_css=file_get_contents(__DIR__.'/../plugins/sanro-studio/assets/buyer.css');
+    $collection_js=file_get_contents(__DIR__.'/../plugins/sanro-studio/assets/collection.js');
     $assets=$GLOBALS['enqueued'];
     $by_handle=[];foreach($assets as $asset)if($asset[0]!=='inline')$by_handle[$asset[1][0]]=$asset[1];
     $inline=end($assets)[1][1];
@@ -58,6 +60,13 @@ register_shutdown_function(function () {
         'no owner token'=>strpos($inline,'owner_token')===false,
         'inline script escaped'=>strpos($inline,'</script>')===false && strpos($inline,'\\u003C')!==false,
         'concept appbar'=>strpos($html,'sanro-appbar')!==false,
+        'dedicated editor layout scope'=>strpos($html,'sanro-buyer-editor')!==false,
+        'collection save and email access separated'=>strpos($html,'sanro-collection-save')!==false&&strpos($html,'sanro-collection-access')!==false,
+        'collection empty/locked states explicit'=>strpos($collection_js,'Koleksi privat. Verifikasi email')!==false&&strpos($collection_js,'Belum ada desain tersimpan')!==false,
+        'saved image draft exposes upload next action'=>strpos($buyer_js,'Lanjut unggah gambar')!==false&&strpos($buyer_js,"sanro:show-panel")!==false,
+        'background control refreshed after local file cleanup'=>strpos($buyer_js,'for(const name of completed)sides[name].file=null;')<strpos($buyer_js,'await refreshBackgroundControl();'),
+        'validation points to side and repair controls'=>strpos($buyer_js,'Pindahkan atau kecilkan pada tab')!==false&&strpos($buyer_js,'Pilih kategori cetak yang lebih besar pada tab Produk')!==false,
+        'theme chrome suppression is limited to opted-in Studio body'=>strpos($buyer_css,'body.sanro-studio-page :is(#masthead,#colophon,.site-header,.site-footer')!==false,
 
     ];
     ob_end_clean();

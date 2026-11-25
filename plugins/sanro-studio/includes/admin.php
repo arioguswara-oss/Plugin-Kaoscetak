@@ -6,11 +6,13 @@ function sanro_studio_admin_menu() {
     $capability = current_user_can('manage_options') ? 'manage_options' : 'manage_woocommerce';
     add_menu_page('SANRO Studio', 'SANRO Studio', $capability,
         'sanro-studio', 'sanro_studio_admin_landing', 'dashicons-art', 56);
+    // WordPress dispatches both callbacks for the shared root/submenu hook on
+    // some versions. Keep the root callback empty and render once from submenu.
     foreach ([['Ringkasan','manage_woocommerce','sanro-studio','sanro_studio_ui_summary'],['Pengaturan','manage_options','sanro-studio-settings','sanro_studio_ui_settings'],['Produk & Mockup','edit_products','sanro-studio-products','sanro_studio_ui_products'],['Harga','edit_products','sanro-studio-prices','sanro_studio_ui_prices'],['Pesanan','manage_woocommerce','sanro-studio-orders','sanro_studio_ui_orders']] as $entry) {
         add_submenu_page('sanro-studio',$entry[0],$entry[0],$entry[1],$entry[2],$entry[3]);
     }
 }
-function sanro_studio_admin_landing(){sanro_studio_ui_summary();}
+function sanro_studio_admin_landing(){if(!current_user_can('manage_woocommerce')&&!current_user_can('manage_options'))wp_die('Akses ditolak.','',['response'=>403]);/* The matching submenu callback owns the single render. */}
 
 function sanro_studio_save_settings() {
     if (!current_user_can('manage_options')) {

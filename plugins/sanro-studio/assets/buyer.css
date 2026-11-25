@@ -114,7 +114,7 @@
 
 /* Owner-approved visual reference: SANRO black / white / yellow workspace. */
 body.sanro-studio-page{background:#f6f4ef;color:#171717;margin:0}
-body.sanro-studio-page > :is(header,footer,hr),body.sanro-studio-page #page > :is(header,footer),body.sanro-studio-page .wp-site-blocks > :is(header,footer){display:none}
+body.sanro-studio-page > :is(header,footer,hr),body.sanro-studio-page #page > :is(header,footer),body.sanro-studio-page .wp-site-blocks > :is(header,footer),body.sanro-studio-page :is(#masthead,#colophon,.site-header,.site-footer,.site-info,.site-branding,.entry-header,.entry-title,.page-header,.wp-block-post-title,.wp-block-separator){display:none!important}
 #sanro-studio-buyer{--sanro-yellow:#f9c900;max-width:1280px;margin:24px auto;padding:0 0 84px;background:#fff;border:1px solid #ddd;border-radius:18px;overflow:hidden;font-family:Inter,Arial,sans-serif;color:#171717}
 #sanro-studio-buyer .sanro-appbar{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#1c1c1c;color:#fff;min-height:72px;padding:18px 28px;margin:0}
 #sanro-studio-buyer .sanro-appbar h1{font-size:28px;letter-spacing:-1px;line-height:1.1;margin:0;font-weight:800;color:#fff}
@@ -201,6 +201,22 @@ body.sanro-studio-page > :is(header,footer,hr),body.sanro-studio-page #page > :i
 #sanro-studio-buyer .sanro-collection-card button{flex:1;min-width:100px}
 #sanro-studio-buyer .sanro-collection-card button:nth-of-type(2){background:#f9c900;border-color:#f9c900}
 #sanro-studio-buyer .sanro-private-note{text-align:center;color:#777;border-top:1px solid #eee;padding-top:20px;margin-top:24px;font-size:13px}
+#sanro-studio-buyer .sanro-collection-view{max-width:880px;margin:0 auto;padding:30px clamp(16px,4vw,48px)}
+#sanro-studio-buyer .sanro-collection-view>h2{font-size:clamp(28px,4vw,36px);font-weight:800;line-height:1.15}
+#sanro-studio-buyer .sanro-collection-view>p{font-size:16px;line-height:1.5}
+#sanro-studio-buyer #sanro-collection{display:grid;gap:16px}
+#sanro-studio-buyer .sanro-collection-save{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;padding:16px;border:1px solid #e2e2e2;border-radius:14px;background:#fff}
+#sanro-studio-buyer .sanro-collection-save label,#sanro-studio-buyer .sanro-collection-access label{display:grid;gap:6px;font-size:13px;font-weight:650}
+#sanro-studio-buyer .sanro-collection-save input,#sanro-studio-buyer .sanro-collection-access input{width:100%;min-width:0}
+#sanro-studio-buyer .sanro-collection-primary{background:#f9c900;border-color:#f9c900;font-weight:750}
+#sanro-studio-buyer .sanro-collection-access{padding:14px 16px;border:1px solid #e2e2e2;border-radius:14px;background:#fafafa}
+#sanro-studio-buyer .sanro-collection-access summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:700}
+#sanro-studio-buyer .sanro-collection-access p{margin:0 0 12px;color:#666;font-size:13px}
+#sanro-studio-buyer .sanro-collection-access button{margin:10px 8px 4px 0}
+#sanro-studio-buyer .sanro-collection-session-actions{display:flex;gap:10px;flex-wrap:wrap}
+#sanro-studio-buyer .sanro-collection-empty{grid-column:1/-1;margin:0;padding:22px;border:1px dashed #d4d4d4;border-radius:14px;background:#fafafa;color:#626262;line-height:1.5}
+#sanro-studio-buyer .sanro-next-action{display:inline-flex;align-items:center;justify-content:center;margin:6px 0;padding:8px 14px;border:1px solid #d0a700;background:#fff4bd;font-weight:700}
+@media(min-width:751px){#sanro-studio-buyer.sanro-buyer-editor .sanro-workflow{display:none}#sanro-studio-buyer.sanro-buyer-editor .sanro-layout{grid-template-columns:minmax(0,1.55fr) minmax(300px,.95fr);padding-top:12px}}
 @media(max-width:750px){
  body.sanro-studio-page{background:#fff}
  #sanro-studio-buyer{margin:0;border:0;border-radius:0;max-width:none;padding-bottom:72px}
@@ -211,8 +227,8 @@ body.sanro-studio-page > :is(header,footer,hr),body.sanro-studio-page #page > :i
  #sanro-studio-buyer .sanro-layout{display:block;padding:0 12px}
  #sanro-studio-buyer .sanro-preview{position:relative;top:auto;padding:0;background:#fff}
  #sanro-studio-buyer .sanro-preview nav{margin:0 auto 10px}
- #sanro-studio-buyer .sanro-shirt{width:min(100%,370px);aspect-ratio:390/420;margin:0 auto;max-height:46svh}
- #sanro-studio-buyer .sanro-position-pad{right:14px;bottom:88px;width:76px;height:76px}
+ #sanro-studio-buyer .sanro-shirt{width:min(100%,390px);aspect-ratio:390/420;margin:0 auto;max-height:58svh}
+ #sanro-studio-buyer .sanro-position-pad{right:8px;bottom:86px;width:132px;height:132px}
  #sanro-studio-buyer .sanro-controls{padding:14px 4px 0;border:0}
  #sanro-studio-buyer .sanro-tool-panel h2{font-size:17px;margin:0 0 4px}
  #sanro-studio-buyer .sanro-tool-panel[data-tool-panel=product]{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -234,4 +250,6 @@ body.sanro-studio-page > :is(header,footer,hr),body.sanro-studio-page #page > :i
 @media(prefers-reduced-motion:reduce){#sanro-studio-buyer *{scroll-behavior:auto!important;transition:none!important}}
 
 #sanro-studio-buyer .sanro-catalog-search{padding:0 28px 22px}#sanro-studio-buyer .sanro-catalog-search>label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}#sanro-studio-buyer .sanro-catalog-heading{padding:26px 28px 16px}#sanro-studio-buyer .sanro-catalog-heading h2{font-size:34px;font-weight:750;letter-spacing:-1px;margin:0 0 8px}#sanro-studio-buyer .sanro-editor-product{text-align:center;font-size:23px;margin:20px 16px 5px;font-weight:750}#sanro-studio-buyer .sanro-private-note{display:flex;align-items:center;justify-content:center;gap:8px}
-@media(max-width:750px){#sanro-studio-buyer .sanro-catalog-search{padding:0 16px 20px}#sanro-studio-buyer .sanro-catalog-heading{padding:24px 18px 16px}#sanro-studio-buyer .sanro-catalog-heading h2{font-size:29px}#sanro-studio-buyer .sanro-editor-product{font-size:20px;margin:16px 12px 8px}#sanro-studio-buyer .sanro-shirt{width:min(100%,370px,42.7svh);max-height:none}}
+@media(max-width:750px){#sanro-studio-buyer .sanro-catalog-search{padding:0 16px 20px}#sanro-studio-buyer .sanro-catalog-heading{padding:24px 18px 16px}#sanro-studio-buyer .sanro-catalog-heading h2{font-size:29px}#sanro-studio-buyer .sanro-editor-product{font-size:20px;margin:16px 12px 8px}#sanro-studio-buyer .sanro-shirt{width:min(100%,390px,56svh);max-height:none}}
+@media(max-width:750px){#sanro-studio-buyer .sanro-collection-view{padding:22px 14px}#sanro-studio-buyer .sanro-collection-view>h2{font-size:29px}#sanro-studio-buyer .sanro-collection-save{grid-template-columns:minmax(0,1fr);padding:12px}#sanro-studio-buyer .sanro-collection-save button,#sanro-studio-buyer .sanro-collection-session-actions button{width:100%}#sanro-studio-buyer #sanro-collection [data-list]{grid-template-columns:minmax(0,1fr);gap:12px}#sanro-studio-buyer .sanro-collection-card{padding:12px;gap:8px}#sanro-studio-buyer .sanro-collection-card img{height:138px}#sanro-studio-buyer .sanro-resize-handle{right:-18px;bottom:-18px;width:44px;height:44px;min-height:44px!important;padding:12px;border-radius:8px}#sanro-studio-buyer .sanro-position-pad{width:140px;height:140px}#sanro-studio-buyer .sanro-position-pad button{min-width:44px;min-height:44px!important;font-size:18px}}
+@media(max-width:400px){#sanro-studio-buyer .sanro-position-pad{right:4px;width:140px;height:140px;padding:2px}#sanro-studio-buyer .sanro-collection-card button{min-width:0;font-size:13px}}

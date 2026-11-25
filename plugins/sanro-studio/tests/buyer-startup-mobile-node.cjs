@@ -16,10 +16,10 @@ function q(selector){if(selector==='#sanro-save-draft')return null;if(!elements.
 q('#sanro-shirt-color').value='#ffffff';q('#sanro-sleeve').value='short';
 const config={product_id:7,pricing_profile:'cotton_combed_24s',safe_areas:{front:{width:32,height:48},back:{width:32,height:48}},categories:{A5:[14.8,21],A4:[21,29.7],A3:[29.7,42],'A3+':[32,48]},mockups:{front:'https://example.invalid/merchant-front.jpg'}};
 const original=JSON.stringify(config.safe_areas);
-const root={querySelector:q,querySelectorAll(selector){return selector==='[data-side]'?sides:[];}};
+const root={querySelector:q,querySelectorAll(selector){return selector==='[data-side]'?sides:[];},dispatchEvent(){}};
 vm.runInNewContext(fs.readFileSync(__dirname+'/../assets/buyer.js','utf8'),{
  document:{getElementById:()=>root},window:{SANRO_STUDIO_EDITOR_CONFIG:config,SanroStudioEstimate:require('../assets/estimate.js'),addEventListener(){}},
- requestAnimationFrame:fn=>fn(),Intl,URL,console
+ requestAnimationFrame:fn=>fn(),Intl,URL,CustomEvent:function(type,options){this.type=type;this.detail=options?.detail;},console
 },{timeout:1000});
 const shirt=q('.sanro-shirt');
 assert.equal(shirt.attributes['data-side'],'front');

@@ -181,7 +181,7 @@ function sanro_studio_render_buyer_editor() {
     // This view is selected only after product identity and visibility checks.
     sanro_studio_register_buyer_viewport_meta();
     get_header();
-    echo '<main id="sanro-studio-buyer" class="sanro-buyer" aria-label="SANRO Studio">';
+    echo '<main id="sanro-studio-buyer" class="sanro-buyer sanro-buyer-editor" aria-label="SANRO Studio">';
     $back_id=(int)get_option('sanro_studio_editor_page_id',0);
     sanro_studio_ui_header($studio_label,$back_id?get_permalink($back_id):'');
     $display_product=wc_get_product($product_id);
@@ -239,7 +239,11 @@ function sanro_studio_render_buyer_editor() {
             echo '<button type="button" id="sanro-request-owner-email">Kirim kode verifikasi</button><label>Kode dari email<input id="sanro-owner-email-code" type="text" autocomplete="one-time-code" maxlength="64" spellcheck="false"></label>';
             echo '<button type="button" id="sanro-confirm-owner-email">Verifikasi kode</button><p id="sanro-owner-email-status" role="status">Simpan desain terlebih dahulu. Repeat 5% dihitung server bila email checkout sama dan riwayat pesanan berbayar terverifikasi.</p></fieldset>';
         }
-        echo '<fieldset id="sanro-collection"><legend>Desain Saya — koleksi permanen</legend><label>Nama desain<input data-title maxlength="120"></label><button type="button" data-save>Simpan ke koleksi</button><label>Email koleksi<input data-email type="email" autocomplete="email" maxlength="254"></label><button type="button" data-request>Kirim kode akses koleksi</button><label>Kode akses<input data-code autocomplete="one-time-code" maxlength="32" spellcheck="false"></label><button type="button" data-verify>Buka koleksi dengan kode</button><button type="button" data-open>Muat koleksi sesi ini</button><button type="button" data-logout>Keluar koleksi</button><p data-status role="status">Verifikasi email pemilik pada draft untuk menyimpan permanen. Akses koleksi dari browser lain memakai kode email.</p><div data-list></div><button type="button" data-more hidden>Halaman berikutnya</button></fieldset>';
+        echo '<fieldset id="sanro-collection"><legend>Desain Saya</legend>';
+        echo '<div class="sanro-collection-save"><label>Nama desain<input data-title maxlength="120" placeholder="Contoh: Kaos komunitas"></label><button type="button" class="sanro-collection-primary" data-save>Simpan desain ini ke koleksi</button></div>';
+        echo '<details class="sanro-collection-access"><summary>Akses koleksi dengan email</summary><p>Kirim kode sekali pakai ke email yang terverifikasi pada desainmu.</p><label>Email koleksi<input data-email type="email" autocomplete="email" maxlength="254"></label><button type="button" data-request>Kirim kode akses</button><label>Kode akses<input data-code autocomplete="one-time-code" maxlength="32" spellcheck="false"></label><button type="button" data-verify>Verifikasi dan buka koleksi</button></details>';
+        echo '<div class="sanro-collection-session-actions"><button type="button" class="sanro-collection-primary" data-open>Buka koleksi sesi ini</button><button type="button" data-logout>Keluar koleksi</button></div>';
+        echo '<p data-status role="status" aria-live="polite">Koleksi ini privat. Verifikasi email untuk menyimpan desain atau mengaksesnya dari browser lain.</p><div data-list></div><button type="button" data-more hidden>Halaman berikutnya</button></fieldset>';
         echo '<button type="button" id="sanro-server-quote">Cek harga resmi draft tersimpan</button>';
         echo '<p id="sanro-server-quote-status" role="status" aria-live="polite">Simpan desain sebelum meminta harga server.</p>';
         echo '<p id="sanro-save-status" role="status">Simpan desain untuk melanjutkan pemesanan.</p>';

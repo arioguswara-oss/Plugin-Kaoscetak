@@ -31,7 +31,12 @@ foreach($roles as $role=>$caps){
     try{sanro_studio_admin_landing();}catch(SS_Denied $e){$denied=$e->getCode()===403;}
     $html=ob_get_clean();
     if($role==='subscriber')ss_assert($denied&&$html==='','unauthorized root denied');
-    else ss_assert(!$denied&&strpos($html,'Ringkasan SANRO Studio')!==false&&strpos($html,'settings_type')===false,'summary is read-only and independent of settings: '.$role);
+    else ss_assert(!$denied&&$html===''&&$root[4]==='sanro_studio_admin_landing','root callback leaves the single matching submenu render: '.$role);
+    if(!empty($caps['manage_woocommerce'])){
+        $summary=array_values(array_filter($GLOBALS['ss_submenus'],static fn($entry)=>$entry[4]==='sanro-studio'))[0];
+        ob_start();$summary[5]();$summary_html=ob_get_clean();
+        ss_assert(substr_count($summary_html,'sanro-admin-shell')===1&&strpos($summary_html,'Ringkasan SANRO Studio')!==false&&strpos($summary_html,'settings_type')===false,'summary renders once, read-only and independent of settings: '.$role);
+    }
 }
 $children=[];foreach($GLOBALS['ss_submenus'] as $entry)$children[$entry[4]]=$entry;
 ss_assert($children['sanro-studio-drive'][3]==='manage_options','Drive setup is Administrator only');

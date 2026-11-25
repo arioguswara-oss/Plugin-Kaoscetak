@@ -126,7 +126,14 @@
   const w=x2-x1,h=y2-y1,limit=Object.prototype.hasOwnProperty.call(categories,d.category)?categories[d.category]:null;
   const outside=objects.some(o=>o.x<0||o.y<0||o.x+o.width>area.width+1e-6||o.y+o.height>area.height+1e-6);
   const valid=!outside&&Array.isArray(limit)&&limit.length===2&&w<=limit[0]+1e-6&&h<=limit[1]+1e-6;
-  q('#sanro-validation').textContent=(valid?'Pratinjau sesuai batas: ':'Di luar batas cetak: ')+w.toFixed(2)+' × '+h.toFixed(2)+' cm';
+  if(valid){
+   q('#sanro-validation').textContent='Sisi '+(side==='front'?'depan':'belakang')+' sesuai batas '+d.category+': '+w.toFixed(2)+' × '+h.toFixed(2)+' cm.';
+  }else if(outside){
+   const names=objects.filter(o=>o.x<0||o.y<0||o.x+o.width>area.width+1e-6||o.y+o.height>area.height+1e-6).map(o=>o.type==='image'?'gambar':'teks');
+   q('#sanro-validation').textContent='Sisi '+(side==='front'?'depan':'belakang')+': '+names.join(' dan ')+' melewati area cetak. Pindahkan atau kecilkan pada tab '+(names.includes('gambar')?'Gambar':'Teks')+'.';
+  }else{
+   q('#sanro-validation').textContent='Desain sisi '+(side==='front'?'depan':'belakang')+' '+w.toFixed(2)+' × '+h.toFixed(2)+' cm melebihi batas kategori '+d.category+'. Pilih kategori cetak yang lebih besar pada tab Produk.';
+  }
  }
  root.querySelectorAll('[data-side]').forEach(b=>b.addEventListener('click',()=>{if(config.safe_areas[b.dataset.side]){side=b.dataset.side;render()}}));
  q('#sanro-text-input').addEventListener('input',e=>{editRevision++;sides[side].text=e.target.value;render()});
@@ -768,10 +775,11 @@
      if(!updated.valid||typeof updated.design_hash!=='string'
       ||!updated.master_refs||completed.some(name=>!updated.master_refs[name]))
       throw new Error('Metadata gambar tidak terikat ke master privat.');
-     Object.assign(boundMasterRefs,updated.master_refs);refreshBackgroundControl();
+     Object.assign(boundMasterRefs,updated.master_refs);
      // A successful server readback turns the local file into a bound master.
      // Do not accidentally upload the same source again on the next click.
      for(const name of completed)sides[name].file=null;
+     await refreshBackgroundControl();
      lastKnownDesignHash=updated.design_hash;
      if(editRevision===revisionAtStart)savedRevision=editRevision;
      masterStatus.textContent='Master dan posisi gambar terverifikasi untuk '+completed.join(', ')+'. Draft dapat dibuka kembali.';
@@ -979,9 +987,15 @@
     lastKnownDesignHash=verified.design_hash;
     if(editRevision===revisionAtSave)savedRevision=editRevision;
     try{sessionStorage.setItem(draftStorageKey,JSON.stringify({id:savedId,token:ownerToken}))}catch(_error){}
-    saveStatus.textContent=editRevision===revisionAtSave
-     ?'Draft teks tersimpan. Design ID: '+savedId+'. Bisa dibuka ulang pada tab ini selama sesi browser masih tersedia.'
-     :'Versi sebelumnya tersimpan. Ada perubahan baru yang belum tersimpan; klik Simpan lagi.';
+    if(editRevision!==revisionAtSave){
+     saveStatus.textContent='Versi sebelumnya tersimpan. Ada perubahan baru yang belum tersimpan; klik Simpan lagi.';
+    }else if(hasLocalImage&&config.master_upload_enabled){
+     saveStatus.replaceChildren(document.createTextNode('Draft tersimpan dan terverifikasi. Unggah gambar asli sebagai langkah berikutnya agar master privat dan preview desain terikat. '));
+     const next=document.createElement('button');next.type='button';next.className='sanro-next-action';next.textContent='Lanjut unggah gambar';
+     next.addEventListener('click',()=>{root.dispatchEvent(new CustomEvent('sanro:show-panel',{detail:{name:'image'}}));window.setTimeout(()=>q('#sanro-upload-master')?.focus(),0);});saveStatus.append(next);
+    }else{
+     saveStatus.textContent='Draft tersimpan dan terverifikasi. Design ID: '+savedId+'. Bisa dibuka ulang pada tab ini selama sesi browser masih tersedia.';
+    }
    }catch(error){saveStatus.textContent=error.message||'Penyimpanan gagal.'}
    finally{saving=false;saveButton.disabled=false}
   });

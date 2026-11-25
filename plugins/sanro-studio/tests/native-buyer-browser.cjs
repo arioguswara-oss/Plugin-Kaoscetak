@@ -13,7 +13,8 @@ const server=http.createServer((req,res)=>{
 (async()=>{
  await new Promise(resolve=>server.listen(18752,'127.0.0.1',resolve));const browser=await chromium.launch({executablePath:process.env.SANRO_TEST_CHROMIUM||undefined,headless:true,args:['--no-sandbox']});
  try{
-  const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});const errors=[];page.on('pageerror',e=>errors.push(e.message));let fixture=null,processed=false,preview={},variantPosts=0,collectionSaved=false;
+  const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
+  const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));let fixture=null,processed=false,preview={},variantPosts=0,collectionSaved=false;
   await page.route('https://example.test/**',async route=>{fixture=fixture||await page.evaluate(()=>window.NATIVE_FIXTURE);await route.fulfill({contentType:'image/png',body:Buffer.from(fixture.original,'base64'),headers:{'Access-Control-Allow-Origin':'*'}});});
   await page.route('**/wp-json/sanro-studio/v1/**',async route=>{
    fixture=fixture||await page.evaluate(()=>window.NATIVE_FIXTURE);const request=route.request(),url=new URL(request.url()),part=url.pathname.replace('/wp-json/sanro-studio/v1',''),body=request.postDataJSON();let value={valid:true};
@@ -33,6 +34,12 @@ const server=http.createServer((req,res)=>{
   });
   await page.goto('http://127.0.0.1:18752/?sanro_studio_editor=1&product_id=7');
   await page.waitForFunction(()=>document.querySelector('#sanro-save-status').textContent.includes('berhasil dibuka'));
+  check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'390px portrait editor has no horizontal overflow');
+  await page.setViewportSize({width:320,height:844});
+  check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'320px portrait editor has no horizontal overflow');
+  await page.setViewportSize({width:390,height:844});
+  await page.locator('[data-tool="image"]').tap();check(await page.locator('[data-tool-panel="image"]').isVisible(),'touch navigation opens image controls');
+  await page.locator('[data-tool="product"]').tap();
   check((await page.locator('#sanro-shirt-color').inputValue())==='#abcdef','configured palette restored');
   check((await page.locator('.sanro-shirt').evaluate(e=>e.style.backgroundImage)).includes('mockup-11'),'front S mapped mockup');
   await page.selectOption('#sanro-mockup-size','L');check((await page.locator('.sanro-shirt').evaluate(e=>e.style.backgroundImage)).includes('mockup-13'),'preview size switches product mapping');
@@ -40,12 +47,16 @@ const server=http.createServer((req,res)=>{
   await page.waitForFunction(()=>!document.querySelector('#sanro-remove-background').disabled);await page.click('#sanro-remove-background');await page.waitForFunction(()=>document.querySelector('#sanro-background-status').textContent.includes('Latar polos dihapus'));
   check(processed,'native remove-background UI calls owner-bound endpoint');check(await page.locator('#sanro-remove-background').isDisabled(),'actual processed alpha disables duplicate removal');
   await page.click('#sanro-restore-background');await page.waitForFunction(()=>document.querySelector('#sanro-background-status').textContent.includes('Gambar asli dipulihkan'));check(!processed,'restore UI preserves original');
+  const hitTargets=await page.evaluate(()=>({resize:document.querySelector('.sanro-resize-handle').getBoundingClientRect().width,dpad:document.querySelector('.sanro-position-pad button:nth-child(4)').getBoundingClientRect().width}));
+  check(hitTargets.resize>=44&&hitTargets.dpad>=44,'mobile resize and D-pad touch targets are at least 44px');
+  const textPosition=await page.locator('.sanro-text').evaluate(el=>el.style.left);await page.locator('.sanro-position-pad button:nth-child(4)').tap();
+  check(await page.locator('.sanro-text').evaluate(el=>el.style.left)!==textPosition,'touch D-pad moves the selected print object');
   await page.locator('[data-title]').fill('Mobile native collection');await page.locator('[data-save]').click();
   await page.waitForFunction(()=>document.querySelector('#sanro-collection [data-status]').textContent.includes('Snapshot tersimpan'),{timeout:15000});
   check(collectionSaved&&variantPosts===4,'collection save first uploads both sides for two active sizes');
   check((await page.evaluate(()=>sessionStorage.getItem('sanro-collection-session')))==='c'.repeat(64),'collection token remains session-scoped');
-  check(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'mobile viewport has no horizontal overflow');
+  check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile collection has no horizontal overflow');
   check(errors.length===0,'no buyer startup/async errors: '+errors.join(';'));
-  console.log('PASS: '+checks+' real Chromium mobile/editor/canvas/collection/background/mapping checks (local simulated WP transport)');
- }finally{await browser.close();}
+  console.log('PASS: '+checks+' real Chromium mobile/editor/canvas/collection/background/mapping checks (390px and 320px viewport, emulated touch, local simulated WP transport)');
+ }finally{await context.close();await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;}).finally(()=>server.close());
