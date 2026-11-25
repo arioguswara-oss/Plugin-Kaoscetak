@@ -9,6 +9,12 @@ INSTALLED_UI_110={
  'archive_sha256':'991f53c93ad6ae7c8c73bad1af4bd1b5406beac93ca7c64d6b0365a289e7896b',
  'version':'1.1.0','channel':'candidate','source_commit':'12b2c043cc6ccbb3e7c828949bf524ff6f2e84b1',
 }
+# Exact P1-corrected 1.1.0 candidate most recently verified on staging.
+INSTALLED_UI_P1={
+ 'manifest_sha256':'bae045a6d8255a482bba191c2a7a5983c83234f7cee887d9302d02231bfabd15',
+ 'archive_sha256':'cd4c86ec548de7d109b751734c0a30dff55f67bf83594ec4430b276633cf0b9a',
+ 'version':'1.1.0','channel':'candidate','source_commit':'826c152c3dbf2e35fff74d276e9c2fd00aed2905',
+}
 p=argparse.ArgumentParser();p.add_argument('--candidate',required=True);p.add_argument('--out',required=True);p.add_argument('--existing-manifest',required=True);p.add_argument('--existing-archive',required=True);p.add_argument('--verified-existing-tree-digest',required=True);a=p.parse_args()
 repo=pathlib.Path(__file__).resolve().parents[1];candidate=pathlib.Path(a.candidate);out=pathlib.Path(a.out);out.mkdir(parents=True,exist_ok=True)
 installer_source_commit=subprocess.check_output(['git','-C',str(repo),'rev-parse','HEAD'],text=True).strip()
@@ -19,9 +25,11 @@ old_manifest_path=pathlib.Path(a.existing_manifest);old_archive_path=pathlib.Pat
 old_manifest_sha=hashlib.sha256(old_manifest).hexdigest()
 is_final=(old.get('version')=='1.0.0' and old.get('channel')=='final' and old.get('deployment_authorized') is False and old_manifest_sha==APPROVED_V1_MANIFEST_SHA256)
 is_installed_ui=(old_manifest_sha==INSTALLED_UI_110['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_UI_110.items() if k not in ('manifest_sha256','archive_sha256')))
-if not (is_final or is_installed_ui):raise SystemExit('existing manifest is neither the approved Final Release 1.0.0 nor the exact previously installed staging UI 1.1.0 candidate')
+is_installed_ui_p1=(old_manifest_sha==INSTALLED_UI_P1['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_UI_P1.items() if k not in ('manifest_sha256','archive_sha256')))
+if not (is_final or is_installed_ui or is_installed_ui_p1):raise SystemExit('existing manifest is neither the approved Final Release 1.0.0 nor an exact previously installed staging UI 1.1.0 candidate')
 if hashlib.sha256(old_archive).hexdigest()!=old.get('archive_sha256'):raise SystemExit('existing release archive checksum mismatch')
 if is_installed_ui and old.get('archive_sha256')!=INSTALLED_UI_110['archive_sha256']:raise SystemExit('installed UI archive is not the previously verified staging archive')
+if is_installed_ui_p1 and old.get('archive_sha256')!=INSTALLED_UI_P1['archive_sha256']:raise SystemExit('installed P1 UI archive is not the previously verified staging archive')
 if hashlib.sha256(json.dumps(old.get('files',[]),sort_keys=True,separators=(',',':')).encode()).hexdigest()!=old.get('plugin_digest'):raise SystemExit('existing release manifest plugin digest mismatch')
 old_files=[*old.get('files',[]),old.get('build_marker',{})]
 rows=[]
