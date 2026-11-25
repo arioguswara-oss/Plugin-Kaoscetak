@@ -1,6 +1,12 @@
 # SANRO Studio — satu baseline resmi development
 
-## ACTIVE — Owner product-catalog P1 blocker confirmed live
+## LATEST — simple-product catalog lifecycle installed; variation mapping remains OPEN
+
+25 November 2026: source `3a3a3ea6606608143658a55e998f2bbbdb9be8ee` installed/active on staging, tree digest `c6da001ee3b8cd22c684c44615a17aaeea19c43a386577df38778ba748fcea79`. Mandatory authenticated HTTPS Web SAPI gate PASS before/after, transport rollback retained, all writer flags OFF. Synthetic #53 Add/Map, configuration save/readback/restore, activate/deactivate, archive/restore and buyer visibility PASS. Product metadata/status/count and order #56 references unchanged. Visual browser acceptance remains Owner action. Variable-product/variation mapping remains unsupported and is explicitly rejected because existing server quote/cart handles simple products only; full task is **PARTIAL / NO-GO** until this scope is resolved. [Implementation and staging evidence](../qa/studio-product-catalog-implementation-20261125.md).
+
+Official functional baseline remains **96,50% →96,50%, delta 0**; no percentage is derived from number of tests or packaging. Seven-stage status: 1 foundations PASS retained; 2 Admin/catalog lifecycle **PASS for simple products, OPEN for WooCommerce variations**; 3 buyer evidence retained with synthetic buyer visibility regression PASS; 4 quote/config persistence smoke PASS; 5 design/order ownership retained and archive/fork guard preserved; 6 checkout/order/production/Drive prior evidence retained, Drive OAuth remains DEFERRED; 7 prior UI candidate remains installed and visual Owner acceptance is separate. No Full Audit, payment, checkout, order mutation, DTF, Drive or merge.
+
+## Historical checkpoint — Owner product-catalog P1 blocker confirmed live
 
 Follow-up on source `826c152c`: edit/save/readback **PASS** for visual print area X on synthetic staging product #53 (31.1 → 31.2 → restored 31.1, all 17 captured configuration fields match the initial form after restoration). V01 **PASS** on staging with one Ringkasan shell and heading. This supplements the initial observations below. Catalog add, Studio-only archive and independent activation remain **P1 / NO-GO**. Baseline **96,50% → 96,50%, delta 0**. [Follow-up evidence](../qa/studio-product-catalog-acceptance-20261125.md#follow-up-live-acceptance).
 

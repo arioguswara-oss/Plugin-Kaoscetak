@@ -1,0 +1,81 @@
+{
+  "final_candidate_source": "3a3a3ea6606608143658a55e998f2bbbdb9be8ee",
+  "installed_tree_digest": "c6da001ee3b8cd22c684c44615a17aaeea19c43a386577df38778ba748fcea79",
+  "historical_fork_guard": "inactive/archived products cannot be used to create a new fork; saved collection access remains",
+  "admin_ui_template": {
+    "add_map": true,
+    "search": true,
+    "filter_all_active_disabled_archived": true,
+    "fixture_53_visible": true,
+    "product_bound_nonce_present": true,
+    "render_method": "WP-CLI loaded WordPress admin template as Administrator; not a browser screenshot"
+  },
+  "synthetic_fixture": {
+    "product_id": 53,
+    "actions": [
+      "add to Studio as disabled",
+      "activate",
+      "deactivate",
+      "reactivate",
+      "archive",
+      "restore"
+    ],
+    "buyer_editor_config_http": [
+      200,
+      404,
+      200,
+      404,
+      404,
+      200,
+      200
+    ],
+    "final_explicit_lifecycle_meta_present": false,
+    "woocommerce_status_before_after": [
+      "publish",
+      "publish"
+    ],
+    "published_product_count_before_after": [
+      "2",
+      "2"
+    ],
+    "configuration_metadata_sha256_before_after": [
+      "9305323b03fede8a55a76a86033cb257c74ed03d5a7ff4d7167271cf55a556ad",
+      "9305323b03fede8a55a76a86033cb257c74ed03d5a7ff4d7167271cf55a556ad"
+    ]
+  },
+  "product_config_save": {
+    "field": "front print-zone X",
+    "change_and_restore": [
+      31.1,
+      31.2,
+      31.1
+    ],
+    "final_configuration_http": 200,
+    "areas_categories_sizes_pricing_profile_retained": true
+  },
+  "quote_smoke": {
+    "valid": true,
+    "currency": "IDR",
+    "total_quantity": 1,
+    "total_price": 75000,
+    "design": "synthetic A4 front, size M; no cart/checkout"
+  },
+  "order_56": {
+    "status_before_after": [
+      "pending",
+      "pending"
+    ],
+    "item_count_before_after": [
+      3,
+      3
+    ],
+    "studio_item_digest_before_after": [
+      "3058dc4f73c40416dbf7055142ef8151b38bcf6fefa67f54c68c00b67c1e75de",
+      "3058dc4f73c40416dbf7055142ef8151b38bcf6fefa67f54c68c00b67c1e75de"
+    ]
+  },
+  "variable_products": {
+    "state": "explicitly rejected before add/save",
+    "reason": "current SANRO server quote/cart adapter supports simple products only"
+  }
+}

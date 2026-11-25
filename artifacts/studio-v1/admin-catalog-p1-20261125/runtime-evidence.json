@@ -1,0 +1,236 @@
+{
+  "schema": 1,
+  "date": "2026-11-25",
+  "repository": "arioguswara-oss/Plugin-Kaoscetak",
+  "pr": 52,
+  "source": "3a3a3ea6606608143658a55e998f2bbbdb9be8ee",
+  "staging_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "web_runtime": {
+    "pre_install": {
+      "http_status": 200,
+      "body": {
+        "gate": {
+          "gate": "PASS",
+          "source": "3a3a3ea6606608143658a55e998f2bbbdb9be8ee",
+          "archive_sha256": "5a0b02537e8e50a93d975312457140c7b3d6a129a134ad3003cd0a93ff52397d",
+          "manifest_sha256": "ef4926df914907f7b7d1b5e42c49f2038dc0d54e52c4c0236bde187473903e4e",
+          "existing_tree_digest": "e8754f97f921308822d8f2e56b7af785391d76c80ee89c0c7e1141f88a97feca",
+          "prior_journal_verified": "new_transport_committed",
+          "web_php": "8.3.37",
+          "sapi": "litespeed",
+          "private_roots": "PASS",
+          "writer_flags": {
+            "STORAGE_GC": false,
+            "STAGING_CHECKOUT_HOOK": false,
+            "DTF_GENERATOR": false,
+            "DTF_ADMIN_GENERATE": false,
+            "DTF_ORDER_BATCH": false,
+            "DTF_IMAGE_RASTER": false,
+            "DTF_LAYER_RASTER": false,
+            "DTF_PRIVATE_ARTIFACTS": false,
+            "DRIVE_MASTER_EXPORT": false,
+            "DRIVE_AUTO_PROVISION": false,
+            "VERIFIED_DRIVE_ATTACHMENT": false,
+            "DRIVE_PACKAGE_EXPORT": false,
+            "DRIVE_DTF_CANDIDATES": false
+          },
+          "installed": false
+        },
+        "runtime_readiness": {
+          "build": {
+            "source_commit": "7c2d67fd07c52cc6fa210c671e762e4f9f0fdd19",
+            "plugin_digest": "dc7f652beb51d444da74ac9da1c9228f5b2247407fc981064eb8292fea64b7f2",
+            "integrity": "declared_marker_only"
+          },
+          "php": {
+            "version": "8.3.37",
+            "sapi": "litespeed",
+            "minimum_met": true,
+            "memory_limit": "1536M",
+            "extensions": {
+              "gd": true,
+              "ctype": true,
+              "json": true,
+              "fileinfo": true
+            },
+            "int64": true,
+            "gd_freetype": true
+          },
+          "woocommerce_loaded": true,
+          "flags": {
+            "BUYER_EDITOR": true,
+            "DRAFT_API": true,
+            "STORAGE_GC": false,
+            "PRIVATE_PREVIEWS": true,
+            "PREVIEW_UPLOAD": true,
+            "PRIVATE_MASTERS": true,
+            "MASTER_UPLOAD": true,
+            "WC_PRICING": true,
+            "STAGING_CHECKOUT_HOOK": false,
+            "DTF_IMAGE_RASTER": false,
+            "DTF_LAYER_RASTER": false,
+            "DTF_PRIVATE_ARTIFACTS": false,
+            "DRIVE_MASTER_EXPORT": false,
+            "DTF_ADMIN_GENERATE": false,
+            "DTF_ORDER_BATCH": false,
+            "DRIVE_AUTO_PROVISION": false,
+            "VERIFIED_DRIVE_ATTACHMENT": false,
+            "DRIVE_PACKAGE_EXPORT": false,
+            "DRIVE_DTF_CANDIDATES": false
+          },
+          "private_storage": {
+            "masters": {
+              "configured": true,
+              "safe": true,
+              "readable": true,
+              "writable": true,
+              "private_permissions": true
+            },
+            "previews": {
+              "configured": true,
+              "safe": true,
+              "readable": true,
+              "writable": true,
+              "private_permissions": true
+            }
+          },
+          "private_master_configured": true,
+          "product": null,
+          "verified_end_to_end": false,
+          "print_approved": false
+        }
+      }
+    },
+    "installation": {
+      "http_status": 200,
+      "body": {
+        "state": "committed",
+        "source": "3a3a3ea6606608143658a55e998f2bbbdb9be8ee",
+        "installed_tree_digest": "c6da001ee3b8cd22c684c44615a17aaeea19c43a386577df38778ba748fcea79",
+        "rollback_retained": true,
+        "flags_changed": false,
+        "activation_changed": false,
+        "order_writes": false
+      }
+    },
+    "post_install": {
+      "http_status": 200,
+      "body": {
+        "gate": {
+          "gate": "PASS",
+          "source": "3a3a3ea6606608143658a55e998f2bbbdb9be8ee",
+          "archive_sha256": "5a0b02537e8e50a93d975312457140c7b3d6a129a134ad3003cd0a93ff52397d",
+          "manifest_sha256": "ef4926df914907f7b7d1b5e42c49f2038dc0d54e52c4c0236bde187473903e4e",
+          "existing_tree_digest": "c6da001ee3b8cd22c684c44615a17aaeea19c43a386577df38778ba748fcea79",
+          "prior_journal_verified": "new_transport_committed",
+          "web_php": "8.3.37",
+          "sapi": "litespeed",
+          "private_roots": "PASS",
+          "writer_flags": {
+            "STORAGE_GC": false,
+            "STAGING_CHECKOUT_HOOK": false,
+            "DTF_GENERATOR": false,
+            "DTF_ADMIN_GENERATE": false,
+            "DTF_ORDER_BATCH": false,
+            "DTF_IMAGE_RASTER": false,
+            "DTF_LAYER_RASTER": false,
+            "DTF_PRIVATE_ARTIFACTS": false,
+            "DRIVE_MASTER_EXPORT": false,
+            "DRIVE_AUTO_PROVISION": false,
+            "VERIFIED_DRIVE_ATTACHMENT": false,
+            "DRIVE_PACKAGE_EXPORT": false,
+            "DRIVE_DTF_CANDIDATES": false
+          },
+          "installed": true
+        },
+        "runtime_readiness": {
+          "build": {
+            "source_commit": "3a3a3ea6606608143658a55e998f2bbbdb9be8ee",
+            "plugin_digest": "6b943e4e73eeb8a9b3b7e9c24df4e8c500c1d9fbfc57847e48f46675755e025b",
+            "integrity": "declared_marker_only"
+          },
+          "php": {
+            "version": "8.3.37",
+            "sapi": "litespeed",
+            "minimum_met": true,
+            "memory_limit": "1536M",
+            "extensions": {
+              "gd": true,
+              "ctype": true,
+              "json": true,
+              "fileinfo": true
+            },
+            "int64": true,
+            "gd_freetype": true
+          },
+          "woocommerce_loaded": true,
+          "flags": {
+            "BUYER_EDITOR": true,
+            "DRAFT_API": true,
+            "STORAGE_GC": false,
+            "PRIVATE_PREVIEWS": true,
+            "PREVIEW_UPLOAD": true,
+            "PRIVATE_MASTERS": true,
+            "MASTER_UPLOAD": true,
+            "WC_PRICING": true,
+            "STAGING_CHECKOUT_HOOK": false,
+            "DTF_IMAGE_RASTER": false,
+            "DTF_LAYER_RASTER": false,
+            "DTF_PRIVATE_ARTIFACTS": false,
+            "DRIVE_MASTER_EXPORT": false,
+            "DTF_ADMIN_GENERATE": false,
+            "DTF_ORDER_BATCH": false,
+            "DRIVE_AUTO_PROVISION": false,
+            "VERIFIED_DRIVE_ATTACHMENT": false,
+            "DRIVE_PACKAGE_EXPORT": false,
+            "DRIVE_DTF_CANDIDATES": false
+          },
+          "private_storage": {
+            "masters": {
+              "configured": true,
+              "safe": true,
+              "readable": true,
+              "writable": true,
+              "private_permissions": true
+            },
+            "previews": {
+              "configured": true,
+              "safe": true,
+              "readable": true,
+              "writable": true,
+              "private_permissions": true
+            }
+          },
+          "private_master_configured": true,
+          "product": null,
+          "verified_end_to_end": false,
+          "print_approved": false
+        }
+      }
+    }
+  },
+  "post_install_read_only": {
+    "editor_config_http": 200,
+    "synthetic_quote": {
+      "valid": true,
+      "currency": "IDR",
+      "total_quantity": 1,
+      "total_price": 75000
+    },
+    "buyer_admin_asset_http": [
+      "200; installed-manifest SHA matches (admin CSS/JS, buyer JS, cache-busted buyer CSS)"
+    ]
+  },
+  "cleanup": {
+    "transport": "0.3.3 inactive; digest 4411c6ca2752e0a91c7c739945e22cb40378714fe6389c439be7a4dafd075106",
+    "temporary_application_password_revoked": true,
+    "remote_temporary_transport_files_removed": true
+  },
+  "safety": {
+    "production_accessed": false,
+    "merged": false,
+    "orders_or_payments_mutated": false,
+    "drive_oauth_touched": false,
+    "writer_flags_changed": false
+  }
+}
