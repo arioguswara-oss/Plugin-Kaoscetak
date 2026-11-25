@@ -102,7 +102,7 @@ function sanro_studio_collection_mutate($id,$token,$action){
 function sanro_studio_collection_fork($id,$token=null,$share=null){
     return sanro_studio_storage_transaction(null,0,static function()use($id,$token,$share){
         $auth=sanro_studio_collection_authorize($id,$token,$share);if(!$auth)return ['valid'=>false,'error'=>'collection_not_found'];$entry=$auth['entry'];
-        if(empty(sanro_studio_public_editor_config($entry['product_id'],true)['valid'])||empty(sanro_studio_validate_product_design($entry['product_id'],$entry['design'])['valid']))return ['valid'=>false,'error'=>'collection_product_changed'];
+        if(empty(sanro_studio_public_editor_config($entry['product_id'])['valid'])||empty(sanro_studio_validate_product_design($entry['product_id'],$entry['design'])['valid']))return ['valid'=>false,'error'=>'collection_product_changed'];
         if(!sanro_studio_draft_creation_budget())return ['valid'=>false,'error'=>'draft_rate_limit'];
         $created=sanro_studio_create_draft($entry['product_id'],$entry['design']);if(empty($created['valid']))return $created;
         $new_id=$created['design_id'];$key='sanro_studio_draft_'.$new_id;$before=get_option($key,false);$after=$before;
