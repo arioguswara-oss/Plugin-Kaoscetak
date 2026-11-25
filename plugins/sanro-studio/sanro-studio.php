@@ -67,6 +67,7 @@ require_once __DIR__ . '/includes/repeat-discount.php';
 require_once __DIR__ . '/includes/product-pricing.php';
 require_once __DIR__ . '/includes/product-mockups.php';
 require_once __DIR__ . '/includes/mockup-mapping.php';
+require_once __DIR__ . '/includes/catalog-lifecycle.php';
 require_once __DIR__ . '/includes/editor-config.php';
 require_once __DIR__ . '/includes/pricing.php';
 require_once __DIR__ . '/includes/pricing-quote.php';

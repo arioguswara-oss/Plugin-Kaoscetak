@@ -73,7 +73,7 @@ function sanro_studio_collection_save($id,$token,$title){
     if(!sanro_studio_collection_id($id)||!is_string($title)||strlen($title)>240)return ['valid'=>false,'error'=>'collection_input'];
     return sanro_studio_storage_transaction(null,0,static function()use($id,$token,$title){
         $draft=sanro_studio_read_draft($id,$token);$record=get_option('sanro_studio_draft_'.$id,false);
-        if(empty($draft['valid'])||!is_array($record)||empty(sanro_studio_public_editor_config($record['product_id'])['valid'])||empty(sanro_studio_validate_product_design($record['product_id'],$record['design'])['valid'])||!sanro_studio_draft_image_binding_allowed($record['design'],$record['master_refs']??[],$id))return ['valid'=>false,'error'=>'collection_draft'];
+        if(empty($draft['valid'])||!is_array($record)||empty(sanro_studio_public_editor_config($record['product_id'],true)['valid'])||empty(sanro_studio_validate_product_design($record['product_id'],$record['design'])['valid'])||!sanro_studio_draft_image_binding_allowed($record['design'],$record['master_refs']??[],$id))return ['valid'=>false,'error'=>'collection_draft'];
         $email=sanro_studio_repeat_verified_email($record);$owner=sanro_studio_collection_owner_key($email);
         if(!$owner)return ['valid'=>false,'error'=>'collection_email_required'];
         $library_id=$id;$origin=$record['library_origin_id']??null;
@@ -102,7 +102,7 @@ function sanro_studio_collection_mutate($id,$token,$action){
 function sanro_studio_collection_fork($id,$token=null,$share=null){
     return sanro_studio_storage_transaction(null,0,static function()use($id,$token,$share){
         $auth=sanro_studio_collection_authorize($id,$token,$share);if(!$auth)return ['valid'=>false,'error'=>'collection_not_found'];$entry=$auth['entry'];
-        if(empty(sanro_studio_public_editor_config($entry['product_id'])['valid'])||empty(sanro_studio_validate_product_design($entry['product_id'],$entry['design'])['valid']))return ['valid'=>false,'error'=>'collection_product_changed'];
+        if(empty(sanro_studio_public_editor_config($entry['product_id'],true)['valid'])||empty(sanro_studio_validate_product_design($entry['product_id'],$entry['design'])['valid']))return ['valid'=>false,'error'=>'collection_product_changed'];
         if(!sanro_studio_draft_creation_budget())return ['valid'=>false,'error'=>'draft_rate_limit'];
         $created=sanro_studio_create_draft($entry['product_id'],$entry['design']);if(empty($created['valid']))return $created;
         $new_id=$created['design_id'];$key='sanro_studio_draft_'.$new_id;$before=get_option($key,false);$after=$before;

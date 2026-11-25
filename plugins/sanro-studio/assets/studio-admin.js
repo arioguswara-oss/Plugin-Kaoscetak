@@ -1,4 +1,5 @@
 (function(){'use strict';
+ const catalogForm=document.querySelector('form.sanro-product-selector[action*="admin-post"]');if(catalogForm){const select=catalogForm.querySelector('[name="product_id"]'),nonce=catalogForm.querySelector('[name="_wpnonce"]');if(select&&nonce){const syncNonce=()=>{nonce.value=select.selectedOptions[0]?.dataset.nonce||'';};select.addEventListener('change',syncNonce);syncNonce();catalogForm.addEventListener('submit',event=>{if(!select.value||!nonce.value)event.preventDefault();});}}
  const form=document.querySelector('.sanro-product-form');if(!form)return;
  const buttons=document.querySelectorAll('[data-sanro-admin-tab]'),panels=form.querySelectorAll('[data-sanro-admin-panel]');
  function tab(name){buttons.forEach(b=>b.setAttribute('aria-selected',String(b.dataset.sanroAdminTab===name)));panels.forEach(p=>p.hidden=p.dataset.sanroAdminPanel!==name);window.dispatchEvent(new Event('resize'));}

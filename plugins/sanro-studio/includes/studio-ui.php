@@ -27,27 +27,75 @@ function sanro_studio_ui_summary(){
 function sanro_studio_ui_settings(){if(!current_user_can('manage_options'))wp_die('Akses ditolak.','',['response'=>403]);sanro_studio_ui_admin_begin('settings');sanro_studio_render_settings();sanro_studio_ui_admin_end();}
 function sanro_studio_ui_products(){sanro_studio_ui_product_page(false);}
 function sanro_studio_ui_prices(){sanro_studio_ui_product_page(true);}
+function sanro_studio_catalog_write($product_id,$action){
+    if((!is_int($product_id)&&!is_string($product_id))||!preg_match('/^[1-9][0-9]{0,18}$/D',(string)$product_id)||(string)(int)$product_id!==(string)$product_id)wp_die('ID produk tidak valid.','',['response'=>400]);
+    $product_id=(int)$product_id;
+    if(!current_user_can('edit_products')||!current_user_can('edit_post',$product_id))wp_die('Akses ditolak.','',['response'=>403]);
+    check_admin_referer('sanro_catalog_'.$product_id);
+    $product=wc_get_product($product_id);if(!$product||$product->get_status()!=='publish')wp_die('Pilih produk WooCommerce yang terbit.','',['response'=>400]);
+    if($action==='add'){
+        if($product->is_type('variable')||!$product->is_type('simple'))wp_die('SANRO Studio saat ini hanya mendukung produk simple; pemetaan variasi belum didukung oleh cart/quote.','',['response'=>409]);
+        if(metadata_exists('post',$product_id,'_sanro_studio_catalog_status')&&get_post_meta($product_id,'_sanro_studio_catalog_status',true)!=='archived')wp_die('Produk sudah ada di katalog Studio.','',['response'=>409]);
+        update_post_meta($product_id,'_sanro_studio_catalog_status','disabled');
+        delete_post_meta($product_id,'_sanro_studio_catalog_restore_status');
+    }elseif($action==='activate'){
+        if($product->is_type('variable')||!$product->is_type('simple'))wp_die('SANRO Studio saat ini hanya mendukung produk simple.','',['response'=>409]);
+        $config=sanro_studio_public_editor_config($product_id,true);
+        if(empty($config['valid']))wp_die('Produk belum siap: lengkapi mockup, area cetak, ukuran dan harga sebelum mengaktifkan.','',['response'=>409]);
+        update_post_meta($product_id,'_sanro_studio_catalog_status','active');
+    }elseif($action==='disable'){
+        update_post_meta($product_id,'_sanro_studio_catalog_status','disabled');
+    }elseif($action==='archive'){
+        $status=sanro_studio_catalog_status($product_id);
+        if($status!=='archived'){
+            update_post_meta($product_id,'_sanro_studio_catalog_restore_status',$status==='active'?'active':'disabled');
+            update_post_meta($product_id,'_sanro_studio_catalog_status','archived');
+        }
+    }elseif($action==='restore'){
+        if(sanro_studio_catalog_status($product_id)==='archived'){
+            $restore=get_post_meta($product_id,'_sanro_studio_catalog_restore_status',true);
+            $config=$restore==='active'?sanro_studio_public_editor_config($product_id,true):['valid'=>false];
+            update_post_meta($product_id,'_sanro_studio_catalog_status',$restore==='active'&&!empty($config['valid'])?'active':'disabled');
+            delete_post_meta($product_id,'_sanro_studio_catalog_restore_status');
+        }
+    }else wp_die('Aksi katalog tidak valid.','',['response'=>400]);
+    return $product_id;
+}
+function sanro_studio_catalog_dispatch($action){$id=sanro_studio_catalog_write($_POST['product_id']??null,$action);wp_safe_redirect(admin_url('admin.php?page=sanro-studio-products&product_id='.$id.'&catalog_updated=1'),303);exit;}
+function sanro_studio_catalog_add(){sanro_studio_catalog_dispatch('add');}
+function sanro_studio_catalog_activate(){sanro_studio_catalog_dispatch('activate');}
+function sanro_studio_catalog_disable(){sanro_studio_catalog_dispatch('disable');}
+function sanro_studio_catalog_archive(){sanro_studio_catalog_dispatch('archive');}
+function sanro_studio_catalog_restore(){sanro_studio_catalog_dispatch('restore');}
 function sanro_studio_ui_product_page($prices=false){
     if(!current_user_can('edit_products'))wp_die('Akses ditolak.','',['response'=>403]);
     sanro_studio_ui_admin_begin($prices?'prices':'products');echo '<p class="sanro-eyebrow">KATALOG ANDA</p><h1>'.($prices?'Harga Produk':'Produk & Mockup').'</h1><p class="sanro-lead">Pengaturan visual memakai konfigurasi produk native yang sama.</p>';
-    $products=wc_get_products(['status'=>'publish','limit'=>100,'orderby'=>'title','order'=>'ASC']);$id=isset($_GET['product_id'])?absint($_GET['product_id']):0;
-    echo '<form method="get" class="sanro-product-selector"><input type="hidden" name="page" value="'.($prices?'sanro-studio-prices':'sanro-studio-products').'"><label>Pilih produk <select name="product_id"><option value="">— Pilih produk —</option>';
-    foreach($products as $product)if(current_user_can('edit_post',$product->get_id()))echo '<option value="'.(int)$product->get_id().'"'.($id===$product->get_id()?' selected':'').'>'.esc_html($product->get_name()).'</option>';
-    echo '</select></label><button class="button" type="submit">Buka Produk</button></form>';
-    if(!$id){echo '<div class="sanro-admin-cards">';foreach($products as $product){$config=sanro_studio_public_editor_config($product->get_id());if(empty($config['valid']))continue;echo '<a class="sanro-admin-card sanro-product-mini" href="'.esc_url(admin_url('admin.php?page='.($prices?'sanro-studio-prices':'sanro-studio-products').'&product_id='.$product->get_id())).'">'.$product->get_image('woocommerce_thumbnail').'<h2>'.esc_html($product->get_name()).'</h2><span>Kelola '.($prices?'harga':'produk').' →</span></a>';}echo '</div>';sanro_studio_ui_admin_end();return;}
+    $id=isset($_GET['product_id'])?absint($_GET['product_id']):0;$search=isset($_GET['q'])&&is_string($_GET['q'])?sanitize_text_field(wp_unslash($_GET['q'])):'';$filter=isset($_GET['status'])&&is_string($_GET['status'])?sanitize_key($_GET['status']):'all';
+    $page_num=max(1,absint($_GET['catalog_page']??1));$query=wc_get_products(['status'=>'publish','limit'=>100,'page'=>$page_num,'paginate'=>true,'orderby'=>'title','order'=>'ASC','s'=>$search]);$products=is_object($query)&&isset($query->products)&&is_array($query->products)?$query->products:(is_array($query)?$query:[]);$max_pages=is_object($query)?max(1,(int)($query->max_num_pages??1)):1;
+    if(!$prices){
+        echo '<section class="sanro-admin-card"><h2>Tambah produk ke katalog</h2><p>Petakan produk WooCommerce yang sudah ada. Studio tidak membuat duplikat dan tidak mengubah status WooCommerce.</p><form method="post" action="'.esc_url(admin_url('admin-post.php')).'" class="sanro-product-selector"><input type="hidden" name="action" value="sanro_studio_catalog_add">';
+        echo '<input type="hidden" name="_wpnonce" value=""><label>Produk WooCommerce <select name="product_id" required><option value="">— Pilih produk simple —</option>';foreach($products as $candidate)if(current_user_can('edit_post',$candidate->get_id())&&!metadata_exists('post',$candidate->get_id(),'_sanro_studio_catalog_status'))echo '<option value="'.(int)$candidate->get_id().'" data-nonce="'.esc_attr(wp_create_nonce('sanro_catalog_'.$candidate->get_id())).'">'.esc_html($candidate->get_name()).' (#'.(int)$candidate->get_id().')</option>';echo '</select></label><button class="button button-primary">Tambah & atur</button></form></section>';
+        echo '<form method="get" class="sanro-product-selector"><input type="hidden" name="page" value="sanro-studio-products"><label>Cari produk <input type="search" name="q" value="'.esc_attr($search).'" placeholder="Nama produk"></label><label>Status <select name="status">';foreach(['all'=>'Semua','active'=>'Aktif','disabled'=>'Nonaktif','archived'=>'Arsip'] as $key=>$label)echo '<option value="'.$key.'"'.selected($filter,$key,false).'>'.$label.'</option>';echo '</select></label><button class="button">Filter</button></form>';
+        echo '<div class="sanro-admin-cards">';foreach($products as $product){if(!current_user_can('edit_post',$product->get_id()))continue;$pid=$product->get_id();$has=metadata_exists('post',$pid,'_sanro_studio_catalog_status');$status=$has?sanro_studio_catalog_status($pid):'unmapped';if($filter!=='all'&&$status!==$filter)continue;$config=sanro_studio_public_editor_config($pid,true);$ready=!empty($config['valid']);$edit=admin_url('admin.php?page=sanro-studio-products&product_id='.$pid);echo '<article class="sanro-admin-card sanro-product-mini">'.$product->get_image('woocommerce_thumbnail').'<h2>'.esc_html($product->get_name()).'</h2><p>WooCommerce #'.(int)$pid.' · '.esc_html($product->get_type()).'</p><span class="sanro-status-pill">'.esc_html($status==='unmapped'?'Belum dipetakan':($status==='active'?'Aktif':($status==='disabled'?'Nonaktif':'Arsip'))).'</span><p>'.($ready?'Konfigurasi siap':'Konfigurasi belum lengkap').'</p><a class="button" href="'.esc_url($edit).'">Edit konfigurasi</a>';
+            if($has){$action=$status==='archived'?'restore':($status==='active'?'disable':'activate');$label=$status==='archived'?'Pulihkan':($status==='active'?'Nonaktifkan':'Aktifkan');echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'"><input type="hidden" name="action" value="sanro_studio_catalog_'.$action.'"><input type="hidden" name="product_id" value="'.$pid.'">';wp_nonce_field('sanro_catalog_'.$pid);echo '<button class="button">'.$label.'</button></form>';if($status!=='archived'){echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'" onsubmit="return confirm(\'Arsipkan listing Studio? Produk WooCommerce dan riwayat tetap ada.\')"><input type="hidden" name="action" value="sanro_studio_catalog_archive"><input type="hidden" name="product_id" value="'.$pid.'">';wp_nonce_field('sanro_catalog_'.$pid);echo '<button class="button">Arsipkan dari Studio</button></form>';}}
+            echo '</article>'; }echo '</div>';if($max_pages>1){echo '<nav class="sanro-catalog-pages" aria-label="Halaman katalog">';for($p=1;$p<=$max_pages;$p++){if($p===$page_num)echo '<strong aria-current="page">'.$p.'</strong> ';else echo '<a class="button" href="'.esc_url(add_query_arg(['page'=>'sanro-studio-products','catalog_page'=>$p,'q'=>$search,'status'=>$filter],admin_url('admin.php'))).'">'.$p.'</a> ';}echo '</nav>';}
+        // Product-bound add nonce is emitted alongside each selectable mapping to prevent unbound writes.
+    }
+    if(!$id){if($prices){echo '<form method="get" class="sanro-product-selector"><input type="hidden" name="page" value="sanro-studio-prices"><label>Pilih produk <select name="product_id"><option value="">— Pilih produk —</option>';foreach($products as $product)if(current_user_can('edit_post',$product->get_id()))echo '<option value="'.(int)$product->get_id().'">'.esc_html($product->get_name()).'</option>';echo '</select></label><button class="button">Buka Harga</button></form><div class="sanro-admin-cards">';foreach($products as $product){if(!current_user_can('edit_post',$product->get_id()))continue;$config=sanro_studio_public_editor_config($product->get_id(),true);if(empty($config['valid']))continue;echo '<a class="sanro-admin-card sanro-product-mini" href="'.esc_url(admin_url('admin.php?page=sanro-studio-prices&product_id='.$product->get_id())).'">'.$product->get_image('woocommerce_thumbnail').'<h2>'.esc_html($product->get_name()).'</h2><span>Kelola harga →</span></a>';}echo '</div>'; }sanro_studio_ui_admin_end();return;}
     $product=wc_get_product($id);if(!$product||!current_user_can('edit_post',$id)){sanro_studio_ui_admin_end();return;}
+    if(!method_exists($product,'is_type')||!$product->is_type('simple')){echo '<div class="notice notice-warning"><p>Produk ini belum dapat dikonfigurasi untuk SANRO Studio. Pemetaan variasi WooCommerce belum didukung oleh kontrak quote/cart saat ini; gunakan produk simple.</p></div>';sanro_studio_ui_admin_end();return;}
     echo '<section class="sanro-admin-card"><h2>'.esc_html($product->get_name()).'</h2><nav class="sanro-admin-tabs" aria-label="Pengaturan produk">';foreach(['mockup'=>'Mockup','area'=>'Area Cetak','variants'=>'Warna & Size','prices'=>'Harga'] as $key=>$title)echo '<button type="button" data-sanro-admin-tab="'.$key.'" aria-selected="'.(($prices?$key==='prices':$key==='area')?'true':'false').'">'.esc_html($title).'</button>';echo '</nav><form method="post" class="sanro-product-form" action="'.esc_url(admin_url('admin-post.php')).'" data-start-tab="'.($prices?'prices':'area').'">';
     echo '<input type="hidden" name="action" value="sanro_studio_ui_save_product"><input type="hidden" name="product_id" value="'.$id.'">';wp_nonce_field('sanro_ui_product_'.$id);
     $old=$GLOBALS['post']??null;$GLOBALS['post']=get_post($id);
     try{
-        echo '<div data-sanro-admin-panel="mockup">';sanro_studio_product_mockup_fields();echo '</div><div data-sanro-admin-panel="area">';sanro_studio_product_print_zone_fields();sanro_studio_product_area_fields();echo '<p class="sanro-help">Geser area atau tarik sudutnya. Posisi visual (%) terpisah dari batas fisik (cm).</p></div><div data-sanro-admin-panel="variants">';sanro_studio_mockup_matrix_fields();echo '</div><div data-sanro-admin-panel="prices">';sanro_studio_product_pricing_fields();$config=sanro_studio_public_editor_config($id);if(!empty($config['pricing']['table']))echo '<script type="application/json" class="sanro-ui-price-config">'.wp_json_encode($config['pricing']['table'],JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT).'</script>';echo '</div>';
+        echo '<div data-sanro-admin-panel="mockup">';sanro_studio_product_mockup_fields();echo '</div><div data-sanro-admin-panel="area">';sanro_studio_product_print_zone_fields();sanro_studio_product_area_fields();echo '<p class="sanro-help">Geser area atau tarik sudutnya. Posisi visual (%) terpisah dari batas fisik (cm).</p></div><div data-sanro-admin-panel="variants">';sanro_studio_mockup_matrix_fields();echo '</div><div data-sanro-admin-panel="prices">';sanro_studio_product_pricing_fields();$config=sanro_studio_public_editor_config($id,true);if(!empty($config['pricing']['table']))echo '<script type="application/json" class="sanro-ui-price-config">'.wp_json_encode($config['pricing']['table'],JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT).'</script>';echo '</div>';
     }finally{$GLOBALS['post']=$old;}
     submit_button('Simpan Produk','primary','sanro_ui_save_product');echo '</form></section>';sanro_studio_ui_admin_end();
 }
 function sanro_studio_ui_save_product(){
     if(($_SERVER['REQUEST_METHOD']??'')!=='POST')wp_die('Gunakan formulir produk.','',['response'=>405]);$id=absint($_POST['product_id']??0);
     if(!$id||!current_user_can('edit_products')||!current_user_can('edit_post',$id))wp_die('Akses ditolak.','',['response'=>403]);check_admin_referer('sanro_ui_product_'.$id);
-    $product=wc_get_product($id);if(!$product)wp_die('Produk tidak tersedia.','',['response'=>404]);
+    $product=wc_get_product($id);if(!$product)wp_die('Produk tidak tersedia.','',['response'=>404]);if(!method_exists($product,'is_type')||!$product->is_type('simple'))wp_die('Penyimpanan ditolak: produk variable dan pemetaan variasi belum didukung oleh kontrak quote/cart SANRO Studio.','',['response'=>409]);
     sanro_studio_save_product_areas($product);sanro_studio_save_product_print_zones($product);sanro_studio_save_product_pricing($product);sanro_studio_save_product_mockups($product);sanro_studio_mockup_matrix_save($product);$product->save();
     wp_safe_redirect(admin_url('admin.php?page=sanro-studio-products&product_id='.$id.'&updated=1'),303);exit;
 }
@@ -74,6 +122,11 @@ function sanro_studio_ui_download_guide(){
 add_action('admin_enqueue_scripts','sanro_studio_ui_admin_assets');
 add_filter('admin_body_class','sanro_studio_ui_admin_body_scope');
 add_action('admin_post_sanro_studio_ui_save_product','sanro_studio_ui_save_product');
+add_action('admin_post_sanro_studio_catalog_add','sanro_studio_catalog_add');
+add_action('admin_post_sanro_studio_catalog_activate','sanro_studio_catalog_activate');
+add_action('admin_post_sanro_studio_catalog_disable','sanro_studio_catalog_disable');
+add_action('admin_post_sanro_studio_catalog_archive','sanro_studio_catalog_archive');
+add_action('admin_post_sanro_studio_catalog_restore','sanro_studio_catalog_restore');
 add_action('admin_post_sanro_studio_ui_guide','sanro_studio_ui_download_guide');
 
 function sanro_studio_ui_drive(){if(!current_user_can('manage_options'))return;sanro_studio_ui_admin_begin('settings');sanro_studio_drive_oauth_page();sanro_studio_ui_admin_end();}

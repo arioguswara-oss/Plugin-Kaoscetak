@@ -19,3 +19,4 @@ body.sanro-studio-admin #wpbody{padding-top:0!important}
 .sanro-admin-main .sanro-order-preview-grid figure{min-width:0}
 body.sanro-studio-admin .sanro-admin-nav{position:sticky;top:0;align-self:start;min-height:100%}
 @media(max-width:700px){.sanro-admin-shell{width:calc(100% - 16px);margin:8px}.sanro-admin-main{padding:16px}.sanro-admin-main .sanro-zone-numbers{grid-template-columns:minmax(0,1fr)}.sanro-order-preview-grid{grid-template-columns:minmax(0,1fr)}.sanro-admin-nav nav a{min-height:44px}.sanro-admin-exit{display:block;margin:6px 12px;padding:8px 10px;border-top:1px solid #414141}}
+.sanro-product-mini{display:flex;flex-direction:column;align-items:flex-start;gap:8px}.sanro-product-mini>img{align-self:stretch}.sanro-product-mini h2{margin:8px 0 0}.sanro-product-mini form{margin:4px 0}.sanro-product-mini form .button{width:100%}.sanro-admin-main .sanro-product-selector input[type=search]{min-width:240px}

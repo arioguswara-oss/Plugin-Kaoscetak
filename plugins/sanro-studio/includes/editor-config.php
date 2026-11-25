@@ -5,7 +5,7 @@ defined('ABSPATH') || exit;
  * Public, read-only editor configuration for published, explicitly opted-in
  * WooCommerce products. Never exposes tokens, drafts or private metadata.
  */
-function sanro_studio_public_editor_config($product_id) {
+function sanro_studio_public_editor_config($product_id, $allow_inactive = false) {
     $product_id = absint($product_id);
     if (!$product_id || !function_exists('wc_get_product')) {
         return ['valid' => false, 'error' => 'product_unavailable'];
@@ -15,6 +15,13 @@ function sanro_studio_public_editor_config($product_id) {
         || $product->get_status() !== 'publish'
         || (method_exists($product,'is_type') && !$product->is_type('simple'))
         || !method_exists($product, 'is_purchasable') || !$product->is_purchasable()) {
+        return ['valid' => false, 'error' => 'product_unavailable'];
+    }
+    // Products without an explicit lifecycle value are legacy listings and
+    // stay available. New Studio mappings start disabled until configured.
+    $catalog_status = function_exists('sanro_studio_catalog_status')
+        ? sanro_studio_catalog_status($product_id) : get_post_meta($product_id, '_sanro_studio_catalog_status', true);
+    if (!$allow_inactive && in_array($catalog_status, ['disabled', 'archived'], true)) {
         return ['valid' => false, 'error' => 'product_unavailable'];
     }
     $pricing=function_exists('sanro_studio_product_pricing_config')?sanro_studio_product_pricing_config($product_id):['valid'=>get_post_meta($product_id,'_sanro_studio_pricing_profile',true)==='cotton_combed_24s','profile'=>'cotton_combed_24s'];
