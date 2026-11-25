@@ -114,7 +114,7 @@
 
 /* Owner-approved visual reference: SANRO black / white / yellow workspace. */
 body.sanro-studio-page{background:#f6f4ef;color:#171717;margin:0}
-body.sanro-studio-page > :is(header,footer,hr),body.sanro-studio-page #page > :is(header,footer),body.sanro-studio-page .wp-site-blocks > :is(header,footer),body.sanro-studio-page :is(#masthead,#colophon,.site-header,.site-footer,.site-info,.site-branding,.entry-header,.entry-title,.page-header,.wp-block-post-title,.wp-block-separator){display:none!important}
+body.sanro-studio-page > :is(header,footer,hr),body.sanro-studio-page #page > :is(header,footer),body.sanro-studio-page .wp-site-blocks > :is(header,footer),body.sanro-studio-page :is(#masthead,#colophon,#header,#footer,.site-header,.site-footer,.site-info,.site-branding,.header-wrap,.footer-wrap,.main-header,.main-footer,.jurnalfx-header,.jurnalfx-footer,.entry-header,.entry-title,.page-header,.wp-block-post-title,.wp-block-separator){display:none!important}
 #sanro-studio-buyer{--sanro-yellow:#f9c900;max-width:1280px;margin:24px auto;padding:0 0 84px;background:#fff;border:1px solid #ddd;border-radius:18px;overflow:hidden;font-family:Inter,Arial,sans-serif;color:#171717}
 #sanro-studio-buyer .sanro-appbar{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#1c1c1c;color:#fff;min-height:72px;padding:18px 28px;margin:0}
 #sanro-studio-buyer .sanro-appbar h1{font-size:28px;letter-spacing:-1px;line-height:1.1;margin:0;font-weight:800;color:#fff}

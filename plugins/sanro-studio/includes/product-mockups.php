@@ -10,10 +10,20 @@ function sanro_studio_valid_mockup_attachment($value) {
     if (!(is_int($value) || is_string($value))
         || !preg_match('/^[1-9][0-9]*$/D', (string) $value)) return 0;
     $id = (int) $value;
-    if ($id < 1 || !function_exists('wp_attachment_is_image')
-        || !wp_attachment_is_image($id)) return 0;
-    // A non-public attachment must never appear on the buyer page.
-    if (!function_exists('get_post_status') || get_post_status($id) !== 'inherit') return 0;
+    if ($id < 1 || !function_exists('get_post') || !function_exists('wp_attachment_is_image')) return 0;
+    $attachment=get_post($id);
+    if (!is_object($attachment)||($attachment->post_type??null)!=='attachment'
+        ||($attachment->post_status??null)!=='inherit'||!wp_attachment_is_image($id)) return 0;
+    // get_post_status() resolves "inherit" through a parent, and orphaned
+    // inherited attachments are effectively public on WordPress. Inspect raw
+    // status, then separately enforce visibility/password on any parent.
+    $parent_id=absint($attachment->post_parent??0);
+    if($parent_id){
+        $parent=get_post($parent_id);
+        if(!is_object($parent)||($parent->post_status??null)!=='publish'
+            ||!empty($parent->post_password)
+            ||(function_exists('is_post_publicly_viewable')&&!is_post_publicly_viewable($parent)))return 0;
+    }elseif(function_exists('get_post_status')&&get_post_status($id)!=='publish')return 0;
     return $id;
 }
 
@@ -86,20 +96,24 @@ function sanro_studio_product_mockup_fields() {
  */
 function sanro_studio_save_product_mockups($product) {
     if (!is_object($product) || !method_exists($product, 'get_id')
-        || !method_exists($product, 'update_meta_data')) return;
+        || !method_exists($product, 'update_meta_data')) return false;
     $id = absint($product->get_id());
-    if (!$id || !current_user_can('edit_post', $id)) return;
+    if (!$id || !current_user_can('edit_post', $id)) return false;
     $result = [];
     foreach (['front', 'back'] as $side) {
         $key = '_sanro_studio_mockup_' . $side;
-        if (!array_key_exists($key, $_POST) || !is_string($_POST[$key])) return;
+        if (!array_key_exists($key, $_POST) || !is_string($_POST[$key])) return false;
         $value = trim(wp_unslash($_POST[$key]));
         if ($value === '') continue;
         $attachment_id = sanro_studio_valid_mockup_attachment($value);
-        if (!$attachment_id) return; // Do not erase the previous good config.
+        if (!$attachment_id) {
+            if(class_exists('WC_Admin_Meta_Boxes'))WC_Admin_Meta_Boxes::add_error('Mockup '.$side.' tidak disimpan. Pilih gambar publik dari Media Library; konfigurasi sebelumnya tetap dipertahankan.');
+            return false;
+        }
         $result[$side] = $attachment_id;
     }
     $product->update_meta_data('_sanro_studio_mockups', $result);
+    return true;
 }
 
 /** Load Media Library chooser only for edit/new WooCommerce product screens. */
@@ -113,12 +127,12 @@ function sanro_studio_enqueue_product_mockup_admin($hook) {
     wp_enqueue_script(
         'sanro-studio-mockup-admin',
         plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/admin-mockups.js',
-        ['jquery'], SANRO_STUDIO_VERSION, true
+        ['jquery'], SANRO_STUDIO_VERSION . '-' . substr(hash_file('sha256', dirname(__DIR__).'/assets/admin-mockups.js'),0,12), true
     );
     wp_enqueue_script('sanro-studio-mockup-mapping', plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/admin-mockup-mapping.js', ['sanro-studio-mockup-admin'], SANRO_STUDIO_VERSION . '-' . substr(hash_file('sha256', dirname(__DIR__).'/assets/admin-mockup-mapping.js'),0,12), true);
     wp_enqueue_script(
         'sanro-studio-print-zone-admin',
         plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/admin-print-zones.js',
-        ['sanro-studio-mockup-admin'], SANRO_STUDIO_VERSION, true
+        ['sanro-studio-mockup-admin'], SANRO_STUDIO_VERSION . '-' . substr(hash_file('sha256', dirname(__DIR__).'/assets/admin-print-zones.js'),0,12), true
     );
 }

@@ -70,6 +70,8 @@ function sanro_studio_catalog_restore(){sanro_studio_catalog_dispatch('restore')
 function sanro_studio_ui_product_page($prices=false){
     if(!current_user_can('edit_products'))wp_die('Akses ditolak.','',['response'=>403]);
     sanro_studio_ui_admin_begin($prices?'prices':'products');echo '<p class="sanro-eyebrow">KATALOG ANDA</p><h1>'.($prices?'Harga Produk':'Produk & Mockup').'</h1><p class="sanro-lead">Pengaturan visual memakai konfigurasi produk native yang sama.</p>';
+    if(!$prices&&isset($_GET['mockup_error'])&&$_GET['mockup_error']==='1')echo '<div class="notice notice-error"><p>Mockup tidak disimpan. Pilih gambar publik dari Media Library; file pribadi, draft, atau terhapus ditolak. Konfigurasi mockup sebelumnya tetap dipertahankan.</p></div>';
+    elseif(!$prices&&isset($_GET['updated'])&&$_GET['updated']==='1')echo '<div class="notice notice-success"><p>Konfigurasi produk SANRO Studio tersimpan.</p></div>';
     $id=isset($_GET['product_id'])?absint($_GET['product_id']):0;$search=isset($_GET['q'])&&is_string($_GET['q'])?sanitize_text_field(wp_unslash($_GET['q'])):'';$filter=isset($_GET['status'])&&is_string($_GET['status'])?sanitize_key($_GET['status']):'all';
     $page_num=max(1,absint($_GET['catalog_page']??1));$query=wc_get_products(['status'=>'publish','limit'=>100,'page'=>$page_num,'paginate'=>true,'orderby'=>'title','order'=>'ASC','s'=>$search]);$products=is_object($query)&&isset($query->products)&&is_array($query->products)?$query->products:(is_array($query)?$query:[]);$max_pages=is_object($query)?max(1,(int)($query->max_num_pages??1)):1;
     if(!$prices){
@@ -96,8 +98,8 @@ function sanro_studio_ui_save_product(){
     if(($_SERVER['REQUEST_METHOD']??'')!=='POST')wp_die('Gunakan formulir produk.','',['response'=>405]);$id=absint($_POST['product_id']??0);
     if(!$id||!current_user_can('edit_products')||!current_user_can('edit_post',$id))wp_die('Akses ditolak.','',['response'=>403]);check_admin_referer('sanro_ui_product_'.$id);
     $product=wc_get_product($id);if(!$product)wp_die('Produk tidak tersedia.','',['response'=>404]);if(!method_exists($product,'is_type')||(!$product->is_type('simple')&&!$product->is_type('variable')))wp_die('Tipe produk tidak didukung SANRO Studio.','',['response'=>409]);
-    sanro_studio_save_product_areas($product);sanro_studio_save_product_print_zones($product);sanro_studio_save_product_pricing($product);sanro_studio_save_product_mockups($product);sanro_studio_mockup_matrix_save($product);$product->save();
-    wp_safe_redirect(admin_url('admin.php?page=sanro-studio-products&product_id='.$id.'&updated=1'),303);exit;
+    sanro_studio_save_product_areas($product);sanro_studio_save_product_print_zones($product);sanro_studio_save_product_pricing($product);$mockups_valid=sanro_studio_save_product_mockups($product);sanro_studio_mockup_matrix_save($product);$product->save();
+    wp_safe_redirect(admin_url('admin.php?page=sanro-studio-products&product_id='.$id.($mockups_valid?'&updated=1':'&mockup_error=1')),303);exit;
 }
 function sanro_studio_ui_orders(){
     if(!current_user_can('manage_woocommerce'))wp_die('Akses ditolak.','',['response'=>403]);sanro_studio_ui_admin_begin('orders');echo '<p class="sanro-eyebrow">PROSES PRODUKSI</p><h1>Pesanan & Desain</h1><p class="sanro-lead">Preview dan file produksi mengikuti status pesanan yang sebenarnya.</p><div class="sanro-order-list">';
@@ -108,9 +110,9 @@ function sanro_studio_ui_storage(){if(!current_user_can('manage_woocommerce'))wp
 function sanro_studio_ui_admin_assets($hook){
     $page=isset($_GET['page'])&&is_string($_GET['page'])?$_GET['page']:'';$screen=function_exists('get_current_screen')?get_current_screen():null;
     if(strpos($page,'sanro-studio')!==0&&(!is_object($screen)||!in_array($screen->id??'', ['product','shop_order','woocommerce_page_wc-orders'],true)))return;
-    $asset=plugin_dir_url(__DIR__.'/../sanro-studio.php').'assets/';wp_enqueue_style('sanro-studio-admin-ui',$asset.'studio-admin.css',[],SANRO_STUDIO_VERSION);wp_enqueue_script('sanro-studio-admin-ui',$asset.'studio-admin.js',[],SANRO_STUDIO_VERSION,true);
+    $asset=plugin_dir_url(__DIR__.'/../sanro-studio.php').'assets/';wp_enqueue_style('sanro-studio-admin-ui',$asset.'studio-admin.css',[],SANRO_STUDIO_VERSION.'-'.substr(hash_file('sha256',dirname(__DIR__).'/assets/studio-admin.css'),0,12));$admin_js=dirname(__DIR__).'/assets/studio-admin.js';wp_enqueue_script('sanro-studio-admin-ui',$asset.'studio-admin.js',[],SANRO_STUDIO_VERSION.'-'.substr(hash_file('sha256',$admin_js),0,12),true);
     if(in_array($page,['sanro-studio-products','sanro-studio-prices'],true)&&current_user_can('edit_products')){
-        wp_enqueue_media();foreach(['admin-mockups','admin-mockup-mapping','admin-print-zones'] as $name)wp_enqueue_script('sanro-ui-'.$name,$asset.$name.'.js',['jquery'],SANRO_STUDIO_VERSION,true);
+        wp_enqueue_media();foreach(['admin-mockups','admin-mockup-mapping','admin-print-zones'] as $name){$path=dirname(__DIR__).'/assets/'.$name.'.js';wp_enqueue_script('sanro-ui-'.$name,$asset.$name.'.js',['jquery'],SANRO_STUDIO_VERSION.'-'.substr(hash_file('sha256',$path),0,12),true);}
     }
 }
 function sanro_studio_ui_download_guide(){
