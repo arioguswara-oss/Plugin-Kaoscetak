@@ -15,6 +15,13 @@ INSTALLED_UI_P1={
  'archive_sha256':'cd4c86ec548de7d109b751734c0a30dff55f67bf83594ec4430b276633cf0b9a',
  'version':'1.1.0','channel':'candidate','source_commit':'826c152c3dbf2e35fff74d276e9c2fd00aed2905',
 }
+# Exact simple-catalog candidate currently installed before the follow-up
+# historical-fork guard; acceptance is bound to both immutable artifacts.
+INSTALLED_CATALOG_P1={
+ 'manifest_sha256':'b388ae26014b6a16e0889579658a125922e573697b4904054f4d913ab87efccc',
+ 'archive_sha256':'d14a7f4381dd4b452a376f035bc4a4112da02fa325ef551a187ea7a3eee2975e',
+ 'version':'1.1.0','channel':'candidate','source_commit':'7c2d67fd07c52cc6fa210c671e762e4f9f0fdd19',
+}
 p=argparse.ArgumentParser();p.add_argument('--candidate',required=True);p.add_argument('--out',required=True);p.add_argument('--existing-manifest',required=True);p.add_argument('--existing-archive',required=True);p.add_argument('--verified-existing-tree-digest',required=True);a=p.parse_args()
 repo=pathlib.Path(__file__).resolve().parents[1];candidate=pathlib.Path(a.candidate);out=pathlib.Path(a.out);out.mkdir(parents=True,exist_ok=True)
 installer_source_commit=subprocess.check_output(['git','-C',str(repo),'rev-parse','HEAD'],text=True).strip()
@@ -26,10 +33,12 @@ old_manifest_sha=hashlib.sha256(old_manifest).hexdigest()
 is_final=(old.get('version')=='1.0.0' and old.get('channel')=='final' and old.get('deployment_authorized') is False and old_manifest_sha==APPROVED_V1_MANIFEST_SHA256)
 is_installed_ui=(old_manifest_sha==INSTALLED_UI_110['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_UI_110.items() if k not in ('manifest_sha256','archive_sha256')))
 is_installed_ui_p1=(old_manifest_sha==INSTALLED_UI_P1['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_UI_P1.items() if k not in ('manifest_sha256','archive_sha256')))
-if not (is_final or is_installed_ui or is_installed_ui_p1):raise SystemExit('existing manifest is neither the approved Final Release 1.0.0 nor an exact previously installed staging UI 1.1.0 candidate')
+is_installed_catalog=(old_manifest_sha==INSTALLED_CATALOG_P1['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_CATALOG_P1.items() if k not in ('manifest_sha256','archive_sha256')))
+if not (is_final or is_installed_ui or is_installed_ui_p1 or is_installed_catalog):raise SystemExit('existing manifest is not an exact approved Final Release or previously installed 1.1.0 staging candidate')
 if hashlib.sha256(old_archive).hexdigest()!=old.get('archive_sha256'):raise SystemExit('existing release archive checksum mismatch')
 if is_installed_ui and old.get('archive_sha256')!=INSTALLED_UI_110['archive_sha256']:raise SystemExit('installed UI archive is not the previously verified staging archive')
 if is_installed_ui_p1 and old.get('archive_sha256')!=INSTALLED_UI_P1['archive_sha256']:raise SystemExit('installed P1 UI archive is not the previously verified staging archive')
+if is_installed_catalog and old.get('archive_sha256')!=INSTALLED_CATALOG_P1['archive_sha256']:raise SystemExit('installed catalog archive is not the previously verified staging archive')
 if hashlib.sha256(json.dumps(old.get('files',[]),sort_keys=True,separators=(',',':')).encode()).hexdigest()!=old.get('plugin_digest'):raise SystemExit('existing release manifest plugin digest mismatch')
 old_files=[*old.get('files',[]),old.get('build_marker',{})]
 rows=[]
