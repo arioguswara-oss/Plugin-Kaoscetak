@@ -1,5 +1,7 @@
 # SANRO Studio — P1 katalog Administrator dan instalasi staging
 
+> **Superseded for variable-product scope:** source `690fb0be568713328a0c6e2fd5f81b3fb457a655` now implements variation mapping through quote/cart/order contracts and is installed on staging. See [Variable product E2E report](studio-variable-product-e2e-20261125.md). That report records the remaining partial live fixture evidence and does not change this report's historical results.
+
 25 November 2026. Repository `arioguswara-oss/Plugin-Kaoscetak`, PR #52, branch `work/studio-mobile-checkout-integration-20261123`. Input checkpoint `23964c41fc56f5ee54557125fb14e3c4ecfb6fd3`.
 
 ## 1. Status dan root cause

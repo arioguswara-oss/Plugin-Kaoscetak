@@ -10,12 +10,12 @@
   "plugin_digest": "cab430b9a596823c01b675882c46fc0d966d5705c02e97d4c2eadb9daf28525f",
   "deployment_authorized": false,
   "staging_installation_authorized": true,
-  "runtime_e2e": "V1.1.0 admin simple-product catalog lifecycle installed; synthetic add/configure/activate/disable/archive/restore and buyer REST visibility PASS; variation mapping unsupported; Owner visual acceptance pending",
-  "staging_installation_state": "V1.1.0_ADMIN_CATALOG_P1_CANDIDATE_INSTALLED_ACTIVE_SIMPLE_PRODUCTS_ONLY",
+  "runtime_e2e": "V1.1.0 simple and variable product support candidate installed; targeted variable contract PASS; live variable fixture blocked by staging media attachment validation; Owner visual acceptance pending",
+  "staging_installation_state": "V1.1.0_VARIABLE_PRODUCT_E2E_CANDIDATE_INSTALLED_ACTIVE_TARGETED_CONTRACT_PASS",
   "staging_installed_version": "1.1.0",
-  "currently_installed_source": "3a3a3ea6606608143658a55e998f2bbbdb9be8ee",
-  "installed_tree_digest": "c6da001ee3b8cd22c684c44615a17aaeea19c43a386577df38778ba748fcea79",
-  "execution_evidence": "artifacts/studio-v1/admin-catalog-p1-20261125/runtime-evidence.json",
+  "currently_installed_source": "690fb0be568713328a0c6e2fd5f81b3fb457a655",
+  "installed_tree_digest": "6240c2816723cec83803416484fb2149611b61a96c96db109e2914b45a8d96f7",
+  "execution_evidence": "artifacts/studio-v1/variable-product-e2e-20261125/runtime-evidence.json",
   "owner_scope_revision": "f415ec55dd5b360da89b76804512624a3611288d",
   "drive_configuration": "NOT CONFIGURED",
   "final_release": true,
@@ -72,6 +72,17 @@
     "buyer_runtime_visibility": "PASS_SYNTHETIC_PRODUCT_53",
     "variation_mapping": "OPEN_UNSUPPORTED_BY_CURRENT_SERVER_QUOTE_CART_CONTRACT",
     "installed_tree_digest": "c6da001ee3b8cd22c684c44615a17aaeea19c43a386577df38778ba748fcea79",
+    "final_release": false
+  },
+  "variable_product_candidate": {
+    "source": "690fb0be568713328a0c6e2fd5f81b3fb457a655",
+    "artifact_directory": "artifacts/studio-v1/variable-product-e2e-20261125",
+    "archive": "sanro-studio-staging-candidate.zip",
+    "archive_sha256": "a8503ff5520164ea4d617b484031ca8e778cc1e8a42b6e6d9d1d879b8bda82c0",
+    "manifest_sha256": "63b0eb377810fa68b120ba151ffd997efe356717e0bae50a0da231374db2fa48",
+    "transport_sha256": "1c52686965fdaec46cf405dd3ec15b1881313188200b55f22760c67018f33ee8",
+    "installed_tree_digest": "6240c2816723cec83803416484fb2149611b61a96c96db109e2914b45a8d96f7",
+    "decision": "CODE_AND_INSTALL_PASS_TARGETED_CONTRACT_PASS_LIVE_VARIABLE_FIXTURE_PARTIAL",
     "final_release": false
   }
 }

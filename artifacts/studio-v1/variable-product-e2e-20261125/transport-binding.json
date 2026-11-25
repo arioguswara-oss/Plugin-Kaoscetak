@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "candidate_source": "690fb0be568713328a0c6e2fd5f81b3fb457a655",
+  "candidate_zip_sha256": "a8503ff5520164ea4d617b484031ca8e778cc1e8a42b6e6d9d1d879b8bda82c0",
+  "candidate_manifest_sha256": "63b0eb377810fa68b120ba151ffd997efe356717e0bae50a0da231374db2fa48",
+  "installer_source_commit": "8a535d1035cc34a3df78183fbe5e6f08579b4d84",
+  "existing_release_version": "1.1.0",
+  "existing_release_channel": "candidate",
+  "existing_release_source": "3a3a3ea6606608143658a55e998f2bbbdb9be8ee",
+  "existing_release_archive_sha256": "5a0b02537e8e50a93d975312457140c7b3d6a129a134ad3003cd0a93ff52397d",
+  "existing_release_manifest_sha256": "ef4926df914907f7b7d1b5e42c49f2038dc0d54e52c4c0236bde187473903e4e",
+  "verified_existing_tree_digest": "c6da001ee3b8cd22c684c44615a17aaeea19c43a386577df38778ba748fcea79",
+  "transport_sha256": "1c52686965fdaec46cf405dd3ec15b1881313188200b55f22760c67018f33ee8",
+  "staging_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "apply_automatic": false,
+  "writers_changed": false
+}
