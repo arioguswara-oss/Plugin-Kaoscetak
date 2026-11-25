@@ -2,7 +2,7 @@
   "schema": 1,
   "release_version": "1.0.0",
   "release_source": "4f5d31ee2a1244674a8a7111cd43f3e695bbf218",
-  "candidate_source": "12b2c043cc6ccbb3e7c828949bf524ff6f2e84b1",
+  "candidate_source": "826c152c3dbf2e35fff74d276e9c2fd00aed2905",
   "artifact_directory": "artifacts/studio-v1/1.0.0",
   "archive": "sanro-studio-1.0.0.zip",
   "archive_sha256": "c1a9d56a8e11a000cde9eb215595ec257a5f3cb70098dbb2cce6fd43775fbcce",
@@ -10,24 +10,24 @@
   "plugin_digest": "cab430b9a596823c01b675882c46fc0d966d5705c02e97d4c2eadb9daf28525f",
   "deployment_authorized": false,
   "staging_installation_authorized": true,
-  "runtime_e2e": "V1.1.0 install and read-only runtime smoke PASS; no checkout/order/payment test; visual acceptance pending",
-  "staging_installation_state": "V1.1.0_UI_INSTALLED_ACTIVE_OWNER_BROWSER_ACCEPTANCE_PENDING",
+  "runtime_e2e": "V1.1.0 P1-corrected candidate installed; read-only runtime smoke PASS; no checkout/order/payment test; visual acceptance pending",
+  "staging_installation_state": "V1.1.0_UI_P1_CORRECTED_INSTALLED_ACTIVE_OWNER_BROWSER_ACCEPTANCE_PENDING",
   "staging_installed_version": "1.1.0",
-  "currently_installed_source": "12b2c043cc6ccbb3e7c828949bf524ff6f2e84b1",
-  "installed_tree_digest": "0c7900e3b5779b19897ad8f1443f4e0bee8fd0b377ffa35f27bb993b68116301",
-  "execution_evidence": "artifacts/studio-v1/1.1.0-ui/installation-execution.json",
+  "currently_installed_source": "826c152c3dbf2e35fff74d276e9c2fd00aed2905",
+  "installed_tree_digest": "f746c3928b96b5c6ca20cb04a7d5615a2f636799d2f88939c93fc4cadb88f049",
+  "execution_evidence": "artifacts/studio-v1/1.1.0-ui-p1-20261125/installation-execution.json",
   "owner_scope_revision": "f415ec55dd5b360da89b76804512624a3611288d",
   "drive_configuration": "NOT CONFIGURED",
   "final_release": true,
   "pending_ui_revision": {
     "version": "1.1.0",
-    "source": "12b2c043cc6ccbb3e7c828949bf524ff6f2e84b1",
-    "artifact_directory": "artifacts/studio-v1/1.1.0-ui",
+    "source": "826c152c3dbf2e35fff74d276e9c2fd00aed2905",
+    "artifact_directory": "artifacts/studio-v1/1.1.0-ui-p1-20261125",
     "archive": "sanro-studio-staging-candidate.zip",
-    "archive_sha256": "991f53c93ad6ae7c8c73bad1af4bd1b5406beac93ca7c64d6b0365a289e7896b",
+    "archive_sha256": "cd4c86ec548de7d109b751734c0a30dff55f67bf83594ec4430b276633cf0b9a",
     "state": "INSTALLED_ACTIVE_RUNTIME_GATE_PASS_OWNER_BROWSER_ACCEPTANCE_PENDING",
     "final_release": false,
-    "blocker": "Owner browser visual and interaction acceptance pending"
+    "blocker": "Owner browser visual and interaction acceptance pending for corrected candidate"
   },
   "visual_review": {
     "checkpoint": "0c34acaa51cf00f738ce31cea8e39777fa8f1d43",
@@ -40,5 +40,13 @@
     "phone_touch": "NOT_TESTED",
     "source_modified": false,
     "installation_changed": false
+  },
+  "latest_ui_correction": {
+    "source": "826c152c3dbf2e35fff74d276e9c2fd00aed2905",
+    "report": "docs/qa/studio-ui-p1-correction-installation-20261125.md",
+    "installation_state": "INSTALLED_ACTIVE_RUNTIME_GATE_PASS",
+    "installed_tree_digest": "f746c3928b96b5c6ca20cb04a7d5615a2f636799d2f88939c93fc4cadb88f049",
+    "owner_browser_acceptance": "PENDING",
+    "final_release": false
   }
 }

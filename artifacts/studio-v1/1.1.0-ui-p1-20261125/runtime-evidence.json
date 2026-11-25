@@ -1,0 +1,36 @@
+{
+  "source": "authenticated HTTPS staging transport gate and readiness route; final readback over kaoscetak-staging SSH",
+  "date": "2026-11-25",
+  "target": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "web_runtime": {
+    "php": "8.3.37",
+    "sapi": "litespeed",
+    "evidence_is_web_sapi": true,
+    "php_cli_used_as_sapi_evidence": false
+  },
+  "studio": {
+    "version": "1.1.0",
+    "active": true,
+    "source_commit": "826c152c3dbf2e35fff74d276e9c2fd00aed2905",
+    "plugin_digest": "275487367a6de2a8c965686896eed1bc83f0098a97db01a8a523bb7fe54bebec",
+    "installed_tree_digest": "f746c3928b96b5c6ca20cb04a7d5615a2f636799d2f88939c93fc4cadb88f049"
+  },
+  "https_gates": {
+    "pre_install": "PASS",
+    "post_install": "PASS",
+    "writer_flags_all_off": true,
+    "private_storage_roots_safe": true,
+    "woocommerce_loaded": true,
+    "product_24_editor_config_valid": true
+  },
+  "smoke": {
+    "buyer_css_http": 200,
+    "buyer_css_sha256": "c542267183b44d78e46c04506f55671a88c5bb38881b7b2f802951b191dcf585",
+    "buyer_js_http": 200,
+    "buyer_js_sha256": "1d7ddbe996cc2f206ad509c3c342647deecbcb32c189bbac4509c02cc010ef50",
+    "css_js_match_manifest": true,
+    "transaction_committed": true,
+    "rollback_retained": true
+  },
+  "checkout_order_payment_dtf_drive": "NOT PERFORMED"
+}
