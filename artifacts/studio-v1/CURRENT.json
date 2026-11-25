@@ -46,7 +46,20 @@
     "report": "docs/qa/studio-ui-p1-correction-installation-20261125.md",
     "installation_state": "INSTALLED_ACTIVE_RUNTIME_GATE_PASS",
     "installed_tree_digest": "f746c3928b96b5c6ca20cb04a7d5615a2f636799d2f88939c93fc4cadb88f049",
-    "owner_browser_acceptance": "PENDING",
+    "owner_browser_acceptance": "PENDING; P1 SANRO catalog lifecycle blocker confirmed live",
     "final_release": false
+  },
+  "product_catalog_review": {
+    "source": "826c152c3dbf2e35fff74d276e9c2fd00aed2905",
+    "installed_tree_digest": "f746c3928b96b5c6ca20cb04a7d5615a2f636799d2f88939c93fc4cadb88f049",
+    "report": "docs/qa/studio-product-catalog-acceptance-20261125.md",
+    "decision": "NO_GO_P1_BLOCKER",
+    "add": "FAIL_NO_STUDIO_UI_CONTROL",
+    "edit": "PARTIAL_UI_PRESENT_SAVE_NOT_TESTED",
+    "archive_or_remove": "FAIL_NO_STUDIO_UI_CONTROL",
+    "activate_deactivate": "FAIL_NO_INDEPENDENT_STUDIO_CONTROL",
+    "woo_mapping": "PARTIAL_EXISTING_SIMPLE_PRODUCTS_ONLY",
+    "woo_products_changed": false,
+    "orders_or_designs_changed": false
   }
 }
