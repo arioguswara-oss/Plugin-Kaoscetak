@@ -29,7 +29,7 @@ function sanro_studio_pricing_wc_quote($line, $quantity, $context) {
     if (($line['sanro_studio_pricing_version'] ?? null) !== 1 || !$quantity
         || !is_int($product_id) || $product_id < 1 || !is_string($size)
         || !is_string($id) || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $id)
-        || !empty($line['variation_id'])) throw new RuntimeException('Invalid SANRO price identity or quantity.');
+        || !is_int($line['variation_id']??0)) throw new RuntimeException('Invalid SANRO price identity or quantity.');
     $resolved = apply_filters('sanro_studio_pricing_authorized_design', null, $id, $product_id, $context);
     if (!is_array($resolved) || ($resolved['authorized'] ?? null) !== true
         || ($resolved['master_ready'] ?? null) !== true || ($resolved['design_id'] ?? null) !== $id
@@ -39,6 +39,7 @@ function sanro_studio_pricing_wc_quote($line, $quantity, $context) {
     if (is_array($resolved['locked_quote']??null)) {
         $saved=$resolved['locked_quote']['items'][$size]??null;
         if (!is_array($saved) || ($saved['quantity']??null)!==$quantity) throw new RuntimeException('SANRO locked order quantity cannot change.');
+        if(($line['variation_id']??0)!==($saved['variation_id']??0)||($line['variation']??[])!==($saved['variation_attributes']??[]))throw new RuntimeException('SANRO locked variation cannot change.');
         return $saved;
     }
     // Re-quote the native cart allocation without changing the saved artwork or draft.
@@ -47,6 +48,9 @@ function sanro_studio_pricing_wc_quote($line, $quantity, $context) {
     $design['quantities'] = [$size => $quantity];
     $quote = sanro_studio_product_quote($product_id, $design);
     if (empty($quote['valid']) || !isset($quote['lines'][$size])) throw new RuntimeException('SANRO server quote rejected.');
+    $expected=$quote['lines'][$size];
+    if(($line['variation_id']??0)!==($expected['variation_id']??0)||($line['variation']??[])!==($expected['variation_attributes']??[])
+        ||($line['sanro_studio_color']??'')!==($design['shirt_color']??''))throw new RuntimeException('SANRO variation mapping rejected.');
     if(function_exists('sanro_studio_repeat_adjust_quote')){
         $adjusted=sanro_studio_repeat_adjust_quote(['valid'=>true,'items'=>$quote['lines'],'total_price'=>$quote['total']],$id);
         if(empty($adjusted['valid']))throw new RuntimeException('SANRO repeat quote rejected.');
@@ -93,7 +97,7 @@ function sanro_studio_pricing_notice($error) {
 function sanro_studio_pricing_add_validation($passed, $product_id, $quantity, $variation_id = 0, $variation = [], $data = []) {
     if (!$passed || !sanro_studio_pricing_is_line($data)) return $passed;
     try {
-        $line = array_merge($data, ['product_id' => (int) $product_id, 'variation_id' => (int) $variation_id, 'quantity' => $quantity]);
+        $line = array_merge($data, ['product_id' => (int) $product_id, 'variation_id' => (int) $variation_id, 'variation' => is_array($variation)?$variation:[], 'quantity' => $quantity]);
         sanro_studio_pricing_wc_quote($line, $quantity, 'add_to_cart');
         sanro_studio_pricing_cart_plan(sanro_studio_pricing_cart(), null, null, $line);
         return true;

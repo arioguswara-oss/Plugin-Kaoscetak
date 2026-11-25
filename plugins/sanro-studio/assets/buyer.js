@@ -16,11 +16,20 @@
   return config.mockups&&config.mockups[name]||null;
  }
  const shirtColor=q('#sanro-shirt-color');
+ const variationMap=config.variations&&Object.keys(config.variations).length?config.variations:null;
+ function syncVariationAvailability(){
+  if(!variationMap)return;
+  const allowed=variationMap[shirtColor.value]||{};
+  for(const input of qtyInputs){const size=input.dataset.size,available=!!(allowed[size]&&allowed[size].available);input.disabled=!available;if(!available)input.value='0';}
+  if(mockupSize)for(const option of mockupSize.options){option.disabled=option.value!=='*'&&!allowed[option.value];}
+  updateQty();updateEstimate();
+ }
  shirtColor.addEventListener('change',()=>{
-  if(shirtColors.has(shirtColor.value)){editRevision++;q('.sanro-shirt').style.setProperty('--sanro-shirt-color',shirtColor.value);render();}
+  if(shirtColors.has(shirtColor.value)){editRevision++;q('.sanro-shirt').style.setProperty('--sanro-shirt-color',shirtColor.value);render();syncVariationAvailability();}
  });
  q('.sanro-shirt').style.setProperty('--sanro-shirt-color',shirtColor.value);
  const qtyInputs=Array.from(root.querySelectorAll('[data-size]'));
+ syncVariationAvailability();
  function designCategory(d){return d.url||d.text.trim()?d.category:null;}
  function updateEstimate(){
   const output=q('#sanro-price-estimate'),calc=window.SanroStudioEstimate;

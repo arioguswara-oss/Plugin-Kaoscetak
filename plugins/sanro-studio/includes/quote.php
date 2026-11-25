@@ -82,6 +82,7 @@ function sanro_studio_quote_size_quantities($product_id, $design, $quantities, $
             'total_quantity' => $quote['pieces'],
             'total_price' => $quote['total'],
             'pricing_profile'=>$quote['pricing_profile'],'pricing_revision'=>$quote['pricing_revision']??null,'sleeve_label'=>$quote['sleeve_label']??null,
+            'shirt_color'=>$quote['shirt_color']??'',
         ];
     }
     $allowed = sanro_studio_24s_price_table();

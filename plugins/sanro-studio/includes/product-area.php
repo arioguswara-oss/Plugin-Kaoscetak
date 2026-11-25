@@ -171,7 +171,8 @@ function sanro_studio_product_readiness($product_id) {
     if (empty($pricing['valid'])) {
         $issues[] = 'pricing_profile_missing';
     }
-    if(method_exists($product,'is_type')&&!$product->is_type('simple'))$issues[]='native_variations_not_configured';
+    if(method_exists($product,'is_type')&&!$product->is_type('simple')&&!$product->is_type('variable'))$issues[]='unsupported_product_type';
+    if(method_exists($product,'is_type')&&$product->is_type('variable')&&(!function_exists('sanro_studio_variation_map')||!is_array($variation_map=sanro_studio_variation_map($product_id))||!$variation_map))$issues[]='native_variations_not_configured';
     return ['ready' => !$issues, 'issues' => $issues];
 }
 
@@ -187,7 +188,8 @@ function sanro_studio_product_readiness_notice() {
         'product_not_purchasable' => 'Produk belum dapat dibeli',
         'safe_area_missing' => 'Area cetak depan/belakang belum dikonfigurasi',
         'pricing_profile_missing' => 'Profil atau tabel harga SANRO Studio belum valid',
-        'native_variations_not_configured'=>'V1 menggunakan size/lengan pada desain. Native variasi Woo belum dikonfigurasi untuk editor.',
+        'native_variations_not_configured'=>'Petakan variation ID untuk setiap warna dan ukuran.',
+        'unsupported_product_type'=>'Tipe produk WooCommerce tidak didukung.',
     ];
     echo '<div class="options_group"><p><strong>SANRO Studio — Kesiapan Produk</strong></p>';
     if ($status['ready']) {

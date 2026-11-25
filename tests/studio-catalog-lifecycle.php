@@ -47,8 +47,12 @@ catalog_action(53, 'archive');
 catalog_action(53, 'restore');
 catalog_check(sanro_studio_catalog_status(53) === 'disabled', 'restore preserves prior disabled state');
 $GLOBALS['product_type'] = 'variable';
-try { catalog_action(53, 'add'); throw new RuntimeException('FAIL variable product accepted'); }
-catch (RuntimeException $error) { catalog_check(strpos($error->getMessage(), 'simple') !== false, 'variable product explicitly rejected'); }
+$GLOBALS['meta'][53] = [];
+catalog_check(catalog_action(53, 'add') === 53 && sanro_studio_catalog_status(53) === 'disabled', 'variable product can be mapped into Studio lifecycle');
+$GLOBALS['meta'][53] = [];
+$GLOBALS['product_type'] = 'grouped';
+try { catalog_action(53, 'add'); throw new RuntimeException('FAIL unsupported product type accepted'); }
+catch (RuntimeException $error) { catalog_check(strpos($error->getMessage(), 'simple atau variable') !== false, 'unsupported product type rejected'); }
 $GLOBALS['product_type'] = 'simple';
 $GLOBALS['catalog_ready'] = false;
 try { catalog_action(53, 'activate'); throw new RuntimeException('FAIL incomplete config activated'); }

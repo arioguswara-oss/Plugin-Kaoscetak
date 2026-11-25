@@ -13,7 +13,7 @@ function sanro_studio_public_editor_config($product_id, $allow_inactive = false)
     $product = wc_get_product($product_id);
     if (!$product || !is_object($product) || !method_exists($product, 'get_status')
         || $product->get_status() !== 'publish'
-        || (method_exists($product,'is_type') && !$product->is_type('simple'))
+        || (method_exists($product,'is_type') && !$product->is_type('simple') && !$product->is_type('variable'))
         || !method_exists($product, 'is_purchasable') || !$product->is_purchasable()) {
         return ['valid' => false, 'error' => 'product_unavailable'];
     }
@@ -29,6 +29,13 @@ function sanro_studio_public_editor_config($product_id, $allow_inactive = false)
         return ['valid' => false, 'error' => 'product_unavailable'];
     }
     if(function_exists('sanro_studio_mockup_matrix_public') && sanro_studio_mockup_matrix_public($product_id)===false)return ['valid'=>false,'error'=>'mockup_mapping_invalid'];
+    $variation_map=function_exists('sanro_studio_variation_map')?sanro_studio_variation_map($product_id):[];
+    $is_variable=method_exists($product,'is_type')&&$product->is_type('variable');
+    if($is_variable){
+        $sizes=$pricing['sizes']??[];$palette=function_exists('sanro_studio_mockup_palette')?sanro_studio_mockup_palette($product_id):[];
+        if(!is_array($variation_map)||!$variation_map||!is_array($sizes)||!$sizes||!is_array($palette)||!$palette)return ['valid'=>false,'error'=>'variation_mapping_invalid'];
+        foreach(array_keys($palette) as $color)foreach($sizes as $size)if(!isset($variation_map[$color][$size]))return ['valid'=>false,'error'=>'variation_mapping_incomplete'];
+    }
     $config = sanro_studio_editor_area_config($product_id);
     if (empty($config['valid'])) return ['valid' => false, 'error' => 'product_unavailable'];
     return [
@@ -42,6 +49,7 @@ function sanro_studio_public_editor_config($product_id, $allow_inactive = false)
         'categories' => $config['categories'],
         'mockup_matrix' => function_exists('sanro_studio_mockup_matrix_public') ? sanro_studio_mockup_matrix_public($product_id) : [],
         'palette' => function_exists('sanro_studio_mockup_palette') ? sanro_studio_mockup_palette($product_id) : [],
+        'variations' => is_array($variation_map)?$variation_map:[],
         'pricing_profile' => $pricing['profile'],
         'pricing' => isset($pricing['table'])?array_intersect_key($pricing,array_flip(['table','sizes','sleeve_extra','fixed_sleeve','revision'])):null,
         // Public, verified Media Library image URLs only. Never private DTF masters.

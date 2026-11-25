@@ -32,9 +32,10 @@ function sanro_studio_production_item_manifest($order, $item_id) {
         || $qty===null || ($record['design']['quantities'][$size]??null)!==$qty
         || (!is_int($unit) && !(is_string($unit)&&preg_match('/^[1-9][0-9]*$/D',$unit))) || (int)$unit<1
         || $item->get_meta('_sanro_studio_quote_currency',true)!=='IDR') return ['valid'=>false,'error'=>'production_allocation_mismatch'];
-    $line=['product_id'=>$item->get_product_id(),'quantity'=>$qty,'sanro_studio_design_id'=>$id,
+    $variation_id=method_exists($item,'get_variation_id')?(int)$item->get_variation_id():0;
+    $line=['product_id'=>$item->get_product_id(),'variation_id'=>$variation_id,'quantity'=>$qty,'sanro_studio_design_id'=>$id,
         'sanro_studio_size'=>$size,'sanro_studio_unit_price'=>(int)$unit,
-        'sanro_studio_line_subtotal'=>(int)$unit*$qty,'sanro_studio_quote_currency'=>'IDR'];
+        'sanro_studio_line_subtotal'=>(int)$unit*$qty,'sanro_studio_quote_currency'=>'IDR','sanro_studio_color'=>$record['design']['shirt_color']??''];
     if (!method_exists($order,'get_currency') || $order->get_currency()!=='IDR'
         || empty(sanro_studio_validate_size_order_item($line,$item)['valid'])) return ['valid'=>false,'error'=>'production_order_amount_mismatch'];
     $design=$record['design'];$hash=hash('sha256',maybe_serialize($design));
@@ -43,7 +44,7 @@ function sanro_studio_production_item_manifest($order, $item_id) {
     $snapshot=sanro_studio_pricing_design_snapshot(['id'=>$id,'contract'=>['design'=>$design]]);
     $manifest=['version'=>1,'kind'=>'production_guide','print_ready'=>false,
         'order_id'=>$order->get_id(),'order_number'=>method_exists($order,'get_order_number')?(string)$order->get_order_number():(string)$order->get_id(),
-        'item_id'=>$item_id,'product_id'=>$item->get_product_id(),
+        'item_id'=>$item_id,'product_id'=>$item->get_product_id(),'variation_id'=>$variation_id,
         'product_name'=>method_exists($item,'get_name')?(string)$item->get_name():'',
         'design_id'=>$id,'design_hash'=>$hash,'size'=>$size,'quantity'=>$qty,
         'quantities'=>$design['quantities'],'unit_price'=>(int)$unit,'subtotal'=>(int)$unit*$qty,'currency'=>'IDR',

@@ -62,6 +62,9 @@ function sanro_studio_validate_size_order_item($candidate, $order_item) {
         || $order_item->get_quantity() !== $candidate['quantity']) {
         return ['valid' => false, 'error' => 'size_order_identity_mismatch'];
     }
+    $candidate_variation_id=$candidate['variation_id']??0;
+    if(!is_int($candidate_variation_id)||$candidate_variation_id<0
+        ||(method_exists($order_item,'get_variation_id')?(int)$order_item->get_variation_id():0)!==$candidate_variation_id)return ['valid'=>false,'error'=>'size_order_variation_mismatch'];
     $subtotal = $order_item->get_subtotal();
     if ((!is_string($subtotal) && !is_int($subtotal) && !is_float($subtotal))
         || !preg_match('/^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,2})?$/D', (string) $subtotal)) {
@@ -111,7 +114,7 @@ function sanro_studio_prepare_size_checkout_order_item($candidate, $order_item) 
     // Persist the verified DTF quote alongside the design/size binding.
     // Never persist buyer-supplied prices, owner credentials or artwork.
     foreach (['_sanro_studio_design_id', '_sanro_studio_size',
-        '_sanro_studio_unit_price', '_sanro_studio_quote_currency'] as $key) {
+        '_sanro_studio_unit_price', '_sanro_studio_quote_currency','_sanro_studio_variation_id','_sanro_studio_color'] as $key) {
         $existing = $order_item->get_meta($key, true);
         if ($existing !== '' && $existing !== null) {
             return ['valid' => false, 'error' => 'size_order_already_bound'];
@@ -121,6 +124,8 @@ function sanro_studio_prepare_size_checkout_order_item($candidate, $order_item) 
     $order_item->update_meta_data('_sanro_studio_size', $verified['size']);
     $order_item->update_meta_data('_sanro_studio_unit_price', $candidate['sanro_studio_unit_price']);
     $order_item->update_meta_data('_sanro_studio_quote_currency', 'IDR');
+    $order_item->update_meta_data('_sanro_studio_variation_id', $candidate['variation_id']??0);
+    $order_item->update_meta_data('_sanro_studio_color', $candidate['sanro_studio_color']??'');
     return ['valid' => true, 'design_id' => $verified['design_id'],
         'size' => $verified['size'], 'requires_item_save' => true,
         'checkout_enabled' => false];
@@ -416,9 +421,9 @@ function sanro_studio_stage_checkout_create_order_line_item($item, $cart_item_ke
     }
     // Full-batch validation happens in checkout_process. Here compare the
     // exact current line with the quote before binding metadata.
-    foreach (['product_id', 'quantity', 'sanro_studio_design_id',
+    foreach (['product_id','variation_id','variation','quantity', 'sanro_studio_design_id',
         'sanro_studio_size', 'sanro_studio_unit_price',
-        'sanro_studio_line_subtotal', 'sanro_studio_quote_currency'] as $field) {
+        'sanro_studio_line_subtotal', 'sanro_studio_quote_currency','sanro_studio_color'] as $field) {
         if (!array_key_exists($field, $values)
             || $values[$field] !== $candidate[$field]) {
             throw new RuntimeException('SANRO Studio: cart item changed during checkout.');

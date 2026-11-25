@@ -111,6 +111,15 @@ function sanro_studio_prepare_size_cart_lines($contract) {
             || $item['subtotal'] !== $item['quantity'] * $item['unit_price']) {
             return ['valid' => false, 'error' => 'invalid_size_breakdown'];
         }
+        $variation_id=$item['variation_id']??0;$variation=$item['variation_attributes']??[];
+        if(!is_int($variation_id)||$variation_id<0||!is_array($variation))return ['valid'=>false,'error'=>'invalid_variation_mapping'];
+        if($variation_id>0){
+            $parent=function_exists('wc_get_product')?wc_get_product($snapshot['product_id']):null;$child=function_exists('wc_get_product')?wc_get_product($variation_id):null;
+            $current=$child&&function_exists('wc_get_product_variation_attributes')?wc_get_product_variation_attributes($variation_id):($child&&method_exists($child,'get_attributes')?$child->get_attributes():null);
+            if(!$parent||!$parent->is_type('variable')||!$child||!$child->is_type('variation')||$child->get_parent_id()!==$snapshot['product_id']
+                ||$child->get_status()!=='publish'||!$child->is_purchasable()||!$child->is_in_stock()||!is_array($current)||$current!==$variation)
+                return ['valid'=>false,'error'=>'invalid_variation_mapping'];
+        }elseif($variation!==[]){return ['valid'=>false,'error'=>'invalid_variation_mapping'];}
         $sum_quantity += $item['quantity'];
         $sum_price += $item['subtotal'];
         $lines[] = [
@@ -121,6 +130,9 @@ function sanro_studio_prepare_size_cart_lines($contract) {
             'sanro_studio_unit_price' => $item['unit_price'],
             'sanro_studio_line_subtotal' => $item['subtotal'],
             'sanro_studio_quote_currency' => 'IDR',
+            'sanro_studio_color' => $contract['quote']['shirt_color']??'',
+            'variation_id' => $variation_id,
+            'variation' => $variation,
         ];
     }
     if ($sum_quantity !== $snapshot['quantity']
@@ -158,7 +170,7 @@ function sanro_studio_validate_size_cart_lines($contract, $lines) {
         $allowed_studio_keys = [
             'sanro_studio_design_id', 'sanro_studio_size',
             'sanro_studio_unit_price', 'sanro_studio_line_subtotal',
-            'sanro_studio_quote_currency',
+            'sanro_studio_quote_currency','sanro_studio_color',
         ];
         foreach (array_keys($line) as $metadata_key) {
             if (is_string($metadata_key)
@@ -174,6 +186,12 @@ function sanro_studio_validate_size_cart_lines($contract, $lines) {
                 return ['valid' => false, 'error' => 'cart_line_mismatch'];
             }
         }
+        $expected_line=$by_size[$size];
+        if(!empty($expected_line['variation_id'])){
+            if(($line['variation_id']??null)!==$expected_line['variation_id']||($line['variation']??null)!==$expected_line['variation']
+                ||($line['sanro_studio_color']??null)!==$expected_line['sanro_studio_color'])return ['valid'=>false,'error'=>'cart_variation_mismatch'];
+        }elseif((isset($line['variation_id'])&&$line['variation_id']!==0)||(isset($line['variation'])&&$line['variation']!==[])
+            ||(isset($line['sanro_studio_color'])&&$line['sanro_studio_color']!==$expected_line['sanro_studio_color']))return ['valid'=>false,'error'=>'cart_line_mismatch'];
         unset($by_size[$size]);
     }
     if ($by_size) return ['valid' => false, 'error' => 'cart_missing_size'];
@@ -217,6 +235,15 @@ function sanro_studio_validate_cart_design_identity($contract, $cart_item) {
             return ['valid' => false, 'error' => 'cart_quote_mismatch'];
         }
     }
+    if(isset($cart_item['sanro_studio_size'])){
+        $size=$cart_item['sanro_studio_size'];$expected=$contract['quote']['items'][$size]??null;
+        if(!is_string($size)||!is_array($expected)
+            ||($cart_item['variation_id']??0)!==($expected['variation_id']??0)
+            ||($cart_item['variation']??[])!==($expected['variation_attributes']??[]))return ['valid'=>false,'error'=>'cart_variation_mismatch'];
+    }elseif(!empty($contract['quote']['items'])){
+        foreach($contract['quote']['items'] as $item)if(!empty($item['variation_id']))return ['valid'=>false,'error'=>'cart_variation_missing'];
+    }
+    if(array_key_exists('sanro_studio_color',$cart_item)&&($cart_item['sanro_studio_color']!==($contract['quote']['shirt_color']??'')))return ['valid'=>false,'error'=>'cart_color_mismatch'];
     return ['valid' => true, 'design_id' => $contract['design_id'],
         'product_id' => $contract['product_id'], 'quantity' => $cart_item['quantity'],
         'checkout_enabled' => false];

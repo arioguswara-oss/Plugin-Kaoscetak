@@ -26,6 +26,10 @@ function sanro_studio_product_quote($product_id, $design) {
     if (!is_array($quantities) || !$quantities) {
         return ['valid' => false, 'error' => 'invalid_quantities'];
     }
+    $wc_product=function_exists('wc_get_product')?wc_get_product($product_id):null;
+    $is_variable=$wc_product&&method_exists($wc_product,'is_type')&&$wc_product->is_type('variable');
+    $variation_map=$is_variable?sanro_studio_variation_map($product_id):[];
+    if($is_variable&&(!is_array($variation_map)||!isset($design['shirt_color'],$variation_map[$design['shirt_color']])))return ['valid'=>false,'error'=>'variation_unavailable'];
     $categories = ['front' => null, 'back' => null];
     foreach ($validated['sides'] as $side => $result) {
         // An empty side is not charged, regardless of its selected category.
@@ -40,13 +44,17 @@ function sanro_studio_product_quote($product_id, $design) {
             :sanro_studio_24s_unit_price($size,$categories['front'],$categories['back'],$design['long_sleeve']??false);
         if (!$unit['valid']) return $unit;
         $subtotal = $unit['unit_price'] * $quantity;
-        $lines[$size] = ['quantity' => $quantity, 'unit_price' => $unit['unit_price'], 'subtotal' => $subtotal];
+        $mapped=$is_variable?($variation_map[$design['shirt_color']][$size]??null):null;
+        if($is_variable&&(!is_array($mapped)||empty($mapped['available'])||!isset($mapped['variation_id'],$mapped['attributes'])||!sanro_studio_variation_for_mapping($product_id,$mapped['variation_id'],sanro_studio_mockup_palette($product_id)[$design['shirt_color']]??'',$size)))return ['valid'=>false,'error'=>'variation_unavailable'];
+        $lines[$size] = ['quantity' => $quantity, 'unit_price' => $unit['unit_price'], 'subtotal' => $subtotal,
+            'variation_id'=>$is_variable?$mapped['variation_id']:0,'variation_attributes'=>$is_variable?$mapped['attributes']:[]];
         $pieces += $quantity;
         $total += $subtotal;
     }
     if (!$pieces) return ['valid' => false, 'error' => 'invalid_quantities'];
     return [
         'valid' => true, 'contract_version' => 1, 'product_id' => $product_id,
+        'shirt_color' => isset($design['shirt_color'])&&is_string($design['shirt_color'])?$design['shirt_color']:'',
         'pricing_profile' => $config['pricing_profile'], 'currency' => 'IDR',
         'pricing_revision'=>$profile['revision']??null,
         'sleeve_label'=>$profile['fixed_sleeve']??(!empty($design['long_sleeve'])?'long':'short'),

@@ -11,13 +11,15 @@ function sanro_studio_stage_cart_signature($line, $expires) {
         || !function_exists('wp_salt')) return null;
     $keys = ['product_id', 'quantity', 'sanro_studio_design_id',
         'sanro_studio_size', 'sanro_studio_unit_price',
-        'sanro_studio_line_subtotal', 'sanro_studio_quote_currency'];
+        'sanro_studio_line_subtotal', 'sanro_studio_quote_currency','sanro_studio_color','variation_id'];
     $values = ['sanro-cart-v1', $expires];
     foreach ($keys as $key) {
-        if (!array_key_exists($key, $line)
-            || (!is_int($line[$key]) && !is_string($line[$key]))) return null;
-        $values[] = $line[$key];
+        $value=$key==='variation_id'?($line[$key]??0):($key==='sanro_studio_color'?($line[$key]??''):($line[$key]??null));
+        if ((!is_int($value) && !is_string($value))) return null;
+        $values[] = $value;
     }
+    $variation=$line['variation']??[];if(!is_array($variation))return null;
+    ksort($variation);$values[]=json_encode($variation,JSON_UNESCAPED_SLASHES);
     $secret = wp_salt('auth');
     if (!is_string($secret) || strlen($secret) < 16) return null;
     $payload = json_encode($values, JSON_UNESCAPED_SLASHES);
@@ -89,7 +91,8 @@ function sanro_studio_stage_reprice_signed_cart($cart) {
             && method_exists($line['data'], 'set_price')
             && isset($line['sanro_studio_unit_price'])
             && is_int($line['sanro_studio_unit_price'])
-            && $line['sanro_studio_unit_price'] > 0;
+            && $line['sanro_studio_unit_price'] > 0
+            && sanro_studio_stage_cart_variation_current($line);
         if (!$valid) {
             sanro_studio_stage_remove_untrusted_cart_line($cart, $key);
             if (function_exists('wc_add_notice')) {
@@ -99,6 +102,18 @@ function sanro_studio_stage_reprice_signed_cart($cart) {
         }
         $line['data']->set_price((string) $line['sanro_studio_unit_price']);
     }
+}
+
+/** Signed session replay must still resolve to the current mapped, purchasable child. */
+function sanro_studio_stage_cart_variation_current($line){
+    if(!is_array($line)||!function_exists('wc_get_product'))return false;
+    $parent=wc_get_product((int)($line['product_id']??0));$variation_id=(int)($line['variation_id']??0);
+    if(!$parent||!$parent->is_purchasable())return false;
+    if($variation_id===0)return $parent->is_type('simple');
+    if(!$parent->is_type('variable')||!is_string($line['sanro_studio_color']??null)||!is_string($line['sanro_studio_size']??null))return false;
+    $map=sanro_studio_variation_map((int)$line['product_id']);$entry=$map[$line['sanro_studio_color']][$line['sanro_studio_size']]??null;
+    return is_array($entry)&&($entry['variation_id']??null)===$variation_id&&!empty($entry['available'])
+        &&($entry['attributes']??null)===($line['variation']??[]);
 }
 
 /**
@@ -131,6 +146,7 @@ function sanro_studio_stage_cart_item_display($item_data, $cart_item) {
         return $item_data;
     }
     $item_data[] = ['key' => 'Ukuran kaos', 'value' => $size];
+    if(is_string($cart_item['sanro_studio_color']??null)&&$cart_item['sanro_studio_color']!=='')$item_data[]=['key'=>'Warna kaos','value'=>$cart_item['sanro_studio_color']];
     $item_data[] = ['key' => 'Kode desain', 'value' => substr($id, 0, 8)];
     return $item_data;
 }
@@ -156,14 +172,14 @@ function sanro_studio_stage_add_cart_lines($contract, $cart) {
     if (empty($prepared['valid'])) return $prepared;
     $verified = sanro_studio_validate_size_cart_lines($contract, $prepared['lines']);
     if (empty($verified['valid'])) return $verified;
-    // Reject product configurations that require separate variation IDs or
-    // extra options. These need a dedicated variation-aware adapter.
+    // Resolve the parent and every variation from the server quote. Never
+    // accept a variation identity posted by the buyer.
     if (!function_exists('wc_get_product')) {
         return ['valid' => false, 'error' => 'product_unavailable'];
     }
     $product = wc_get_product($contract['product_id']);
     if (!$product || !method_exists($product, 'is_type')
-        || !$product->is_type('simple')
+        || (!$product->is_type('simple')&&!$product->is_type('variable'))
         || !method_exists($product, 'is_purchasable')
         || !$product->is_purchasable()) {
         return ['valid' => false, 'error' => 'unsupported_product_type'];
@@ -216,13 +232,18 @@ function sanro_studio_stage_price_cart_line($contract, $line, $product) {
         }
     }
     if ($matched === null) return ['valid' => false, 'error' => 'unknown_cart_size'];
-    foreach (['product_id', 'quantity', 'sanro_studio_design_id',
+    foreach (['product_id','quantity', 'sanro_studio_design_id',
         'sanro_studio_size', 'sanro_studio_unit_price',
         'sanro_studio_line_subtotal', 'sanro_studio_quote_currency'] as $key) {
         if (!array_key_exists($key, $line) || $line[$key] !== $matched[$key]) {
             return ['valid' => false, 'error' => 'cart_line_mismatch'];
         }
     }
+    if(!empty($matched['variation_id'])){
+        if(($line['variation_id']??null)!==$matched['variation_id']||($line['variation']??null)!==$matched['variation']
+            ||($line['sanro_studio_color']??null)!==$matched['sanro_studio_color'])return ['valid'=>false,'error'=>'cart_variation_mismatch'];
+    }elseif((isset($line['variation_id'])&&$line['variation_id']!==0)||(isset($line['variation'])&&$line['variation']!==[])
+        ||(isset($line['sanro_studio_color'])&&$line['sanro_studio_color']!==$matched['sanro_studio_color']))return ['valid'=>false,'error'=>'cart_line_mismatch'];
     $product->set_price((string) $matched['sanro_studio_unit_price']);
     return ['valid' => true, 'unit_price' => $matched['sanro_studio_unit_price'],
         'currency' => 'IDR', 'requires_totals_recalculation' => true];
@@ -333,8 +354,9 @@ function sanro_studio_stage_commit_cart_lines($contract, $cart) {
                 'sanro_studio_unit_price' => $line['sanro_studio_unit_price'],
                 'sanro_studio_line_subtotal' => $line['sanro_studio_line_subtotal'],
                 'sanro_studio_quote_currency' => 'IDR',
+                'sanro_studio_color' => $line['sanro_studio_color'],
             ];
-            $key = $cart->add_to_cart($line['product_id'], $line['quantity'], 0, [], $meta);
+            $key = $cart->add_to_cart($line['product_id'], $line['quantity'], $line['variation_id'], $line['variation'], $meta);
             if (!is_string($key) || $key === '' || in_array($key, $keys, true)) {
                 throw new RuntimeException('cart_add_failed');
             }

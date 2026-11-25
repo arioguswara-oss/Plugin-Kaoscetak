@@ -69,7 +69,7 @@ function sanro_studio_repeat_adjust_quote($quote,$id,$billing=null) {
         if(!is_int($base)||$base<1||$base>2000000||!is_int($quantity)||$quantity<1||$quantity>999||isset($line['base_unit_price'])||$base*$quantity!==($line['subtotal']??null))return ['valid'=>false,'error'=>'repeat_quote_invalid'];
         // Existing source uses PHP_ROUND_HALF_UP; exact positive integer arithmetic reproduces it.
         $unit_discount=intdiv($base*5+50,100);$unit=$base-$unit_discount;
-        $items[$size]=['quantity'=>$quantity,'unit_price'=>$unit,'subtotal'=>$unit*$quantity,'base_unit_price'=>$base,'unit_discount'=>$unit_discount];
+        $items[$size]=array_merge($line,['quantity'=>$quantity,'unit_price'=>$unit,'subtotal'=>$unit*$quantity,'base_unit_price'=>$base,'unit_discount'=>$unit_discount]);
         $total+=$unit*$quantity;$base_total+=$base*$quantity;$discount+=$unit_discount*$quantity;
     }
     $quote['items']=$items;$quote['total_price']=$total;
