@@ -84,5 +84,19 @@
     "installed_tree_digest": "6240c2816723cec83803416484fb2149611b61a96c96db109e2914b45a8d96f7",
     "decision": "CODE_AND_INSTALL_PASS_TARGETED_CONTRACT_PASS_LIVE_VARIABLE_FIXTURE_PARTIAL",
     "final_release": false
+  },
+  "final_acceptance_690fb0b": {
+    "source": "690fb0be568713328a0c6e2fd5f81b3fb457a655",
+    "reviewed_head": "1b5081ca63d769217c8b662f5c3af176406fdb77",
+    "decision": "NO_GO_FINAL_RELEASE_AND_MERGE_RECOMMENDATION",
+    "report": "docs/qa/studio-final-acceptance-690fb0b-20261125.md",
+    "screenshots": "artifacts/studio-v1/acceptance-690fb0b-20261125",
+    "blockers": [
+      "catalog_add_nonce_not_bound_live",
+      "wordpress_media_attachment_status_validator"
+    ],
+    "live_variable_quote_cart": "NOT_TESTED",
+    "live_variable_order": "NOT_TESTED",
+    "phone_pinch": "NOT_TESTED"
   }
 }

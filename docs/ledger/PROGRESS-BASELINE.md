@@ -1,6 +1,10 @@
 # SANRO Studio — satu baseline resmi development
 
-## LATEST — variable-product code installed; runtime fixture PARTIAL
+## LATEST — acceptance Cloud Browser kandidat 690fb0b NO-GO
+
+25 November 2026. HEAD review `1b5081c`, staging V1.1.0 source `690fb0b` menurut bukti instalasi CLI, tanpa diff plugin antara keduanya. **96,50% → 96,50%, delta 0,00.** Admin edit visual X simple lulus dan nilai awal dipulihkan. Tambah lewat UI menghasilkan HTTP 403 dua kali karena nonce tidak terikat pada field yang dikirim. Media Library menerima dua PNG, tetapi Studio tidak menyimpan ID mockup. Buyer variable hingga quote/cart tertahan. Order line hanya PASS di kontrak terdahulu. Drag/resize desktop PASS, Desain Saya dan visual desktop PARTIAL, potret/touch/pinch NOT TESTED. Final Release dan rekomendasi merge **NO-GO**. [Bukti dan handoff](../qa/studio-final-acceptance-690fb0b-20261125.md).
+
+## Historical checkpoint — variable-product code installed; runtime fixture PARTIAL
 
 25 November 2026: source `690fb0be568713328a0c6e2fd5f81b3fb457a655` installed/active on staging, tree digest `6240c2816723cec83803416484fb2149611b61a96c96db109e2914b45a8d96f7`. Mandatory HTTPS Web SAPI gate PASS before/after; official installer committed with rollback retained and all writer flags OFF. Targeted variable contract (mapping, availability, multi-size quote/cart candidates, wrong parent/attributes, order-line binding) PASS; simple lifecycle 15, cart adapter 74, quote 690 regression checks PASS. A live hidden variable fixture was created and removed, but buyer editor-config could not pass because available staging media fails the product mockup attachment status validator. No existing catalog/order changed. Admin mapping and buyer visual acceptance remain separate Owner/ChatGPT Work actions. Full live variable buyer/cart/order evidence is **PARTIAL**. [Variable implementation, package and staging evidence](../qa/studio-variable-product-e2e-20261125.md).
 
