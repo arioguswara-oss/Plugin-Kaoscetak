@@ -16,3 +16,11 @@ This gate supersedes earlier live-Drive and payment requirements. It does not co
 Normal buyer submission is stopped by a temporary exact-staging Administrator-only Woo after-validation guard BEFORE customer-profile/order/payment writes. It records native authorization+server quote and upstream validation codes without credentials/addresses, then unconditionally adds an error even if evidence storage fails. This proves the allowed checkout boundary; existing order56 proves creation/binding. The guard is outside the application ZIP and is deactivated after acceptance.
 
 Release may be declared Final only after all required rows have evidence. Runtime Drive state must remain NOT CONFIGURED, actual OAuth/upload DEFERRED BY OWNER, never incorrectly labelled tested. Global historical estimates are separate from the mandatory release checklist; progress credit must follow the existing QA rubric and verified revised criteria.
+
+## Owner clarification — 26 November 2026: third-party payment boundary
+
+DECIDED: Payment processing, gateway configuration, payment authorization/settlement and payment-provider audits are outside SANRO Studio V1 scope. No real payment, gateway sandbox transaction or payment-provider certification is a release prerequisite. WooCommerce and its existing third-party gateway retain responsibility for checkout/payment status; Studio must not interfere with them.
+
+Mandatory Studio acceptance remains Guest Buyer First: editor → native WooCommerce Cart → native WooCommerce Checkout, authoritative pricing and session continuity, correct product/color/size/quantity/Design ID, order binding and production artifacts under the approved order lifecycle. Reuse existing synthetic order #56 creation/binding evidence and verify the affected mixed-cart after-validation boundary; no additional order or payment is authorized by this documentation change. Record payment as OUT OF SCOPE, not PASS. Remaining touch/visual and mixed checkout acceptance gates are unchanged.
+
+Owner manual Android video acceptance reports successful Cart → Checkout navigation after the guest fix; this supplements the existing staging guest evidence, not a new full runtime audit or order/payment test. Baseline remains 96.50% (delta 0.00); no final release or merge approval.
