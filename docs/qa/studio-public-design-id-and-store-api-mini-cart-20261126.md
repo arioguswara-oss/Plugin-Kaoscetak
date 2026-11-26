@@ -4,6 +4,8 @@
 
 Work continues on PR #52, branch `work/studio-mobile-checkout-integration-20261123`, from checkpoint `9d9fc70937e403ae99d4345c659df201c8bf9159`. Installed staging predecessor remains source `644739c` / SANRO Studio 1.1.0. Development progress remains **96.50%** until the changed candidate passes the required staging gates and fresh Guest Buyer acceptance.
 
+Owner acceptance: the general Android Cart appearance is accepted. This revision changes buyer-facing Design ID labels and native theme Mini Cart artwork previews; it does not redesign the accepted Cart interface.
+
 ## Implementation
 
 - Added a persistent SQL mapping table with a unique internal UUID key and a unique `AUTO_INCREMENT` sequence. Concurrent calls for the same UUID are idempotent; the internal UUID, owner token, order metadata, and authorization paths remain the private identity. Mapping rows are never deleted. IDs format as `ID-` plus at least five digits and grow beyond 99999.
