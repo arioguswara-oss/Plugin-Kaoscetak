@@ -10,12 +10,12 @@
   "plugin_digest": "cab430b9a596823c01b675882c46fc0d966d5705c02e97d4c2eadb9daf28525f",
   "deployment_authorized": false,
   "staging_installation_authorized": true,
-  "runtime_e2e": "V1.1.0 simple and variable product support candidate installed; targeted variable contract PASS; live variable fixture blocked by staging media attachment validation; Owner visual acceptance pending",
-  "staging_installation_state": "V1.1.0_VARIABLE_PRODUCT_E2E_CANDIDATE_INSTALLED_ACTIVE_TARGETED_CONTRACT_PASS",
+  "runtime_e2e": "Admin simple/variable lifecycle and simple buyer cart verified on installed source 964e428. Buyer collection and mobile acceptance open.",
+  "staging_installation_state": "V1.1.0_964E428_INSTALLED_RELEASE_ACCEPTANCE_NO_GO",
   "staging_installed_version": "1.1.0",
-  "currently_installed_source": "690fb0be568713328a0c6e2fd5f81b3fb457a655",
-  "installed_tree_digest": "6240c2816723cec83803416484fb2149611b61a96c96db109e2914b45a8d96f7",
-  "execution_evidence": "artifacts/studio-v1/variable-product-e2e-20261125/runtime-evidence.json",
+  "currently_installed_source": "964e428442e21cbae05bd336b81f8aef82cac424",
+  "installed_tree_digest": "f8243694f32da6cbb54ce7186b32f91e0c78cef828d8616b32d27e9fabbfbf73",
+  "execution_evidence": "artifacts/studio-v1/lumise-final-correction-20261125/runtime-evidence.json",
   "owner_scope_revision": "f415ec55dd5b360da89b76804512624a3611288d",
   "drive_configuration": "NOT CONFIGURED",
   "final_release": true,
@@ -100,7 +100,7 @@
     "rollback_retained": true,
     "catalog_nonce_p1": "CLOSED_TARGETED_VM_PASS",
     "mockup_attachment_p1": "CLOSED_FIXTURES_74_75_PERSIST_AND_RESTORE_PASS",
-    "visual_acceptance": "PENDING_CHATGPT_WORK",
+    "visual_acceptance": "PARTIAL_CLOUD_BROWSER_MOBILE_GATE_OPEN",
     "final_release": false
   },
   "final_acceptance_690fb0b": {
@@ -116,5 +116,19 @@
     "live_variable_quote_cart": "NOT_TESTED",
     "live_variable_order": "NOT_TESTED",
     "phone_pinch": "NOT_TESTED"
+  },
+  "final_acceptance_964e428": {
+    "reviewed_head": "851d11bb7a9b2cbee0c30673c07a7d487d47dc29",
+    "installed_source": "964e428442e21cbae05bd336b81f8aef82cac424",
+    "followup_source": "2bd19b3a734e4edea25142b757dc1155e9954f5d",
+    "followup_installed": false,
+    "decision": "NO_GO_FINAL_RELEASE_AND_MERGE_RECOMMENDATION",
+    "report": "docs/qa/studio-release-closure-20261126.md",
+    "screenshots": "artifacts/studio-v1/acceptance-964e428-20261126",
+    "admin_lifecycle": "PASS_LIVE_SIMPLE_VARIABLE",
+    "simple_quote_cart": "PASS_LIVE_IDR_297000_3_PCS",
+    "variable_quote_cart": "BLOCKED_DRAFT_429_CONTRACT_PASS",
+    "visual_mobile_pinch": "NOT_TESTED_LIVE",
+    "baseline_percent": 96.5
   }
 }

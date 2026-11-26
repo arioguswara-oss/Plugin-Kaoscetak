@@ -1,6 +1,10 @@
 # SANRO Studio — satu baseline resmi development
 
-## LATEST — Lumise-scope functional correction terpasang; visual acceptance owner pending
+## LATEST — 964e428 admin PASS, release closure NO-GO
+
+26 November 2026 WIB. Staging V1.1.0 source `964e428`, install gate dari evidence `851d11b`, patch source `2bd19b3` belum terpasang. UI admin simple dan variable (fixture #53/#76, Woo variants #77–82) lulus tambah, edit, aktif/nonaktif, arsip, restore, dan simpan mockup #74/#75. Buyer simple mengikat dua master privat dan quote/cart Rp297.000 untuk S×1/M×2 dengan A4 dua sisi. Variable mengonfirmasi warna, ukuran dan mockup, tetapi draft HTTP 429 menahan quote/cart live. Defect Simpan, ukuran kategori, preview koleksi dan tipe penghitung kuota ditangani pada source. JS terarah PASS, PHP belum dijalankan. Visual desktop pointer dan isolasi tema lulus, Desain Saya dan portrait/touch/pinch masih terbuka. **96,50% → 96,50%, delta 0,00. NO-GO Final Release dan rekomendasi merge.** [Laporan closure dan bukti](../qa/studio-release-closure-20261126.md).
+
+## Checkpoint sebelumnya — Lumise-scope functional correction terpasang; visual acceptance owner pending
 
 26 November 2026. Source `964e428442e21cbae05bd336b81f8aef82cac424` terpasang aktif di staging, SANRO Studio 1.1.0, installed tree digest `f8243694f32da6cbb54ce7186b32f91e0c78cef828d8616b32d27e9fabbfbf73`. Mandatory HTTPS pre/post gate PASS pada LiteSpeed; predecessor tree `6240c281...96f7` diverifikasi terhadap manifest/ZIP 690fb0b; installer committed dengan rollback retained dan semua writer flags OFF. P1 nonce binding dan attachment mockup ditutup: nonce terpilih lulus simulasi, fixture PNG #74/#75 valid/persisted pada produk sintetis #53 lalu metadata semula dipulihkan. Product-mockup smoke 39 assertion, syntax dan Chromium layout/drag/resize harness PASS. Baseline resmi tetap **96,50% →96,50%, delta 0,00**. Pricing/repeat discount, Google Drive OAuth, order/payment, production dan merge tidak disentuh. Final visual acceptance dari ChatGPT Work masih pending; status rilis tetap NO-GO sampai konsep Owner, editor mobile/touch dan alur live buyer diperiksa independen. [Laporan tujuh bagian dan handoff](../qa/studio-lumise-final-correction-20261125.md).
 
