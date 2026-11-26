@@ -11,3 +11,12 @@
 | Order dan produksi | Kategori hasil quote masuk snapshot privat order dan manifest produksi. Ringkasan buyer hanya menampilkan informasi pesanan yang relevan, termasuk Design ID, warna dan ukuran. Pesanan historis mempertahankan kategori dan tarif yang sudah terkunci. |
 
 Tes terarah PHP/JS mencakup ambang kategori, penolakan dimensi, akumulasi dua objek, rotasi, resize dalam editor, preview privat, tarif default dan tarif admin, metadata order, PDF serta raster GD sintetis. Smoke staging memeriksa editor dan quote dengan data sintetis. Pengujian checkout dibatasi sebelum submit. Production dan merge berada di luar scope.
+
+## Bukti terarah
+
+- PHP. 32 pemeriksaan bounding box, 533 pemeriksaan quote, 31 pemeriksaan adapter WooCommerce dan 8 pemeriksaan kontrak checkout campuran. Tes metadata order, variasi, replay checkout dan harga admin lulus.
+- JavaScript. 372 pemeriksaan estimator dan tes render resize/rotasi, serialisasi draft tanpa kategori, serta preview privat lulus.
+- Produksi sintetis. PNG GD dengan rotasi gambar/teks serta raster A3+ dan PDF Unicode lulus. Writer staging tetap OFF sesuai konfigurasi yang sudah tercatat.
+- Paket ZIP dibangun dua kali dengan hasil identik dan preflight lokal PASS. Saat akses gate staging, WordPress meminta login. Kandidat ini berstatus belum terpasang sampai gate dan smoke desktop lulus. [Kandidat ZIP dan checksum](../../artifacts/studio-v1/automatic-print-sizing-20261126).
+
+Baseline resmi tetap **96,50%**. Scope ini belum mendapat tambahan poin acceptance staging.

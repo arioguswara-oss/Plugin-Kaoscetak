@@ -1,6 +1,10 @@
 # SANRO Studio — satu baseline resmi development
 
-## LATEST — Mockup standar dan pemisahan produk lengan
+## LATEST — Deteksi otomatis ukuran cetak
+
+26 November 2026 WIB. Source `c5d1184` di PR #52 menghapus pemilih kategori buyer. Editor dan server menghitung tier A5/A4/A3/A3+ per sisi dari gabungan bounding box objek di bidang cm, termasuk rotasi. Sisi kosong tidak dikenakan tarif. Admin dapat mengatur batas serta tarif. Checkout menyimpan kategori hasil quote untuk produksi secara privat. Tes PHP/JS, fixture GD rotasi dan validasi paket reproducible **PASS**. Gate live dan smoke kandidat menunggu login WordPress staging. **96,50% → 96,50%, delta 0,00. NO-GO Final Release.** [Kriteria dan bukti](../qa/studio-automatic-print-sizing-20261126.md).
+
+## Checkpoint — Mockup standar dan pemisahan produk lengan
 
 26 November 2026 WIB. Source `094a511` terpasang aktif sebagai V1.1.0. Selector ukuran mockup dan surcharge jenis lengan dihapus. Admin memakai satu pasangan mockup per warna dengan mapping variasi WooCommerce terpisah. Browser staging PASS untuk admin variable, geometri desain tetap saat jumlah diubah, quote #53 Rp192.000, quote #76 Rp265.000, keranjang empat baris dari dua Design ID Rp457.000 dan halaman review checkout dengan total yang sama. Gate sebelum/sesudah PASS pada LiteSpeed PHP 8.3.37, private roots PASS, digest terpasang `3658b899…fa4fa` cocok dengan ZIP, GC dan writer OFF. Draft/order historis PASS offline. Submit dan lock mixed WooCommerce live serta acceptance touch/visual masih terbuka. **96,50% → 96,50%, delta 0,00. GO review staging. NO-GO Final Release dan rekomendasi merge.** [Kriteria dan bukti acceptance](../qa/studio-standard-mockup-and-sleeve-products-20261126.md).
 
