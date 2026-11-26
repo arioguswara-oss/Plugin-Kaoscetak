@@ -40,7 +40,7 @@
     "classic_cart_artwork": "PASS 2 images",
     "native_wc_drawer_artwork": "FAIL catalog files rendered; Store API returned private src with catalog srcset still present",
     "remove_test_lines": "PASS",
-    "preview_after_remove": "Browser received HTTP error response, exact status not observed",
+    "preview_after_remove": "HTTP 404 on the same synthetic image URL without any cookie after test rows were removed",
     "drag_resize_pointer": "PASS desktop",
     "layouts_no_horizontal_overflow_or_toolbar_control_clipping_css_px": [
       1363,
@@ -54,7 +54,8 @@
     ],
     "pinch": "NOT TESTED",
     "upload": "NOT VERIFIED browser chooser timed out",
-    "design_collection": "Guest UI visible; persistent account flow reused historical evidence"
+    "design_collection": "Guest UI visible; persistent account flow reused historical evidence",
+    "exact_mobile_constraint": "Cloud Chromium organization policy blocks DevTools device emulation; normal browser zoom was available"
   },
   "admin": {
     "top_level_menu": "PASS",

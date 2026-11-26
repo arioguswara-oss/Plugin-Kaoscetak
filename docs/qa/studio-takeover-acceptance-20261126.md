@@ -13,10 +13,10 @@ Percobaan pertama berhenti sebelum rename dengan `committed_tree_changed`. Jurna
 | Guest Buyer First | **PASS**. Sesi baru tanpa login dan badge kosong sebelum uji. |
 | Home dan perubahan belum disimpan | **PASS**. Home katalog menuju Beranda. Batal pada prompt mempertahankan editor yang berubah. |
 | Editor desktop | **PASS**. Toggle depan-belakang, teks, pointer drag dan resize, panel Desain Saya serta dua ukuran. |
-| Layout | **PASS** untuk 1363, 454 dan 340 CSS px. Dua viewport sempit berasal dari zoom browser. 320/390/430 persis, touch/pinch dan upload end-to-end belum terverifikasi pada kandidat aktif. File chooser Cloud Browser timeout. |
+| Layout | **PASS** untuk 1363, 454 dan 340 CSS px. Dua viewport sempit berasal dari zoom browser. 320/390/430 persis, touch/pinch dan upload end-to-end belum terverifikasi pada kandidat aktif. File chooser Cloud Browser timeout. Kebijakan Chromium memblokir DevTools device emulation. |
 | Studio Mini Cart, Cart, Checkout | **PASS**. Artwork privat termuat di Mini Cart Studio dan Cart. ID-00001, Biru, S × 1 Rp82.000, M × 1 Rp85.000, total Rp167.000 konsisten hingga Checkout. Edit Desain membuka ID yang sama. Lanjut Belanja kembali ke katalog. Item sintetis dibersihkan. |
 | Native WooCommerce drawer | **FAIL live pada 695b441**. Permintaan Store API guest mengembalikan `src` dan `thumbnail` privat dengan `srcset` katalog tersisa. Drawer menampilkan gambar katalog. `0a15c10` menghapus `srcset` dan `sizes` setelah otorisasi preview lulus. Tes bentuk object/array, cross-session dan label legacy PASS. Kandidat patch reproducible, live retest masih diperlukan. |
-| Keamanan preview | Tes cross-session lokal PASS. Preview tidak bisa dibuka lewat browser setelah baris uji dihapus. Status HTTP tepat dan sesi guest kedua belum direkam. |
+| Keamanan preview | Tes cross-session lokal PASS. URL preview artwork sintetis yang sama mengembalikan HTTP 404 tanpa cookie setelah baris uji dihapus. |
 | Admin | **PASS** tampilan top-level menu, katalog, daftar pesanan, dan setup Drive OFF. Uji CRUD/mapping dan order preview menggunakan bukti sebelumnya. |
 | Concurrency Design ID | **NOT TESTED**. Runtime SQL terisolasi belum tersedia. Tes mapping dan idempotensi dipakai sesuai cakupan. |
 
