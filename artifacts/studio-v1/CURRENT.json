@@ -85,6 +85,24 @@
     "decision": "CODE_AND_INSTALL_PASS_TARGETED_CONTRACT_PASS_LIVE_VARIABLE_FIXTURE_PARTIAL",
     "final_release": false
   },
+  "lumise_final_correction": {
+    "source": "964e428442e21cbae05bd336b81f8aef82cac424",
+    "report": "docs/qa/studio-lumise-final-correction-20261125.md",
+    "artifact_directory": "artifacts/studio-v1/lumise-final-correction-20261125",
+    "archive_sha256": "60c9bd4096765c854f70aa46dbe1bbfa606052f01aec0d13d01b1d184b967aed",
+    "manifest_sha256": "fd9708b0d603bc338a1eeb63d673fb493a2e7be6d751f6548935f55167b33d77",
+    "transport_sha256": "95d4fa23648dae18fbca4df2607c8b55640b568669530f0bbf5ea66abf84da25",
+    "predecessor_tree_digest": "6240c2816723cec83803416484fb2149611b61a96c96db109e2914b45a8d96f7",
+    "installed_tree_digest": "f8243694f32da6cbb54ce7186b32f91e0c78cef828d8616b32d27e9fabbfbf73",
+    "version": "1.1.0",
+    "active": true,
+    "runtime_gate": "PASS_PRE_AND_POST_HTTPS_LITESPEED",
+    "rollback_retained": true,
+    "catalog_nonce_p1": "CLOSED_TARGETED_VM_PASS",
+    "mockup_attachment_p1": "CLOSED_FIXTURES_74_75_PERSIST_AND_RESTORE_PASS",
+    "visual_acceptance": "PENDING_CHATGPT_WORK",
+    "final_release": false
+  },
   "final_acceptance_690fb0b": {
     "source": "690fb0be568713328a0c6e2fd5f81b3fb457a655",
     "reviewed_head": "1b5081ca63d769217c8b662f5c3af176406fdb77",
