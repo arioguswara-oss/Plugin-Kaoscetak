@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "candidate_source": "84c667c69bfbaf715b668b6203da7a9ca929c904",
+  "candidate_zip_sha256": "525e8a0fae8b48f63ea78baed47ed8f70e2a26ce68fa35ca29fcb136b6be77dc",
+  "candidate_manifest_sha256": "e2b67f938d4888337b94829de56eda39fd6df7ec07f12846bce65d4979bb8fe5",
+  "installed_digest": "NOT_YET_INSTALLED; predecessor 644739c digest 6b39138c7a8312eb8bf8d720bbafdf1221d44dac2f50bbf01b1fd734f4a18f3e",
+  "mandatory_preinstall_https_gate": "PENDING",
+  "mandatory_postinstall_https_gate": "PENDING",
+  "staging_install": "PENDING",
+  "fresh_guest_buyer_acceptance": "PENDING",
+  "temporary_application_password": "REQUIRES_ONE_CONSOLIDATED_OWNER_APPROVAL; previous credential is revoked",
+  "no_final_release_pass": true,
+  "baseline_percent": 96.5
+}
