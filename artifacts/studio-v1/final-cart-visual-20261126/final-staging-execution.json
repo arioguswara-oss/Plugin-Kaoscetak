@@ -30,7 +30,9 @@
     "multi_size": "NOT_RUN_INSTALL_BLOCKED",
     "cart": "NOT_RUN_INSTALL_BLOCKED",
     "checkout": "NOT_RUN_INSTALL_BLOCKED",
-    "local_native_buyer_drag_assertion": "UNRESOLVED",
+    "local_native_buyer_drag_assertion": "PASS_AFTER_FIXTURE_DEPENDENCY_REPAIR",
+    "local_browser_viewports": ["390x844", "320x844"],
+    "real_device_touch_drag": "NOT_VERIFIED_STAGING_ACCESS_BLOCKED",
     "order_submitted": false,
     "payment": false
   },

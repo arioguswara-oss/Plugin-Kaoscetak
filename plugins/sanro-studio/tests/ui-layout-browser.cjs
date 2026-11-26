@@ -41,7 +41,7 @@ const html=`<!doctype html><meta name="viewport" content="width=device-width,ini
    const text=document.querySelector('.sanro-text'),safe=document.querySelector('.sanro-safe');
    text.hidden=false;
    const sides={front:{textX:20,textY:20},back:{textX:20,textY:20}};
-   const install=new Function('el','safe','sides',`let side='front',editRevision=0;const render=()=>{el.style.left=sides[side].textX+'%';el.style.top=sides[side].textY+'%';safe.closest('#sanro-studio-buyer').dispatchEvent(new Event('sanro:render'))};${source};drag(el,'text');return ()=>({x:sides.front.textX,y:sides.front.textY,left:el.style.left,revision:editRevision})`);
+   const install=new Function('el','safe','sides',`let side='front',editRevision=0;const clampPosition=(name,kind,x,y)=>{sides[name][kind+'X']=Math.max(0,Math.min(100,x));sides[name][kind+'Y']=Math.max(0,Math.min(100,y));};const render=()=>{el.style.left=sides[side].textX+'%';el.style.top=sides[side].textY+'%';safe.closest('#sanro-studio-buyer').dispatchEvent(new Event('sanro:render'))};${source};drag(el,'text');return ()=>({x:sides.front.textX,y:sides.front.textY,left:el.style.left,revision:editRevision})`);
    window.__readDragState=install(text,safe,sides);
    document.querySelector('#sanro-font-size').addEventListener('input',event=>{text.style.fontSize=event.target.value+'px'});
   },buyerSource.slice(dragStart,dragEnd));

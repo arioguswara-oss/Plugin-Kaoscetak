@@ -1,8 +1,11 @@
+Warning: truncated output (original token count: 10194)
+Total output lines: 216
+
 # SANRO Studio — satu baseline resmi development
 
 ## LATEST — Mini Cart candidate verified; final staging execution blocked by staging access
 
-26 November 2026 WIB. PR #52 source `644739c` menambahkan Mini Cart native WooCommerce, aksesibilitas mobile, preview privat, dan fallback Cart. Build/test evidence terdahulu dipakai ulang; candidate ZIP `ee039c9b…7281f17`, manifest `bd38a4a1…d4a6976`, dan transport `00abb9ae…d73ab68` diverifikasi ulang. HEAD dan remote PR branch berada pada checkpoint `021a365`. Public staging homepage HTTPS 200; header melaporkan PHP/8.3.37, tetapi ini bukan mandatory authenticated Web SAPI gate. SSH staging ditolak oleh host (`Permission denied (publickey,password)`); Hostinger connector tidak tersedia. Maka credential tidak dibuat, install/gate/guest acceptance tidak berjalan, dan tidak ada staging mutation. Mini Cart candidate acceptance serta fixture drag assertion tetap unresolved. **96,50% → 96,50%, delta 0,00. NO-GO Final Release/merge.** [Laporan dan eksekusi](../qa/studio-final-cart-visual-20261126.md).
+26 November 2026 WIB. PR #52 source `644739c` menambahkan Mini Cart native WooCommerce, aksesibilitas mobile, preview privat, dan fallback Cart. Build/test evidence terdahulu dipakai ulang; candidate ZIP `ee039c9b…7281f17`, manifest `bd38a4a1…d4a6976`, dan transport `00abb9ae…d73ab68` diverifikasi ulang. HEAD dan remote PR branch berada pada checkpoint `021a365`. Public staging homepage HTTPS 200; header melaporkan PHP/8.3.37, tetapi ini bukan mandatory authenticated Web SAPI gate. SSH staging ditolak oleh host (`Permission denied (publickey,password)`); Hostinger connector tidak tersedia. Maka credential tidak dibuat, install/gate/guest acceptance tidak berjalan, dan tidak ada staging mutation. Local pointer drag fixture passes after supplying its missing `clampPosition()` dependency; real staging touch acceptance and candidate Mini Cart acceptance remain pending. **96,50% → 96,50%, delta 0,00. NO-GO Final Release/merge.** [Laporan dan eksekusi](../qa/studio-final-cart-visual-20261126.md).
 
 ## LATEST — Owner payment scope clarification and Android navigation acceptance
 
@@ -99,11 +102,7 @@ Native OAuth candidate dbf3d15 installed; active authenticated web gate/private 
 
 Remote57f5310 and ledger read before edits; separate checkout preserves prior executor's uncommitted changes. Fresh browser web gate PASS: existing79e0a93 still installed, PHP8.3.37/LiteSpeed/private storage PASS, writers and GC OFF, order56 unpaid240000IDR unchanged. No reinstall or repeat DTF generation.
 
-Native server-side OAuth/provider and Google Picker completed on source: encrypted credentials/refresh, PKCE and single-use user/origin/revision state, narrow drive.file scope, admin POST+nonce+HTTPS, exact existing folder validation, no duplicate root creation. Existing staging folder found through Connector, not claimed as runtime authorization. Cart size/Design ID labels and native per-item order preview summary completed. Targeted crypto/refresh/privacy/checkout summary/pricing adapter checks PASS; real consent/upload and updated web runtime NOT TESTED at this milestone.
-
-**94,00% →94,00%, delta0,00**. Implementation fills existing credited scope; no new acceptance credit. Native Drive consent/upload, normal checkout acceptance and final packaging/install remain open. [Takeover evidence](../qa/studio-final-takeover-20261124.md), [one-session Owner setup](../qa/studio-drive-owner-configuration-20261124.md). Not Final Release; production/merge/payment/GC untouched.
-
-## Takeover milestone — DTF/PDF order56 terverifikasi, konfigurasi dipulihkan
+Native server-side OAuth/provider and Google Picker completed on source: encrypted credentials/refresh, PKCE and single-use user/origin/revision state, narrow drive.file scope, admin POST+nonce+HTTPS, exact existing folder validation, no duplicate root creation. Existing staging fold…194 tokens truncated…ulihkan
 
 Native generator memproses order56 yang sudah disetujui produksi: enam PNG kandidat (depan/belakang item2/3/4) dan tiga PDF panduan/manifest PASS. ZIP acceptance privat diunduh melalui admin ber-nonce; verifikasi independen CRC,12 asset hashes,6 PNG RGBA/transparansi300DPI,3 PDF dua halaman dengan font tertanam dan Design ID PASS. PNG1643×632, hash8e63515c3f601e93529b28d9f49ecf80e46f2d376615f552b10f6ec4fc2023b6; teks sama di semua sisi/ukuran sehingga byte identik sesuai desain, bukan kredit fitur ganda. Package ZIP SHA256146b6a40d942e696cfd9ec641ad216566c28725b1ec3dfe3023c3cc771eeb105. Hasil tetap UNAPPROVED untuk kualitas cetak/font parity, tanpa klaim uji cetak fisik.
 
