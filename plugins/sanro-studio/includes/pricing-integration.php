@@ -429,7 +429,8 @@ function sanro_studio_pricing_group_summary() {
         || !method_exists($cart,'get_product_price') || !method_exists($cart,'get_product_subtotal')) return;
     $groups = sanro_studio_pricing_summary_groups($cart->get_cart());
     if (!$groups) return;
-    echo '<section class="sanro-studio-group-summary" aria-label="Ringkasan desain"><h3>Ringkasan desain</h3>';
+    $on_cart = function_exists('is_cart') && is_cart();
+    echo '<details class="sanro-studio-group-summary" aria-label="Ringkasan desain"' . ($on_cart ? ' open' : '') . '><summary style="cursor:pointer;font-weight:600">Ringkasan desain (' . count($groups) . ')</summary>';
     foreach ($groups as $group) {
         $line = $group['line'];
         $palette = sanro_studio_mockup_palette($line['product_id']);
@@ -458,7 +459,7 @@ function sanro_studio_pricing_group_summary() {
         }
         echo '</div></div>';
     }
-    echo '</section>';
+    echo '</details>';
 }
 
 /** Friendly cart/checkout labels; never display tokens, private refs or browser prices. */
