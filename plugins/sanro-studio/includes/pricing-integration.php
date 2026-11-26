@@ -434,6 +434,15 @@ function sanro_studio_pricing_group_summary() {
         echo '<div style="min-width:0;flex:1"><strong>' . esc_html($line['data']->get_name()) . '</strong>';
         echo '<div style="overflow-wrap:anywhere">Design ID: ' . esc_html($line['sanro_studio_design_id']) . '</div>';
         echo '<div>Warna: ' . esc_html($color) . '</div>';
+        if (function_exists('is_cart') && is_cart() && function_exists('sanro_studio_frontend_enabled')
+            && sanro_studio_frontend_enabled() && sanro_studio_pricing_cart_preview($line)) {
+            $page = (int) get_option('sanro_studio_editor_page_id',0);
+            if ($page && get_post_type($page) === 'page' && get_post_status($page) === 'publish' && get_permalink($page)) {
+                $url = add_query_arg(['sanro_studio_editor'=>'1','product_id'=>$line['product_id'],
+                    'sanro_design'=>$line['sanro_studio_design_id']],get_permalink($page));
+                echo '<p><a class="button sanro-studio-edit-design" href="' . esc_url($url) . '">Edit Desain</a></p>';
+            }
+        }
         foreach ($group['sizes'] as $row) {
             $unit = sanro_studio_pricing_display_line($cart->get_product_price($row['product']),$row['line']);
             $subtotal = sanro_studio_pricing_display_line($cart->get_product_subtotal($row['product'],$row['qty']),$row['line']);
