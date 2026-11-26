@@ -80,6 +80,9 @@ catch (_) {
         const servedCssUrl = new URL(cssAsset.url());
         assert((servedCssUrl.searchParams.get('ver') || '').endsWith('-'+expectedCssHash.slice(0,12)),
           'SANRO buyer.css URL must use its content fingerprint');
+        // The V1.1 mobile workspace hides inactive tools behind its bottom tabs.
+        // Select the text panel before checking controls so this is a user-visible flow.
+        await page.locator('#sanro-studio-buyer [data-tool="text"]').tap();
         await page.locator('#sanro-studio-buyer #sanro-text-input')
           .waitFor({state:'visible',timeout:15000});
 

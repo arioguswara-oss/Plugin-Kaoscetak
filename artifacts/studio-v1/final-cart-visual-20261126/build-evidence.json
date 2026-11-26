@@ -16,8 +16,8 @@
     "archive_sha256": "902be3ac0806651b1aed55105d165c8bf12780f86da17b6638eaa670a80a3ca4",
     "verified_live_tree_digest": "d9792ebcc58ad813a63b6593ab0778976fcfa6bced5ddae0419142d28e0c1314"
   },
-  "install": "PENDING_OWNER_APPROVAL_FOR_TEMPORARY_WORDPRESS_APPLICATION_PASSWORD",
-  "installed_candidate_digest": null,
+  "install": "COMMITTED_BY_PINNED_CLI_INSTALLER_AFTER_MANDATORY_HTTPS_PREINSTALL_GATE",
+  "installed_candidate_digest": "6b39138c7a8312eb8bf8d720bbafdf1221d44dac2f50bbf01b1fd734f4a18f3e",
   "latest_staging_gate": "NOT_RUN",
   "staging_visual_acceptance": "PENDING_INSTALL",
   "previous_guest_acceptance_source": "608579528eeb9d3eddea0dec74b2f8de7e476abe",
@@ -34,5 +34,14 @@
     "payments": 0,
     "mini_cart_present": false
   },
-  "latest_mini_cart_local_browser_test": "PASS_AT_390PX"
+  "latest_mini_cart_local_browser_test": "PASS_AT_390PX",
+  "github_checkpoint": "6a2c7bb1b9fb223eaf2c56b23bcbeb2cdb7da3d8",
+  "preinstall_https_gate": "PASS_LITESPEED_PHP_8.3.37_PRIVATE_ROOTS_PASS_WRITERS_OFF",
+  "postinstall_authenticated_https_gate": "NOT_RUN_AFTER_IMMEDIATE_CREDENTIAL_REVOCATION",
+  "rollback_retained": true,
+  "activation_changed": false,
+  "writer_flags_changed": false,
+  "order_writes": false,
+  "application_password_revoked": true,
+  "transport_restored": "0.3.3_INACTIVE"
 }

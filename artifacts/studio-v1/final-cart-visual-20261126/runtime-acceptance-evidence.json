@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "repository": "arioguswara-oss/Plugin-Kaoscetak",
+  "pull_request": 52,
+  "checkpoint": "6a2c7bb1b9fb223eaf2c56b23bcbeb2cdb7da3d8",
+  "target": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "candidate_source": "644739c88e8bacebd4a42d7272da93eff8fec419",
+  "candidate_zip_sha256": "ee039c9b60b1eab65b257e4545f0da63e30cc44ecf0919d955589002a7281f17",
+  "candidate_manifest_sha256": "bd38a4a14208df0be483ef8a86f2c521ed1ac53b57219c63567c6da0604d6976",
+  "transport_sha256": "00abb9ae37a4c966028e5d03ade56555ff64462422aaa89b18e9115c9d73ab68",
+  "ssh": {
+    "result": "SSH_AUTO_AUTH_OK",
+    "host": "id-dci-web1631.main-hosting.eu",
+    "account": "u606139982"
+  },
+  "preinstall_https_gate": {
+    "result": "PASS",
+    "http": 200,
+    "web_php": "8.3.37",
+    "web_sapi": "litespeed",
+    "private_roots": "PASS",
+    "woocommerce_active": true,
+    "all_writer_flags_off": true,
+    "existing_tree_digest": "d9792ebcc58ad813a63b6593ab0778976fcfa6bced5ddae0419142d28e0c1314"
+  },
+  "credential": {
+    "temporary_application_password_created": true,
+    "used_for": "authenticated HTTPS preinstall gate plus one refused REST install attempt (HTTP 403; X-WP-Nonce required)",
+    "revoked": true,
+    "revocation_verified_by": "WP-CLI application password list; temporary label absent"
+  },
+  "https_install_route": {
+    "result": "REFUSED_HTTP_403",
+    "reason": "transport source requires X-WP-Nonce on REST POST; no nonce was supplied by Application Password Basic auth"
+  },
+  "install": {
+    "result": "files_replaced",
+    "source_commit": "644739c88e8bacebd4a42d7272da93eff8fec419",
+    "rollback_retained": true,
+    "flags_changed": false,
+    "activation_changed": false,
+    "order_writes": false,
+    "method": "pinned existing CLI installer with exact Owner approval bound to the passing HTTPS gate"
+  },
+  "postinstall_readback": {
+    "method": "SSH",
+    "studio_version": "1.1.0",
+    "studio_active": true,
+    "tree_digest": "6b39138c7a8312eb8bf8d720bbafdf1221d44dac2f50bbf01b1fd734f4a18f3e",
+    "matches_committed_transaction": true,
+    "build_marker_source": "644739c88e8bacebd4a42d7272da93eff8fec419",
+    "transport_version": "0.3.3",
+    "transport_active": false,
+    "temporary_transport_files_removed": true,
+    "temporary_credential_absent": true
+  },
+  "authenticated_postinstall_https_gate": "NOT_RUN_AFTER_IMMEDIATE_CREDENTIAL_REVOCATION",
+  "acceptance": {
+    "guest": true,
+    "cart": true,
+    "mini_cart": true,
+    "private_artwork_thumbnails": true,
+    "edit_design": true,
+    "multi_size_S1_M1": true,
+    "checkout_review": true,
+    "mobile_touch_drag": "Chromium touch event emulation",
+    "mobile_viewports": [
+      "320x700",
+      "390x844",
+      "768x1024"
+    ],
+    "order_submitted": false,
+    "payment": false
+  },
+  "cleanup": {
+    "acceptance_created_drafts_removed": 8,
+    "private_preview_files_removed": 14,
+    "acceptance_guest_cart_sessions_removed": 6,
+    "remaining_test_cart": false
+  },
+  "production_accessed": false,
+  "merge": false,
+  "dtf_activation": false,
+  "google_drive_activation": false,
+  "development_baseline": "96.50% unchanged"
+}

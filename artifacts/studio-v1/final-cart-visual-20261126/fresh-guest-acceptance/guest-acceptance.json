@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "source_commit": "644739c88e8bacebd4a42d7272da93eff8fec419",
+  "fresh_guest": true,
+  "viewport": "390x844",
+  "session_cleared": true,
+  "order_submitted": false,
+  "payment": false,
+  "checks": {
+    "guest_editor": "PASS",
+    "mobile_touch_drag": "PASS_CHROMIUM_TOUCH_EMULATION",
+    "draft_and_multi_size": "PASS",
+    "cart_artwork_edit_multi_size": "PASS",
+    "edit_design_restore": "PASS",
+    "mini_cart": "PASS",
+    "checkout": "PASS"
+  },
+  "design": {
+    "text_only_synthetic": true,
+    "multi_size": {
+      "S": 1,
+      "M": 1
+    },
+    "quantity": 2,
+    "total_idr": 167000
+  },
+  "cart": {
+    "edit_design_links": 1,
+    "size_rows": [
+      "S × 1",
+      "M × 1"
+    ],
+    "thumbnail_count": 3,
+    "loaded_artwork_thumbnails": 3
+  },
+  "mini_cart": {
+    "items": 2,
+    "loaded_thumbnails": 2,
+    "view_cart_link": 1
+  },
+  "checkout": {
+    "guest_billing_form": true,
+    "multi_size": true,
+    "loaded_artwork_thumbnails": 2,
+    "place_order_clicked": false
+  },
+  "browser_page_errors": 0,
+  "cart_cleared": true,
+  "staging_mobile_readonly": {
+    "status": "PASS",
+    "viewports": [
+      "320x700",
+      "390x844",
+      "768x1024"
+    ],
+    "touch_controls_min_height_px": 44,
+    "buyer_css_js_fingerprints": "PASS"
+  },
+  "synthetic_qa_cleanup": {
+    "draft_records_removed": 8,
+    "private_preview_files_removed": 14,
+    "guest_cart_sessions_removed": 6,
+    "orders_or_order_bound_drafts": 0
+  },
+  "screenshot_sha256": {
+    "guest-editor-mobile-390.png": "2545a2dcec5002b69c1fb9a8dd465b443b206c085afd3398739479be59190162",
+    "guest-cart-mobile-390.png": "7344cb4dd79fbab79f6092e89940c64c110bf3589578d4cee1a185e7c9fc9580",
+    "guest-mini-cart-mobile-390.png": "4998c7705f45ca8d14b337bbe2f2e19f339c811105336686529da5599989c6a5",
+    "guest-checkout-mobile-390.png": "3a42ae55a2431fc747913ff30ec8684932735fd4337b779741f4dbc055b33485"
+  }
+}
