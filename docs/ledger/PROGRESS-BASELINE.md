@@ -1,5 +1,9 @@
 # SANRO Studio — satu baseline resmi development
 
+## LATEST — Owner payment scope clarification and Android navigation acceptance
+
+26 November 2026 WIB. DECIDED: pembayaran adalah ranah WooCommerce/payment gateway pihak ketiga, bukan scope SANRO Studio V1. Transaksi nyata/sandbox gateway dan audit provider bukan release gate. Integritas harga, session, metadata order dan artefak produksi tetap wajib; reuse evidence order sintetis #56 dan batas checkout yang diizinkan, tanpa order tambahan. Owner melaporkan navigasi Cart → Checkout Android berhasil pada video terbaru; evidence guest staging source `e36af5a` tetap berlaku. Acceptance touch/visual dan mixed checkout masih terbuka. **96,50% → 96,50%, delta 0,00. NO-GO Final Release/merge.** [Release gate revisi Owner](../qa/studio-v1-final-release-gate.md), commit `4a546e5`.
+
 ## LATEST — P0 Cart dan Guest Buyer First PASS di staging
 
 26 November 2026 WIB. V1.1.0 source `e36af5a` aktif dan digest instalasi cocok dengan ZIP. WooCommerce staging memakai Live setelah mode Coming Soon ditemukan menutup Cart untuk guest. Dari sesi Chromium baru tanpa login, buyer menyimpan desain lalu ikon badge 1 membuka Cart. Tombol native melanjutkan ke Checkout. Thumbnail produk sintetis #53 dari Media #74, Design ID, warna Biru, ukuran M × 1 dan Rp65.000 konsisten. Item uji sudah dibersihkan. **96,50% → 96,50%, delta 0,00. GO P0 untuk review staging. NO-GO Final Release** selama acceptance perangkat sentuh dan checkout campuran live masih terbuka. [Bukti guest, screenshot dan paket](../qa/studio-guest-cart-acceptance-20261126.md).
