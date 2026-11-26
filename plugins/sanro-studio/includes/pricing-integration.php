@@ -212,8 +212,8 @@ function sanro_studio_rest_pricing_draft_cart($request) {
         }
         $existing_designs[$line['sanro_studio_design_id']] = true;
     }
-    if (isset($existing_designs[$id])) {
-        if (!sanro_studio_pricing_verify_cart($cart,$contract,false)) return new WP_Error('sanro_cart_not_empty', 'Review your existing cart before adding this design.', ['status'=>409]);
+    $replacing = isset($existing_designs[$id]);
+    if ($replacing && sanro_studio_pricing_verify_cart($cart,$contract,false)) {
         try {
             sanro_studio_pricing_cart_plan($cart);
             $cart->calculate_totals();
@@ -222,7 +222,7 @@ function sanro_studio_rest_pricing_draft_cart($request) {
         return rest_ensure_response(['valid'=>true,'already_in_cart'=>true,'design_id'=>$id,
             'cart_url'=>function_exists('wc_get_cart_url')?wc_get_cart_url():'']);
     }
-    if (count($existing_designs) >= 10) {
+    if (!$replacing && count($existing_designs) >= 10) {
         return new WP_Error('sanro_cart_design_limit', 'Maksimal 10 desain dalam satu keranjang.', ['status'=>409]);
     }
     foreach ($existing_designs as $existing_id => $_) {
@@ -234,7 +234,15 @@ function sanro_studio_rest_pricing_draft_cart($request) {
     $prepared = sanro_studio_prepare_size_cart_lines($contract);
     if (empty($prepared['valid'])) return new WP_Error('sanro_cart_quote', 'Server quote failed.', ['status'=>409]);
     $keys = [];
+    $retained = $existing;
+    if ($replacing) {
+        if (!method_exists($cart,'set_cart_contents')) return new WP_Error('sanro_cart_unavailable','Cart replacement unavailable.',['status'=>503]);
+        foreach ($retained as $key => $line) {
+            if (($line['sanro_studio_design_id'] ?? null) === $id) unset($retained[$key]);
+        }
+    }
     try {
+        if ($replacing) $cart->set_cart_contents($retained);
         foreach ($prepared['lines'] as $candidate) {
             $meta = ['sanro_studio_pricing_version'=>1,
                 'sanro_studio_design_id'=>$id, 'sanro_studio_size'=>$candidate['sanro_studio_size'],
@@ -246,10 +254,19 @@ function sanro_studio_rest_pricing_draft_cart($request) {
         sanro_studio_pricing_cart_plan($cart);
         $cart->calculate_totals();
         $now = $cart->get_cart();
-        if (!is_array($now) || count($now) !== count($existing) + count($keys)) throw new RuntimeException('cart_mismatch');
+        if (!is_array($now) || count($now) !== count($retained) + count($keys)) throw new RuntimeException('cart_mismatch');
         foreach ($keys as $key) if (!isset($now[$key])) throw new RuntimeException('cart_mismatch');
         if (!sanro_studio_pricing_verify_cart($cart,$contract)) throw new RuntimeException('cart_quote_mismatch');
     } catch (Throwable $error) {
+        if ($replacing) {
+            try {
+                $cart->set_cart_contents($existing);
+                $cart->calculate_totals();
+            } catch (Throwable $ignored) {
+                return new WP_Error('sanro_cart_rollback_failed','Cart recovery required before checkout.',['status'=>503]);
+            }
+            return new WP_Error('sanro_cart_failed','Could not replace the verified design.',['status'=>409]);
+        }
         foreach ($keys as $key) {
             try { if ($cart->remove_cart_item($key) !== true) throw new RuntimeException('rollback'); }
             catch (Throwable $ignored) { return new WP_Error('sanro_cart_rollback_failed','Cart recovery required before checkout.',['status'=>503]); }
