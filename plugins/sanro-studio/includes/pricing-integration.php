@@ -270,6 +270,7 @@ function sanro_studio_register_pricing_integration_hooks() {
     add_filter('woocommerce_cart_totals_order_total_html','sanro_studio_pricing_display_total',20);
     add_filter('woocommerce_get_item_data','sanro_studio_pricing_cart_item_data',20,2);
     add_action('woocommerce_before_cart_table','sanro_studio_pricing_group_summary',10);
+    add_action('woocommerce_after_cart_table','sanro_studio_pricing_continue_designing',10);
     add_action('woocommerce_checkout_before_order_review','sanro_studio_pricing_group_summary',10);
     add_filter('woocommerce_checkout_cart_item_quantity', 'sanro_studio_pricing_checkout_thumbnail', 20, 2);
     add_filter('woocommerce_cart_item_thumbnail', 'sanro_studio_pricing_cart_thumbnail', 20, 3);
@@ -358,6 +359,22 @@ function sanro_studio_pricing_checkout_thumbnail($quantity_html, $line) {
     return $quantity_html . '<span style="display:block;margin-top:0.5em">' . wp_kses_post($thumbnail) . '</span>';
 }
 
+
+/** Return to the configured Studio catalog, never a hard-coded production URL. */
+function sanro_studio_pricing_continue_designing() {
+    $cart = sanro_studio_pricing_wc_cart();
+    if (!is_object($cart) || !method_exists($cart,'get_cart')) return;
+    $has_studio = false;
+    foreach ($cart->get_cart() as $line) {
+        if (sanro_studio_pricing_is_line($line)) { $has_studio = true; break; }
+    }
+    if (!$has_studio || !function_exists('sanro_studio_frontend_enabled') || !sanro_studio_frontend_enabled()) return;
+    $page = (int) get_option('sanro_studio_editor_page_id',0);
+    if (!$page || get_post_type($page) !== 'page' || get_post_status($page) !== 'publish') return;
+    $url = get_permalink($page);
+    if (!$url) return;
+    echo '<p class="sanro-studio-continue"><a class="button" href="' . esc_url($url) . '">Lanjut Belanja</a></p>';
+}
 
 /** Read-only grouping: native WooCommerce rows, quantities and totals remain authoritative. */
 function sanro_studio_pricing_summary_groups($lines) {
