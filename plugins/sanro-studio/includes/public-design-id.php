@@ -29,11 +29,16 @@ function sanro_studio_public_design_id($design_uuid) {
     if (!is_string($design_uuid) || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_uuid)) return null;
     $table = sanro_studio_public_design_id_table();
     if (!$table || !preg_match('/^[A-Za-z0-9_]+$/D', $table) || !method_exists($wpdb, 'prepare') || !method_exists($wpdb, 'query')) return null;
-    // The unique UUID key makes concurrent retries idempotent; AUTO_INCREMENT
-    // is atomic and its values are never deleted or reused.
-    $sql = $wpdb->prepare("INSERT IGNORE INTO `{$table}` (design_uuid, created_at) VALUES (%s, %s)", strtolower($design_uuid), current_time('mysql', true));
-    if ($wpdb->query($sql) === false) return null;
-    $sequence = $wpdb->get_var($wpdb->prepare("SELECT public_sequence FROM `{$table}` WHERE design_uuid = %s", strtolower($design_uuid)));
+    $uuid = strtolower($design_uuid);
+    $lookup = $wpdb->prepare("SELECT public_sequence FROM `{$table}` WHERE design_uuid = %s", $uuid);
+    $sequence = $wpdb->get_var($lookup);
+    if ($sequence === null) {
+        // Do not consume AUTO_INCREMENT on ordinary reads of an existing ID.
+        // The unique UUID key still protects simultaneous first allocations.
+        $sql = $wpdb->prepare("INSERT IGNORE INTO `{$table}` (design_uuid, created_at) VALUES (%s, %s)", $uuid, current_time('mysql', true));
+        if ($wpdb->query($sql) === false) return null;
+        $sequence = $wpdb->get_var($lookup);
+    }
     if (!is_numeric($sequence) || (string) $sequence === '' || (float) $sequence < 1) return null;
     return 'ID-' . str_pad((string) $sequence, 5, '0', STR_PAD_LEFT);
 }
