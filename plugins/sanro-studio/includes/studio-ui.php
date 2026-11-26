@@ -36,8 +36,14 @@ function sanro_studio_ui_header($label,$back=''){
     $cart = $wc->cart ?? null;
     $count = is_object($cart) && method_exists($cart,'get_cart_contents_count') ? $cart->get_cart_contents_count() : 0;
     $icon = sanro_studio_ui_icon('cart') . ($count ? '<span>' . (int)$count . '</span>' : '');
+    $mini_cart = '';
+    if ($cart_url !== '' && function_exists('woocommerce_mini_cart')) {
+        ob_start();
+        woocommerce_mini_cart();
+        $mini_cart = ob_get_clean();
+    }
     $cart_control = $cart_url !== ''
-        ? '<a class="sanro-cart-link" aria-label="Keranjang WooCommerce" href="' . $cart_url . '">' . $icon . '</a>'
+        ? '<div class="sanro-mini-cart-wrap"><a class="sanro-cart-link" aria-label="Keranjang WooCommerce" aria-haspopup="true" aria-expanded="false" aria-controls="sanro-mini-cart-panel" data-sanro-mini-cart-toggle href="' . $cart_url . '">' . $icon . '</a><div id="sanro-mini-cart-panel" class="sanro-mini-cart-panel" data-sanro-mini-cart role="region" aria-label="Mini Cart" hidden>' . $mini_cart . '<a class="sanro-mini-cart-view" href="' . $cart_url . '">Lihat keranjang</a></div></div>'
         : '<span class="sanro-cart-link" role="img" aria-label="Keranjang belum tersedia" title="Keranjang belum tersedia">' . $icon . '</span>';
     echo '<header class="sanro-appbar">'
         . ($back ? '<a class="sanro-back" aria-label="Kembali pilih produk" href="' . esc_url($back) . '">' . sanro_studio_ui_icon('arrow') . '</a>' : '')

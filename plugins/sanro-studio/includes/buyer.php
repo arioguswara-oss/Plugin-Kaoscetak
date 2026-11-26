@@ -121,6 +121,7 @@ function sanro_studio_render_buyer_editor() {
     if ($on_selected_page && !isset($_GET['product_id']) && !isset($_GET['sanro_studio_editor'])) {
         $asset = plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/';
         wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], sanro_studio_buyer_style_version());
+        wp_enqueue_script('sanro-studio-ui', $asset . 'studio-ui.js', [], SANRO_STUDIO_VERSION . '-' . substr(hash_file('sha256',dirname(__DIR__).'/assets/studio-ui.js'),0,12), true);
         sanro_studio_register_buyer_viewport_meta();
         if (function_exists('nocache_headers')) nocache_headers();
         get_header();

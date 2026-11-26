@@ -121,6 +121,14 @@ body.sanro-studio-page > :is(header,footer,hr),body.sanro-studio-page #page > :i
 #sanro-studio-buyer .sanro-appbar :is(a,.sanro-cart-link){color:#fff;display:flex;text-decoration:none;position:relative}
 #sanro-studio-buyer .sanro-appbar svg{width:29px;height:29px}
 #sanro-studio-buyer .sanro-cart-link span{position:absolute;right:-8px;top:-8px;border-radius:50%;background:#f9c900;color:#111;font-size:12px;padding:3px 6px;font-weight:800}
+#sanro-studio-buyer .sanro-mini-cart-wrap{position:relative}
+#sanro-studio-buyer .sanro-mini-cart-panel{position:absolute;z-index:1000;right:0;top:calc(100% + 14px);width:min(360px,calc(100vw - 32px));max-height:min(70vh,560px);overflow:auto;padding:16px;background:#fff;color:#171717;border:1px solid #ddd;border-radius:14px;box-shadow:0 16px 40px #0003;font:14px/1.45 Inter,Arial,sans-serif}
+#sanro-studio-buyer .sanro-mini-cart-panel[hidden]{display:none!important}
+#sanro-studio-buyer .sanro-mini-cart-panel .woocommerce-mini-cart{list-style:none;padding:0;margin:0 0 12px}
+#sanro-studio-buyer .sanro-mini-cart-panel .woocommerce-mini-cart-item{display:grid;grid-template-columns:58px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid #eee}
+#sanro-studio-buyer .sanro-mini-cart-panel .woocommerce-mini-cart-item img{width:58px;height:58px;object-fit:contain}
+#sanro-studio-buyer .sanro-mini-cart-panel :is(.quantity,.woocommerce-mini-cart__total,.woocommerce-mini-cart__buttons){display:block;margin:10px 0}
+#sanro-studio-buyer .sanro-mini-cart-view{display:block;padding:10px 14px;border-radius:9px;background:#f9c900;color:#171717;text-align:center;font-weight:750;text-decoration:none}
 #sanro-studio-buyer .sanro-catalog-heading{padding:26px 28px 12px}
 #sanro-studio-buyer .sanro-catalog-heading h2{font-size:34px;letter-spacing:-1.2px;margin:0 0 16px;font-weight:800}
 #sanro-studio-buyer .sanro-workflow{padding:16px 24px;margin:0;gap:8px;background:#fff}
