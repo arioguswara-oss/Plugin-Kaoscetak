@@ -270,6 +270,9 @@ function sanro_studio_register_pricing_integration_hooks() {
     add_filter('woocommerce_cart_totals_order_total_html','sanro_studio_pricing_display_total',20);
     add_filter('woocommerce_get_item_data','sanro_studio_pricing_cart_item_data',20,2);
     add_filter('woocommerce_checkout_cart_item_quantity', 'sanro_studio_pricing_checkout_thumbnail', 20, 2);
+    add_filter('woocommerce_cart_item_thumbnail', 'sanro_studio_pricing_cart_thumbnail', 20, 3);
+    add_action('wp_ajax_sanro_studio_cart_preview', 'sanro_studio_pricing_deliver_cart_preview');
+    add_action('wp_ajax_nopriv_sanro_studio_cart_preview', 'sanro_studio_pricing_deliver_cart_preview');
     add_filter('sanro_studio_pricing_authorized_design', 'sanro_studio_pricing_authorized_design', 10, 4);
     add_action('woocommerce_review_order_before_submit', 'sanro_studio_pricing_checkout_field', 5);
     add_action('wp_enqueue_scripts', 'sanro_studio_pricing_enqueue_checkout_auth', 30);
@@ -281,15 +284,73 @@ function sanro_studio_register_pricing_integration_hooks() {
     add_action('woocommerce_pre_payment_complete','sanro_studio_pricing_before_payment_complete',5,1);
 }
 
-/** Show the same native product or variation thumbnail as the classic cart. */
-function sanro_studio_pricing_checkout_thumbnail($quantity_html, $line) {
-    if (($line['sanro_studio_pricing_version'] ?? null) !== 1 || !(($line['data'] ?? null) instanceof WC_Product)) {
-        return $quantity_html;
+/** Only the current Woo session may retrieve a current cart design preview. */
+function sanro_studio_pricing_cart_preview($line) {
+    if (!is_array($line) || ($line['sanro_studio_pricing_version'] ?? null) !== 1) return null;
+    $id = $line['sanro_studio_design_id'] ?? null;
+    if (!is_string($id) || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $id)) return null;
+    $session = sanro_studio_pricing_session_hash();
+    $record = get_option('sanro_studio_draft_' . $id, false);
+    if (!is_string($session) || !is_array($record)
+        || ($record['status'] ?? null) !== 'draft'
+        || ($record['product_id'] ?? null) !== ($line['product_id'] ?? null)
+        || !is_int($record['expires_at'] ?? null) || $record['expires_at'] <= time()
+        || !is_string($record['wc_session_hash'] ?? null)
+        || !hash_equals($record['wc_session_hash'], $session)
+        || !is_array($record['design'] ?? null)
+        || !is_string($record['preview_design_hash'] ?? null)
+        || !hash_equals($record['preview_design_hash'], hash('sha256', maybe_serialize($record['design'])))) return null;
+    foreach (['front', 'back'] as $side) {
+        if (empty($record['design'][$side]['objects'])) continue;
+        $ref = $record['preview_refs'][$side] ?? null;
+        if (!is_string($ref)) continue;
+        $result = sanro_studio_read_verified_preview_file($id, $side, $ref);
+        if (!empty($result['valid'])) return $result;
     }
-    $thumbnail = $line['data']->get_image('woocommerce_thumbnail', [
-        'width' => 48, 'height' => 48, 'style' => 'width:48px;height:auto;vertical-align:middle;margin-inline:0.5em',
+    return null;
+}
+
+/** Use a same-origin, session-authorized, non-cacheable image response. */
+function sanro_studio_pricing_deliver_cart_preview() {
+    $id = $_GET['design'] ?? null;
+    $cart = sanro_studio_pricing_wc_cart();
+    nocache_headers();
+    header('Cache-Control: private, no-store, max-age=0', true);
+    header('X-Content-Type-Options: nosniff');
+    if (is_string($id) && is_object($cart) && method_exists($cart, 'get_cart')) {
+        foreach ($cart->get_cart() as $line) {
+            if (($line['sanro_studio_design_id'] ?? null) !== $id) continue;
+            $preview = sanro_studio_pricing_cart_preview($line);
+            if ($preview && in_array($preview['mime'], ['image/png','image/jpeg','image/webp'], true)) {
+                header('Content-Type: ' . $preview['mime']);
+                echo $preview['bytes'];
+                exit;
+            }
+        }
+    }
+    status_header(404);
+    exit;
+}
+
+function sanro_studio_pricing_preview_markup($line, $width) {
+    $preview = sanro_studio_pricing_cart_preview($line);
+    if (!$preview) return '';
+    $url = add_query_arg(['action'=>'sanro_studio_cart_preview','design'=>$line['sanro_studio_design_id']], admin_url('admin-ajax.php'));
+    return '<img class="sanro-studio-cart-preview" src="' . esc_url($url) . '" alt="' . esc_attr('Preview desain') . '" width="' . (int)$width . '" height="' . (int)$width . '" style="width:' . (int)$width . 'px;max-width:100%;height:auto;object-fit:contain;vertical-align:middle" />';
+}
+
+function sanro_studio_pricing_cart_thumbnail($thumbnail, $line, $key = '') {
+    $preview = sanro_studio_pricing_preview_markup($line, 96);
+    return $preview !== '' ? $preview : $thumbnail;
+}
+
+function sanro_studio_pricing_checkout_thumbnail($quantity_html, $line) {
+    if (($line['sanro_studio_pricing_version'] ?? null) !== 1 || !(($line['data'] ?? null) instanceof WC_Product)) return $quantity_html;
+    $thumbnail = sanro_studio_pricing_preview_markup($line, 112);
+    if ($thumbnail === '') $thumbnail = $line['data']->get_image('woocommerce_thumbnail', [
+        'width'=>112, 'height'=>112, 'style'=>'width:112px;max-width:100%;height:auto;vertical-align:middle',
     ]);
-    return $quantity_html . wp_kses_post($thumbnail);
+    return $quantity_html . '<span style="display:block;margin-top:0.5em">' . wp_kses_post($thumbnail) . '</span>';
 }
 
 /** Friendly cart/checkout labels; never display tokens, private refs or browser prices. */
