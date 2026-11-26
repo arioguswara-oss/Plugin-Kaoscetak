@@ -1,6 +1,10 @@
 # SANRO Studio — satu baseline resmi development
 
-## LATEST — Takeover acceptance kandidat 695b441
+## LATEST — 695b441 terpasang, koreksi artwork drawer menunggu staging
+
+26–27 November 2026 WIB. Gate HTTPS admin sebelum/sesudah **PASS**, kandidat `695b441` aktif dengan digest `26aeb020…035e`. Installer ditangani pada `e25671f` agar jurnal lama hanya bisa diarsipkan ketika predecessor lebih baru terbukti dan backup lama utuh. Guest desktop PASS untuk Home, proteksi perubahan, sisi depan/belakang, drag/resize, Design ID pendek, Studio Mini Cart, dua ukuran dan checkout Rp167.000. Toolbar dan overflow lulus pada 340/454 CSS px dari zoom Chromium. Drawer native WooCommerce masih memilih gambar katalog dari `srcset`. Patch `0a15c10` dan build reproducible PASS lokal, menunggu install serta uji live. Upload, pinch, viewport persis 320/390/430 dan concurrency SQL belum terbukti pada kandidat aktif. **96,50% → 96,50%, Δ 0,00. NO-GO Final Release.** [Laporan dan screenshot](../qa/studio-takeover-acceptance-20261126.md).
+
+## Checkpoint awal — Takeover kandidat 695b441
 
 26 November 2026 WIB. SHA ZIP/manifest dan 88 file runtime kandidat `695b441` cocok dengan HEAD `bbb7c73`. Fingerprint aset live mengonfirmasi predecessor `644739c`, dengan digest terdokumentasi `6b39138c…f4a18f3e`. Tes Home lokal 6 PASS. Cloud Browser guest baseline desktop merekam katalog/editor. Gate admin, instalasi, post-gate dan acceptance kandidat baru menunggu sesi WordPress staging yang sah. Concurrency SQL terisolasi belum diuji. **96,50% → 96,50%, delta 0,00 poin. NO-GO Final Release.** [Bukti takeover](../qa/studio-takeover-acceptance-20261126.md).
 

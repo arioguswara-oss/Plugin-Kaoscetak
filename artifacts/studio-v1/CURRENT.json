@@ -10,12 +10,12 @@
   "plugin_digest": "cab430b9a596823c01b675882c46fc0d966d5705c02e97d4c2eadb9daf28525f",
   "deployment_authorized": false,
   "staging_installation_authorized": true,
-  "runtime_e2e": "Guest buyer in a fresh Chromium session verified Studio to WooCommerce Cart to Checkout, matching line and thumbnail. No submit or order.",
-  "staging_installation_state": "V1.1.0_E36AF5A_GUEST_CART_P0_INSTALLED_ACTIVE",
+  "runtime_e2e": "Fresh guest Home, Design ID, Studio Mini Cart, two sizes, Cart and Checkout passed. Native WooCommerce drawer artwork failed.",
+  "staging_installation_state": "V1.1.0_695B441_INSTALLED_AUTHENTICATED_HTTPS_GATE_PASS",
   "staging_installed_version": "1.1.0",
-  "currently_installed_source": "e36af5addcd16eacab9c8463c6a50bab73b94d89",
-  "installed_tree_digest": "0941179129bba0c8fbb709a7e6863984c54d4cc4b5545c1dcc81666555eb2048",
-  "execution_evidence": "artifacts/studio-v1/guest-cart-p0-20261126/runtime-evidence.json",
+  "currently_installed_source": "695b4410f394dbb862a2ef44c2d7753b852b7711",
+  "installed_tree_digest": "26aeb020ff96684e1166fe1bd7c09d5cac4abd25c25660878652b54b9a31035e",
+  "execution_evidence": "artifacts/studio-v1/takeover-695b441-20261126/runtime-acceptance.json",
   "owner_scope_revision": "f415ec55dd5b360da89b76804512624a3611288d",
   "drive_configuration": "NOT CONFIGURED",
   "final_release": true,
@@ -189,6 +189,20 @@
     "report": "docs/qa/studio-guest-cart-acceptance-20261126.md",
     "evidence": "artifacts/studio-v1/guest-cart-p0-20261126/runtime-evidence.json",
     "p0_supersedes": "782271659669581abfe5588294428c564af7c049",
+    "final_release": false
+  },
+  "home_navigation_takeover": {
+    "candidate_source": "695b4410f394dbb862a2ef44c2d7753b852b7711",
+    "installed_tree_digest": "26aeb020ff96684e1166fe1bd7c09d5cac4abd25c25660878652b54b9a31035e",
+    "authenticated_https_gates": "PASS_PRE_AND_POST",
+    "report": "docs/qa/studio-takeover-acceptance-20261126.md",
+    "evidence": "artifacts/studio-v1/takeover-695b441-20261126/runtime-acceptance.json",
+    "final_release": false
+  },
+  "native_drawer_artwork_correction": {
+    "candidate_source": "0a15c107032bbdef1adc7d966269d7af1cc09541",
+    "artifact_directory": "artifacts/studio-v1/store-api-drawer-fix-20261127",
+    "state": "BUILT_TARGETED_REGRESSION_PASS_STAGING_NOT_INSTALLED",
     "final_release": false
   }
 }

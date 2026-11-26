@@ -1,0 +1,80 @@
+{
+  "candidate_installed": "695b4410f394dbb862a2ef44c2d7753b852b7711",
+  "installed_tree_digest": "26aeb020ff96684e1166fe1bd7c09d5cac4abd25c25660878652b54b9a31035e",
+  "php": "8.3.37 LiteSpeed",
+  "authenticated_https": {
+    "pre": "PASS",
+    "post": "PASS fresh GET",
+    "previous_tree": "6b39138c7a8312eb8bf8d720bbafdf1221d44dac2f50bbf01b1fd734f4a18f3e",
+    "rollback_retained": true,
+    "private_roots": "PASS",
+    "writer_flags_and_gc": "OFF",
+    "staging_transport_cleanup": "Both temporary transport plugins removed"
+  },
+  "installer_correction": {
+    "initial_error": "committed_tree_changed",
+    "source": "e25671f3a94aba39ed45c4bc56f42b799328c65d",
+    "transaction_recovery_scenarios_passed": 9
+  },
+  "guest_candidate": {
+    "fresh_signed_out": true,
+    "starting_cart_empty": true,
+    "catalog_home": "PASS",
+    "dirty_home_cancel_stays_in_editor": "PASS",
+    "design_id": "ID-00001",
+    "front_back_toggle": "PASS",
+    "sizes": {
+      "S": 1,
+      "M": 1
+    },
+    "color": "Biru",
+    "line_prices_idr": [
+      82000,
+      85000
+    ],
+    "cart_checkout_total_idr": 167000,
+    "checkout_guest_billing_form": "PASS",
+    "edit_reopened_same_design": "PASS",
+    "continue_shopping": "PASS",
+    "studio_mini_cart_artwork": "PASS 2 images",
+    "classic_cart_artwork": "PASS 2 images",
+    "native_wc_drawer_artwork": "FAIL catalog files rendered; Store API returned private src with catalog srcset still present",
+    "remove_test_lines": "PASS",
+    "preview_after_remove": "Browser received HTTP error response, exact status not observed",
+    "drag_resize_pointer": "PASS desktop",
+    "layouts_no_horizontal_overflow_or_toolbar_control_clipping_css_px": [
+      1363,
+      340,
+      454
+    ],
+    "exact_mobile_css_px_not_tested": [
+      320,
+      390,
+      430
+    ],
+    "pinch": "NOT TESTED",
+    "upload": "NOT VERIFIED browser chooser timed out",
+    "design_collection": "Guest UI visible; persistent account flow reused historical evidence"
+  },
+  "admin": {
+    "top_level_menu": "PASS",
+    "catalog_ui": "PASS read only",
+    "order_list": "PASS read only",
+    "drive_setup": "PASS interface only, runtime OFF",
+    "exact_mockup_mapping_save_and_order_preview": "REUSED historical authorized tests"
+  },
+  "drawer_source_fix": {
+    "source": "0a15c107032bbdef1adc7d966269d7af1cc09541",
+    "local_regressions": "PASS responsive image fields cleared while preserving authorization, non-Studio cases and input objects",
+    "candidate_build": "PASS reproducible",
+    "staging": "NOT INSTALLED"
+  },
+  "isolated_design_id_concurrency": "NOT TESTED isolated SQL runtime unavailable",
+  "order_payment_created": false,
+  "baseline_percent": {
+    "before": 96.5,
+    "after": 96.5,
+    "delta": 0
+  },
+  "final_release": "NO_GO"
+}

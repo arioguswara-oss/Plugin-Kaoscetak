@@ -2,6 +2,30 @@
 
 26 November 2026 WIB · PR #52 · HEAD yang diperiksa `bbb7c73` · baseline 96,50%
 
+## Hasil akhir takeover
+
+Kandidat `695b441` **terpasang dan aktif**. Gate HTTPS pra-instalasi dan pascainstalasi PASS melalui sesi resmi WordPress Administrator. Digest tree `26aeb020ff96684e1166fe1bd7c09d5cac4abd25c25660878652b54b9a31035e` cocok dengan ZIP. Rollback tetap tersedia, private roots PASS, writer dan GC OFF. Tidak ada kredensial baru. Kedua transport staging sementara sudah dihapus.
+
+Percobaan pertama berhenti sebelum rename dengan `committed_tree_changed`. Jurnal web lama mencatat tree yang disupersesi oleh instalasi CLI sebelumnya. Koreksi installer `e25671f` tetap membutuhkan digest predecessor yang dipatok, jurnal independen atas predecessor aktif, backup lama yang valid, nonce, capability dan filesystem lock. Sembilan skenario filesystem dan recovery PASS, termasuk penolakan ketika bukti eksternal atau backup yang valid hilang. Kandidat aplikasi asli dipakai ulang.
+
+| Acceptance | Hasil |
+| --- | --- |
+| Guest Buyer First | **PASS**. Sesi baru tanpa login dan badge kosong sebelum uji. |
+| Home dan perubahan belum disimpan | **PASS**. Home katalog menuju Beranda. Batal pada prompt mempertahankan editor yang berubah. |
+| Editor desktop | **PASS**. Toggle depan-belakang, teks, pointer drag dan resize, panel Desain Saya serta dua ukuran. |
+| Layout | **PASS** untuk 1363, 454 dan 340 CSS px. Dua viewport sempit berasal dari zoom browser. 320/390/430 persis, touch/pinch dan upload end-to-end belum terverifikasi pada kandidat aktif. File chooser Cloud Browser timeout. |
+| Studio Mini Cart, Cart, Checkout | **PASS**. Artwork privat termuat di Mini Cart Studio dan Cart. ID-00001, Biru, S × 1 Rp82.000, M × 1 Rp85.000, total Rp167.000 konsisten hingga Checkout. Edit Desain membuka ID yang sama. Lanjut Belanja kembali ke katalog. Item sintetis dibersihkan. |
+| Native WooCommerce drawer | **FAIL live pada 695b441**. Permintaan Store API guest mengembalikan `src` dan `thumbnail` privat dengan `srcset` katalog tersisa. Drawer menampilkan gambar katalog. `0a15c10` menghapus `srcset` dan `sizes` setelah otorisasi preview lulus. Tes bentuk object/array, cross-session dan label legacy PASS. Kandidat patch reproducible, live retest masih diperlukan. |
+| Keamanan preview | Tes cross-session lokal PASS. Preview tidak bisa dibuka lewat browser setelah baris uji dihapus. Status HTTP tepat dan sesi guest kedua belum direkam. |
+| Admin | **PASS** tampilan top-level menu, katalog, daftar pesanan, dan setup Drive OFF. Uji CRUD/mapping dan order preview menggunakan bukti sebelumnya. |
+| Concurrency Design ID | **NOT TESTED**. Runtime SQL terisolasi belum tersedia. Tes mapping dan idempotensi dipakai sesuai cakupan. |
+
+Perbandingan fungsional memakai alur produk, editor serta koleksi dari Lumise Classic dan acuan visual Owner. **Baseline 96,50% → 96,50% (delta 0,00 poin). GO untuk review staging kandidat terpasang. NO-GO Final Release selama artwork drawer live dan acceptance yang belum selesai.**
+
+[Runtime JSON dan screenshot kandidat](../../artifacts/studio-v1/takeover-695b441-20261126) · [Kandidat koreksi drawer, checksum dan binding](../../artifacts/studio-v1/store-api-drawer-fix-20261127).
+
+## Preflight awal sebelum autentikasi
+
 ## Kandidat dan runtime
 
 Checksum ZIP dan manifest kandidat `695b441` cocok. Pemeriksaan ulang CRC, inventaris, hash setiap anggota, marker dan 88 file runtime mengonfirmasi paket yang diterbitkan identik byte-for-byte dengan file plugin pada HEAD `bbb7c73`. Marker paket tetap `695b441`. Kandidat tidak dibangun ulang. [Paket](../../artifacts/studio-v1/home-navigation-20261126).
