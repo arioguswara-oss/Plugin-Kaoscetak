@@ -8,7 +8,7 @@
  for(const [key,title] of [['product','Warna, ukuran & jumlah'],['image','Gambar'],['text','Teks'],['advanced','Pilihan lanjutan']]){const el=document.createElement('section');el.className='sanro-tool-panel';el.dataset.toolPanel=key;const h=document.createElement('h2');h.textContent=title;el.append(h);controls.append(el);panels[key]=el;}
  const moving=new Set();
  function move(selector,to){const el=q(selector);if(!el)return;const node=el.closest('label')||el;moving.add(node);to.append(node);}
- ['#sanro-shirt-color','#sanro-mockup-size','.sanro-size-qty','#sanro-qty-total','#sanro-sleeve','#sanro-category'].forEach(s=>move(s,panels.product));
+ ['#sanro-shirt-color','.sanro-size-qty','#sanro-qty-total','#sanro-category'].forEach(s=>move(s,panels.product));
  ['#sanro-image','#sanro-image-size','#sanro-center-image','#sanro-remove-image','#sanro-upload-master','#sanro-background-tolerance','#sanro-remove-background','#sanro-restore-background','#sanro-background-status','#sanro-master-upload-status'].forEach(s=>move(s,panels.image));
  ['#sanro-text-input','#sanro-font-size','#sanro-text-color','#sanro-center-text','#sanro-remove-text','#sanro-copy-text','#sanro-copy-status'].forEach(s=>move(s,panels.text));
  ['#sanro-reopen-draft','#sanro-reopen-status','#sanro-upload-previews','#sanro-preview-upload-status','#sanro-server-quote','#sanro-server-quote-status','#sanro-reset-side','#sanro-validation'].forEach(s=>move(s,panels.advanced));

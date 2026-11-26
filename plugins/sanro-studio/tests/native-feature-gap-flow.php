@@ -15,7 +15,7 @@ function wp_mail($email,$subject,$body){$GLOBALS['mail']=compact('email','subjec
 function get_post_meta($id,$key,$single=true){return match($key){'_sanro_studio_mockup_matrix'=>$GLOBALS['matrix'],'_sanro_studio_safe_areas'=>['front'=>['width'=>32,'height'=>48],'back'=>['width'=>32,'height'=>48]],default=>''};}
 function sanro_studio_product_pricing_config($id){return ['valid'=>true,'profile'=>'cotton_combed_24s','sizes'=>['S','L']];}
 function wc_get_product($id){return $id===7?new class{function get_status(){return 'publish';}function is_purchasable(){return true;}function is_type($v){return $v==='simple';}}:false;}
-function wp_attachment_is_image($id){return in_array($id,[11,12,13,14],true);}function get_post_status($id){return 'inherit';}function wp_get_attachment_image_url($id,$size){return 'https://example.test/mockup-'.$id.'.jpg';}function esc_url_raw($v){return $v;}
+function wp_attachment_is_image($id){return in_array($id,[11,12,13,14],true);}function get_post($id){return wp_attachment_is_image($id)?(object)['post_type'=>'attachment','post_status'=>'inherit','post_parent'=>0]:null;}function get_post_status($id){return 'publish';}function wp_get_attachment_image_url($id,$size){return 'https://example.test/mockup-'.$id.'.jpg';}function esc_url_raw($v){return $v;}
 function wc_get_orders($args){return $GLOBALS['order_query_fail']??false?false:$GLOBALS['orders'];}function wc_get_order_statuses(){return ['wc-pending'=>'pending','wc-processing'=>'processing'];}
 class WP_Error {function __construct(public $code,public $message,public $data){}}
 class NativeResponse {public $headers=[];function __construct(public $data){}function header($k,$v){$this->headers[$k]=$v;}}
@@ -107,12 +107,20 @@ $rows=[['color'=>'#abcdef','label'=>'Custom','size'=>'S','front'=>11,'back'=>12]
 gap_check(sanro_studio_mockup_matrix_validate($rows,['S','L'])===$rows,'configured sizes and both sides accepted');
 gap_check(sanro_studio_mockup_matrix_validate([$rows[0],$rows[0]],['S','L'])===false,'ambiguous duplicate variant rejected');
 $bad=$rows;$bad[0]['front']='https://evil.test/master.png';gap_check(sanro_studio_mockup_matrix_validate($bad,['S','L'])===false,'buyer/external URL cannot become mockup mapping');
-$GLOBALS['matrix']=$rows;$config=sanro_studio_public_editor_config(7);gap_check($config['valid']&&$config['mockup_matrix']['#abcdef']['L']['back']==='https://example.test/mockup-14.jpg'&&array_keys($config['palette'])===['#abcdef'],'backend mapping reaches public config without private paths');
+$GLOBALS['matrix']=$rows;$config=sanro_studio_public_editor_config(7);
+gap_check($config['valid']&&$config['color_mockups']['#abcdef']===['front'=>'https://example.test/mockup-11.jpg','back'=>'https://example.test/mockup-12.jpg']&&array_keys($config['palette'])===['#abcdef'],'first saved pair is canonical across sizes');
+$GLOBALS['matrix'][]=['color'=>'#abcdef','label'=>'Custom','size'=>'*','front'=>13,'back'=>14];
+gap_check(sanro_studio_color_mockups_public(7)['#abcdef']['back']==='https://example.test/mockup-14.jpg','legacy all-size pair takes precedence');
 $design=$copy['design'];gap_check(!sanro_studio_validate_product_design(7,$design)['valid'],'server rejects palette not configured for mapped product');$design['shirt_color']='#abcdef';gap_check(sanro_studio_validate_product_design(7,$design)['valid'],'configured custom palette accepted by server');
-$fork_key='sanro_studio_draft_'.$fork['design_id'];$GLOBALS['options'][$fork_key]['design']=$design;$variant_hash=hash('sha256',serialize($design));
-gap_check(sanro_studio_mockup_variant_store($fork['design_id'],$fork['owner_token'],'front','L',$transparent,$variant_hash)['valid'],'size-specific preview saved with owner/revision');
-$variant=get_option($fork_key);gap_check(sanro_studio_record_preview_refs($variant,'L')['front']!==($variant['preview_refs']['front']??null),'variant can reference independent rendered image');
-gap_check(sanro_studio_record_preview_refs($variant,'S')===[],'missing mapped size cannot silently substitute another preview');
-gap_check(!sanro_studio_mockup_variant_store($fork['design_id'],$token,'back','L',$bytes,$variant_hash)['valid'],'foreign token cannot bind variant');
+$fork_key='sanro_studio_draft_'.$fork['design_id'];$record=$GLOBALS['options'][$fork_key];$record['design']=$design;
+$record['preview_variant_required']=true;
+$record['preview_refs_by_size']=['L'=>['front'=>'prior-variant']];
+$hash=hash('sha256',serialize($design));
+$GLOBALS['options'][$fork_key]=$record;
+gap_check(sanro_studio_record_preview_refs($record,'L')['front']==='prior-variant'&&sanro_studio_record_preview_refs($record,'S')===[],'historical references stay size-bound');
+gap_check(!sanro_studio_store_owned_draft_preview($fork['design_id'],$token,'front',$transparent,$hash)['valid'],'wrong owner cannot migrate preview');
+gap_check(sanro_studio_store_owned_draft_preview($fork['design_id'],$fork['owner_token'],'front',$transparent,$hash)['valid'],'canonical preview saved with owner and revision');
+$migrated=get_option($fork_key);
+gap_check(!isset($migrated['preview_variant_required'],$migrated['preview_refs_by_size'])&&sanro_studio_record_preview_refs($migrated,'S')===sanro_studio_record_preview_refs($migrated,'L'),'active draft preview shared across sizes');
 gap_check(!defined('SANRO_STUDIO_ENABLE_DTF_GENERATOR')&&!defined('SANRO_STUDIO_ENABLE_AUTO_DRIVE'),'native features never activate production writers');
 echo "PASS: $checks native collection/storage/background/mockup functional and security checks (WP/Woo/SMTP simulated; actual PHP/GD/filesystem)\n";

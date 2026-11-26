@@ -21,6 +21,9 @@ function sanro_studio_quote_product_design($product_id, $design, $size, $long_sl
     if (get_post_meta($product_id, '_sanro_studio_pricing_profile', true) !== 'cotton_combed_24s') {
         return ['valid' => false, 'error' => 'pricing_profile_unconfigured'];
     }
+    if ($long_sleeve === true && get_post_meta($product_id, '_sanro_studio_product_sleeve', true) !== 'long') {
+        return ['valid'=>false,'error'=>'select_long_sleeve_product'];
+    }
     $validated = sanro_studio_validate_product_design($product_id, $design);
     if (empty($validated['valid'])) return $validated;
     $front = null;
@@ -31,7 +34,9 @@ function sanro_studio_quote_product_design($product_id, $design, $size, $long_sl
             else $back = $design[$side]['category'];
         }
     }
-    $quote = sanro_studio_24s_unit_price($size, $front, $back, $long_sleeve);
+    $pricing = function_exists('sanro_studio_product_pricing_config') ? sanro_studio_product_pricing_config($product_id) : null;
+    $quote = $pricing === null ? sanro_studio_24s_unit_price($size, $front, $back, $long_sleeve)
+        : sanro_studio_profile_unit_price($pricing,$size,$front,$back,$long_sleeve);
     if (empty($quote['valid'])) return $quote;
     return [
         'valid' => true,
@@ -98,6 +103,9 @@ function sanro_studio_quote_size_quantities($product_id, $design, $quantities, $
     }
     if (get_post_meta($product_id, '_sanro_studio_pricing_profile', true) !== 'cotton_combed_24s') {
         return ['valid' => false, 'error' => 'pricing_profile_unconfigured'];
+    }
+    if ($long_sleeve === true && get_post_meta($product_id, '_sanro_studio_product_sleeve', true) !== 'long') {
+        return ['valid'=>false,'error'=>'select_long_sleeve_product'];
     }
     $validated = sanro_studio_validate_product_design($product_id, $design);
     if (empty($validated['valid'])) return $validated;

@@ -19,15 +19,34 @@ function sanro_studio_pricing_recoverable_order($record) {
     return $order;
 }
 
-/** Complete the same order's preview binding after a previous partial save. */
-function sanro_studio_pricing_finish_order_binding($order,$verified,$record) {
+function sanro_studio_keep_original_checkout_order($order) {
     // Woo normally sets this after create_order returns. Preserve retry authority
     // even when a private-preview CRUD save fails inside order_created first.
     $wc=function_exists('WC')?WC():null;
     if(is_object($wc)&&isset($wc->session)&&method_exists($wc->session,'set')
         &&method_exists($order,'is_paid')&&!$order->is_paid()
         &&in_array($order->get_status(),['pending','failed'],true))$wc->session->set('order_awaiting_payment',$order->get_id());
+}
 
+function sanro_studio_pricing_finish_multi_order_binding($order,$designs,$records) {
+    sanro_studio_keep_original_checkout_order($order);
+    $quotes = array_map('sanro_studio_frozen_quote_hash',$records);
+    ksort($quotes);
+    $saved = $order->get_meta('_sanro_studio_checkout_design_quotes',true);
+    if ($saved !== '' && $saved !== $quotes) throw new RuntimeException('SANRO Studio: saved order quote conflict.');
+    if ($saved === '') {
+        $order->update_meta_data('_sanro_studio_checkout_design_quotes',$quotes);
+        if ($order->save() === false) throw new RuntimeException('SANRO Studio: saved order identity needs recovery.');
+    }
+    foreach ($designs as $id => $verified) {
+        sanro_studio_pricing_bind_order_previews($order,$verified,$records[$id]);
+    }
+    unset($GLOBALS['sanro_studio_pricing_checkout']);
+}
+
+/** Complete the same order's preview binding after a previous partial save. */
+function sanro_studio_pricing_finish_order_binding($order,$verified,$record) {
+    sanro_studio_keep_original_checkout_order($order);
     if(method_exists($order,'update_meta_data')&&method_exists($order,'save')){
         $marker=$order->get_meta('_sanro_studio_checkout_design_id',true);$quote_hash=sanro_studio_frozen_quote_hash($record);
         if($marker!==''&&$marker!==$verified['id'])throw new RuntimeException('SANRO Studio: saved order identity conflict.');
@@ -35,11 +54,15 @@ function sanro_studio_pricing_finish_order_binding($order,$verified,$record) {
         if($old_hash!==''&&$old_hash!==$quote_hash)throw new RuntimeException('SANRO Studio: saved order quote conflict.');
         if($marker===''||$old_hash===''){$order->update_meta_data('_sanro_studio_checkout_design_id',$verified['id']);$order->update_meta_data('_sanro_studio_checkout_quote_hash',$quote_hash);if($order->save()===false)throw new RuntimeException('SANRO Studio: saved order identity needs recovery.');}
     }
+    sanro_studio_pricing_bind_order_previews($order,$verified,$record);
+    unset($GLOBALS['sanro_studio_pricing_checkout']);
+}
+
+function sanro_studio_pricing_bind_order_previews($order,$verified,$record) {
     if (defined('SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS') && SANRO_STUDIO_ENABLE_PRIVATE_PREVIEWS===true) {
         $bound=sanro_studio_checkout_bind_existing_item_previews($order,$verified['id'],$verified['token'],$record['order_item_ids']);
         if (empty($bound['valid'])) throw new RuntimeException('SANRO Studio: private previews were not bound; retry this checkout.');
     }
-    unset($GLOBALS['sanro_studio_pricing_checkout']);
 }
 
 /** Existing-order payment uses Woo nonce/order-key authorization, not a fresh draft/cart. */

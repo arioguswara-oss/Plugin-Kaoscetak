@@ -196,16 +196,12 @@ function sanro_studio_render_buyer_editor() {
     echo '<section class="sanro-controls" id="sanro-design-controls"><h2>Atur desain</h2>';
     echo '<label>Warna kaos<select id="sanro-shirt-color">';
     foreach ((($config['palette']??[]) ?: ['#ffffff'=>'Putih','#171717'=>'Hitam','#b91c1c'=>'Merah','#1d4ed8'=>'Biru','#166534'=>'Hijau']) as $color=>$label) echo '<option value="'.esc_attr($color).'">'.esc_html($label).'</option>';
-    echo '</select></label><label>Ukuran pratinjau<select id="sanro-mockup-size">';
-    foreach (($config['pricing']['sizes']??['S','M','L','XL','2XL','3XL','4XL','5XL']) as $size) echo '<option>'.esc_html($size).'</option>';
     echo '</select></label>';
     echo '<fieldset class="sanro-size-qty"><legend>Jumlah per ukuran</legend>';
     foreach (($config['pricing']['sizes']??['S','M','L','XL','2XL','3XL','4XL','5XL']) as $size) {
         echo '<label>' . esc_html($size) . '<input type="number" data-size="' . esc_attr($size) . '" min="0" max="999" step="1" value="0" inputmode="numeric"></label>';
     }
     echo '</fieldset><p id="sanro-qty-total" role="status">Total: 0 pcs</p>';
-    if(($config['pricing']['fixed_sleeve']??null)==='3/4')echo '<label>Model lengan<select id="sanro-sleeve"><option value="3/4">Lengan 3/4</option></select></label>';
-    else echo '<label>Model lengan<select id="sanro-sleeve"><option value="short">Lengan pendek</option><option value="long">Lengan panjang (+Rp10.000/pcs)</option></select></label>';
     echo '<p id="sanro-price-estimate" role="status">Estimasi harga: pilih desain dan jumlah. Harga final dihitung saat checkout.</p>';
     echo '<label>Gambar PNG/JPEG maks. 10 MB<input type="file" id="sanro-image" accept="image/png,image/jpeg"></label>';
     echo '<label>Ukuran gambar<input type="range" id="sanro-image-size" min="10" max="100" value="60"></label>';

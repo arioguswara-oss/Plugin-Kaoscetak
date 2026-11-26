@@ -373,6 +373,9 @@ function sanro_studio_rest_draft_response($result) {
         return rest_ensure_response($result);
     }
     $error = isset($result['error']) && is_string($result['error']) ? $result['error'] : 'invalid_draft';
+    if ($error === 'select_long_sleeve_product') {
+        return new WP_Error('sanro_' . $error, 'Buat desain baru pada produk lengan panjang untuk memesan desain ini.', ['status'=>409]);
+    }
     $status = in_array($error, ['invalid_product', 'invalid_design'], true) ? 400 : 409;
     if (in_array($error, ['invalid_credentials', 'not_found'], true)) $status = 404;
     if ($error === 'draft_expired') $status = 410;
@@ -444,7 +447,7 @@ function sanro_studio_draft_payload_allowed($design, $allow_image_geometry = fal
 }
 
 /** An image-only draft starts without printable objects, never as a quote. */
-function sanro_studio_image_bootstrap_allowed($design) {
+function sanro_studio_image_bootstrap_allowed($design, $product_id = 0) {
     if (!defined('SANRO_STUDIO_ENABLE_MASTER_UPLOAD')
         || SANRO_STUDIO_ENABLE_MASTER_UPLOAD !== true
         || !defined('SANRO_STUDIO_ENABLE_PRIVATE_MASTERS')
@@ -453,9 +456,11 @@ function sanro_studio_image_bootstrap_allowed($design) {
         || array_diff(array_keys($design), ['shirt_color', 'quantities', 'long_sleeve'])) {
         return false;
     }
+    $palette = $product_id && function_exists('sanro_studio_mockup_palette')
+        ? array_keys(sanro_studio_mockup_palette($product_id)) : ['#ffffff','#171717','#b91c1c','#1d4ed8','#166534'];
     return isset($design['shirt_color'], $design['quantities'], $design['long_sleeve'])
         && is_string($design['shirt_color'])
-        && in_array($design['shirt_color'], ['#ffffff','#171717','#b91c1c','#1d4ed8','#166534'], true)
+        && in_array($design['shirt_color'], $palette, true)
         && is_bool($design['long_sleeve'])
         && is_array($design['quantities'])
         && !array_diff(array_keys($design['quantities']), ['S','M','L','XL','2XL','3XL','4XL','5XL'])
@@ -474,7 +479,7 @@ function sanro_studio_rest_create_draft($request) {
     }
     // Validate before consuming the guest creation budget. Invalid geometry
     // must not create records or consume a legitimate customer's allowance.
-    if (!sanro_studio_image_bootstrap_allowed($design)) {
+    if (!sanro_studio_image_bootstrap_allowed($design, $product_id)) {
         $validation = sanro_studio_validate_product_design($product_id, $design);
         if (empty($validation['valid'])) {
             return sanro_studio_rest_draft_response($validation);

@@ -42,6 +42,5 @@ function sanro_studio_24s_unit_price($size, $front_category, $back_category, $lo
     rsort($active, SORT_NUMERIC);
     $price = $table[$size][$active[0]];
     if (count($active) === 2) $price += $extras[$active[1]];
-    if ($long_sleeve) $price += 10000;
     return ['valid' => true, 'unit_price' => $price, 'currency' => 'IDR'];
 }

@@ -55,16 +55,34 @@ function sanro_studio_variation_map($product_id){
     }
     return $map;
 }
-function sanro_studio_mockup_matrix_public($product_id){
-    $rows=sanro_studio_mockup_matrix($product_id);if($rows===false)return false;$matrix=[];
-    foreach($rows as $row)foreach(['front','back'] as $side){$url=wp_get_attachment_image_url($row[$side],'large');if(!is_string($url)||!preg_match('~^https?://~i',$url))return false;$matrix[$row['color']][$row['size']][$side]=esc_url_raw($url);}
-    return $matrix;
+/**
+ * Legacy catalog: prefer the all-sizes pair, otherwise take the first saved
+ * pair for the color. Admin uses this same rule when opening the grouped UI.
+ */
+function sanro_studio_color_mockups_public($product_id) {
+    $rows = sanro_studio_mockup_matrix($product_id);
+    if ($rows === false) return false;
+
+    $pairs = [];
+    foreach ($rows as $row) {
+        $color = $row['color'];
+        if (!isset($pairs[$color]) || $row['size'] === '*') $pairs[$color] = $row;
+    }
+    $mockups = [];
+    foreach ($pairs as $color => $row) {
+        foreach (['front', 'back'] as $side) {
+            $url = wp_get_attachment_image_url($row[$side], 'large');
+            if (!is_string($url) || !preg_match('~^https?://~i', $url)) return false;
+            $mockups[$color][$side] = esc_url_raw($url);
+        }
+    }
+    return $mockups;
 }
 function sanro_studio_mockup_matrix_fields(){
     $id=absint(get_the_ID());if(!$id||!current_user_can('edit_post',$id))return;$rows=get_post_meta($id,'_sanro_studio_mockup_matrix',true);
     $pricing=sanro_studio_product_pricing_config($id);
     $product=wc_get_product($id);$options=[];if($product&&$product->is_type('variable'))foreach($product->get_children() as $vid){$v=wc_get_product($vid);if($v)$options[]=['id'=>(int)$vid,'attributes'=>$v->get_attributes(),'available'=>$v->get_status()==='publish'&&$v->is_purchasable()&&$v->is_in_stock()];}
-    echo '<div class="options_group sanro-mockup-matrix" data-variable="'.($product&&$product->is_type('variable')?'1':'0').'" data-variations="'.esc_attr(wp_json_encode($options)).'" data-sizes="'.esc_attr(wp_json_encode($pricing['sizes']??['S','M','L','XL','2XL','3XL','4XL','5XL'])).'"><p class="form-field"><strong>Mockup dan variasi WooCommerce per warna/ukuran</strong></p><input type="hidden" name="_sanro_studio_mockup_matrix" value="'.esc_attr(wp_json_encode(is_array($rows)?$rows:[])).'"><table class="widefat"><thead><tr><th>Warna</th><th>Nama atribut warna WooCommerce</th><th>Ukuran</th><th>Variation ID</th><th>Depan</th><th>Belakang</th><th>Aksi</th></tr></thead><tbody></tbody></table><p><button type="button" class="button" data-add-mapping>Tambah warna/ukuran</button></p><p>Produk variable memerlukan mapping variation ID tersedia untuk setiap kombinasi. Harga SANRO tetap dihitung dari profil induk di server.</p><noscript>Aktifkan JavaScript untuk mengubah mapping. Mapping sebelumnya tetap dipertahankan.</noscript></div>';
+    echo '<div class="options_group sanro-mockup-matrix" data-variable="'.($product&&$product->is_type('variable')?'1':'0').'" data-variations="'.esc_attr(wp_json_encode($options)).'" data-sizes="'.esc_attr(wp_json_encode($pricing['sizes']??['S','M','L','XL','2XL','3XL','4XL','5XL'])).'"><p class="form-field"><strong>Mockup standar per warna</strong></p><input type="hidden" name="_sanro_studio_mockup_matrix" value="'.esc_attr(wp_json_encode(is_array($rows)?$rows:[])).'"><table class="widefat"><thead><tr><th>Warna</th><th>Nama atribut warna WooCommerce</th><th>Depan</th><th>Belakang</th><th>Variasi WooCommerce</th><th>Aksi</th></tr></thead><tbody></tbody></table><p><button type="button" class="button" data-add-mapping>Tambah warna</button></p><p>Gunakan satu gambar per sisi untuk semua ukuran. Pada produk variable, pilih variasi WooCommerce untuk setiap ukuran yang dijual.</p><noscript>Aktifkan JavaScript untuk mengubah mapping. Mapping sebelumnya tetap dipertahankan.</noscript></div>';
 
 }
 function sanro_studio_mockup_matrix_save($product){
@@ -79,24 +97,4 @@ function sanro_studio_record_preview_refs($record,$size=null){
     // New mapped snapshots cannot quietly substitute another size. Existing orders without this marker remain compatible.
     if(!empty($record['preview_variant_required'])&&is_string($size))return [];
     return $record['preview_refs']??[];
-}
-function sanro_studio_mockup_variant_store($id,$token,$side,$size,$bytes,$expected){
-    $draft=sanro_studio_read_draft($id,$token);
-    if(empty($draft['valid'])||$draft['status']!=='draft'||!is_string($expected)||!hash_equals($draft['design_hash'],$expected)
-        ||!in_array($side,['front','back'],true)||!is_string($size)||empty($draft['design']['quantities'][$size]))return ['valid'=>false,'error'=>'preview_variant_conflict'];
-    $stored=sanro_studio_store_private_preview($id,$side,$bytes);if(empty($stored['valid']))return $stored;
-    $result=sanro_studio_repeat_update($id,$token,static function($record)use($side,$size,$expected,$stored){
-        if(!hash_equals(hash('sha256',maybe_serialize($record['design'])),$expected)||empty($record['design']['quantities'][$size]))return ['valid'=>false,'error'=>'draft_conflict'];
-        $record['preview_refs_by_size'][$size][$side]=$stored['file_id'];$record['preview_design_hash']=$expected;$record['preview_variant_required']=true;
-        return ['valid'=>true,'record'=>$record];
-    });return empty($result['valid'])?$result:$stored;
-}
-function sanro_studio_mockup_variant_routes(){
-    if(!sanro_studio_preview_upload_enabled())return;
-    register_rest_route('sanro-studio/v1','/drafts/(?P<id>[a-f0-9-]{36})/previews/(?P<side>front|back)/variant/(?P<size>S|M|L|XL|2XL|3XL|4XL|5XL)',['methods'=>'POST','permission_callback'=>'sanro_studio_rest_draft_nonce','callback'=>static function($r){
-        $encoded=$r->get_param('image_base64');$bytes=is_string($encoded)&&strlen($encoded)<=70000?base64_decode($encoded,true):false;
-        $result=sanro_studio_mockup_variant_store($r->get_param('id'),$r->get_header('X-Sanro-Owner-Token'),$r->get_param('side'),$r->get_param('size'),$bytes,$r->get_param('expected_design_hash'));
-        if(empty($result['valid']))return new WP_Error('sanro_variant_preview','Preview ukuran belum tersimpan.',['status'=>($result['error']??'')==='storage_capacity'?507:409]);
-        $response=rest_ensure_response($result);$response->header('Cache-Control','private, no-store, max-age=0');return $response;
-    }]);
 }

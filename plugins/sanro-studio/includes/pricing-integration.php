@@ -133,23 +133,18 @@ function sanro_studio_pricing_preview_bundle($draft, $token) {
         )['valid'])) return ['valid'=>false];
         $refs[$side] = $ref;
     }
-    if (function_exists('sanro_studio_mockup_matrix') && sanro_studio_mockup_matrix($record['product_id'])) {
-        foreach ($record['design']['quantities'] ?? [] as $size => $quantity) {
-            if ($quantity < 1) continue;
-            foreach (['front','back'] as $side) {
-                $ref = $record['preview_refs_by_size'][$size][$side] ?? null;
-                if (!is_string($ref) || empty(sanro_studio_read_owned_draft_preview($draft['design_id'], $token, $side, $ref)['valid'])) return ['valid'=>false];
-            }
-        }
-    }
     return ['valid'=>true, 'refs'=>$refs];
 }
 
-/** Validate the entire cart against the fresh server contract, including replays. */
+/** Validate one design allocation against its fresh server contract, including replays. */
 function sanro_studio_pricing_verify_cart($cart, $contract, $check_price = true) {
     $expected = sanro_studio_prepare_size_cart_lines($contract);
     $items = $cart->get_cart();
-    if (empty($expected['valid']) || !is_array($items) || count($items) !== count($expected['lines'])) return false;
+    if (empty($expected['valid']) || !is_array($items)) return false;
+    $items = array_filter($items, static function ($line) use ($contract) {
+        return ($line['sanro_studio_design_id'] ?? null) === $contract['design_id'];
+    });
+    if (count($items) !== count($expected['lines'])) return false;
     $sizes = [];
     foreach ($expected['lines'] as $line) $sizes[$line['sanro_studio_size']] = $line;
     foreach ($items as $line) {
@@ -209,14 +204,31 @@ function sanro_studio_rest_pricing_draft_cart($request) {
     if (!sanro_studio_pricing_claim_draft_session($draft, $session, $token)) {
         return new WP_Error('sanro_cart_not_ready', 'Save and verify the design before adding it.', ['status'=>409]);
     }
-    if ($existing) {
+    $existing_designs = [];
+    foreach ($existing as $line) {
+        if (!sanro_studio_pricing_is_line($line) || !is_string($line['sanro_studio_design_id'] ?? null)) {
+            return new WP_Error('sanro_cart_not_empty', 'Review your existing cart before adding this design.', ['status'=>409]);
+        }
+        $existing_designs[$line['sanro_studio_design_id']] = true;
+    }
+    if (isset($existing_designs[$id])) {
         if (!sanro_studio_pricing_verify_cart($cart,$contract,false)) return new WP_Error('sanro_cart_not_empty', 'Review your existing cart before adding this design.', ['status'=>409]);
         try {
+            sanro_studio_pricing_cart_plan($cart);
             $cart->calculate_totals();
             if (!sanro_studio_pricing_verify_cart($cart,$contract)) throw new RuntimeException('cart_mismatch');
         } catch (Throwable $error) { return new WP_Error('sanro_cart_failed','Server price verification failed.',['status'=>409]); }
         return rest_ensure_response(['valid'=>true,'already_in_cart'=>true,'design_id'=>$id,
             'cart_url'=>function_exists('wc_get_cart_url')?wc_get_cart_url():'']);
+    }
+    if (count($existing_designs) >= 10) {
+        return new WP_Error('sanro_cart_design_limit', 'Maksimal 10 desain dalam satu keranjang.', ['status'=>409]);
+    }
+    foreach ($existing_designs as $existing_id => $_) {
+        $record = get_option('sanro_studio_draft_' . $existing_id, false);
+        if (!is_array($record) || ($record['status'] ?? null) !== 'draft') {
+            return new WP_Error('sanro_cart_order_pending', 'Selesaikan pesanan yang sedang diproses atau tinjau keranjang.', ['status'=>409]);
+        }
     }
     $prepared = sanro_studio_prepare_size_cart_lines($contract);
     if (empty($prepared['valid'])) return new WP_Error('sanro_cart_quote', 'Server quote failed.', ['status'=>409]);
@@ -230,9 +242,10 @@ function sanro_studio_rest_pricing_draft_cart($request) {
             if (!is_string($key) || $key === '') throw new RuntimeException('cart_add_failed');
             $keys[] = $key;
         }
+        sanro_studio_pricing_cart_plan($cart);
         $cart->calculate_totals();
         $now = $cart->get_cart();
-        if (!is_array($now) || count($now) !== count($keys)) throw new RuntimeException('cart_mismatch');
+        if (!is_array($now) || count($now) !== count($existing) + count($keys)) throw new RuntimeException('cart_mismatch');
         foreach ($keys as $key) if (!isset($now[$key])) throw new RuntimeException('cart_mismatch');
         if (!sanro_studio_pricing_verify_cart($cart,$contract)) throw new RuntimeException('cart_quote_mismatch');
     } catch (Throwable $error) {
@@ -274,23 +287,32 @@ function sanro_studio_pricing_cart_item_data($data,$line){
         ||!is_string($id)||!preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD',$id)
         ||!is_string($size)||!in_array($size,['S','M','L','XL','2XL','3XL','4XL','5XL'],true))return $data;
     $data[]=['key'=>'Ukuran','value'=>$size,'display'=>esc_html($size)];
-    $data[]=['key'=>'Design ID','value'=>$id,'display'=>esc_html($id)];return $data;
+    $data[]=['key'=>'Design ID','value'=>$id,'display'=>esc_html($id)];
+    $color = $line['sanro_studio_color'] ?? '';
+    if (is_string($color) && preg_match('/^#[a-f0-9]{6}$/D',$color)) {
+        $palette = sanro_studio_mockup_palette((int) ($line['product_id'] ?? 0));
+        $label = $palette[$color] ?? $color;
+        $data[]=['key'=>'Warna','value'=>$label,'display'=>esc_html($label)];
+    }
+    return $data;
 }
 
 function sanro_studio_pricing_checkout_field() {
     $items = (array) (sanro_studio_pricing_wc_cart() ? sanro_studio_pricing_wc_cart()->get_cart() : []);
+    $rendered = [];
     foreach ($items as $line) if (sanro_studio_pricing_is_line($line)) {
         $id = $line['sanro_studio_design_id'] ?? '';
         $product = $line['product_id'] ?? 0;
-        echo '<input type="hidden" id="sanro_studio_checkout_token" name="sanro_studio_checkout_token" value="" data-design-id="' . esc_attr($id) . '" data-product-id="' . esc_attr((string)$product) . '">';
-        wp_nonce_field('sanro_studio_checkout_auth', 'sanro_studio_checkout_nonce');
-        return;
+        if (isset($rendered[$id])) continue;
+        $rendered[$id] = true;
+        echo '<input type="hidden" name="sanro_studio_checkout_token[' . esc_attr($id) . ']" value="" data-sanro-checkout-token data-design-id="' . esc_attr($id) . '" data-product-id="' . esc_attr((string)$product) . '">';
     }
+    if ($rendered) wp_nonce_field('sanro_studio_checkout_auth', 'sanro_studio_checkout_nonce');
 }
 
 function sanro_studio_pricing_enqueue_checkout_auth() {
     if (function_exists('is_checkout') && is_checkout() && !(function_exists('is_order_received_page') && is_order_received_page())) {
-        wp_enqueue_script('sanro-studio-checkout-auth', plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/checkout-auth.js', ['jquery','wc-checkout'], SANRO_STUDIO_VERSION, true);
+        wp_enqueue_script('sanro-studio-checkout-auth', plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/checkout-auth.js', ['jquery','wc-checkout'], SANRO_STUDIO_VERSION . '-' . substr(hash_file('sha256', dirname(__DIR__) . '/assets/checkout-auth.js'), 0, 12), true);
     }
 }
 
@@ -303,27 +325,64 @@ function sanro_studio_pricing_checkout_authorize() {
     if (!$lines) return;
     if (count($lines) !== count((array)$cart->get_cart()) || !function_exists('wp_verify_nonce')
         || !isset($_POST['sanro_studio_checkout_nonce'], $_POST['sanro_studio_checkout_token'])
-        || !is_string($_POST['sanro_studio_checkout_nonce']) || !is_string($_POST['sanro_studio_checkout_token'])
+        || !is_string($_POST['sanro_studio_checkout_nonce'])
         || !wp_verify_nonce($_POST['sanro_studio_checkout_nonce'], 'sanro_studio_checkout_auth')) {
         wc_add_notice('SANRO Studio: reopen your design session before checkout.', 'error'); return;
     }
-    $id = $lines[0]['sanro_studio_design_id'] ?? null;
-    $product = $lines[0]['product_id'] ?? null;
-    $token = $_POST['sanro_studio_checkout_token'];
-    if (!is_string($id) || !is_int($product) || !preg_match('/^[a-f0-9]{64}$/D', $token)
-        || !sanro_studio_read_draft($id, $token)['valid']) {
+    $groups = [];
+    foreach ($lines as $line) {
+        $id = $line['sanro_studio_design_id'] ?? null;
+        if (!is_string($id)) { wc_add_notice('SANRO Studio: invalid design.', 'error'); return; }
+        $groups[$id][] = $line;
+    }
+    $tokens = $_POST['sanro_studio_checkout_token'];
+    // An open checkout tab from before this update may still send one token.
+    if (is_string($tokens) && count($groups) === 1) $tokens = [array_key_first($groups) => $tokens];
+    if (!is_array($tokens) || count($tokens) !== count($groups) || count($groups) > 10) {
         wc_add_notice('SANRO Studio: design authorization failed.', 'error'); return;
     }
-    foreach ($lines as $line) if (($line['sanro_studio_design_id'] ?? null) !== $id || ($line['product_id'] ?? null) !== $product) {
-        wc_add_notice('SANRO Studio: mixed designs are not supported.', 'error'); return;
+    $verified = [];
+    $resume_id = null;
+    foreach ($groups as $id => $group) {
+        $current = sanro_studio_pricing_checkout_design($id, $tokens[$id] ?? null, $group);
+        if ($current === null) return;
+        $existing_order_id = $current['existing_order_id'] ?? 0;
+        if ($resume_id !== null && $resume_id !== $existing_order_id) {
+            wc_add_notice('SANRO Studio: resume the original order or use a new cart.', 'error'); return;
+        }
+        $resume_id = $existing_order_id;
+        $verified[$id] = $current;
+    }
+    if ($resume_id) {
+        $original_ids = [];
+        foreach (reset($verified)['existing_order']->get_items('line_item') as $item) {
+            $original_ids[$item->get_meta('_sanro_studio_design_id',true)] = true;
+        }
+        if (count($original_ids) !== count($verified) || array_diff_key($original_ids,$verified)) {
+            wc_add_notice('SANRO Studio: resume checkout with every original design.', 'error'); return;
+        }
+    }
+    $GLOBALS['sanro_studio_pricing_checkout'] = count($verified) === 1 ? reset($verified) : ['designs'=>$verified];
+}
+
+function sanro_studio_pricing_checkout_design($id, $token, $lines) {
+    $product = $lines[0]['product_id'] ?? null;
+    if (!is_string($id) || !is_int($product) || !is_string($token) || !preg_match('/^[a-f0-9]{64}$/D', $token)) {
+        wc_add_notice('SANRO Studio: design authorization failed.', 'error'); return null;
+    }
+    foreach ($lines as $line) if (($line['product_id'] ?? null) !== $product) {
+        wc_add_notice('SANRO Studio: inconsistent design product.', 'error'); return null;
     }
     $draft = sanro_studio_read_draft($id, $token);
+    if (empty($draft['valid']) || ($draft['product_id'] ?? null) !== $product) {
+        wc_add_notice('SANRO Studio: design authorization failed.', 'error'); return null;
+    }
     $design = $draft['design']; $design['quantities'] = [];
     foreach ($lines as $line) {
         $size = $line['sanro_studio_size'] ?? null;
         $quantity = sanro_studio_pricing_quantity($line['quantity'] ?? null);
         if (!is_string($size) || isset($design['quantities'][$size]) || $quantity === null) {
-            wc_add_notice('SANRO Studio: invalid size allocation.', 'error'); return;
+            wc_add_notice('SANRO Studio: invalid size allocation.', 'error'); return null;
         }
         $design['quantities'][$size] = $quantity;
     }
@@ -332,22 +391,21 @@ function sanro_studio_pricing_checkout_authorize() {
         $record['design_id']=$id;$resume=sanro_studio_pricing_recoverable_order($record);
         $saved=$record['design']['quantities']??[];$current=$design['quantities'];ksort($saved);ksort($current);
         if (!$resume || $saved!==$current || empty(sanro_studio_pricing_preview_bundle($draft,$token)['valid'])) {
-            wc_add_notice('SANRO Studio: resume the original unpaid order or create a new design.', 'error');return;
+            wc_add_notice('SANRO Studio: resume the original unpaid order or create a new design.', 'error');return null;
         }
         $contract=['valid'=>true,'design_id'=>$id,'product_id'=>$product,'design'=>$record['design'],'quote'=>$record['checkout_quote'],'shipping_total'=>$record['shipping_total']??0];
-        $GLOBALS['sanro_studio_pricing_checkout']=['id'=>$id,'token'=>$token,'draft'=>$draft,'contract'=>$contract,'sizes'=>[],'existing_order_id'=>$resume->get_id()];
-        return;
+        return ['id'=>$id,'token'=>$token,'draft'=>$draft,'contract'=>$contract,'sizes'=>[],'existing_order_id'=>$resume->get_id(),'existing_order'=>$resume];
     }
     $contract = sanro_studio_prepare_cart_design_contract($id, $token, $product);
-    if (empty($contract['valid'])) { wc_add_notice('SANRO Studio: draft is no longer ready.', 'error'); return; }
+    if (empty($contract['valid'])) { wc_add_notice('SANRO Studio: draft is no longer ready.', 'error'); return null; }
     $contract['design'] = $design;
     $contract['quote'] = sanro_studio_quote_size_quantities($product, $design, $design['quantities'], $design['long_sleeve'] ?? false);
     if(function_exists('sanro_studio_repeat_adjust_quote'))$contract['quote']=sanro_studio_repeat_adjust_quote($contract['quote'],$id);
-    if (empty($contract['quote']['valid'])) { wc_add_notice('SANRO Studio: fresh quote failed.', 'error'); return; }
+    if (empty($contract['quote']['valid'])) { wc_add_notice('SANRO Studio: fresh quote failed.', 'error'); return null; }
     if (empty(sanro_studio_pricing_preview_bundle($draft,$token)['valid'])) {
-        wc_add_notice('SANRO Studio: refresh both private previews before checkout.', 'error'); return;
+        wc_add_notice('SANRO Studio: refresh both private previews before checkout.', 'error'); return null;
     }
-    $GLOBALS['sanro_studio_pricing_checkout'] = ['id'=>$id,'token'=>$token,'draft'=>$draft,'contract'=>$contract,'sizes'=>[]];
+    return ['id'=>$id,'token'=>$token,'draft'=>$draft,'contract'=>$contract,'sizes'=>[]];
 }
 
 /** Whitelist immutable design metadata; never copy owner credentials/file refs. */
@@ -372,14 +430,17 @@ function sanro_studio_pricing_design_snapshot($verified) {
 }
 
 function sanro_studio_pricing_order_item($item, $cart_item_key, $values, $order) {
-    $verified = $GLOBALS['sanro_studio_pricing_checkout'] ?? null;
     if (!sanro_studio_pricing_is_line($values)) return;
+    $checkout = $GLOBALS['sanro_studio_pricing_checkout'] ?? null;
+    $id = $values['sanro_studio_design_id'] ?? '';
+    $multi = isset($checkout['designs']);
+    $verified = $multi ? ($checkout['designs'][$id] ?? null) : $checkout;
     if (!is_array($verified) || empty($verified['contract']['quote']['valid']) || !method_exists($item,'update_meta_data')) {
         throw new RuntimeException('SANRO Studio: checkout authorization missing.');
     }
     $size = $values['sanro_studio_size'] ?? null;
     $candidate = $verified['contract']['quote']['items'][$size] ?? null;
-    if (!is_array($candidate) || ($verified['id'] ?? null) !== ($values['sanro_studio_design_id'] ?? null)
+    if (isset($verified['sizes'][$size]) || !is_array($candidate) || ($verified['id'] ?? null) !== ($values['sanro_studio_design_id'] ?? null)
         || ($candidate['quantity'] ?? null) !== sanro_studio_pricing_quantity($values['quantity'] ?? null)
         || ($values['variation_id']??0)!==($candidate['variation_id']??0)
         || ($values['variation']??[])!==($candidate['variation_attributes']??[])
@@ -393,7 +454,10 @@ function sanro_studio_pricing_order_item($item, $cart_item_key, $values, $order)
         '_sanro_studio_color'=>$verified['contract']['quote']['shirt_color']??'',
         '_sanro_studio_design_snapshot'=>$snapshot] as $key=>$value) $item->update_meta_data($key,$value);
     if(isset($verified['contract']['quote']['repeat_discount']))$item->update_meta_data('_sanro_studio_repeat_discount',['proof'=>$verified['contract']['quote']['repeat_discount'],'base_unit_price'=>$candidate['base_unit_price'],'unit_discount'=>$candidate['unit_discount']]);
-    $verified['sizes'][$size] = true; $GLOBALS['sanro_studio_pricing_checkout'] = $verified;
+    $verified['sizes'][$size] = true;
+    if ($multi) $checkout['designs'][$id] = $verified;
+    else $checkout = $verified;
+    $GLOBALS['sanro_studio_pricing_checkout'] = $checkout;
 }
 
 function sanro_studio_pricing_validate_order($order, $data) {
@@ -402,67 +466,110 @@ function sanro_studio_pricing_validate_order($order, $data) {
         foreach ((array)$order->get_items('line_item') as $item) if (method_exists($item,'get_meta') && $item->get_meta('_sanro_studio_design_id',true) !== '') throw new RuntimeException('SANRO Studio: verified checkout missing.');
         return;
     }
+    $designs = $verified['designs'] ?? [$verified['id']=>$verified];
     if (!is_object($order) || !method_exists($order,'get_currency') || $order->get_currency() !== 'IDR'
-        || !method_exists($order,'get_items') || count((array)$order->get_items('line_item')) !== count($verified['sizes'])) {
+        || !method_exists($order,'get_items')) {
         throw new RuntimeException('SANRO Studio: invalid order allocation.');
     }
-    if (isset($verified['existing_order_id']) && $order->get_id()!==$verified['existing_order_id']) throw new RuntimeException('SANRO Studio: resume the original order, not a second order.');
-    $expected = sanro_studio_prepare_size_cart_lines($verified['contract']);
-    if (empty($expected['valid'])) throw new RuntimeException('SANRO Studio: order quote missing.');
-    $by_size = [];
-    foreach ($expected['lines'] as $line) $by_size[$line['sanro_studio_size']]=$line;
+    $expected = [];
+    $subtotal = 0;
+    $shipping = null;
+    foreach ($designs as $id => $design) {
+        $contract = $design['contract'];
+        $prepared = sanro_studio_prepare_size_cart_lines($contract);
+        if (empty($prepared['valid'])) throw new RuntimeException('SANRO Studio: order quote missing.');
+        foreach ($prepared['lines'] as $line) $expected[$id][$line['sanro_studio_size']] = $line;
+        $subtotal += $contract['quote']['total_price'];
+        if (isset($design['existing_order_id'])) {
+            if ($order->get_id() !== $design['existing_order_id']
+                || ($shipping !== null && $shipping !== ($contract['shipping_total'] ?? 0))) {
+                throw new RuntimeException('SANRO Studio: resume the original order.');
+            }
+            $shipping = $contract['shipping_total'] ?? 0;
+        }
+        if (function_exists('sanro_studio_repeat_saved_order_allowed')) {
+            $record = get_option('sanro_studio_draft_' . $id, false);
+            if (!is_array($record)) throw new RuntimeException('SANRO Studio: repeat draft unavailable.');
+            $record['checkout_quote'] = $contract['quote'];
+            if (!sanro_studio_repeat_saved_order_allowed($order,$record)) throw new RuntimeException('SANRO Studio: repeat eligibility or checkout email changed.');
+        }
+    }
     foreach ($order->get_items('line_item') as $item) {
         $size = is_object($item) && method_exists($item,'get_meta') ? $item->get_meta('_sanro_studio_size',true) : null;
-        if (!is_string($size) || !isset($by_size[$size])
-            || $item->get_meta('_sanro_studio_design_id',true) !== $verified['id']
+        $id = is_string($size) ? $item->get_meta('_sanro_studio_design_id',true) : null;
+        $line = is_string($id) && is_string($size) ? ($expected[$id][$size] ?? null) : null;
+        if (!is_array($line)
             || $item->get_meta('_sanro_studio_quote_currency',true) !== 'IDR'
-            || (string)$item->get_meta('_sanro_studio_unit_price',true) !== (string)$by_size[$size]['sanro_studio_unit_price']
-            || ($item->get_meta('_sanro_studio_variation_id',true)!==''&&(int)$item->get_meta('_sanro_studio_variation_id',true) !== $by_size[$size]['variation_id'])
-            || (!empty($by_size[$size]['variation_id'])&&(int)$item->get_meta('_sanro_studio_variation_id',true)!==$by_size[$size]['variation_id'])
-            || ($item->get_meta('_sanro_studio_color',true)!==''&&(string)$item->get_meta('_sanro_studio_color',true) !== (string)$by_size[$size]['sanro_studio_color'])
-            || empty(sanro_studio_validate_size_order_item($by_size[$size],$item)['valid'])) {
+            || (string)$item->get_meta('_sanro_studio_unit_price',true) !== (string)$line['sanro_studio_unit_price']
+            || ($item->get_meta('_sanro_studio_variation_id',true)!==''&&(int)$item->get_meta('_sanro_studio_variation_id',true) !== $line['variation_id'])
+            || (!empty($line['variation_id'])&&(int)$item->get_meta('_sanro_studio_variation_id',true)!==$line['variation_id'])
+            || ($item->get_meta('_sanro_studio_color',true)!==''&&(string)$item->get_meta('_sanro_studio_color',true) !== (string)$line['sanro_studio_color'])
+            || empty(sanro_studio_validate_size_order_item($line,$item)['valid'])) {
             throw new RuntimeException('SANRO Studio: order metadata or totals mismatch.');
         }
-        if(function_exists('sanro_studio_repeat_item_evidence')){
-            $repeat_expected=sanro_studio_repeat_item_evidence($verified['contract']['quote'],$size);$repeat_actual=$item->get_meta('_sanro_studio_repeat_discount',true);
+        if (function_exists('sanro_studio_repeat_item_evidence')) {
+            $repeat_expected=sanro_studio_repeat_item_evidence($designs[$id]['contract']['quote'],$size);
+            $repeat_actual=$item->get_meta('_sanro_studio_repeat_discount',true);
             if($repeat_expected!==null?$repeat_actual!==$repeat_expected:($repeat_actual!==''&&$repeat_actual!==[]))throw new RuntimeException('SANRO Studio: repeat metadata mismatch.');
         }
-        unset($by_size[$size]);
+        unset($expected[$id][$size]);
     }
-    if ($by_size) throw new RuntimeException('SANRO Studio: incomplete order sizes.');
-    if(function_exists('sanro_studio_repeat_saved_order_allowed')){
-        $repeat_record=get_option('sanro_studio_draft_'.$verified['id'],false);if(!is_array($repeat_record))throw new RuntimeException('SANRO Studio: repeat draft unavailable.');$repeat_record['checkout_quote']=$verified['contract']['quote'];
-        if(!sanro_studio_repeat_saved_order_allowed($order,$repeat_record))throw new RuntimeException('SANRO Studio: repeat eligibility or checkout email changed.');
+    foreach ($expected as $sizes) if ($sizes) throw new RuntimeException('SANRO Studio: incomplete order sizes.');
+    if ($shipping === null) {
+        $charges = sanro_studio_capture_native_shipping($order,['quote'=>['total_price'=>$subtotal]]);
+        if (empty($charges['valid'])) throw new RuntimeException('SANRO Studio: native shipping or order charges do not match.');
+        $shipping = $charges['shipping_total'];
     }
-    if(!isset($verified['existing_order_id'])){$charges=sanro_studio_capture_native_shipping($order,$verified['contract']);if(empty($charges['valid']))throw new RuntimeException('SANRO Studio: native shipping or order charges do not match.');$verified['contract']['shipping_total']=$charges['shipping_total'];}
-    if(!sanro_studio_order_shipping_matches($order,$verified['contract']['shipping_total']??0))throw new RuntimeException('SANRO Studio: saved shipping changed.');
-    $verified['order_id'] = 0; $GLOBALS['sanro_studio_pricing_checkout'] = $verified;
+    if (!sanro_studio_order_shipping_matches($order,$shipping)) throw new RuntimeException('SANRO Studio: saved shipping changed.');
+    foreach ($designs as &$design) $design['contract']['shipping_total'] = $shipping;
+    unset($design);
+    $GLOBALS['sanro_studio_pricing_checkout'] = isset($verified['designs']) ? ['designs'=>$designs] : reset($designs);
 }
 
 function sanro_studio_pricing_lock_order($order) {
     $verified = $GLOBALS['sanro_studio_pricing_checkout'] ?? null;
     if (!is_array($verified) || !is_object($order) || !method_exists($order,'get_id') || !method_exists($order,'get_items')) return;
+    $designs = $verified['designs'] ?? [$verified['id']=>$verified];
+    $contracts = array_column($designs, 'contract');
+    $preflight = count($designs) === 1 ? $contracts[0] : [
+        'valid'=>true, 'designs'=>$contracts, 'shipping_total'=>$contracts[0]['shipping_total']??0,
+    ];
     if (!function_exists('sanro_studio_checkout_batch_lock_preflight')
-        || empty(sanro_studio_checkout_batch_lock_preflight($order, $verified['contract'])['valid'])) {
+        || empty(sanro_studio_checkout_batch_lock_preflight($order,$preflight)['valid'])) {
         throw new RuntimeException('SANRO Studio: persisted order quote could not be verified.');
     }
-    $ids = array_map('intval', array_keys((array)$order->get_items('line_item'))); sort($ids, SORT_NUMERIC);
+    $items_by_design = [];
+    foreach ($order->get_items('line_item') as $item_id => $item) {
+        $items_by_design[$item->get_meta('_sanro_studio_design_id',true)][] = $item_id;
+    }
+    $updates = [];
+    foreach ($designs as $id => $design) {
+        $ids = $items_by_design[$id];
+        sort($ids, SORT_NUMERIC);
+        $updates[$id] = sanro_studio_pricing_order_draft_update($order,$design,$ids);
+    }
+    sanro_studio_pricing_commit_order_drafts($updates);
+    $records = array_map(static function ($update) { return $update['after']; }, $updates);
+    if (count($designs) === 1) sanro_studio_pricing_finish_order_binding($order,reset($designs),reset($records));
+    else sanro_studio_pricing_finish_multi_order_binding($order,$designs,$records);
+}
+
+function sanro_studio_pricing_order_draft_update($order,$verified,$ids) {
     $key = 'sanro_studio_draft_' . $verified['id']; $record = get_option($key, false);
     $session = sanro_studio_pricing_session_hash();
     if (is_array($record) && ($record['status']??null)==='locked'
         && ($record['order_id']??null)===$order->get_id()
         && ($record['wc_session_hash']??null)===$session
         && ($record['shipping_total']??0)===($verified['contract']['shipping_total']??0)
+        && ($record['checkout_quote']??null) === $verified['contract']['quote']
         && is_string($record['token_hash']??null)
         && hash_equals($record['token_hash'],hash('sha256',$verified['token']))
         && hash('sha256',maybe_serialize($record['design']))===hash('sha256',maybe_serialize($verified['contract']['design']))) {
-        if(($record['order_item_ids']??null)!==$ids){
-            if(($verified['existing_order_id']??null)!==$order->get_id())throw new RuntimeException('SANRO Studio: order allocation changed.');
-            global $wpdb;$after=$record;$after['order_item_ids']=$ids;
-            $changed=$wpdb->query($wpdb->prepare("UPDATE `{$wpdb->options}` SET option_value = %s WHERE option_name = %s AND BINARY option_value = BINARY %s",maybe_serialize($after),$key,maybe_serialize($record)));wp_cache_delete($key,'options');
-            if($changed!==1)throw new RuntimeException('SANRO Studio: retry allocation conflict.');$record=$after;
-        }
-        sanro_studio_pricing_finish_order_binding($order,$verified,$record);return;
+        if (($record['order_item_ids']??null) !== $ids
+            && ($verified['existing_order_id']??null) !== $order->get_id()) throw new RuntimeException('SANRO Studio: order allocation changed.');
+        $after = $record;
+        $after['order_item_ids'] = $ids;
+        return ['key'=>$key,'before'=>$record,'after'=>$after];
     }
     if (!is_array($record) || ($record['status'] ?? null) !== 'draft' || ($record['wc_session_hash'] ?? null) !== $session
         || ($record['product_id'] ?? null) !== ($verified['contract']['product_id'] ?? null)
@@ -481,12 +588,33 @@ function sanro_studio_pricing_lock_order($order) {
         throw new RuntimeException('SANRO Studio: production artwork changed.');
     }
     if(function_exists('sanro_studio_repeat_saved_order_allowed')){$repeat_record=$record;$repeat_record['checkout_quote']=$verified['contract']['quote'];if(!sanro_studio_repeat_saved_order_allowed($order,$repeat_record))throw new RuntimeException('SANRO Studio: repeat eligibility changed before lock.');}
-    global $wpdb; $after=$record; $after['design']=$production_design;
+    $after=$record; $after['design']=$production_design;
     if (isset($after['preview_design_hash'])) $after['preview_design_hash']=hash('sha256',maybe_serialize($production_design));
     $after['design_id']=$verified['id'];$after['checkout_quote']=$verified['contract']['quote'];$after['shipping_total']=$verified['contract']['shipping_total']??0;
     $after['status']='locked'; $after['order_id']=(int)$order->get_id(); $after['order_item_ids']=$ids; $after['locked_at']=time();
-    $changed=$wpdb->query($wpdb->prepare("UPDATE `{$wpdb->options}` SET option_value = %s WHERE option_name = %s AND BINARY option_value = BINARY %s", maybe_serialize($after),$key,maybe_serialize($record)));
-    wp_cache_delete($key,'options');
-    if ($changed !== 1) throw new RuntimeException('SANRO Studio: draft could not be locked to order.');
-    sanro_studio_pricing_finish_order_binding($order,$verified,$after);
+    return ['key'=>$key,'before'=>$record,'after'=>$after];
+}
+
+/** One compare-and-swap statement for all affected draft rows. */
+function sanro_studio_pricing_commit_order_drafts($updates) {
+    global $wpdb;
+    $tables = $assignments = $values = $conditions = $expected = $keys = [];
+    $changed_count = 0;
+    foreach (array_values($updates) as $index => $update) {
+        $alias = 'draft_' . $index;
+        $tables[] = "`{$wpdb->options}` AS " . $alias;
+        $assignments[] = "$alias.option_value = %s";
+        $values[] = maybe_serialize($update['after']);
+        $conditions[] = "$alias.option_name = %s AND BINARY $alias.option_value = BINARY %s";
+        $keys[] = $update['key'];
+        $expected[] = $update['key'];
+        $expected[] = maybe_serialize($update['before']);
+        if ($update['before'] !== $update['after']) $changed_count++;
+    }
+    if (!$changed_count) return;
+    $sql = 'UPDATE ' . implode(' CROSS JOIN ', $tables) . ' SET ' . implode(', ', $assignments)
+        . ' WHERE ' . implode(' AND ', $conditions);
+    $changed = $wpdb->query($wpdb->prepare($sql,...array_merge($values,$expected)));
+    foreach ($keys as $key) wp_cache_delete($key,'options');
+    if ($changed !== $changed_count) throw new RuntimeException('SANRO Studio: draft allocation changed before locking the order.');
 }

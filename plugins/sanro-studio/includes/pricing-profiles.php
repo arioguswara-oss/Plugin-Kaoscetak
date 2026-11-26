@@ -5,8 +5,8 @@ require_once __DIR__.'/pricing.php';
 /** Only Owner-approved presets; product metadata never changes these defaults. */
 function sanro_studio_pricing_presets() {
     return [
-        'cotton_combed_24s'=>['label'=>'Cotton Combed 24s','sizes'=>['S','M','L','XL','2XL','3XL','4XL','5XL'],'table'=>sanro_studio_24s_price_table(),'sleeve_extra'=>10000,'fixed_sleeve'=>null],
-        'tunik_oversize_34'=>['label'=>'Tunik Oversize lengan 3/4','sizes'=>['M','L','XL'],'table'=>['M'=>[85000,95000,105000,110000],'L'=>[90000,100000,110000,115000],'XL'=>[95000,105000,115000,120000]],'sleeve_extra'=>0,'fixed_sleeve'=>'3/4'],
+        'cotton_combed_24s'=>['label'=>'Cotton Combed 24s','sizes'=>['S','M','L','XL','2XL','3XL','4XL','5XL'],'table'=>sanro_studio_24s_price_table()],
+        'tunik_oversize_34'=>['label'=>'Tunik Oversize lengan 3/4','sizes'=>['M','L','XL'],'table'=>['M'=>[85000,95000,105000,110000],'L'=>[90000,100000,110000,115000],'XL'=>[95000,105000,115000,120000]]],
     ];
 }
 function sanro_studio_validate_product_price_table($table,$sizes) {
@@ -23,13 +23,20 @@ function sanro_studio_product_pricing_config($product_id) {
         if(!is_array($override)||($override['profile']??null)!==$key||!sanro_studio_validate_product_price_table($override['table']??null,$profile['sizes']))return ['valid'=>false,'error'=>'product_price_table_invalid'];
         $profile['table']=$override['table'];
     }
-    return ['valid'=>true,'profile'=>$key,'revision'=>hash('sha256',json_encode([$key,$profile['table'],$profile['sleeve_extra'],$profile['fixed_sleeve']]))]+$profile;
+    $sleeve = get_post_meta($product_id, '_sanro_studio_product_sleeve', true);
+    if ($key === 'tunik_oversize_34') $sleeve = '3/4';
+    elseif ($sleeve !== 'long') $sleeve = 'short';
+    if ($sleeve === 'long' && empty($override['table'])) {
+        return ['valid'=>false,'error'=>'long_sleeve_price_table_required'];
+    }
+    return ['valid'=>true,'profile'=>$key,'sleeve_label'=>$sleeve,
+        'revision'=>hash('sha256',json_encode([$key,$profile['table'],$sleeve]))]+$profile;
 }
 function sanro_studio_profile_unit_price($config,$size,$front,$back,$long=false) {
-    if(empty($config['valid'])||!is_string($size)||!isset($config['table'][$size])||!is_bool($long)||($config['fixed_sleeve']!==null&&$long))return ['valid'=>false,'error'=>'invalid_variant'];
+    if(empty($config['valid'])||!is_string($size)||!isset($config['table'][$size])||!is_bool($long))return ['valid'=>false,'error'=>'invalid_variant'];
     $categories=['A5','A4','A3','A3+'];$active=[];
     foreach([$front,$back] as $category){if($category===null)continue;$i=is_string($category)?array_search($category,$categories,true):false;if($i===false)return ['valid'=>false,'error'=>'invalid_category'];$active[]=$i;}
     if(!$active)return ['valid'=>false,'error'=>'empty_design'];rsort($active,SORT_NUMERIC);$extras=[15000,25000,35000,40000];
-    $price=$config['table'][$size][$active[0]]+(count($active)===2?$extras[$active[1]]:0)+($long?$config['sleeve_extra']:0);
+    $price=$config['table'][$size][$active[0]]+(count($active)===2?$extras[$active[1]]:0);
     return ['valid'=>true,'currency'=>'IDR','unit_price'=>$price];
 }

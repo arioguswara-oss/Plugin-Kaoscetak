@@ -3,17 +3,14 @@
  const root=document.getElementById('sanro-studio-buyer'),config=window.SANRO_STUDIO_EDITOR_CONFIG;
  if(!root||!config||!config.safe_areas)return;
  const q=s=>root.querySelector(s),sides={front:{},back:{}};
+ let legacyLongSleeve=false;
  const make=()=>({url:null,file:null,text:'',imageSize:60,fontSize:22,textColor:'#171717',imageX:10,imageY:10,textX:10,textY:65,category:'A5'});
  sides.front=make();sides.back=make();let side=(config.safe_areas[config.default_side]?config.default_side:(config.safe_areas.front?'front':'back'));
  const image=q('.sanro-safe img'),text=q('.sanro-text'),safe=q('.sanro-safe');
  const categories=config.categories;
  const shirtColors=new Set(config.palette&&Object.keys(config.palette).length?Object.keys(config.palette):['#ffffff','#171717','#b91c1c','#1d4ed8','#166534']);
- const mockupSize=q('#sanro-mockup-size');
- if(mockupSize)mockupSize.addEventListener('change',()=>render());
- function mappedMockup(name,size){
-  const matrix=config.mockup_matrix;
-  if(matrix&&Object.keys(matrix).length){const color=matrix[shirtColor.value]||{};return (color[size]||color['*']||{})[name]||null;}
-  return config.mockups&&config.mockups[name]||null;
+ function mappedMockup(name){
+  return config.color_mockups?.[shirtColor.value]?.[name] || config.mockups?.[name] || null;
  }
  const shirtColor=q('#sanro-shirt-color');
  const variationMap=config.variations&&Object.keys(config.variations).length?config.variations:null;
@@ -21,7 +18,6 @@
   if(!variationMap)return;
   const allowed=variationMap[shirtColor.value]||{};
   for(const input of qtyInputs){const size=input.dataset.size,available=!!(allowed[size]&&allowed[size].available);input.disabled=!available;if(!available)input.value='0';}
-  if(mockupSize)for(const option of mockupSize.options){option.disabled=option.value!=='*'&&!allowed[option.value];}
   updateQty();updateEstimate();
  }
  shirtColor.addEventListener('change',()=>{
@@ -33,12 +29,16 @@
  function designCategory(d){return d.url||d.text.trim()?d.category:null;}
  function updateEstimate(){
   const output=q('#sanro-price-estimate'),calc=window.SanroStudioEstimate;
+  if(legacyLongSleeve&&config.pricing?.sleeve_label!=='long'){
+   output.textContent='Untuk memesan ulang desain ini, buat desain baru pada produk lengan panjang.';
+   return;
+  }
   if(!calc||!['cotton_combed_24s','tunik_oversize_34'].includes(config.pricing_profile)){output.textContent='Estimasi belum tersedia';return;}
   if(qtyInputs.some(input=>!input.validity.valid)){
    output.textContent='Estimasi tidak tersedia: periksa jumlah per ukuran';return;
   }
   const qty=Object.fromEntries(qtyInputs.map(input=>[input.dataset.size,Number(input.value)]));
-  const result=calc.estimate(qty,designCategory(sides.front),designCategory(sides.back),q('#sanro-sleeve').value==='long',config.pricing||null);
+  const result=calc.estimate(qty,designCategory(sides.front),designCategory(sides.back),false,config.pricing||null);
   output.textContent=result&&result.pieces>0?'Estimasi: '+new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(result.total)+' (belum final)':'Estimasi harga: lengkapi desain dan jumlah';
  }
  function updateQty(){
@@ -57,7 +57,6 @@
   updateEstimate();
  }
  qtyInputs.forEach(input=>input.addEventListener('input',()=>{editRevision++;updateQty()}));
- q('#sanro-sleeve').addEventListener('change',()=>{editRevision++;updateEstimate()});
  updateQty();
 
  // A visual print zone is independent for each product side. All physical
@@ -97,7 +96,7 @@
   const d=sides[side];
   // Merchant-selected WooCommerce Media Library mockup; presentation only.
   // Design geometry, authoritative area and DTF master bindings are unchanged.
-  const mockup=mappedMockup(side,mockupSize?mockupSize.value:'S');
+  const mockup=mappedMockup(side);
   const shirt=q('.sanro-shirt');
   shirt.setAttribute('data-side',side);
   shirt.setAttribute('data-mockup',String(typeof mockup==='string' && /^https?:\/\//i.test(mockup)));
@@ -354,13 +353,9 @@
      ||obj.y+obj.height>area.height+0.000001)throw new Error('Geometri draft tidak valid.');
    }
   }
-  if(design.long_sleeve!==undefined){
-   if(typeof design.long_sleeve!=='boolean')throw new Error('Model lengan draft tidak valid.');
-   if(config.pricing&&config.pricing.fixed_sleeve){
-    if(design.long_sleeve)throw new Error('Model lengan draft tidak sesuai produk.');
-    q('#sanro-sleeve').value=config.pricing.fixed_sleeve;
-   }else q('#sanro-sleeve').value=design.long_sleeve?'long':'short';
-  }
+  if(design.long_sleeve!==undefined&&typeof design.long_sleeve!=='boolean')
+   throw new Error('Model lengan draft tidak valid.');
+  legacyLongSleeve=design.long_sleeve===true;
   if(design.shirt_color!==undefined){
    if(!shirtColors.has(design.shirt_color))throw new Error('Warna draft tidak valid.');
    shirtColor.value=design.shirt_color;q('.sanro-shirt').style.setProperty('--sanro-shirt-color',shirtColor.value);
@@ -476,7 +471,7 @@
   if(Object.values(quantities).some(v=>!Number.isInteger(v)||v<0||v>999)
    ||Object.values(quantities).reduce((a,b)=>a+b,0)>5000)throw new Error('Jumlah per ukuran tidak valid.');
   design.shirt_color=shirtColor.value;design.quantities=quantities;
-  design.long_sleeve=q('#sanro-sleeve').value==='long';
+  design.long_sleeve=legacyLongSleeve;
   return design;
  }
  async function ensureProductionFont(){
@@ -534,7 +529,7 @@
  }
  // Derived private JPEG preview, not original print-resolution artwork.
  // Require the owner-bound master before previewing an uploaded image.
- async function makeDesignPreview(name,variantSize){
+ async function makeDesignPreview(name){
   await ensureProductionFont();
   const d=sides[name],area=config.safe_areas[name];
   // A blank garment side still needs an owner-bound preview for the native
@@ -554,7 +549,7 @@
     probe.src=d.url;
    });
   }
-  const mockupUrl=mappedMockup(name,variantSize||(mockupSize?mockupSize.value:'S'));
+  const mockupUrl=mappedMockup(name);
   let garment=null;
   if(mockupUrl){
    garment=await new Promise((resolve,reject)=>{const img=new Image();img.crossOrigin='anonymous';img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('Mockup produk gagal dimuat.'));img.src=mockupUrl;});
@@ -848,14 +843,6 @@
       if(editRevision!==revisionAtStart)
        throw new Error('Desain berubah selama upload. Simpan draft dan unggah preview terbaru.');
      }
-     if(config.mockup_matrix&&Object.keys(config.mockup_matrix).length){
-      for(const input of qtyInputs.filter(input=>Number(input.value)>0))for(const name of ['front','back']){
-       const encoded=await makeDesignPreview(name,input.dataset.size);if(!encoded)continue;
-       if(editRevision!==revisionAtStart)throw new Error('Desain berubah selama preview ukuran.');
-       const response=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId)+'/previews/'+name+'/variant/'+encodeURIComponent(input.dataset.size),{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),'X-Sanro-Owner-Token':ownerToken},body:JSON.stringify({image_base64:encoded,expected_design_hash:lastKnownDesignHash})});
-       const value=await window.SanroStudioTransport.readJson(response);if(!response.ok||!value.valid)throw new Error('Preview ukuran '+input.dataset.size+' gagal.');
-      }
-     }
      if(!completed.length)throw new Error('Tidak ada desain yang dapat dipratinjau.');
      if(editRevision!==revisionAtStart)throw new Error('Desain berubah setelah preview disimpan. Simpan ulang.');
      uploadStatus.textContent='Preview terbaru tersimpan dan siap ditautkan ke pesanan.';
@@ -961,6 +948,7 @@
      });
      const result=await response.json();
      if(!response.ok||!result.valid)throw new Error('Keranjang belum siap ('+response.status+').');
+     try{sessionStorage.setItem('sanro-studio-checkout:'+savedId,ownerToken)}catch(_error){}
      status.textContent='Desain masuk keranjang. Lanjutkan melalui halaman keranjang untuk otorisasi checkout.';
      const safeCartUrl=typeof window.SanroStudioSafeCartUrl==='function'
       ?window.SanroStudioSafeCartUrl(result.cart_url,location.href):null;

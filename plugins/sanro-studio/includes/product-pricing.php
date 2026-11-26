@@ -19,6 +19,14 @@ function sanro_studio_product_pricing_fields() {
         'description' => 'Harga dari server. Produk lain membutuhkan tabel harga tersendiri.',
         'desc_tip' => true,
     ]);
+    woocommerce_wp_select([
+        'id' => '_sanro_studio_product_sleeve',
+        'label' => 'SANRO Studio — Model produk kaos',
+        'value' => get_post_meta($product_id, '_sanro_studio_product_sleeve', true) === 'long' ? 'long' : 'short',
+        'options' => ['short' => 'Lengan pendek', 'long' => 'Lengan panjang'],
+        'description' => 'Pakai produk WooCommerce tersendiri dan tabel harga khusus untuk kaos lengan panjang. Profil tunik selalu lengan 3/4.',
+        'desc_tip' => true,
+    ]);
     if(function_exists('woocommerce_wp_textarea_input')){
         $override=get_post_meta($product_id,'_sanro_studio_price_table',true);
         woocommerce_wp_textarea_input(['id'=>'_sanro_studio_price_table_json','label'=>'SANRO Studio — Tabel khusus produk (JSON)','value'=>is_array($override)&&isset($override['table'])?json_encode($override['table'],JSON_PRETTY_PRINT):'',
@@ -39,6 +47,9 @@ function sanro_studio_save_product_pricing($product) {
         || !is_string($_POST['_sanro_studio_pricing_profile'])) return;
     $profile = wp_unslash($_POST['_sanro_studio_pricing_profile']);
     $allowed=['','cotton_combed_24s','tunik_oversize_34'];if(!in_array($profile,$allowed,true))return;
+    $sleeve = $_POST['_sanro_studio_product_sleeve'] ?? get_post_meta($product->get_id(), '_sanro_studio_product_sleeve', true);
+    if (!in_array($sleeve, ['', 'short', 'long'], true)) return;
+    if ($profile === 'tunik_oversize_34') $sleeve = 'short';
     $override=null;
     if(array_key_exists('_sanro_studio_price_table_json',$_POST)){
         if(!is_string($_POST['_sanro_studio_price_table_json']))return;
@@ -48,6 +59,12 @@ function sanro_studio_save_product_pricing($product) {
             $override=['profile'=>$profile,'table'=>$table];
         }else $override=[];
     }
+    $effective_override = $override ?? get_post_meta($product->get_id(), '_sanro_studio_price_table', true);
+    if ($sleeve === 'long' && $profile !== '' && (empty($effective_override['table']) || ($effective_override['profile'] ?? null) !== $profile)) {
+        if (class_exists('WC_Admin_Meta_Boxes')) WC_Admin_Meta_Boxes::add_error('SANRO Studio: isi tabel harga khusus untuk produk lengan panjang.');
+        return;
+    }
+    $product->update_meta_data('_sanro_studio_product_sleeve', $sleeve);
     if($override!==null)$product->update_meta_data('_sanro_studio_price_table',$override);
     $product->update_meta_data('_sanro_studio_pricing_profile', $profile);
 }

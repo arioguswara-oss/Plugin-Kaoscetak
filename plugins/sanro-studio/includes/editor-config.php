@@ -28,7 +28,8 @@ function sanro_studio_public_editor_config($product_id, $allow_inactive = false)
     if (empty($pricing['valid'])) {
         return ['valid' => false, 'error' => 'product_unavailable'];
     }
-    if(function_exists('sanro_studio_mockup_matrix_public') && sanro_studio_mockup_matrix_public($product_id)===false)return ['valid'=>false,'error'=>'mockup_mapping_invalid'];
+    $color_mockups = function_exists('sanro_studio_color_mockups_public') ? sanro_studio_color_mockups_public($product_id) : [];
+    if ($color_mockups === false) return ['valid'=>false,'error'=>'mockup_mapping_invalid'];
     $variation_map=function_exists('sanro_studio_variation_map')?sanro_studio_variation_map($product_id):[];
     $is_variable=method_exists($product,'is_type')&&$product->is_type('variable');
     if($is_variable){
@@ -47,11 +48,11 @@ function sanro_studio_public_editor_config($product_id, $allow_inactive = false)
         'print_zones' => function_exists('sanro_studio_product_print_zones')
             ? sanro_studio_product_print_zones($product_id) : [],
         'categories' => $config['categories'],
-        'mockup_matrix' => function_exists('sanro_studio_mockup_matrix_public') ? sanro_studio_mockup_matrix_public($product_id) : [],
+        'color_mockups' => $color_mockups,
         'palette' => function_exists('sanro_studio_mockup_palette') ? sanro_studio_mockup_palette($product_id) : [],
         'variations' => is_array($variation_map)?$variation_map:[],
         'pricing_profile' => $pricing['profile'],
-        'pricing' => isset($pricing['table'])?array_intersect_key($pricing,array_flip(['table','sizes','sleeve_extra','fixed_sleeve','revision'])):null,
+        'pricing' => isset($pricing['table'])?array_intersect_key($pricing,array_flip(['table','sizes','sleeve_label','revision'])):null,
         // Public, verified Media Library image URLs only. Never private DTF masters.
         'mockups' => function_exists('sanro_studio_product_mockup_urls')
             ? sanro_studio_product_mockup_urls($product_id) : [],

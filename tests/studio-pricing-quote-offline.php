@@ -9,15 +9,18 @@ $GLOBALS['areas'] = ['front' => ['width' => 32, 'height' => 48], 'back' => ['wid
 function absint($id) { return abs((int) $id); }
 function get_woocommerce_currency() { return $GLOBALS['currency']; }
 function get_post_meta($id, $key, $single) {
-    return $key === '_sanro_studio_pricing_profile' ? $GLOBALS['profile'] : $GLOBALS['areas'];
+    if ($key === '_sanro_studio_pricing_profile') return $GLOBALS['profile'];
+    if ($key === '_sanro_studio_product_sleeve') return $id === 8 ? 'long' : '';
+    if ($key === '_sanro_studio_price_table') return $id === 8 ? ($GLOBALS['long_table'] ?? '') : '';
+    return $GLOBALS['areas'];
 }
 function wc_get_product($id) {
-    return $id === 7 ? new class {
+    return in_array($id,[7,8],true) ? new class {
         public function get_status() { return $GLOBALS['published'] ? 'publish' : 'draft'; }
         public function is_purchasable() { return $GLOBALS['purchasable']; }
     } : false;
 }
-foreach (['print-area', 'product-area', 'editor-config', 'pricing', 'pricing-quote', 'quote'] as $file) {
+foreach (['print-area', 'product-area', 'editor-config', 'pricing', 'pricing-profiles', 'pricing-quote', 'quote'] as $file) {
     require dirname(__DIR__) . '/plugins/sanro-studio/includes/' . $file . '.php';
 }
 $checks = 0;
@@ -45,8 +48,12 @@ foreach ($official as $size => $prices) {
                 $d = ['front' => side($front), 'quantities' => [$size => 1], 'long_sleeve' => $long];
                 if ($back !== null) $d['back'] = side($back);
                 $j = $back === null ? $i : array_search($back, $categories, true);
-                $expected = $prices[max($i,$j)] + ($back === null ? 0 : $extras[min($i,$j)]) + ($long ? 10000 : 0);
+                $expected = $prices[max($i,$j)] + ($back === null ? 0 : $extras[min($i,$j)]);
                 $q = sanro_studio_product_quote(7, $d);
+                if ($long) {
+                    check_quote(!$q['valid'] && $q['error'] === 'select_long_sleeve_product', 'legacy flag cannot switch product');
+                    continue;
+                }
                 check_quote($q['valid'] && $q['total'] === $expected, 'official full price matrix');
                 $swap = $d; unset($swap['front'], $swap['back']);
                 $swap['back'] = side($front);
@@ -58,7 +65,13 @@ foreach ($official as $size => $prices) {
 }
 check_quote(sanro_studio_product_quote(7, design())['total'] === 297000, 'multi-size quantity totals');
 $q = sanro_studio_product_quote(7, ['front' => side('A5'), 'quantities' => ['S' => 1], 'long_sleeve' => true]);
-check_quote($q['total'] === 72000, 'Owner long-sleeve S example');
+check_quote($q['error'] === 'select_long_sleeve_product', 'legacy long sleeve requires the separate product');
+check_quote(!sanro_studio_product_quote(8,design())['valid'], 'long sleeve product requires its own table');
+$custom = $official;
+$custom['S'][2] = 85750;
+$GLOBALS['long_table'] = ['profile'=>'cotton_combed_24s','table'=>$custom];
+$q = sanro_studio_product_quote(8,design());
+check_quote($q['valid'] && $q['sleeve_label'] === 'long' && $q['total'] === 304500, 'separate price table without surcharge');
 foreach ($categories as $category) {
     [$w,$h] = sanro_studio_print_categories()[$category];
     $d = ['front' => side($category, $w, $h), 'quantities' => ['S' => 1]];

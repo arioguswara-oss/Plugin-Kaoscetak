@@ -173,6 +173,11 @@ function sanro_studio_store_owned_draft_preview($design_id, $owner_token, $side,
         if (!isset($after['preview_refs']) || !is_array($after['preview_refs'])) {
             $after['preview_refs'] = [];
         }
+        // The first standard upload replaces a legacy draft's size-specific preview set.
+        if (!empty($after['preview_variant_required']) || !empty($after['preview_refs_by_size'])) {
+            $after['preview_refs'] = [];
+            unset($after['preview_refs_by_size'], $after['preview_variant_required']);
+        }
         $after['preview_refs'][$side] = $stored['file_id'];
         $after['preview_design_hash'] = hash('sha256', maybe_serialize($before['design']));
         if ($before === $after) return $stored;

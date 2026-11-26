@@ -20,6 +20,10 @@ function sanro_studio_product_quote($product_id, $design) {
     if (!is_array($design) || (array_key_exists('long_sleeve', $design) && !is_bool($design['long_sleeve']))) {
         return ['valid' => false, 'error' => 'invalid_variant'];
     }
+    if (!empty($design['long_sleeve']) && ($config['pricing']['sleeve_label'] ?? null) !== 'long') {
+        return ['valid'=>false,'error'=>'select_long_sleeve_product'];
+    }
+    $profile = function_exists('sanro_studio_product_pricing_config') ? sanro_studio_product_pricing_config($product_id) : null;
     $validated = sanro_studio_validate_product_design($product_id, $design);
     if (empty($validated['valid'])) return $validated;
     $quantities = $design['quantities'] ?? null;
@@ -39,9 +43,8 @@ function sanro_studio_product_quote($product_id, $design) {
     $pieces = $total = 0;
     foreach ($quantities as $size => $quantity) {
         if ($quantity === 0) continue;
-        $profile=function_exists('sanro_studio_product_pricing_config')?sanro_studio_product_pricing_config($product_id):null;
-        $unit=$profile!==null?sanro_studio_profile_unit_price($profile,$size,$categories['front'],$categories['back'],$design['long_sleeve']??false)
-            :sanro_studio_24s_unit_price($size,$categories['front'],$categories['back'],$design['long_sleeve']??false);
+        $unit=$profile!==null?sanro_studio_profile_unit_price($profile,$size,$categories['front'],$categories['back'])
+            :sanro_studio_24s_unit_price($size,$categories['front'],$categories['back']);
         if (!$unit['valid']) return $unit;
         $subtotal = $unit['unit_price'] * $quantity;
         $mapped=$is_variable?($variation_map[$design['shirt_color']][$size]??null):null;
@@ -57,7 +60,7 @@ function sanro_studio_product_quote($product_id, $design) {
         'shirt_color' => isset($design['shirt_color'])&&is_string($design['shirt_color'])?$design['shirt_color']:'',
         'pricing_profile' => $config['pricing_profile'], 'currency' => 'IDR',
         'pricing_revision'=>$profile['revision']??null,
-        'sleeve_label'=>$profile['fixed_sleeve']??(!empty($design['long_sleeve'])?'long':'short'),
+        'sleeve_label'=>$profile['sleeve_label']??'short',
         'categories' => $categories, 'sides' => $validated['sides'],
         'lines' => $lines, 'pieces' => $pieces, 'total' => $total,
     ];

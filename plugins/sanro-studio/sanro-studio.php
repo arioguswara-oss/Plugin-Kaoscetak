@@ -210,7 +210,6 @@ add_action('rest_api_init', 'sanro_studio_background_routes');
 
 add_action('woocommerce_product_options_general_product_data', 'sanro_studio_mockup_matrix_fields');
 add_action('woocommerce_admin_process_product_object', 'sanro_studio_mockup_matrix_save');
-add_action('rest_api_init', 'sanro_studio_mockup_variant_routes');
 
 // Explicit administrator OAuth setup; registers no writer and defines no enable flags.
 require_once __DIR__ . '/includes/drive-oauth.php';

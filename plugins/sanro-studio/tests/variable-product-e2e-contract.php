@@ -27,7 +27,7 @@ function wc_get_product_variation_attributes($id){$attrs=wc_get_product($id)->ge
 function get_post_meta($id,$key,$single=true){return $key==='_sanro_studio_mockup_matrix'?$GLOBALS['vp_rows']:'';}
 function sanro_studio_valid_mockup_attachment($id){return is_int($id)&&$id>0?$id:0;}
 function sanro_studio_product_pricing_config($id){return ['valid'=>true,'profile'=>'cotton_combed_24s','sizes'=>['S','M']];}
-function sanro_studio_profile_unit_price($profile,$size,$front,$back,$sleeve){return ['valid'=>true,'unit_price'=>$size==='S'?50000:60000,'currency'=>'IDR'];}
+function sanro_studio_profile_unit_price($profile,$size,$front,$back,$sleeve=false){return ['valid'=>true,'unit_price'=>$size==='S'?50000:60000,'currency'=>'IDR'];}
 function get_woocommerce_currency(){return 'IDR';}
 function sanro_studio_public_editor_config($id,$allow=false){return ['valid'=>true,'pricing_profile'=>'cotton_combed_24s'];}
 function sanro_studio_validate_product_design($id,$design){return ['valid'=>true,'sides'=>['front'=>['empty'=>false],'back'=>['empty'=>true]]];}

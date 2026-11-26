@@ -17,7 +17,7 @@ function sanro_studio_create_draft($product_id, $design) {
     // image-only design. It cannot be quoted or checked out until an image
     // master is bound and valid geometry is saved.
     $empty_bootstrap = function_exists('sanro_studio_image_bootstrap_allowed')
-        && sanro_studio_image_bootstrap_allowed($design);
+        && sanro_studio_image_bootstrap_allowed($design, $product_id);
     if (!$empty_bootstrap) {
         $result = sanro_studio_validate_product_design($product_id, $design);
         if (empty($result['valid'])) return $result;

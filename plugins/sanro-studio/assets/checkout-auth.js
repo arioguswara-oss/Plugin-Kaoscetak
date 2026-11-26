@@ -4,14 +4,17 @@
   var draftPrefix = 'sanro-studio-draft:';
   var missingMessage = 'Sesi desain tidak ditemukan di tab ini. Kembali ke editor, simpan desain, lalu ulangi checkout.';
 
-  function getField() {
-    return document.getElementById(tokenFieldId);
+  function authorize() {
+    var fields = Array.from(document.querySelectorAll('[data-sanro-checkout-token]'));
+    if (!fields.length) {
+      var legacy = document.getElementById(tokenFieldId);
+      if (legacy) fields.push(legacy);
+    }
+    fields.forEach(function(field) { field.value = ''; });
+    return fields.map(authorizeDesign).every(Boolean);
   }
 
-  function authorize() {
-    var field = getField();
-    if (!field) return true; // Ordinary WooCommerce checkout.
-    field.value = '';
+  function authorizeDesign(field) {
     var product = field.getAttribute('data-product-id') || '';
     var design = field.getAttribute('data-design-id') || '';
     if (!/^[1-9][0-9]*$/.test(product) ||
@@ -19,10 +22,11 @@
       return false;
     }
     try {
+      var token = window.sessionStorage.getItem('sanro-studio-checkout:' + design);
       var stored = JSON.parse(window.sessionStorage.getItem(draftPrefix + product) || 'null');
-      if (stored && stored.id === design &&
-          typeof stored.token === 'string' && /^[a-f0-9]{64}$/.test(stored.token)) {
-        field.value = stored.token;
+      if (!token && stored && stored.id === design) token = stored.token;
+      if (typeof token === 'string' && /^[a-f0-9]{64}$/.test(token)) {
+        field.value = token;
         return true;
       }
     } catch (_error) {}

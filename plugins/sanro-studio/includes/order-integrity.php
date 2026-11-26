@@ -5,27 +5,61 @@ require_once __DIR__.'/checkout-charges.php';
 /** One internal saved-order contract for retry, payment, production and receipts. No repricing. */
 function sanro_studio_saved_order_context($order, $require_previews = true) {
     if (!is_object($order) || !method_exists($order,'get_items') || !method_exists($order,'get_id')) return ['valid'=>false,'error'=>'invalid_order'];
-    $items=$order->get_items('line_item');$id=null;$ids=[];
+    $items=$order->get_items('line_item');$groups=[];
     if (!is_array($items)) return ['valid'=>false,'error'=>'invalid_items'];
     foreach($items as $item_id=>$item){
         if(!is_object($item)||!method_exists($item,'get_meta')) return ['valid'=>false,'error'=>'invalid_item'];
         $design=$item->get_meta('_sanro_studio_design_id',true);
         if($design===''){foreach(['_sanro_studio_size','_sanro_studio_design_snapshot','_sanro_studio_preview_front_ref','_sanro_studio_preview_back_ref','_sanro_studio_repeat_discount'] as $key)if($item->get_meta($key,true)!=='')return ['valid'=>false,'error'=>'order_design_mismatch'];continue;}
         if(!is_string($design)||!preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD',$design)
-            ||($id!==null&&$id!==$design)||!is_int($item_id)||$item_id<1)return ['valid'=>false,'error'=>'order_design_mismatch'];
-        $id=$design;$ids[]=$item_id;
+            ||!is_int($item_id)||$item_id<1)return ['valid'=>false,'error'=>'order_design_mismatch'];
+        $groups[$design][]=$item_id;
     }
     $marker=method_exists($order,'get_meta')?$order->get_meta('_sanro_studio_checkout_design_id',true):'';
-    if($marker!==''&&$marker!==$id)return ['valid'=>false,'error'=>'order_design_mismatch'];
-    if($id===null)return ['valid'=>true,'studio'=>false];
-    sort($ids,SORT_NUMERIC);$record=get_option('sanro_studio_draft_'.$id,false);
-    if(!is_array($record)||($record['status']??null)!=='locked'||($record['order_id']??null)!==$order->get_id()
-        ||($record['order_item_ids']??null)!==$ids||!is_array($record['design']??null)||!is_array($record['checkout_quote']??null))return ['valid'=>false,'error'=>'order_snapshot_missing'];
-    if(function_exists('sanro_studio_repeat_saved_order_allowed')&&!sanro_studio_repeat_saved_order_allowed($order,$record))return ['valid'=>false,'error'=>'repeat_order_integrity_failed'];
     $pinned=method_exists($order,'get_meta')?$order->get_meta('_sanro_studio_checkout_quote_hash',true):'';
-    if($pinned!==''&&$pinned!==sanro_studio_frozen_quote_hash($record))return ['valid'=>false,'error'=>'order_quote_snapshot_mismatch'];
+    $batch=method_exists($order,'get_meta')?$order->get_meta('_sanro_studio_checkout_design_quotes',true):'';
+    if (!$groups && $marker === '' && $batch === '') return ['valid'=>true,'studio'=>false];
+    $multi = count($groups) > 1;
+    if (!$groups || count($groups) > 10
+        || ($multi && ($marker !== '' || $pinned !== ''))
+        || (!$multi && ($batch !== '' || ($marker !== '' && $marker !== array_key_first($groups))))) {
+        return ['valid'=>false,'error'=>'order_design_mismatch'];
+    }
+    ksort($groups);
+    $contexts = $quotes = $contracts = $all_ids = [];
+    $shipping = null;
+    foreach ($groups as $id => $ids) {
+        sort($ids,SORT_NUMERIC);
+        $record = get_option('sanro_studio_draft_'.$id,false);
+        if (!is_array($record) || ($record['status']??null)!=='locked' || ($record['order_id']??null)!==$order->get_id()
+            || ($record['order_item_ids']??null)!==$ids || !is_array($record['design']??null) || !is_array($record['checkout_quote']??null)) {
+            return ['valid'=>false,'error'=>'order_snapshot_missing'];
+        }
+        $current_shipping = $record['shipping_total'] ?? 0;
+        if ($shipping !== null && $current_shipping !== $shipping) return ['valid'=>false,'error'=>'order_shipping_mismatch'];
+        $shipping = $current_shipping;
+        $context = sanro_studio_saved_design_context($order,$id,$record,$ids,$items,$require_previews);
+        if (empty($context['valid'])) return $context;
+        $contexts[$id] = $context;
+        $contracts[] = $context['contract'];
+        $quotes[$id] = sanro_studio_frozen_quote_hash($record);
+        $all_ids = array_merge($all_ids,$ids);
+    }
+    if ($multi ? (($batch !== '' || $require_previews) && $batch !== $quotes)
+        : ($pinned !== '' && $pinned !== reset($quotes))) return ['valid'=>false,'error'=>'order_quote_snapshot_mismatch'];
+    $contract = $multi ? ['valid'=>true,'designs'=>$contracts,'shipping_total'=>$shipping] : $contracts[0];
+    if (empty(sanro_studio_checkout_batch_lock_preflight($order,$contract)['valid'])) {
+        return ['valid'=>false,'error'=>'order_amount_or_allocation_mismatch'];
+    }
+    if (!$multi) return reset($contexts);
+    sort($all_ids,SORT_NUMERIC);
+    return ['valid'=>true,'studio'=>true,'item_ids'=>$all_ids,'contract'=>$contract,
+        'fingerprint'=>hash('sha256',maybe_serialize(array_column($contexts,'fingerprint')))];
+}
+
+function sanro_studio_saved_design_context($order,$id,$record,$ids,$items,$require_previews) {
+    if(function_exists('sanro_studio_repeat_saved_order_allowed')&&!sanro_studio_repeat_saved_order_allowed($order,$record))return ['valid'=>false,'error'=>'repeat_order_integrity_failed'];
     $contract=['valid'=>true,'design_id'=>$id,'product_id'=>$record['product_id']??null,'quote'=>$record['checkout_quote'],'shipping_total'=>$record['shipping_total']??0];
-    if(empty(sanro_studio_checkout_batch_lock_preflight($order,$contract)['valid']))return ['valid'=>false,'error'=>'order_amount_or_allocation_mismatch'];
     $hash=hash('sha256',maybe_serialize($record['design']));$allocation=[];
     foreach($record['design']['quantities']??[] as $size=>$qty)if($qty>0)$allocation[$size]=$qty;
     $quoted=[];foreach($record['checkout_quote']['items']??[] as $size=>$line)$quoted[$size]=$line['quantity']??null;

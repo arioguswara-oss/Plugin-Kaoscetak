@@ -1,6 +1,10 @@
 # SANRO Studio — satu baseline resmi development
 
-## LATEST — 964e428 admin PASS, release closure NO-GO
+## LATEST — Mockup standar dan pemisahan produk lengan
+
+26 November 2026 WIB. Selector ukuran mockup dan surcharge jenis lengan dihapus pada branch PR #52. Katalog admin memakai satu pasangan mockup per warna, dengan mapping ukuran WooCommerce tetap terpisah. Checkout mendukung dua atau lebih desain Studio dalam satu keranjang dengan otorisasi, alokasi, harga dan snapshot per desain. Bukti PHP/JS terarah dan kontrak checkout campuran **PASS**. Pengujian browser staging, SQL lock campuran pada runtime WooCommerce dan final sign-off masih terbuka. **96,50% → 96,50%, delta 0,00. NO-GO Final Release.** [Kriteria dan bukti acceptance](../qa/studio-standard-mockup-and-sleeve-products-20261126.md).
+
+## Checkpoint sebelumnya — 964e428 admin PASS, release closure NO-GO
 
 26 November 2026 WIB. Staging V1.1.0 source `964e428`, install gate dari evidence `851d11b`, patch source `2bd19b3` belum terpasang. UI admin simple dan variable (fixture #53/#76, Woo variants #77–82) lulus tambah, edit, aktif/nonaktif, arsip, restore, dan simpan mockup #74/#75. Buyer simple mengikat dua master privat dan quote/cart Rp297.000 untuk S×1/M×2 dengan A4 dua sisi. Variable mengonfirmasi warna, ukuran dan mockup, tetapi draft HTTP 429 menahan quote/cart live. Defect Simpan, ukuran kategori, preview koleksi dan tipe penghitung kuota ditangani pada source. JS terarah PASS, PHP belum dijalankan. Visual desktop pointer dan isolasi tema lulus, Desain Saya dan portrait/touch/pinch masih terbuka. **96,50% → 96,50%, delta 0,00. NO-GO Final Release dan rekomendasi merge.** [Laporan closure dan bukti](../qa/studio-release-closure-20261126.md).
 

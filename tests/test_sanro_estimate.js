@@ -10,7 +10,7 @@ for(let i=0;i<sizes.length;i++){
  for(let j=0;j<cats.length;j++){
   assert.equal(price.unit(sizes[i],cats[j],null),table[i][j]);checks++;
   assert.equal(price.unit(sizes[i],null,cats[j]),table[i][j]);checks++;
-  assert.equal(price.unit(sizes[i],cats[j],null,true),table[i][j]+10000);checks++;
+  assert.equal(price.unit(sizes[i],cats[j],null,true),table[i][j]);checks++;
   for(let k=0;k<cats.length;k++){
    const expected=table[i][Math.max(j,k)]+extras[Math.min(j,k)];
    assert.equal(price.unit(sizes[i],cats[j],cats[k]),expected);checks++;
