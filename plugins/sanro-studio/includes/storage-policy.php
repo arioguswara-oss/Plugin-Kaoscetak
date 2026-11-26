@@ -205,6 +205,11 @@ function sanro_studio_read_owned_draft_preview($design_id, $owner_token, $side, 
     }
     $draft = sanro_studio_read_draft($design_id, $owner_token);
     if (empty($draft['valid'])) return $draft;
+    return sanro_studio_read_verified_preview_file($design_id, $side, $file_id);
+}
+
+/** Internal filesystem reader; callers MUST authorize the design and reference first. */
+function sanro_studio_read_verified_preview_file($design_id, $side, $file_id) {
     if (!in_array($side, ['front', 'back'], true)
         || !is_string($file_id) || !is_string($design_id)
         || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id)) {
