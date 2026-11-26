@@ -150,7 +150,7 @@ function sanro_studio_pricing_verify_cart($cart, $contract, $check_price = true)
     foreach ($expected['lines'] as $line) $sizes[$line['sanro_studio_size']] = $line;
     foreach ($items as $line) {
         $size = $line['sanro_studio_size'] ?? null;
-        if (!sanro_studio_pricing_is_line($line) || !is_string($size) || !isset($sizes[$size])
+        if (!empty($line['sanro_studio_replacement_pending']) || !sanro_studio_pricing_is_line($line) || !is_string($size) || !isset($sizes[$size])
             || ($line['product_id'] ?? null) !== $contract['product_id']
             || ($line['sanro_studio_design_id'] ?? null) !== $contract['design_id']
             || ($line['variation_id']??0)!==$sizes[$size]['variation_id']
@@ -260,6 +260,12 @@ function sanro_studio_rest_pricing_draft_cart($request) {
     } catch (Throwable $error) {
         if ($replacing) {
             try {
+                // The draft may already contain the new revision. Preserve old rows
+                // for recovery, but never treat them as an accepted checkout allocation.
+                foreach ($existing as &$old_line) {
+                    if (($old_line['sanro_studio_design_id'] ?? null) === $id) $old_line['sanro_studio_replacement_pending'] = true;
+                }
+                unset($old_line);
                 $cart->set_cart_contents($existing);
                 $cart->calculate_totals();
             } catch (Throwable $ignored) {
@@ -545,6 +551,11 @@ function sanro_studio_pricing_checkout_design($id, $token, $lines) {
     $product = $lines[0]['product_id'] ?? null;
     if (!is_string($id) || !is_int($product) || !is_string($token) || !preg_match('/^[a-f0-9]{64}$/D', $token)) {
         wc_add_notice('SANRO Studio: design authorization failed.', 'error'); return null;
+    }
+    foreach ($lines as $line) {
+        if (!empty($line['sanro_studio_replacement_pending'])) {
+            wc_add_notice('SANRO Studio: simpan ulang desain dan perbarui keranjang sebelum checkout.', 'error'); return null;
+        }
     }
     foreach ($lines as $line) if (($line['product_id'] ?? null) !== $product) {
         wc_add_notice('SANRO Studio: inconsistent design product.', 'error'); return null;
