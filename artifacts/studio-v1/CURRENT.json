@@ -10,11 +10,11 @@
   "plugin_digest": "cab430b9a596823c01b675882c46fc0d966d5705c02e97d4c2eadb9daf28525f",
   "deployment_authorized": false,
   "staging_installation_authorized": true,
-  "runtime_e2e": "Fresh guest Home, Design ID, Studio Mini Cart, two sizes, Cart and Checkout passed. Native WooCommerce drawer artwork failed.",
-  "staging_installation_state": "V1.1.0_695B441_INSTALLED_AUTHENTICATED_HTTPS_GATE_PASS",
+  "runtime_e2e": "Guest Cart and Checkout PASS on Home candidate. Installed drawer correction fixes Store API payload; native visible artwork remains FAIL.",
+  "staging_installation_state": "V1.1.0_0A15C10_INSTALLED_AUTHENTICATED_HTTPS_GATE_PASS",
   "staging_installed_version": "1.1.0",
-  "currently_installed_source": "695b4410f394dbb862a2ef44c2d7753b852b7711",
-  "installed_tree_digest": "26aeb020ff96684e1166fe1bd7c09d5cac4abd25c25660878652b54b9a31035e",
+  "currently_installed_source": "0a15c107032bbdef1adc7d966269d7af1cc09541",
+  "installed_tree_digest": "274df9212cf63dc9df128bc9cde507418c93a4a3b3a97c09c48b1cbc602cd0fc",
   "execution_evidence": "artifacts/studio-v1/takeover-695b441-20261126/runtime-acceptance.json",
   "owner_scope_revision": "f415ec55dd5b360da89b76804512624a3611288d",
   "drive_configuration": "NOT CONFIGURED",
@@ -202,7 +202,14 @@
   "native_drawer_artwork_correction": {
     "candidate_source": "0a15c107032bbdef1adc7d966269d7af1cc09541",
     "artifact_directory": "artifacts/studio-v1/store-api-drawer-fix-20261127",
-    "state": "BUILT_TARGETED_REGRESSION_PASS_STAGING_NOT_INSTALLED",
+    "state": "INSTALLED_ACTIVE_GATES_PASS_STORE_API_PASS_NATIVE_VISUAL_FAIL",
+    "installed_tree_digest": "274df9212cf63dc9df128bc9cde507418c93a4a3b3a97c09c48b1cbc602cd0fc",
+    "final_release": false
+  },
+  "responsive_drawer_followup": {
+    "candidate_source": "d6defee4f14f87274e24242b8732796460010f82",
+    "artifact_directory": "artifacts/studio-v1/responsive-drawer-followup-20261127",
+    "state": "BUILT_TARGETED_REGRESSION_PASS_STAGING_NOT_RUN",
     "final_release": false
   }
 }

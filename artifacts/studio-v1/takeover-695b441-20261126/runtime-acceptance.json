@@ -62,13 +62,14 @@
     "catalog_ui": "PASS read only",
     "order_list": "PASS read only",
     "drive_setup": "PASS interface only, runtime OFF",
-    "exact_mockup_mapping_save_and_order_preview": "REUSED historical authorized tests"
+    "exact_mockup_mapping_save_and_order_preview": "REUSED historical authorized tests",
+    "mockup_mapping_tabs_after_latest_install": "PASS fixture #53 read-only"
   },
   "drawer_source_fix": {
     "source": "0a15c107032bbdef1adc7d966269d7af1cc09541",
     "local_regressions": "PASS responsive image fields cleared while preserving authorization, non-Studio cases and input objects",
     "candidate_build": "PASS reproducible",
-    "staging": "NOT INSTALLED"
+    "staging": "INSTALLED_ACTIVE_PRE_AND_POST_AUTHENTICATED_HTTPS_PASS"
   },
   "isolated_design_id_concurrency": "NOT TESTED isolated SQL runtime unavailable",
   "order_payment_created": false,
@@ -77,5 +78,36 @@
     "after": 96.5,
     "delta": 0
   },
-  "final_release": "NO_GO"
+  "final_release": "NO_GO",
+  "latest_authenticated_install": {
+    "source": "0a15c107032bbdef1adc7d966269d7af1cc09541",
+    "installed_tree_digest": "274df9212cf63dc9df128bc9cde507418c93a4a3b3a97c09c48b1cbc602cd0fc",
+    "archive_sha256": "95e30d0bf85bd482225953e7770f07caa37305a8958f0d7277f75ae6bc084498",
+    "manifest_sha256": "c77b8cd0aa51c60c9abd3dc930f3c97f48731f2bc5d53e015c97b9d48136785c",
+    "pre_and_post_https": "PASS including fresh GET",
+    "rollback_retained": true,
+    "writers_off": true,
+    "private_roots": "PASS",
+    "temporary_transport_deleted": true
+  },
+  "latest_guest_drawer_retest": {
+    "fresh_guest_empty_cart": true,
+    "design_id": "ID-00066",
+    "matching_studio_rows": 2,
+    "drawer_id_and_total_match": true,
+    "total_idr": 167000,
+    "store_api": "PASS two private image URLs with blank responsive fields",
+    "browser_drawer": "FAIL visible img.src was private but img.currentSrc still resolved to catalog through retained HTML srcset",
+    "cart_items_removed": true,
+    "screenshot": "drawer-0a15c10-live.jpg"
+  },
+  "prepared_followup": {
+    "source": "d6defee4f14f87274e24242b8732796460010f82",
+    "artifact_directory": "artifacts/studio-v1/responsive-drawer-followup-20261127",
+    "scope": "Serve the private artwork in src, thumbnail and srcset; clear the catalog attachment ID; SELECT before allocating public IDs.",
+    "local_php_lint_and_contract_tests": "PASS",
+    "reproducible_package": "PASS",
+    "staging_install": "NOT_RUN",
+    "isolated_sql_concurrency": "NOT_TESTED"
+  }
 }

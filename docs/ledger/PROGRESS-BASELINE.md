@@ -1,6 +1,10 @@
 # SANRO Studio — satu baseline resmi development
 
-## LATEST — 695b441 terpasang, koreksi artwork drawer menunggu staging
+## LATEST — 0a15c10 aktif, responsive drawer belum lulus visual
+
+27 November 2026 WIB. Kandidat `0a15c10` terpasang melalui gate HTTPS WordPress sebelum dan sesudah (**PASS**). Installed tree `274df921…02cd0fc` cocok dengan ZIP. Guest baru melihat ID-00066, dua baris dan Rp167.000. Store API sudah mengembalikan artwork privat dan `srcset` kosong, tetapi atribut responsif HTML drawer tetap mengarah ke katalog, jadi artwork drawer live **FAIL**. Patch `d6defee` memasang URL privat juga pada `srcset`, menghapus kaitan attachment katalog dan mencegah pembacaan ID mengonsumsi alokasi baru. Tes terarah dan dua build identik PASS. Kandidat patch belum terpasang. **96,50% → 96,50%, Δ 0,00. GO review staging, NO-GO Final Release.** [Bukti runtime dan gap](../qa/studio-takeover-acceptance-20261126.md).
+
+## Checkpoint — Acceptance guest kandidat 695b441
 
 26–27 November 2026 WIB. Gate HTTPS admin sebelum/sesudah **PASS**, kandidat `695b441` aktif dengan digest `26aeb020…035e`. Installer ditangani pada `e25671f` agar jurnal lama hanya bisa diarsipkan ketika predecessor lebih baru terbukti dan backup lama utuh. Guest desktop PASS untuk Home, proteksi perubahan, sisi depan/belakang, drag/resize, Design ID pendek, Studio Mini Cart, dua ukuran dan checkout Rp167.000. Toolbar dan overflow lulus pada 340/454 CSS px dari zoom Chromium. Drawer native WooCommerce masih memilih gambar katalog dari `srcset`. Patch `0a15c10` dan build reproducible PASS lokal, menunggu install serta uji live. Upload, pinch, viewport persis 320/390/430 dan concurrency SQL belum terbukti pada kandidat aktif. **96,50% → 96,50%, Δ 0,00. NO-GO Final Release.** [Laporan dan screenshot](../qa/studio-takeover-acceptance-20261126.md).
 

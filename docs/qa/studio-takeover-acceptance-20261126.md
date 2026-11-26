@@ -2,7 +2,17 @@
 
 26 November 2026 WIB · PR #52 · HEAD yang diperiksa `bbb7c73` · baseline 96,50%
 
-## Hasil akhir takeover
+## Retest kandidat terbaru yang terpasang
+
+27 November 2026 WIB. `0a15c10` **terpasang aktif** dengan digest `274df9212cf63dc9df128bc9cde507418c93a4a3b3a97c09c48b1cbc602cd0fc`. Gate HTTPS pra-instalasi dan GET pascainstalasi **PASS**. Tidak ada kredensial baru. Rollback tersedia, private roots PASS, DTF/Drive/GC dan writer tambahan OFF. Transport sementara ketiga sudah dihapus. Tab Mockup dan Area Cetak untuk fixture #53 terlihat pada UI admin kandidat aktif.
+
+Uji guest baru memperoleh ID-00066, dengan dua baris dan Rp167.000 pada drawer. Respons Store API membawa URL privat pada `src` dan `thumbnail` serta nilai `srcset` kosong. Kedua gambar drawer yang terlihat masih mempunyai `img.src` privat dan `img.currentSrc` katalog karena atribut `srcset` lama tetap ada pada HTML. Ini memisahkan **PASS respons Store API** dari **FAIL render drawer**. Baris sintetis dibersihkan. [Bukti screenshot dan runtime](../../artifacts/studio-v1/takeover-695b441-20261126).
+
+Kandidat lanjutan `d6defee` mengisi `srcset` dengan URL artwork privat dan memakai ID attachment 0. Substitusi tetap bergantung pada otorisasi sesi. Perubahan ID melakukan lookup sebelum INSERT agar pembacaan ID yang sudah ada tidak mengonsumsi alokasi baru. ID terdahulu tetap stabil. Lint, tes kotak hitam bentuk payload dan otorisasi, tes ID serta dua build identik PASS. Instal dan retest live kandidat ini masih terbuka. [Paket, manifest, checksum dan binding](../../artifacts/studio-v1/responsive-drawer-followup-20261127).
+
+**Keputusan akhir siklus 96,50% → 96,50% (delta 0,00 poin), GO review staging, NO-GO Final Release.**
+
+## Acceptance dan instalasi kandidat 695b441
 
 Kandidat `695b441` **terpasang dan aktif**. Gate HTTPS pra-instalasi dan pascainstalasi PASS melalui sesi resmi WordPress Administrator. Digest tree `26aeb020ff96684e1166fe1bd7c09d5cac4abd25c25660878652b54b9a31035e` cocok dengan ZIP. Rollback tetap tersedia, private roots PASS, writer dan GC OFF. Tidak ada kredensial baru. Kedua transport staging sementara sudah dihapus.
 
@@ -15,7 +25,7 @@ Percobaan pertama berhenti sebelum rename dengan `committed_tree_changed`. Jurna
 | Editor desktop | **PASS**. Toggle depan-belakang, teks, pointer drag dan resize, panel Desain Saya serta dua ukuran. |
 | Layout | **PASS** untuk 1363, 454 dan 340 CSS px. Dua viewport sempit berasal dari zoom browser. 320/390/430 persis, touch/pinch dan upload end-to-end belum terverifikasi pada kandidat aktif. File chooser Cloud Browser timeout. Kebijakan Chromium memblokir DevTools device emulation. |
 | Studio Mini Cart, Cart, Checkout | **PASS**. Artwork privat termuat di Mini Cart Studio dan Cart. ID-00001, Biru, S × 1 Rp82.000, M × 1 Rp85.000, total Rp167.000 konsisten hingga Checkout. Edit Desain membuka ID yang sama. Lanjut Belanja kembali ke katalog. Item sintetis dibersihkan. |
-| Native WooCommerce drawer | **FAIL live pada 695b441**. Permintaan Store API guest mengembalikan `src` dan `thumbnail` privat dengan `srcset` katalog tersisa. Drawer menampilkan gambar katalog. `0a15c10` menghapus `srcset` dan `sizes` setelah otorisasi preview lulus. Tes bentuk object/array, cross-session dan label legacy PASS. Kandidat patch reproducible, live retest masih diperlukan. |
+| Native WooCommerce drawer | **FAIL live pada 695b441**. Permintaan Store API guest mengembalikan `src` dan `thumbnail` privat dengan `srcset` katalog tersisa. Drawer menampilkan gambar katalog. `0a15c10` menghapus `srcset` dan `sizes` setelah otorisasi preview lulus. Tes bentuk object/array, cross-session dan label legacy PASS. Kandidat patch reproducible. Hasil retest dan follow-up ada di atas. |
 | Keamanan preview | Tes cross-session lokal PASS. URL preview artwork sintetis yang sama mengembalikan HTTP 404 tanpa cookie setelah baris uji dihapus. |
 | Admin | **PASS** tampilan top-level menu, katalog, daftar pesanan, dan setup Drive OFF. Uji CRUD/mapping dan order preview menggunakan bukti sebelumnya. |
 | Concurrency Design ID | **NOT TESTED**. Runtime SQL terisolasi belum tersedia. Tes mapping dan idempotensi dipakai sesuai cakupan. |
