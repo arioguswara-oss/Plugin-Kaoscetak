@@ -46,6 +46,7 @@ function sanro_studio_ui_header($label,$back=''){
         ? '<div class="sanro-mini-cart-wrap"><a class="sanro-cart-link" aria-label="Keranjang WooCommerce" aria-haspopup="true" aria-expanded="false" aria-controls="sanro-mini-cart-panel" data-sanro-mini-cart-toggle href="' . $cart_url . '">' . $icon . '</a><div id="sanro-mini-cart-panel" class="sanro-mini-cart-panel" data-sanro-mini-cart role="region" aria-label="Mini Cart" hidden>' . $mini_cart . '<a class="sanro-mini-cart-view" href="' . $cart_url . '">Lihat keranjang</a></div></div>'
         : '<span class="sanro-cart-link" role="img" aria-label="Keranjang belum tersedia" title="Keranjang belum tersedia">' . $icon . '</span>';
     echo '<header class="sanro-appbar">'
+        . '<a class="sanro-home-link" data-sanro-home-link aria-label="Beranda" title="Beranda" href="' . esc_url(home_url('/')) . '">' . sanro_studio_ui_icon('home') . '</a>'
         . ($back ? '<a class="sanro-back" aria-label="Kembali pilih produk" href="' . esc_url($back) . '">' . sanro_studio_ui_icon('arrow') . '</a>' : '')
         . '<h1>' . esc_html($label) . '</h1>' . $cart_control . '</header>';
 }

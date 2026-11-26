@@ -241,8 +241,10 @@ ob_start();
 sanro_studio_ui_header('Studio','/studio/');
 $header = ob_get_clean();
 qa_assert(str_contains($header,'href="https://stage.example.test/custom-cart/"')
+    && str_contains($header,'class="sanro-home-link" data-sanro-home-link aria-label="Beranda" title="Beranda" href="https://stage.example.test/"')
+    && strpos($header,'class="sanro-home-link"') < strpos($header,'<h1>Studio</h1>')
     && str_contains($header,'<span>1</span>') && $GLOBALS['qa_cart']->cart->lines === $before,
-    'header uses native Woo cart URL without mutating the session or its badge');
+    'header uses escaped WordPress homepage and native Woo cart URL without mutating the session or its badge');
 $GLOBALS['qa_cart_url'] = 'https://stage.example.test/?page_id=16';
 qa_assert(sanro_studio_ui_cart_url() === $GLOBALS['qa_cart_url'],'plain configured cart permalink accepted');
 foreach (['https://stage.example.test/','https://stage.example.test/?page_id=17',
@@ -256,7 +258,9 @@ foreach (['missing','unpublished','plain','block'] as $invalid_page) {
     ob_start();
     sanro_studio_ui_header('Studio');
     $header = ob_get_clean();
-    qa_assert(!str_contains($header,'href=') && str_contains($header,'Keranjang belum tersedia'),
-        'invalid cart configuration renders an inactive icon');
+    qa_assert(str_contains($header,'class="sanro-home-link"')
+        && !str_contains($header,'href="https://stage.example.test/custom-cart/"')
+        && str_contains($header,'Keranjang belum tersedia'),
+        'invalid cart configuration keeps Home and renders an inactive cart icon');
 }
 ob_end_flush();

@@ -354,7 +354,12 @@
  };
  // Owner-bound draft session; master/preview APIs and checkout use independent server gates.
  const saveButton=q('#sanro-save-draft'),saveStatus=q('#sanro-save-status');
- let savedId=null,savedPublicId=null,ownerToken=null,saving=false,uploadingMaster=false,editRevision=0,savedRevision=-1,lastKnownDesignHash=null;
+ let savedId=null,savedPublicId=null,ownerToken=null,saving=false,uploadingMaster=false,editRevision=0,savedRevision=0,lastKnownDesignHash=null;
+ const homeLink=document.querySelector('#sanro-studio-buyer [data-sanro-home-link]');
+ if(homeLink)homeLink.addEventListener('click',event=>{
+  const dirty=saving||uploadingMaster||editRevision!==savedRevision;
+  if(dirty&&!window.confirm('Perubahan desain belum disimpan. Tetap kembali ke beranda?'))event.preventDefault();
+ });
  const boundMasterRefs={};
  const draftStorageKey='sanro-studio-draft:'+String(config.product_id);
  const requestedDesign=new URLSearchParams(location.search).get('sanro_design');

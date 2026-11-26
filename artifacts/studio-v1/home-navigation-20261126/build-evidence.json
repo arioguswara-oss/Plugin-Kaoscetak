@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "repository": "arioguswara-oss/Plugin-Kaoscetak",
+  "branch": "work/studio-mobile-checkout-integration-20261123",
+  "parent_checkpoint": "636b008d12d3bf0e1b3b122fc947a24c40446f19",
+  "source_commit": "695b4410f394dbb862a2ef44c2d7753b852b7711",
+  "version": "1.1.0",
+  "candidate_zip": "sanro-studio-staging-candidate.zip",
+  "candidate_zip_sha256": "167cc119fe4d86facddb05dfff51a651fd687ee8ae7a671c3251376435747dc9",
+  "manifest_sha256": "58d291989ff44b90b9eef797cea908219026b2a94bfa41c20363ced0b57aae28",
+  "plugin_digest": "7e6ab118513dd2585c490d269e35bf81e0002ca3f91cb66a2da9acb7dc461a23",
+  "reproducible_builds": 2,
+  "build_result": "identical ZIP and manifest SHA256",
+  "preflight": "PASS PLAN_ONLY; all candidate PHP files linted with PHP 8.5.4 CLI",
+  "target_runtime": "NOT TESTED",
+  "staging_install": "NOT RUN; waiting for GDI-02 runtime capability correction",
+  "deployment_authorized": false,
+  "generator_default": "OFF",
+  "drive_default": "OFF",
+  "merge": "NOT AUTHORIZED"
+}

@@ -15,6 +15,7 @@ function get_option($key, $default=false) { return $default; }
 function esc_html($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
 function esc_attr($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
 function esc_url($value){return esc_html($value);}
+function home_url($path='/'){return 'https://staging.example.test'.$path;}
 function wc_get_product($id){return false;}
 function add_filter(...$args){}
 function esc_url_raw($value) { return filter_var((string)$value, FILTER_SANITIZE_URL); }
@@ -60,6 +61,7 @@ register_shutdown_function(function () {
         'no owner token'=>strpos($inline,'owner_token')===false,
         'inline script escaped'=>strpos($inline,'</script>')===false && strpos($inline,'\\u003C')!==false,
         'concept appbar'=>strpos($html,'sanro-appbar')!==false,
+        'escaped WordPress Home icon in appbar'=>strpos($html,'class="sanro-home-link" data-sanro-home-link aria-label="Beranda" title="Beranda" href="https://staging.example.test/"')!==false,
         'dedicated editor layout scope'=>strpos($html,'sanro-buyer-editor')!==false,
         'collection save and email access separated'=>strpos($html,'sanro-collection-save')!==false&&strpos($html,'sanro-collection-access')!==false,
         'collection empty/locked states explicit'=>strpos($collection_js,'Koleksi privat. Verifikasi email')!==false&&strpos($collection_js,'Belum ada desain tersimpan')!==false,
