@@ -117,7 +117,10 @@ function sswr_apply() {
             sswr_write($path,$bytes,0644);
         }$zip->close();chmod($incoming,0755);
         $gate=sswr_preflight(); // Recheck identity, flags, active plugins, exact old bytes and journal after extraction.
-        $r=sswr_replace(WP_PLUGIN_DIR.'/sanro-studio',$root,$incoming,$m,$gate['existing_tree_digest']);
+        $verified_external_predecessor = is_int($gate['prior_journal_verified'])
+            && $gate['prior_journal_verified'] > 0;
+        $r=sswr_replace(WP_PLUGIN_DIR.'/sanro-studio',$root,$incoming,$m,$gate['existing_tree_digest'],
+            null,$verified_external_predecessor);
         return ['state'=>'committed','source'=>SSWR_SOURCE,'installed_tree_digest'=>$r['candidate_digest'],'rollback_retained'=>true,'flags_changed'=>false,'activation_changed'=>false,'order_writes'=>false];
     } finally {flock($lock,LOCK_UN);fclose($lock);}
 }

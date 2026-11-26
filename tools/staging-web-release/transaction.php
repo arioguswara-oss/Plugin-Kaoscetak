@@ -61,11 +61,19 @@ function sswr_recover($target,$root,$r) {
     }
     $r['phase']='rolled_back'; sswr_journal($root,$r); return 'rolled_back';
 }
-function sswr_replace($target,$root,$incoming,$manifest,$before,$checkpoint=null) {
+function sswr_replace($target,$root,$incoming,$manifest,$before,$checkpoint=null,$verified_external_predecessor=false) {
     if (sswr_tree($target)!==$before) throw new RuntimeException('existing_tree_changed');
     $old=sswr_journal($root);
     if ($old) {
-        sswr_recover($target,$root,$old);
+        // A verified external installer can have committed a newer exact predecessor.
+        if ($verified_external_predecessor === true && $old['phase'] === 'committed'
+            && $old['candidate_digest'] !== $before) {
+            if ($old['target'] !== $target || sswr_tree($root.'/'.$old['backup']) !== $old['before_digest']) {
+                throw new RuntimeException('superseded_journal_not_verified');
+            }
+        } else {
+            sswr_recover($target,$root,$old);
+        }
         sswr_write($root.'/transaction-'.$old['transaction'].'.json',json_encode($old,JSON_UNESCAPED_SLASHES|JSON_THROW_ON_ERROR));
     }
     $id=bin2hex(random_bytes(16));
