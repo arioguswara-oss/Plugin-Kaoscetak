@@ -10,12 +10,12 @@
   "plugin_digest": "cab430b9a596823c01b675882c46fc0d966d5705c02e97d4c2eadb9daf28525f",
   "deployment_authorized": false,
   "staging_installation_authorized": true,
-  "runtime_e2e": "Single and variable buyer quote, mixed cart and checkout review verified. New order/payment and physical touch acceptance are not claimed.",
-  "staging_installation_state": "V1.1.0_094A511_INSTALLED_ACTIVE_FINAL_ACCEPTANCE_OPEN",
+  "runtime_e2e": "Automatic tier resize and rotation, two-sided quote, private preview, and cart summary verified on staging. No live order created.",
+  "staging_installation_state": "V1.1.0_C5D1184_AUTO_PRINT_INSTALLED_ACTIVE",
   "staging_installed_version": "1.1.0",
-  "currently_installed_source": "094a511b7b315358dd6641bbca7ee9c4664619a9",
-  "installed_tree_digest": "3658b899ec3854b1b4436ab1f275ff5fa6c7c1da519fa858874ab673adafa4fa",
-  "execution_evidence": "artifacts/studio-v1/standard-mockup-20261126/runtime-evidence.json",
+  "currently_installed_source": "c5d1184ee968ae2f2fcafb8646c22670f231fd0e",
+  "installed_tree_digest": "6fc942196e86c298480d0ba0ab236c6e0c66dbfae5431743c657d394b6f579ec",
+  "execution_evidence": "artifacts/studio-v1/automatic-print-sizing-20261126/runtime-evidence.json",
   "owner_scope_revision": "f415ec55dd5b360da89b76804512624a3611288d",
   "drive_configuration": "NOT CONFIGURED",
   "final_release": true,
@@ -155,8 +155,10 @@
     "manifest_sha256": "42a2a7aa6e0614dc1fbd688ad1d42ea30af8e2952c1b325c2fcddb9d35fad196",
     "plugin_digest": "1f9c6b9fe5fe22421d3b0a788462626501a5ecededf56452c21c5c8d6a64fef6",
     "report": "docs/qa/studio-automatic-print-sizing-20261126.md",
-    "installation_status": "STAGING_GATE_REQUIRES_WORDPRESS_LOGIN",
-    "acceptance": "TARGETED_PHP_JS_GD_PASS_LIVE_PENDING",
-    "final_release": false
+    "installation_status": "INSTALLED_ACTIVE_STAGING_GATE_PASS",
+    "acceptance": "TARGETED_PHP_JS_GD_AND_STAGING_QUOTE_CART_PASS",
+    "final_release": false,
+    "installed_tree_digest": "6fc942196e86c298480d0ba0ab236c6e0c66dbfae5431743c657d394b6f579ec",
+    "runtime_evidence": "artifacts/studio-v1/automatic-print-sizing-20261126/runtime-evidence.json"
   }
 }

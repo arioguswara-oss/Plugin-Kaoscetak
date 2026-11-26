@@ -2,7 +2,7 @@
 
 ## LATEST — Deteksi otomatis ukuran cetak
 
-26 November 2026 WIB. Source `c5d1184` di PR #52 menghapus pemilih kategori buyer. Editor dan server menghitung tier A5/A4/A3/A3+ per sisi dari gabungan bounding box objek di bidang cm, termasuk rotasi. Sisi kosong tidak dikenakan tarif. Admin dapat mengatur batas serta tarif. Checkout menyimpan kategori hasil quote untuk produksi secara privat. Tes PHP/JS, fixture GD rotasi dan validasi paket reproducible **PASS**. Gate live dan smoke kandidat menunggu login WordPress staging. **96,50% → 96,50%, delta 0,00. NO-GO Final Release.** [Kriteria dan bukti](../qa/studio-automatic-print-sizing-20261126.md).
+26 November 2026 WIB. Source `c5d1184` di PR #52 menghapus pemilih kategori buyer. Editor dan server menghitung tier A5/A4/A3/A3+ per sisi dari gabungan bounding box objek di bidang cm, termasuk rotasi. Sisi kosong tidak dikenakan tarif. Admin dapat mengatur batas serta tarif. Checkout menyimpan kategori hasil quote untuk produksi secara privat. Tes PHP/JS, fixture GD rotasi dan validasi paket reproducible **PASS**. Revisi aktif di staging. Gate LiteSpeed dan digest PASS. Smoke terarah membuktikan perubahan estimasi Rp62.000 → Rp82.000 → Rp87.000 saat resize/rotasi, serta estimasi, quote server dan keranjang Rp102.000 untuk desain dua sisi. Ringkasan buyer menyembunyikan kategori. **96,50% → 96,50%, delta 0,00. GO review staging. NO-GO Final Release.** [Kriteria dan bukti](../qa/studio-automatic-print-sizing-20261126.md).
 
 ## Checkpoint — Mockup standar dan pemisahan produk lengan
 
