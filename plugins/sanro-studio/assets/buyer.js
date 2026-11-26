@@ -357,6 +357,7 @@
  let savedId=null,ownerToken=null,saving=false,uploadingMaster=false,editRevision=0,savedRevision=-1,lastKnownDesignHash=null;
  const boundMasterRefs={};
  const draftStorageKey='sanro-studio-draft:'+String(config.product_id);
+ const requestedDesign=new URLSearchParams(location.search).get('sanro_design');
  async function readDraftMaster(id,token,name,fileId){
   if(!config.master_upload_enabled||typeof fileId!=='string'
    ||!fileId.startsWith(id.toLowerCase()+'-'+name+'-'))
@@ -452,7 +453,14 @@
  }
  async function reopenDraft(){
   let stored;
-  try{stored=sessionStorage.getItem(draftStorageKey)}catch(_error){return false}
+  try{
+   if(requestedDesign!==null){
+    if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(requestedDesign))throw new Error('Design ID tidak valid.');
+    const token=sessionStorage.getItem('sanro-studio-checkout:'+requestedDesign);
+    if(!token)throw new Error('Akses desain tidak tersedia pada tab ini.');
+    stored=JSON.stringify({id:requestedDesign,token});
+   }else stored=sessionStorage.getItem(draftStorageKey);
+  }catch(error){if(requestedDesign!==null)throw error;return false}
   if(!stored)return false;
   const revisionAtRequest=editRevision;
   let credentials;
@@ -464,7 +472,7 @@
    method:'GET',headers:{'X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),'X-Sanro-Owner-Token':credentials.token},
    credentials:'same-origin',cache:'no-store'});
   if(response.status===410){
-   try{sessionStorage.removeItem(draftStorageKey)}catch(_error){}
+   try{if(requestedDesign!==null)sessionStorage.removeItem('sanro-studio-checkout:'+requestedDesign);else sessionStorage.removeItem(draftStorageKey)}catch(_error){}
    throw new Error('Draft telah kedaluwarsa (7 hari). Simpan desain sebagai draft baru.');
   }
   if(!response.ok)throw new Error('Draft tidak dapat dibuka ('+response.status+').');
