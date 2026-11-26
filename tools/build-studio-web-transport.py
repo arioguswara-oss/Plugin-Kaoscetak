@@ -9,6 +9,13 @@ INSTALLED_UI_110={
  'archive_sha256':'991f53c93ad6ae7c8c73bad1af4bd1b5406beac93ca7c64d6b0365a289e7896b',
  'version':'1.1.0','channel':'candidate','source_commit':'12b2c043cc6ccbb3e7c828949bf524ff6f2e84b1',
 }
+# Exact guest-cart P0 candidate currently installed on staging; this immutable
+# predecessor is bound to its published manifest/archive and freshly measured tree.
+INSTALLED_GUEST_CART_P0={
+ 'manifest_sha256':'cf562494a0e0a5def4d2393bc3adffb18e9dc62e77440aefaa7c2fd812bbf6b7',
+ 'archive_sha256':'e4b6abb2529f620ba4d71ff69fc210f672c2b27af3bb50bd4d6d405fb3c0409d',
+ 'version':'1.1.0','channel':'candidate','source_commit':'e36af5addcd16eacab9c8463c6a50bab73b94d89',
+}
 # Exact P1-corrected 1.1.0 candidate most recently verified on staging.
 INSTALLED_UI_P1={
  'manifest_sha256':'bae045a6d8255a482bba191c2a7a5983c83234f7cee887d9302d02231bfabd15',
@@ -64,6 +71,7 @@ old_manifest_path=pathlib.Path(a.existing_manifest);old_archive_path=pathlib.Pat
 old_manifest_sha=hashlib.sha256(old_manifest).hexdigest()
 is_final=(old.get('version')=='1.0.0' and old.get('channel')=='final' and old.get('deployment_authorized') is False and old_manifest_sha==APPROVED_V1_MANIFEST_SHA256)
 is_installed_ui=(old_manifest_sha==INSTALLED_UI_110['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_UI_110.items() if k not in ('manifest_sha256','archive_sha256')))
+is_installed_guest_cart_p0=(old_manifest_sha==INSTALLED_GUEST_CART_P0['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_GUEST_CART_P0.items() if k not in ('manifest_sha256','archive_sha256')))
 is_installed_ui_p1=(old_manifest_sha==INSTALLED_UI_P1['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_UI_P1.items() if k not in ('manifest_sha256','archive_sha256')))
 is_installed_catalog=(old_manifest_sha==INSTALLED_CATALOG_P1['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_CATALOG_P1.items() if k not in ('manifest_sha256','archive_sha256')))
 is_installed_variable=(old_manifest_sha==INSTALLED_VARIABLE_E2E['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_VARIABLE_E2E.items() if k not in ('manifest_sha256','archive_sha256')))
@@ -71,9 +79,10 @@ is_installed_correction=(old_manifest_sha==INSTALLED_LUMISE_CORRECTION['manifest
 is_installed_standard=(old_manifest_sha==INSTALLED_STANDARD_MOCKUP['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_STANDARD_MOCKUP.items() if k not in ('manifest_sha256','archive_sha256')))
 is_installed_auto=(old_manifest_sha==INSTALLED_AUTO_PRINT['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_AUTO_PRINT.items() if k not in ('manifest_sha256','archive_sha256')))
 is_installed_nav=(old_manifest_sha==INSTALLED_CHECKOUT_NAV['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_CHECKOUT_NAV.items() if k not in ('manifest_sha256','archive_sha256')))
-if not (is_final or is_installed_ui or is_installed_ui_p1 or is_installed_catalog or is_installed_variable or is_installed_correction or is_installed_standard or is_installed_auto or is_installed_nav):raise SystemExit('existing manifest is not an exact approved Final Release or previously installed 1.1.0 staging candidate')
+if not (is_final or is_installed_ui or is_installed_guest_cart_p0 or is_installed_ui_p1 or is_installed_catalog or is_installed_variable or is_installed_correction or is_installed_standard or is_installed_auto or is_installed_nav):raise SystemExit('existing manifest is not an exact approved Final Release or previously installed 1.1.0 staging candidate')
 if hashlib.sha256(old_archive).hexdigest()!=old.get('archive_sha256'):raise SystemExit('existing release archive checksum mismatch')
 if is_installed_ui and old.get('archive_sha256')!=INSTALLED_UI_110['archive_sha256']:raise SystemExit('installed UI archive is not the previously verified staging archive')
+if is_installed_guest_cart_p0 and old.get('archive_sha256')!=INSTALLED_GUEST_CART_P0['archive_sha256']:raise SystemExit('installed guest-cart P0 archive is not the previously verified staging archive')
 if is_installed_ui_p1 and old.get('archive_sha256')!=INSTALLED_UI_P1['archive_sha256']:raise SystemExit('installed P1 UI archive is not the previously verified staging archive')
 if is_installed_catalog and old.get('archive_sha256')!=INSTALLED_CATALOG_P1['archive_sha256']:raise SystemExit('installed catalog archive is not the previously verified staging archive')
 if is_installed_variable and old.get('archive_sha256')!=INSTALLED_VARIABLE_E2E['archive_sha256']:raise SystemExit('installed variable-product archive is not the previously verified staging archive')
