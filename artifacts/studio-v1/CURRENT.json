@@ -10,12 +10,12 @@
   "plugin_digest": "cab430b9a596823c01b675882c46fc0d966d5705c02e97d4c2eadb9daf28525f",
   "deployment_authorized": false,
   "staging_installation_authorized": true,
-  "runtime_e2e": "Admin simple/variable lifecycle and simple buyer cart verified on installed source 964e428. Buyer collection and mobile acceptance open.",
-  "staging_installation_state": "V1.1.0_964E428_INSTALLED_RELEASE_ACCEPTANCE_NO_GO",
+  "runtime_e2e": "Single and variable buyer quote, mixed cart and checkout review verified. New order/payment and physical touch acceptance are not claimed.",
+  "staging_installation_state": "V1.1.0_094A511_INSTALLED_ACTIVE_FINAL_ACCEPTANCE_OPEN",
   "staging_installed_version": "1.1.0",
-  "currently_installed_source": "964e428442e21cbae05bd336b81f8aef82cac424",
-  "installed_tree_digest": "f8243694f32da6cbb54ce7186b32f91e0c78cef828d8616b32d27e9fabbfbf73",
-  "execution_evidence": "artifacts/studio-v1/lumise-final-correction-20261125/runtime-evidence.json",
+  "currently_installed_source": "094a511b7b315358dd6641bbca7ee9c4664619a9",
+  "installed_tree_digest": "3658b899ec3854b1b4436ab1f275ff5fa6c7c1da519fa858874ab673adafa4fa",
+  "execution_evidence": "artifacts/studio-v1/standard-mockup-20261126/runtime-evidence.json",
   "owner_scope_revision": "f415ec55dd5b360da89b76804512624a3611288d",
   "drive_configuration": "NOT CONFIGURED",
   "final_release": true,
@@ -140,8 +140,10 @@
     "manifest_sha256": "2fd4d92199c3c724019d9544336c99b18f919797af6b090f420888dfff4b821c",
     "plugin_digest": "6ddbe931c65e0c567e2857ea4c18e3fc1636cb4916293edc3da23171aa442e7d",
     "report": "docs/qa/studio-standard-mockup-and-sleeve-products-20261126.md",
-    "installation_status": "BUILT_PLAN_ONLY",
-    "acceptance": "OFFLINE_PASS_STAGING_PENDING",
-    "final_release": false
+    "installation_status": "INSTALLED_ACTIVE_STAGING_GATE_PASS",
+    "acceptance": "LIVE_BUYER_ADMIN_AND_MIXED_CART_PASS_CHECKOUT_REVIEW_PASS_FINAL_ACCEPTANCE_OPEN",
+    "final_release": false,
+    "installed_tree_digest": "3658b899ec3854b1b4436ab1f275ff5fa6c7c1da519fa858874ab673adafa4fa",
+    "runtime_evidence": "artifacts/studio-v1/standard-mockup-20261126/runtime-evidence.json"
   }
 }

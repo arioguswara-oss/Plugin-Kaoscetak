@@ -1,0 +1,137 @@
+{
+  "schema": 1,
+  "date_wib": "2026-11-26",
+  "repository": "arioguswara-oss/Plugin-Kaoscetak",
+  "pull_request": 52,
+  "target": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "source_commit": "094a511b7b315358dd6641bbca7ee9c4664619a9",
+  "version": "1.1.0",
+  "archive_sha256": "ce74fc6f3140b5c9b0e6f30cf1319af12996014a2ca881e5fc532729295b63b7",
+  "candidate_manifest_sha256": "2fd4d92199c3c724019d9544336c99b18f919797af6b090f420888dfff4b821c",
+  "pre_install": {
+    "result": "PASS",
+    "sapi": "litespeed",
+    "php": "8.3.37",
+    "private_roots": "PASS",
+    "all_guarded_writer_flags_off": true,
+    "storage_gc": "OFF",
+    "installed_source": "964e428442e21cbae05bd336b81f8aef82cac424",
+    "installed_tree_digest": "f8243694f32da6cbb54ce7186b32f91e0c78cef828d8616b32d27e9fabbfbf73",
+    "prior_journal_verified": true
+  },
+  "install": {
+    "transaction": "committed",
+    "rollback_retained": true
+  },
+  "post_install": {
+    "result": "PASS",
+    "sapi": "litespeed",
+    "php": "8.3.37",
+    "private_roots": "PASS",
+    "all_guarded_writer_flags_off": true,
+    "storage_gc": "OFF",
+    "installed_source": "094a511b7b315358dd6641bbca7ee9c4664619a9",
+    "installed_tree_digest": "3658b899ec3854b1b4436ab1f275ff5fa6c7c1da519fa858874ab673adafa4fa",
+    "archive_tree_digest_matches": true,
+    "studio_active": true,
+    "woocommerce_active": true
+  },
+  "browser_checks": {
+    "buyer_selector_absent": {
+      "preview_size": true,
+      "sleeve": true
+    },
+    "simple_text_position_and_dimensions_unchanged_on_s_l_qty_edit": true,
+    "admin_variable_product_76_itself_remains_intact": true,
+    "admin_color_mockups": {
+      "saved_and_read_back": true,
+      "media_ids_by_side": [
+        74,
+        75
+      ],
+      "variation_ids_by_color": [
+        [
+          77,
+          78,
+          79
+        ],
+        [
+          80,
+          81,
+          82
+        ]
+      ]
+    },
+    "variable_mockup_live": {
+      "front_loaded": true,
+      "no_change_on_size_qty": true,
+      "back_loaded": true,
+      "different_side_image": true
+    },
+    "server_quote_idr": [
+      {
+        "product_id": 53,
+        "fixture": "simple cotton 24s",
+        "sizes": {
+          "S": {
+            "qty": 2,
+            "unit": 62000
+          },
+          "L": {
+            "qty": 1,
+            "unit": 68000
+          }
+        },
+        "total": 192000
+      },
+      {
+        "product_id": 76,
+        "fixture": "variable tunic 3/4",
+        "sizes": {
+          "M": {
+            "qty": 1,
+            "unit": 85000
+          },
+          "L": {
+            "qty": 2,
+            "unit": 90000
+          }
+        },
+        "total": 265000
+      }
+    ],
+    "mixed_cart": {
+      "result": "PASS",
+      "design_count": 2,
+      "line_count": 4,
+      "currency": "IDR",
+      "total": 457000
+    },
+    "checkout_review": {
+      "result": "PASS",
+      "design_count": 2,
+      "currency": "IDR",
+      "total": 457000,
+      "form_submitted": false
+    },
+    "mixed_order_database_lock": "NOT_TESTED_ON_STAGING",
+    "live_long_sleeve_specific_product": "NOT_TESTED_ON_STAGING",
+    "physical_phone_pinch_zoom": "NOT_TESTED"
+  },
+  "cleanup": {
+    "test_cart_empty": true,
+    "fixture_76_archived_again": true,
+    "temporary_transport_removed": true,
+    "previous_transport_inactive": true,
+    "writer_flags_mutated": false
+  },
+  "boundaries": {
+    "existing_order_mutated": false,
+    "new_order_created": false,
+    "payment_attempted": false,
+    "google_drive_live": "DEFERRED_BY_OWNER",
+    "dtf_regenerated": false,
+    "production_touched": false,
+    "merged": false
+  }
+}

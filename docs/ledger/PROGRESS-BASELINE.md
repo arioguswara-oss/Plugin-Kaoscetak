@@ -2,7 +2,7 @@
 
 ## LATEST — Mockup standar dan pemisahan produk lengan
 
-26 November 2026 WIB. Selector ukuran mockup dan surcharge jenis lengan dihapus pada branch PR #52. Katalog admin memakai satu pasangan mockup per warna, dengan mapping ukuran WooCommerce tetap terpisah. Checkout mendukung dua atau lebih desain Studio dalam satu keranjang dengan otorisasi, alokasi, harga dan snapshot per desain. Bukti PHP/JS terarah dan kontrak checkout campuran **PASS**. Pengujian browser staging, SQL lock campuran pada runtime WooCommerce dan final sign-off masih terbuka. **96,50% → 96,50%, delta 0,00. NO-GO Final Release.** [Kriteria dan bukti acceptance](../qa/studio-standard-mockup-and-sleeve-products-20261126.md).
+26 November 2026 WIB. Source `094a511` terpasang aktif sebagai V1.1.0. Selector ukuran mockup dan surcharge jenis lengan dihapus. Admin memakai satu pasangan mockup per warna dengan mapping variasi WooCommerce terpisah. Browser staging PASS untuk admin variable, geometri desain tetap saat jumlah diubah, quote #53 Rp192.000, quote #76 Rp265.000, keranjang empat baris dari dua Design ID Rp457.000 dan halaman review checkout dengan total yang sama. Gate sebelum/sesudah PASS pada LiteSpeed PHP 8.3.37, private roots PASS, digest terpasang `3658b899…fa4fa` cocok dengan ZIP, GC dan writer OFF. Draft/order historis PASS offline. Submit dan lock mixed WooCommerce live serta acceptance touch/visual masih terbuka. **96,50% → 96,50%, delta 0,00. GO review staging. NO-GO Final Release dan rekomendasi merge.** [Kriteria dan bukti acceptance](../qa/studio-standard-mockup-and-sleeve-products-20261126.md).
 
 ## Checkpoint sebelumnya — 964e428 admin PASS, release closure NO-GO
 
