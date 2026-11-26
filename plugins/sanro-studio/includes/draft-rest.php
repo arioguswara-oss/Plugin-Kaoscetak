@@ -620,27 +620,28 @@ function sanro_studio_stage_rest_session_ready() {
  * Unconfigured, nonpublic and mixed-block pages fail closed.
  */
 function sanro_studio_stage_classic_checkout_ready() {
+    return sanro_studio_classic_wc_page_id('cart') > 0
+        && sanro_studio_classic_wc_page_id('checkout') > 0;
+}
+
+/** Resolve a published classic WooCommerce page compatible with the Studio hooks. */
+function sanro_studio_classic_wc_page_id($type) {
     if (!function_exists('wc_get_page_id') || !function_exists('get_post')
         || !function_exists('has_block') || !function_exists('has_shortcode')) {
-        return false;
+        return 0;
     }
     try {
-        foreach ([
-            'cart' => ['woocommerce/cart', 'woocommerce_cart'],
-            'checkout' => ['woocommerce/checkout', 'woocommerce_checkout'],
-        ] as $type => $format) {
-            $page_id = wc_get_page_id($type);
-            if (!is_int($page_id) || $page_id < 1) return false;
-            $page = get_post($page_id);
-            if (!is_object($page) || ($page->post_type ?? null) !== 'page'
-                || ($page->post_status ?? null) !== 'publish'
-                || !is_string($page->post_content ?? null)) return false;
-            if (has_block($format[0], $page)
-                || !has_shortcode($page->post_content, $format[1])) return false;
-        }
-        return true;
+        $page_id = wc_get_page_id($type);
+        if (!is_int($page_id) || $page_id < 1) return 0;
+        $page = get_post($page_id);
+        if (!is_object($page) || ($page->post_type ?? null) !== 'page'
+            || ($page->post_status ?? null) !== 'publish'
+            || !is_string($page->post_content ?? null)
+            || has_block('woocommerce/' . $type, $page)
+            || !has_shortcode($page->post_content, 'woocommerce_' . $type)) return 0;
+        return $page_id;
     } catch (Throwable $error) {
-        return false;
+        return 0;
     }
 }
 

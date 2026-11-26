@@ -118,7 +118,7 @@ body.sanro-studio-page > :is(header,footer,hr),body.sanro-studio-page #page > :i
 #sanro-studio-buyer{--sanro-yellow:#f9c900;max-width:1280px;margin:24px auto;padding:0 0 84px;background:#fff;border:1px solid #ddd;border-radius:18px;overflow:hidden;font-family:Inter,Arial,sans-serif;color:#171717}
 #sanro-studio-buyer .sanro-appbar{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#1c1c1c;color:#fff;min-height:72px;padding:18px 28px;margin:0}
 #sanro-studio-buyer .sanro-appbar h1{font-size:28px;letter-spacing:-1px;line-height:1.1;margin:0;font-weight:800;color:#fff}
-#sanro-studio-buyer .sanro-appbar a{color:#fff;display:flex;text-decoration:none;position:relative}
+#sanro-studio-buyer .sanro-appbar :is(a,.sanro-cart-link){color:#fff;display:flex;text-decoration:none;position:relative}
 #sanro-studio-buyer .sanro-appbar svg{width:29px;height:29px}
 #sanro-studio-buyer .sanro-cart-link span{position:absolute;right:-8px;top:-8px;border-radius:50%;background:#f9c900;color:#111;font-size:12px;padding:3px 6px;font-weight:800}
 #sanro-studio-buyer .sanro-catalog-heading{padding:26px 28px 12px}

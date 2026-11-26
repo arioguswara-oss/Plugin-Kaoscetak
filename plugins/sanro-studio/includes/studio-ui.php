@@ -5,9 +5,43 @@ function sanro_studio_ui_icon($name){
     $paths=['cart'=>'M3 3h2l3 12h10l3-9H6M9 21h.01M18 21h.01','image'=>'M3 3h18v18H3zM3 16l6-6 4 4 3-3 5 5M16 7h.01','text'=>'M4 4h16M12 4v16M8 20h8','shirt'=>'M8 3l4 2 4-2 6 5-4 4-2-2v11H8V10l-2 2-4-4z','folder'=>'M3 6h7l2 2h9v13H3z','arrow'=>'M19 12H5m6-6-6 6 6 6','center'=>'M12 2v4m0 12v4M2 12h4m12 0h4M6 6h12v12H6z','trash'=>'M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7','resize'=>'M4 10V4h6m4 0h6v6M4 14v6h6m4 0h6v-6M4 4l5 5m11-5-5 5M4 20l5-5m11 5-5-5','lock'=>'M6 10h12v11H6zM8 10V7a4 4 0 018 0v3','mountain'=>'M2 20L9 5l6 10 3-5 4 10M7 9l3 3 2-2','home'=>'M3 11l9-8 9 8M5 10v11h5v-7h4v7h5V10','settings'=>'M4 7h16M4 17h16M8 4v6m8 4v6','price'=>'M3 3h10l8 8-10 10-8-8zM8 8h.01','cloud'=>'M6 19a5 5 0 010-10 6 6 0 0112-1 5 5 0 010 11z','orders'=>'M5 4h14v18H5zM9 2h6v4H9zM8 10h8m-8 4h8m-8 4h5'];
     return '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'.($paths[$name]??$paths['settings']).'"/></svg>';
 }
+/** Stay on the storefront so the Woo session and checkout authorization still apply. */
+function sanro_studio_ui_checkout_url() {
+    if (!function_exists('wc_get_checkout_url') || !function_exists('sanro_studio_classic_wc_page_id')) return '';
+    $page_id = sanro_studio_classic_wc_page_id('checkout');
+    if (!$page_id) return '';
+
+    $url = wc_get_checkout_url();
+    if (!is_string($url) || $url === '') return '';
+    $target = wp_parse_url($url);
+    $home = wp_parse_url(home_url('/'));
+    if (empty($target['host']) || empty($home['host']) || strcasecmp($home['host'],$target['host']) !== 0
+        || !in_array($target['scheme'] ?? '', ['http','https'], true)
+        || (($home['scheme'] ?? '') === 'https' && $target['scheme'] !== 'https')
+        || ($target['port'] ?? null) !== ($home['port'] ?? null)
+        || isset($target['user']) || isset($target['pass'])) return '';
+
+    // WooCommerce or a URL filter may return the site root instead of checkout.
+    // Keep plain WordPress permalinks such as /?page_id=17 working.
+    if (rtrim($target['path'] ?? '', '/') === rtrim($home['path'] ?? '', '/')) {
+        wp_parse_str($target['query'] ?? '',$query);
+        if (($query['page_id'] ?? '') !== (string)$page_id) return '';
+    }
+    return $url;
+}
+
 function sanro_studio_ui_header($label,$back=''){
-    $cart=function_exists('wc_get_cart_url')?wc_get_cart_url():'#';$count=function_exists('WC')&&is_object(WC()->cart)&&method_exists(WC()->cart,'get_cart_contents_count')?WC()->cart->get_cart_contents_count():0;
-    echo '<header class="sanro-appbar">'.($back?'<a class="sanro-back" aria-label="Kembali pilih produk" href="'.esc_url($back).'">'.sanro_studio_ui_icon('arrow').'</a>':'').'<h1>'.esc_html($label).'</h1><a class="sanro-cart-link" aria-label="Keranjang" href="'.esc_url($cart).'">'.sanro_studio_ui_icon('cart').($count?'<span>'.(int)$count.'</span>':'').'</a></header>';
+    $checkout = esc_url(sanro_studio_ui_checkout_url());
+    $wc = function_exists('WC') ? WC() : null;
+    $cart = $wc->cart ?? null;
+    $count = is_object($cart) && method_exists($cart,'get_cart_contents_count') ? $cart->get_cart_contents_count() : 0;
+    $icon = sanro_studio_ui_icon('cart') . ($count ? '<span>' . (int)$count . '</span>' : '');
+    $checkout_control = $checkout !== ''
+        ? '<a class="sanro-cart-link" aria-label="Checkout WooCommerce" href="' . $checkout . '">' . $icon . '</a>'
+        : '<span class="sanro-cart-link" role="img" aria-label="Checkout belum tersedia" title="Checkout belum tersedia">' . $icon . '</span>';
+    echo '<header class="sanro-appbar">'
+        . ($back ? '<a class="sanro-back" aria-label="Kembali pilih produk" href="' . esc_url($back) . '">' . sanro_studio_ui_icon('arrow') . '</a>' : '')
+        . '<h1>' . esc_html($label) . '</h1>' . $checkout_control . '</header>';
 }
 function sanro_studio_ui_theme_scope($classes){$classes[]='sanro-studio-page';return $classes;}
 function sanro_studio_ui_admin_body_scope($classes){$page=isset($_GET['page'])&&is_string($_GET['page'])?sanitize_key(wp_unslash($_GET['page'])):'';if(strpos($page,'sanro-studio')===0)$classes.=' sanro-studio-admin';return $classes;}

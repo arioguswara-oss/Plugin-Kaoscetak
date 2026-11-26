@@ -122,6 +122,7 @@ function sanro_studio_render_buyer_editor() {
         $asset = plugin_dir_url(__DIR__ . '/../sanro-studio.php') . 'assets/';
         wp_enqueue_style('sanro-studio-buyer', $asset . 'buyer.css', [], sanro_studio_buyer_style_version());
         sanro_studio_register_buyer_viewport_meta();
+        if (function_exists('nocache_headers')) nocache_headers();
         get_header();
         sanro_studio_render_product_picker(get_permalink($editor_page_id));
         get_footer();
@@ -180,6 +181,7 @@ function sanro_studio_render_buyer_editor() {
     // WordPress may have a canonical redirect for product query arguments.
     // This view is selected only after product identity and visibility checks.
     sanro_studio_register_buyer_viewport_meta();
+    if (function_exists('nocache_headers')) nocache_headers();
     get_header();
     echo '<main id="sanro-studio-buyer" class="sanro-buyer sanro-buyer-editor" aria-label="SANRO Studio">';
     $back_id=(int)get_option('sanro_studio_editor_page_id',0);
