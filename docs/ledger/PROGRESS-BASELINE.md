@@ -1,5 +1,9 @@
 # SANRO Studio — satu baseline resmi development
 
+## LATEST — P0 Cart dan Guest Buyer First PASS di staging
+
+26 November 2026 WIB. V1.1.0 source `e36af5a` aktif dan digest instalasi cocok dengan ZIP. WooCommerce staging memakai Live setelah mode Coming Soon ditemukan menutup Cart untuk guest. Dari sesi Chromium baru tanpa login, buyer menyimpan desain lalu ikon badge 1 membuka Cart. Tombol native melanjutkan ke Checkout. Thumbnail produk sintetis #53 dari Media #74, Design ID, warna Biru, ukuran M × 1 dan Rp65.000 konsisten. Item uji sudah dibersihkan. **96,50% → 96,50%, delta 0,00. GO P0 untuk review staging. NO-GO Final Release** selama acceptance perangkat sentuh dan checkout campuran live masih terbuka. [Bukti guest, screenshot dan paket](../qa/studio-guest-cart-acceptance-20261126.md).
+
 ## Gate permanen V1 — Guest Buyer First
 
 26 November 2026 WIB. Semua acceptance frontend dimulai dari browser bersih tanpa autentikasi WordPress atau keranjang lama. Buyer wajib dapat mendesain lalu membuka WooCommerce Cart dan Checkout pada sesi yang sama. Bukti sesi Administrator tidak dapat meluluskan alur buyer. Cakupan dan kriteria ada di [release gate V1](../qa/studio-v1-final-release-gate.md). P0 navigasi dibuka kembali setelah uji Owner. Baseline tetap **96,50% → 96,50%, delta 0,00**.
