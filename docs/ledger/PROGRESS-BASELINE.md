@@ -1,6 +1,10 @@
 # SANRO Studio — satu baseline resmi development
 
-## LATEST — Owner Home navigation revision
+## LATEST — Takeover acceptance kandidat 695b441
+
+26 November 2026 WIB. SHA ZIP/manifest dan 88 file runtime kandidat `695b441` cocok dengan HEAD `bbb7c73`. Fingerprint aset live mengonfirmasi predecessor `644739c`, dengan digest terdokumentasi `6b39138c…f4a18f3e`. Tes Home lokal 6 PASS. Cloud Browser guest baseline desktop merekam katalog/editor. Gate admin, instalasi, post-gate dan acceptance kandidat baru menunggu sesi WordPress staging yang sah. Concurrency SQL terisolasi belum diuji. **96,50% → 96,50%, delta 0,00 poin. NO-GO Final Release.** [Bukti takeover](../qa/studio-takeover-acceptance-20261126.md).
+
+## Checkpoint — Owner Home navigation revision
 
 26 November 2026. PR #52 continued from verified GitHub checkpoint `636b008d12d3bf0e1b3b122fc947a24c40446f19`; source commit `695b4410f394dbb862a2ef44c2d7753b852b7711` adds an escaped WordPress Home link to the shared picker/editor header and confirms only when the editor revision is dirty or a save/master upload is active. Focused PHP and JS checks pass. Two builds are identical: ZIP SHA256 `167cc119fe4d86facddb05dfff51a651fd687ee8ae7a671c3251376435747dc9`, manifest SHA256 `58d291989ff44b90b9eef797cea908219026b2a94bfa41c20363ced0b57aae28`, plugin digest `7e6ab118513dd2585c490d269e35bf81e0002ca3f91cb66a2da9acb7dc461a23`. Candidate preflight is PASS PLAN_ONLY; staging install/runtime acceptance are NOT TESTED while the GDI-02 runtime capability correction is pending. Previously verified sequential Design IDs and native Store API artwork previews remain in the candidate unchanged. **96.50% → 96.50%, delta 0.00. NO-GO Final Release pending staging runtime gate.** [Focused implementation, test and candidate evidence](../qa/studio-home-navigation-20261126.md).
 
