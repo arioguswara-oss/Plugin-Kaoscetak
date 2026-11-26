@@ -313,6 +313,8 @@ function sanro_studio_pricing_cart_preview($line) {
 /** Use a same-origin, session-authorized, non-cacheable image response. */
 function sanro_studio_pricing_deliver_cart_preview() {
     $id = $_GET['design'] ?? null;
+    // admin-ajax may not initialize the frontend WooCommerce session/cart.
+    if (function_exists('wc_load_cart') && !sanro_studio_pricing_wc_cart()) wc_load_cart();
     $cart = sanro_studio_pricing_wc_cart();
     nocache_headers();
     header('Cache-Control: private, no-store, max-age=0', true);
@@ -335,12 +337,13 @@ function sanro_studio_pricing_deliver_cart_preview() {
 function sanro_studio_pricing_preview_markup($line, $width) {
     $preview = sanro_studio_pricing_cart_preview($line);
     if (!$preview) return '';
-    $url = add_query_arg(['action'=>'sanro_studio_cart_preview','design'=>$line['sanro_studio_design_id']], admin_url('admin-ajax.php'));
+    $url = add_query_arg(['action'=>'sanro_studio_cart_preview','design'=>$line['sanro_studio_design_id']], admin_url('admin-ajax.php', 'relative'));
     return '<img class="sanro-studio-cart-preview" src="' . esc_url($url) . '" alt="' . esc_attr('Preview desain') . '" width="' . (int)$width . '" height="' . (int)$width . '" style="width:' . (int)$width . 'px;max-width:100%;height:auto;object-fit:contain;vertical-align:middle" />';
 }
 
 function sanro_studio_pricing_cart_thumbnail($thumbnail, $line, $key = '') {
-    $preview = sanro_studio_pricing_preview_markup($line, 96);
+    $width = function_exists('is_cart') && is_cart() ? 96 : 64;
+    $preview = sanro_studio_pricing_preview_markup($line, $width);
     return $preview !== '' ? $preview : $thumbnail;
 }
 
