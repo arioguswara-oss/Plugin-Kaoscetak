@@ -377,8 +377,7 @@ function sanro_studio_pricing_summary_groups($lines) {
             || !(($line['data'] ?? null) instanceof WC_Product)) continue;
         $key = $product . ':' . $id . ':' . $color;
         if (!isset($groups[$key])) $groups[$key] = ['line'=>$line,'sizes'=>[]];
-        $groups[$key]['sizes'][] = ['size'=>$size,'qty'=>$qty,
-            'unit'=>$line['data']->get_price()];
+        $groups[$key]['sizes'][] = ['size'=>$size,'qty'=>$qty,'product'=>$line['data'],'line'=>$line];
     }
     return $groups;
 }
@@ -386,7 +385,8 @@ function sanro_studio_pricing_summary_groups($lines) {
 /** Compact grouped reference, without hiding native cart controls or financial totals. */
 function sanro_studio_pricing_group_summary() {
     $cart = sanro_studio_pricing_wc_cart();
-    if (!is_object($cart) || !method_exists($cart,'get_cart')) return;
+    if (!is_object($cart) || !method_exists($cart,'get_cart')
+        || !method_exists($cart,'get_product_price') || !method_exists($cart,'get_product_subtotal')) return;
     $groups = sanro_studio_pricing_summary_groups($cart->get_cart());
     if (!$groups) return;
     echo '<section class="sanro-studio-group-summary" aria-label="Ringkasan desain"><h3>Ringkasan desain</h3>';
@@ -401,7 +401,11 @@ function sanro_studio_pricing_group_summary() {
         echo '<div style="overflow-wrap:anywhere">Design ID: ' . esc_html($line['sanro_studio_design_id']) . '</div>';
         echo '<div>Warna: ' . esc_html($color) . '</div>';
         foreach ($group['sizes'] as $row) {
-            echo '<div>' . esc_html($row['size'] . ' × ' . $row['qty']) . '</div>';
+            $unit = sanro_studio_pricing_display_line($cart->get_product_price($row['product']),$row['line']);
+            $subtotal = sanro_studio_pricing_display_line($cart->get_product_subtotal($row['product'],$row['qty']),$row['line']);
+            echo '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px"><span>'
+                . esc_html($row['size'] . ' × ' . $row['qty']) . ' @ ' . wp_kses_post($unit)
+                . '</span><span>' . wp_kses_post($subtotal) . '</span></div>';
         }
         echo '</div></div>';
     }
