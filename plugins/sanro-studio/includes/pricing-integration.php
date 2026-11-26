@@ -384,21 +384,18 @@ function sanro_studio_pricing_store_api_cart_images($images, $line, $key = '') {
     if (!$preview || !is_string($design)) return $images;
     $url = add_query_arg(['action'=>'sanro_studio_cart_preview','design'=>$design], admin_url('admin-ajax.php'));
     if (!is_string($url) || !wp_parse_url($url, PHP_URL_HOST)) return $images;
+    // Keep the Store API image shape, but never let a catalog srcset override
+    // the session-bound artwork src in the native drawer.
     $image = $images[0];
-    if (is_object($image)) {
-        $image = clone $image;
-        $image->src = $url;
-        $image->thumbnail = $url;
-        $image->alt = 'Preview desain';
-        return [$image];
-    }
-    if (is_array($image) && isset($image['id'])) {
-        $image['src'] = $url;
-        $image['thumbnail'] = $url;
-        $image['alt'] = 'Preview desain';
-        return [(object)$image];
-    }
-    return $images;
+    if (is_array($image) && isset($image['id'])) $image = (object)$image;
+    if (!is_object($image)) return $images;
+    $image = clone $image;
+    $image->src = $url;
+    $image->thumbnail = $url;
+    $image->srcset = '';
+    $image->sizes = '';
+    $image->alt = 'Preview desain';
+    return [$image];
 }
 
 function sanro_studio_pricing_checkout_thumbnail($quantity_html, $line) {
