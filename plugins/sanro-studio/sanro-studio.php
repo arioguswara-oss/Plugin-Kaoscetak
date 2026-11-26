@@ -54,6 +54,7 @@ if (!function_exists('sanro_studio_bootstrap_admin_menu')) {
 }
 // Load the historical source modules; their activation gates remain default OFF.
 require_once __DIR__ . '/includes/private-master-setup.php';
+require_once __DIR__ . '/includes/public-design-id.php';
 if (function_exists('register_activation_hook')) {
     register_activation_hook(__FILE__, 'sanro_studio_provision_private_master_storage');
 }

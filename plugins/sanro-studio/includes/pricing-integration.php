@@ -297,6 +297,9 @@ function sanro_studio_register_pricing_integration_hooks() {
     add_action('woocommerce_checkout_before_order_review','sanro_studio_pricing_group_summary',10);
     add_filter('woocommerce_checkout_cart_item_quantity', 'sanro_studio_pricing_checkout_thumbnail', 20, 2);
     add_filter('woocommerce_cart_item_thumbnail', 'sanro_studio_pricing_cart_thumbnail', 20, 3);
+    // Native WooCommerce Blocks Mini Cart reads Store API cart images and does
+    // not render the legacy cart-item-thumbnail PHP filter above.
+    add_filter('woocommerce_store_api_cart_item_images', 'sanro_studio_pricing_store_api_cart_images', 20, 3);
     add_action('wp_ajax_sanro_studio_cart_preview', 'sanro_studio_pricing_deliver_cart_preview');
     add_action('wp_ajax_nopriv_sanro_studio_cart_preview', 'sanro_studio_pricing_deliver_cart_preview');
     add_filter('sanro_studio_pricing_authorized_design', 'sanro_studio_pricing_authorized_design', 10, 4);
@@ -373,6 +376,31 @@ function sanro_studio_pricing_cart_thumbnail($thumbnail, $line, $key = '') {
     return $preview !== '' ? $preview : $thumbnail;
 }
 
+/** Replace Store API catalog imagery only for a preview authorized by this cart session. */
+function sanro_studio_pricing_store_api_cart_images($images, $line, $key = '') {
+    if (!is_array($images) || !$images || !is_array($line)) return $images;
+    $preview = sanro_studio_pricing_cart_preview($line);
+    $design = $line['sanro_studio_design_id'] ?? null;
+    if (!$preview || !is_string($design)) return $images;
+    $url = add_query_arg(['action'=>'sanro_studio_cart_preview','design'=>$design], admin_url('admin-ajax.php'));
+    if (!is_string($url) || !wp_parse_url($url, PHP_URL_HOST)) return $images;
+    $image = $images[0];
+    if (is_object($image)) {
+        $image = clone $image;
+        $image->src = $url;
+        $image->thumbnail = $url;
+        $image->alt = 'Preview desain';
+        return [$image];
+    }
+    if (is_array($image) && isset($image['id'])) {
+        $image['src'] = $url;
+        $image['thumbnail'] = $url;
+        $image['alt'] = 'Preview desain';
+        return [(object)$image];
+    }
+    return $images;
+}
+
 function sanro_studio_pricing_checkout_thumbnail($quantity_html, $line) {
     if (($line['sanro_studio_pricing_version'] ?? null) !== 1 || !(($line['data'] ?? null) instanceof WC_Product)) return $quantity_html;
     $thumbnail = sanro_studio_pricing_preview_markup($line, 112);
@@ -439,7 +467,8 @@ function sanro_studio_pricing_group_summary() {
         $image = sanro_studio_pricing_preview_markup($line,96);
         if ($image !== '') echo wp_kses_post($image);
         echo '<div style="min-width:0;flex:1"><strong>' . esc_html($line['data']->get_name()) . '</strong>';
-        echo '<div style="overflow-wrap:anywhere">Design ID: ' . esc_html($line['sanro_studio_design_id']) . '</div>';
+        $public_id=function_exists('sanro_studio_public_design_id')?sanro_studio_public_design_id($line['sanro_studio_design_id']):null;
+        echo '<div style="overflow-wrap:anywhere">Design ID: ' . esc_html(is_string($public_id)?$public_id:'tersedia') . '</div>';
         echo '<div>Warna: ' . esc_html($color) . '</div>';
         if (function_exists('is_cart') && is_cart() && function_exists('sanro_studio_frontend_enabled')
             && sanro_studio_frontend_enabled() && sanro_studio_pricing_cart_preview($line)) {
@@ -470,7 +499,9 @@ function sanro_studio_pricing_cart_item_data($data,$line){
         ||!is_string($id)||!preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD',$id)
         ||!is_string($size)||!in_array($size,['S','M','L','XL','2XL','3XL','4XL','5XL'],true))return $data;
     $data[]=['key'=>'Ukuran','value'=>$size,'display'=>esc_html($size)];
-    $data[]=['key'=>'Design ID','value'=>$id,'display'=>esc_html($id)];
+    $public_id=function_exists('sanro_studio_public_design_id')?sanro_studio_public_design_id($id):null;
+    $public_id=is_string($public_id)?$public_id:$id;
+    $data[]=['key'=>'Design ID','value'=>$public_id,'display'=>esc_html($public_id)];
     $color = $line['sanro_studio_color'] ?? '';
     if (is_string($color) && preg_match('/^#[a-f0-9]{6}$/D',$color)) {
         $palette = sanro_studio_mockup_palette((int) ($line['product_id'] ?? 0));
@@ -638,6 +669,8 @@ function sanro_studio_pricing_order_item($item, $cart_item_key, $values, $order)
         || (isset($values['sanro_studio_color'])&&$values['sanro_studio_color']!==($verified['contract']['quote']['shirt_color']??''))) throw new RuntimeException('SANRO Studio: order line mismatch.');
     $snapshot = sanro_studio_pricing_design_snapshot($verified);
     $snapshot['sleeve_label']=$verified['contract']['quote']['sleeve_label']??(!empty($snapshot['long_sleeve'])?'long':'short');
+    $public_id=function_exists('sanro_studio_public_design_id')?sanro_studio_public_design_id($verified['id']):null;
+    if(is_string($public_id))$item->update_meta_data('Design ID',$public_id);
     foreach (['_sanro_studio_design_id'=>$verified['id'], '_sanro_studio_size'=>$size,
         '_sanro_studio_unit_price'=>$candidate['unit_price'], '_sanro_studio_quote_currency'=>'IDR',
         '_sanro_studio_variation_id'=>$candidate['variation_id']??0,

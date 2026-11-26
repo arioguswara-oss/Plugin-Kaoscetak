@@ -23,7 +23,7 @@
   const target=new URL(location.href);target.hash=reorder?'sanro-reorder':'';target.searchParams.set('sanro_studio_editor','1');target.searchParams.set('product_id',fresh.product_id);location.assign(target.href);
  }
  async function card(entry,secret){
-  const article=document.createElement('article'),title=document.createElement('h4');article.className='sanro-collection-card';title.textContent=entry.title||'Desain saya';article.append(title);list.append(article);
+  const article=document.createElement('article'),title=document.createElement('h4');article.className='sanro-collection-card';title.textContent=(entry.title||'Desain saya')+(entry.public_design_id?' · '+entry.public_design_id:'');article.append(title);list.append(article);
   for(const side of ['front','back']){
    try{const preview=await api('/collection/'+entry.id+'/preview/'+side,undefined,secret);if(!['image/png','image/jpeg','image/webp'].includes(preview.mime))continue;
     const img=document.createElement('img');img.width=160;img.height=172;img.style.objectFit='contain';img.alt=side==='front'?'Preview depan':'Preview belakang';img.src='data:'+preview.mime+';base64,'+preview.image_base64;article.append(img);

@@ -46,7 +46,8 @@ function sanro_studio_production_item_manifest($order, $item_id) {
         'order_id'=>$order->get_id(),'order_number'=>method_exists($order,'get_order_number')?(string)$order->get_order_number():(string)$order->get_id(),
         'item_id'=>$item_id,'product_id'=>$item->get_product_id(),'variation_id'=>$variation_id,
         'product_name'=>method_exists($item,'get_name')?(string)$item->get_name():'',
-        'design_id'=>$id,'design_hash'=>$hash,'size'=>$size,'quantity'=>$qty,
+        'design_id'=>$id,'public_design_id'=>function_exists('sanro_studio_public_design_id')?sanro_studio_public_design_id($id):null,
+        'design_hash'=>$hash,'size'=>$size,'quantity'=>$qty,
         'quantities'=>$design['quantities'],'unit_price'=>(int)$unit,'subtotal'=>(int)$unit*$qty,'currency'=>'IDR',
         'sleeve_label'=>$record['checkout_quote']['sleeve_label']??(!empty($snapshot['long_sleeve'])?'long':'short'),
         'shirt_color'=>$snapshot['shirt_color'],'long_sleeve'=>$snapshot['long_sleeve'],'sides'=>$snapshot['sides']];

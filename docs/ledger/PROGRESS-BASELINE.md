@@ -1,6 +1,10 @@
 # SANRO Studio — satu baseline resmi development
 
-## LATEST — Mini Cart V1.1.0 final staging acceptance PASS
+## LATEST — Owner revision implementation and targeted verification
+
+26 November 2026. PR #52 continues from checkpoint `9d9fc70937e403ae99d4345c659df201c8bf9159`. Implemented persistent sequential public Design IDs and WooCommerce Store API cart artwork thumbnails; changed-feature targeted PHP/JS checks pass. Active staging runtime is WooCommerce 11.3.1 / Twenty Twenty-Five. The prior candidate `644739c` remains installed. Updated candidate build, both authenticated HTTPS release gates, install, and fresh Guest Buyer acceptance are pending. The prior temporary Application Password is revoked; one consolidated Owner approval is required before creating a new temporary credential. No new staging write, order, payment, production, merge, DTF, or Drive action has occurred. The managed sandbox also prevents live Chromium and local SQL socket execution; these are reported in the focused [QA record](../qa/studio-public-design-id-and-store-api-mini-cart-20261126.md). **96.50% → 96.50%, delta 0.00. NO-GO Final Release.**
+
+## Previously verified — Mini Cart V1.1.0 final staging acceptance
 
 26 November 2026 WIB. PR #52 source `644739c` menambahkan Mini Cart native WooCommerce, preview privat dan fallback Cart. Checkpoint GitHub terbaru `6a2c7bb`; ZIP `ee039c9b…7281f17`, manifest `bd38a4a1…d4a6976` dan transport `00abb9ae…d73ab68` diverifikasi ulang. SSH inherited berhasil; mandatory HTTPS Web SAPI gate PASS pada PHP 8.3.37 LiteSpeed, private roots PASS dan semua writer flags OFF. Satu Application Password sementara dicabut segera setelah gate. Kandidat dipasang dengan pinned CLI installer; tree digest `6b39138c…f4a18f3e` cocok dengan jurnal/ZIP, Studio 1.1.0 aktif, rollback tersedia, tanpa perubahan flags/aktivasi/order. Guest acceptance baru PASS: touch drag emulation, artwork, Edit Desain, S/M, Mini Cart, Cart dan Checkout; sesi uji dibersihkan, tanpa order/payment. **96,50% → 96,50%, delta 0,00. NO-GO merge/production.** [Laporan, screenshot, gate dan bukti runtime](../qa/studio-final-cart-visual-20261126.md).
 

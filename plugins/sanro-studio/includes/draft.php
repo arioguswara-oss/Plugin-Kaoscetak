@@ -36,7 +36,14 @@ function sanro_studio_create_draft($product_id, $design) {
     if (!add_option('sanro_studio_draft_' . $id, $record, '', false)) {
         return ['valid' => false, 'error' => 'storage_failed'];
     }
-    return ['valid' => true, 'design_id' => $id, 'owner_token' => $token];
+    $public_id = function_exists('sanro_studio_public_design_id') ? sanro_studio_public_design_id($id) : null;
+    if (function_exists('sanro_studio_public_design_id') && !is_string($public_id)) {
+        delete_option('sanro_studio_draft_' . $id);
+        return ['valid' => false, 'error' => 'public_id_unavailable'];
+    }
+    return ['valid' => true, 'design_id' => $id,
+        'public_design_id' => $public_id,
+        'owner_token' => $token];
 }
 
 /** Read draft only with the independent secret owner token. */
@@ -59,9 +66,14 @@ function sanro_studio_read_draft($id, $token) {
         || $record['expires_at'] <= time()) {
         return ['valid' => false, 'error' => 'draft_expired'];
     }
+    $public_id = function_exists('sanro_studio_public_design_id') ? sanro_studio_public_design_id($id) : null;
+    if (function_exists('sanro_studio_public_design_id') && !is_string($public_id)) {
+        return ['valid' => false, 'error' => 'public_id_unavailable'];
+    }
     return [
         'valid' => true,
         'design_id' => $id,
+        'public_design_id' => $public_id,
         'product_id' => $record['product_id'],
         'design' => $record['design'],
         'design_hash' => hash('sha256', maybe_serialize($record['design'])),

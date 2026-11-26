@@ -25,7 +25,7 @@ function sanro_studio_unicode_production_pdf($manifest,$previews) {
             'SANRO STUDIO - PANDUAN PRODUKSI (BUKAN FILE SIAP CETAK)',
             'Order '.$manifest['order_number'].' / item '.$manifest['item_id'],
             'Produk '.$manifest['product_id'].': '.$manifest['product_name'],
-            'Design ID: '.$manifest['design_id'],
+            'Design ID: '.($manifest['public_design_id']??(function_exists('sanro_studio_public_design_id')?sanro_studio_public_design_id($manifest['design_id']):null)??'unavailable'),
             'Ukuran '.$manifest['size'].' x '.$manifest['quantity'].' | IDR '.$manifest['unit_price'].' / pcs',
             'Qty semua size: '.json_encode($manifest['quantities']),
             'Warna '.$manifest['shirt_color'].' | Lengan '.(($manifest['sleeve_label']??null)==='3/4'?'3/4':(($manifest['sleeve_label']??($manifest['long_sleeve']?'long':'short'))==='long'?'panjang':'pendek')),

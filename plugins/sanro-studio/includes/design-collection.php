@@ -81,7 +81,9 @@ function sanro_studio_collection_save($id,$token,$title){
         $key='sanro_studio_library_'.$library_id;$before=get_option($key,false);
         if($before!==false&&(!is_array($before)||($before['owner']??null)!==$owner))return ['valid'=>false,'error'=>'collection_owner'];
         $entry=array_intersect_key($record,array_flip(['product_id','design','master_refs','original_master_refs','preview_refs','preview_refs_by_size','preview_variant_required','preview_design_hash']));
-        $entry+=['version'=>1,'status'=>'active','owner'=>$owner,'source_design_id'=>$id,'title'=>sanitize_text_field($title),'updated_at'=>time()];
+        $entry+=['version'=>1,'status'=>'active','owner'=>$owner,'source_design_id'=>$id,
+            'title'=>sanitize_text_field($title),'updated_at'=>time()];
+        $entry['public_design_id']=function_exists('sanro_studio_public_design_id')?sanro_studio_public_design_id($id):null;
         // Saving a new snapshot revokes old share links rather than silently republishing changes.
         if(!sanro_studio_collection_cas($key,$before,$entry))return ['valid'=>false,'error'=>'collection_conflict'];
         $session=sanro_studio_collection_session_create($email);return $session+['id'=>$library_id];
@@ -121,7 +123,7 @@ function sanro_studio_collection_fork($id,$token=null,$share=null){
         return $created+['product_id'=>$entry['product_id']];
     });
 }
-function sanro_studio_collection_public_entry($id,$entry){return ['id'=>$id,'title'=>$entry['title'],'product_id'=>$entry['product_id'],'updated_at'=>$entry['updated_at'],'shared'=>isset($entry['share_hash'])];}
+function sanro_studio_collection_public_entry($id,$entry){$public=$entry['public_design_id']??null;if(!is_string($public)&&function_exists('sanro_studio_public_design_id'))$public=sanro_studio_public_design_id($entry['source_design_id']??'');return ['id'=>$id,'public_design_id'=>is_string($public)?$public:null,'title'=>$entry['title'],'product_id'=>$entry['product_id'],'updated_at'=>$entry['updated_at'],'shared'=>isset($entry['share_hash'])];}
 function sanro_studio_collection_routes(){
     if(!sanro_studio_draft_rest_enabled())return;
     $routes=[

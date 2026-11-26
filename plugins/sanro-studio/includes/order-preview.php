@@ -354,7 +354,8 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
             && is_numeric($subtotal) && is_numeric($total)
             && (float) $subtotal === (float) ((int) $price * (int) $qty)
             && (float) $total === (float) ((int) $price * (int) $qty);
-        echo '<p>' . esc_html('Design ID: ' . $design_id) . '</p>';
+        $public_id=function_exists('sanro_studio_public_design_id')?sanro_studio_public_design_id($design_id):null;
+        echo '<p>' . esc_html('Design ID: ' . (is_string($public_id)?$public_id:$design_id)) . '</p>';
         if ($price_valid) {
             echo '<p>' . esc_html('Ukuran: ' . $size . ' | Jumlah: ' . (int) $qty
                 . ' | Harga DTF: Rp ' . number_format((int) $price, 0, ',', '.')
@@ -446,6 +447,7 @@ function sanro_studio_order_item_production_manifest($order, $item_id) {
         'reason' => $eligibility['reason'],
         'item_id' => $item_id,
         'design_id' => $design_id,
+        'public_design_id' => function_exists('sanro_studio_public_design_id')?sanro_studio_public_design_id($design_id):null,
         'preview_front_available' => $inventory['front'] !== null,
         'preview_back_available' => $inventory['back'] !== null,
         'ready_for_drive_integration' => $eligibility['eligible'] && $has_preview,
