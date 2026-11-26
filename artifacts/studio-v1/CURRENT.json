@@ -130,5 +130,18 @@
     "variable_quote_cart": "BLOCKED_DRAFT_429_CONTRACT_PASS",
     "visual_mobile_pinch": "NOT_TESTED_LIVE",
     "baseline_percent": 96.5
+  },
+  "standard_mockup_revision": {
+    "candidate_source": "094a511b7b315358dd6641bbca7ee9c4664619a9",
+    "version": "1.1.0",
+    "artifact_directory": "artifacts/studio-v1/standard-mockup-20261126",
+    "archive": "sanro-studio-staging-candidate.zip",
+    "archive_sha256": "ce74fc6f3140b5c9b0e6f30cf1319af12996014a2ca881e5fc532729295b63b7",
+    "manifest_sha256": "2fd4d92199c3c724019d9544336c99b18f919797af6b090f420888dfff4b821c",
+    "plugin_digest": "6ddbe931c65e0c567e2857ea4c18e3fc1636cb4916293edc3da23171aa442e7d",
+    "report": "docs/qa/studio-standard-mockup-and-sleeve-products-20261126.md",
+    "installation_status": "BUILT_PLAN_ONLY",
+    "acceptance": "OFFLINE_PASS_STAGING_PENDING",
+    "final_release": false
   }
 }
