@@ -1,6 +1,10 @@
 # SANRO Studio — satu baseline resmi development
 
-## LATEST — Deteksi otomatis ukuran cetak
+## LATEST — P0 ikon keranjang menuju checkout
+
+26 November 2026 WIB. SANRO Studio V1.1.0 source `7822716` aktif di staging. Header katalog, editor dan Desain Saya membuka checkout native WooCommerce. Cloud Browser PASS di desktop 1363 CSS px dan viewport sempit 454 CSS px. Design ID, produk sintetis #53, warna Biru, ukuran M, jumlah 1 dan Rp65.000 konsisten dari keranjang ke checkout. Gate dan digest PASS. Item uji dibersihkan, transport sementara dihapus, writer dan Storage GC OFF. Perangkat mobile fisik dan submit checkout belum diuji dalam putaran ini. **96,50% → 96,50%, delta 0,00. GO review staging. NO-GO Final Release menunggu acceptance yang masih terbuka.** [Bukti P0](../qa/studio-checkout-navigation-p0-20261126.md).
+
+## Checkpoint — Deteksi otomatis ukuran cetak
 
 26 November 2026 WIB. Source `c5d1184` di PR #52 menghapus pemilih kategori buyer. Editor dan server menghitung tier A5/A4/A3/A3+ per sisi dari gabungan bounding box objek di bidang cm, termasuk rotasi. Sisi kosong tidak dikenakan tarif. Admin dapat mengatur batas serta tarif. Checkout menyimpan kategori hasil quote untuk produksi secara privat. Tes PHP/JS, fixture GD rotasi dan validasi paket reproducible **PASS**. Revisi aktif di staging. Gate LiteSpeed dan digest PASS. Smoke terarah membuktikan perubahan estimasi Rp62.000 → Rp82.000 → Rp87.000 saat resize/rotasi, serta estimasi, quote server dan keranjang Rp102.000 untuk desain dua sisi. Ringkasan buyer menyembunyikan kategori. **96,50% → 96,50%, delta 0,00. GO review staging. NO-GO Final Release.** [Kriteria dan bukti](../qa/studio-automatic-print-sizing-20261126.md).
 

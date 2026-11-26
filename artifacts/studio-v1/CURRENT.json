@@ -10,12 +10,12 @@
   "plugin_digest": "cab430b9a596823c01b675882c46fc0d966d5705c02e97d4c2eadb9daf28525f",
   "deployment_authorized": false,
   "staging_installation_authorized": true,
-  "runtime_e2e": "Automatic tier resize and rotation, two-sided quote, private preview, and cart summary verified on staging. No live order created.",
-  "staging_installation_state": "V1.1.0_C5D1184_AUTO_PRINT_INSTALLED_ACTIVE",
+  "runtime_e2e": "Studio header to WooCommerce checkout passed on staging at 1363 and 454 CSS px. Synthetic cart line preserved. No submit or live order.",
+  "staging_installation_state": "V1.1.0_7822716_P0_CHECKOUT_NAVIGATION_INSTALLED_ACTIVE",
   "staging_installed_version": "1.1.0",
-  "currently_installed_source": "c5d1184ee968ae2f2fcafb8646c22670f231fd0e",
-  "installed_tree_digest": "6fc942196e86c298480d0ba0ab236c6e0c66dbfae5431743c657d394b6f579ec",
-  "execution_evidence": "artifacts/studio-v1/automatic-print-sizing-20261126/runtime-evidence.json",
+  "currently_installed_source": "782271659669581abfe5588294428c564af7c049",
+  "installed_tree_digest": "18e8e1da2a2893bd0c3b069337c773f7687d5a2630599df1c5b1b1519efeead9",
+  "execution_evidence": "artifacts/studio-v1/p0-checkout-navigation-20261126/runtime-evidence.json",
   "owner_scope_revision": "f415ec55dd5b360da89b76804512624a3611288d",
   "drive_configuration": "NOT CONFIGURED",
   "final_release": true,
@@ -160,5 +160,20 @@
     "final_release": false,
     "installed_tree_digest": "6fc942196e86c298480d0ba0ab236c6e0c66dbfae5431743c657d394b6f579ec",
     "runtime_evidence": "artifacts/studio-v1/automatic-print-sizing-20261126/runtime-evidence.json"
+  },
+  "checkout_navigation_p0": {
+    "candidate_source": "782271659669581abfe5588294428c564af7c049",
+    "version": "1.1.0",
+    "artifact_directory": "artifacts/studio-v1/p0-checkout-navigation-20261126",
+    "archive": "sanro-studio-staging-candidate.zip",
+    "archive_sha256": "754e32773f596c25de5156ac8524bd69e4641dc9132334fe6bbb42ae701b0f2f",
+    "manifest_sha256": "1831073a0750f8f28b279e566806ab08fdc74cfce08de063551e11ee0db6bdfd",
+    "plugin_digest": "b1786cfc5568f89d2138abe994b418b6fc1edfda5a6addb12b4ec90091a69730",
+    "installed_tree_digest": "18e8e1da2a2893bd0c3b069337c773f7687d5a2630599df1c5b1b1519efeead9",
+    "installation_status": "INSTALLED_ACTIVE_STAGING_GATE_PASS",
+    "report": "docs/qa/studio-checkout-navigation-p0-20261126.md",
+    "evidence": "artifacts/studio-v1/p0-checkout-navigation-20261126/runtime-evidence.json",
+    "acceptance": "PASS_DESKTOP_AND_454_CSS_PX_VIEWPORT_PHYSICAL_MOBILE_NOT_TESTED",
+    "final_release": false
   }
 }
