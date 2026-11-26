@@ -1,6 +1,10 @@
 # SANRO Studio — satu baseline resmi development
 
-## LATEST — P0 ikon keranjang menuju checkout
+## Gate permanen V1 — Guest Buyer First
+
+26 November 2026 WIB. Semua acceptance frontend dimulai dari browser bersih tanpa autentikasi WordPress atau keranjang lama. Buyer wajib dapat mendesain lalu membuka WooCommerce Cart dan Checkout pada sesi yang sama. Bukti sesi Administrator tidak dapat meluluskan alur buyer. Cakupan dan kriteria ada di [release gate V1](../qa/studio-v1-final-release-gate.md). P0 navigasi dibuka kembali setelah uji Owner. Baseline tetap **96,50% → 96,50%, delta 0,00**.
+
+## Historis — Bukti navigasi P0 sesi Administrator (disupersesi)
 
 26 November 2026 WIB. SANRO Studio V1.1.0 source `7822716` aktif di staging. Header katalog, editor dan Desain Saya membuka checkout native WooCommerce. Cloud Browser PASS di desktop 1363 CSS px dan viewport sempit 454 CSS px. Design ID, produk sintetis #53, warna Biru, ukuran M, jumlah 1 dan Rp65.000 konsisten dari keranjang ke checkout. Gate dan digest PASS. Item uji dibersihkan, transport sementara dihapus, writer dan Storage GC OFF. Perangkat mobile fisik dan submit checkout belum diuji dalam putaran ini. **96,50% → 96,50%, delta 0,00. GO review staging. NO-GO Final Release menunggu acceptance yang masih terbuka.** [Bukti P0](../qa/studio-checkout-navigation-p0-20261126.md).
 

@@ -72,8 +72,7 @@ function sanro_studio_stage_reauthorize_cart($id, $token, $product, $cart) {
         'total_price'=>$GLOBALS['qa_reauth_price']];
 }
 function rest_ensure_response($value) { return $value; }
-function wc_get_cart_url() { return '/cart/'; }
-function wc_get_checkout_url() { return $GLOBALS['qa_checkout_url']; }
+function wc_get_cart_url() { return $GLOBALS['qa_cart_url'] ?? '/cart/'; }
 function home_url($path) { return 'https://stage.example.test' . $path; }
 function wp_parse_url($url) { return parse_url($url); }
 function wp_parse_str($input,&$output) { parse_str($input,$output); }
@@ -233,31 +232,31 @@ qa_assert($unreadable instanceof WP_Error && $unreadable->code === 'sanro_cart_u
 qa_assert($GLOBALS['qa_commits'] === 1, 'cart inspection failure never inserts lines');
 echo "PASS: 42 staging REST cart-bootstrap checks\n";
 
-$GLOBALS['qa_checkout_mode'] = 'classic';
-$GLOBALS['qa_checkout_url'] = 'https://stage.example.test/custom-checkout/';
+$GLOBALS['qa_cart_page_mode'] = 'classic';
+$GLOBALS['qa_cart_url'] = 'https://stage.example.test/custom-cart/';
 $GLOBALS['qa_cart']->cart = new QaCart();
 $GLOBALS['qa_cart']->cart->lines = [['product_id'=>53,'design_id'=>'qa-design','quantity'=>1]];
 $before = $GLOBALS['qa_cart']->cart->lines;
 ob_start();
 sanro_studio_ui_header('Studio','/studio/');
 $header = ob_get_clean();
-qa_assert(str_contains($header,'href="https://stage.example.test/custom-checkout/"')
+qa_assert(str_contains($header,'href="https://stage.example.test/custom-cart/"')
     && str_contains($header,'<span>1</span>') && $GLOBALS['qa_cart']->cart->lines === $before,
-    'header uses native Woo checkout URL without mutating the session or its badge');
-$GLOBALS['qa_checkout_url'] = 'https://stage.example.test/?page_id=17';
-qa_assert(sanro_studio_ui_checkout_url() === $GLOBALS['qa_checkout_url'],'plain configured checkout permalink accepted');
-foreach (['https://stage.example.test/','https://stage.example.test/?page_id=16',
-    'https://other.example.test/checkout/','http://stage.example.test/checkout/'] as $bad_url) {
-    $GLOBALS['qa_checkout_url'] = $bad_url;
-    qa_assert(sanro_studio_ui_checkout_url() === '', 'root or unsuitable redirect destination rejected');
+    'header uses native Woo cart URL without mutating the session or its badge');
+$GLOBALS['qa_cart_url'] = 'https://stage.example.test/?page_id=16';
+qa_assert(sanro_studio_ui_cart_url() === $GLOBALS['qa_cart_url'],'plain configured cart permalink accepted');
+foreach (['https://stage.example.test/','https://stage.example.test/?page_id=17',
+    'https://other.example.test/cart/','http://stage.example.test/cart/'] as $bad_url) {
+    $GLOBALS['qa_cart_url'] = $bad_url;
+    qa_assert(sanro_studio_ui_cart_url() === '', 'root or unsuitable redirect destination rejected');
 }
-$GLOBALS['qa_checkout_url'] = 'https://stage.example.test/custom-checkout/';
+$GLOBALS['qa_cart_url'] = 'https://stage.example.test/custom-cart/';
 foreach (['missing','unpublished','plain','block'] as $invalid_page) {
-    $GLOBALS['qa_checkout_mode'] = $invalid_page;
+    $GLOBALS['qa_cart_page_mode'] = $invalid_page;
     ob_start();
     sanro_studio_ui_header('Studio');
     $header = ob_get_clean();
-    qa_assert(!str_contains($header,'href=') && str_contains($header,'Checkout belum tersedia'),
-        'invalid checkout configuration renders an inactive icon');
+    qa_assert(!str_contains($header,'href=') && str_contains($header,'Keranjang belum tersedia'),
+        'invalid cart configuration renders an inactive icon');
 }
 ob_end_flush();

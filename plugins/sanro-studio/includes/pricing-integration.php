@@ -269,6 +269,7 @@ function sanro_studio_register_pricing_integration_hooks() {
     add_filter('woocommerce_cart_subtotal','sanro_studio_pricing_display_total',20);
     add_filter('woocommerce_cart_totals_order_total_html','sanro_studio_pricing_display_total',20);
     add_filter('woocommerce_get_item_data','sanro_studio_pricing_cart_item_data',20,2);
+    add_filter('woocommerce_checkout_cart_item_quantity', 'sanro_studio_pricing_checkout_thumbnail', 20, 2);
     add_filter('sanro_studio_pricing_authorized_design', 'sanro_studio_pricing_authorized_design', 10, 4);
     add_action('woocommerce_review_order_before_submit', 'sanro_studio_pricing_checkout_field', 5);
     add_action('wp_enqueue_scripts', 'sanro_studio_pricing_enqueue_checkout_auth', 30);
@@ -278,6 +279,17 @@ function sanro_studio_register_pricing_integration_hooks() {
     add_action('woocommerce_checkout_order_created', 'sanro_studio_pricing_lock_order', 10, 1);
     add_action('woocommerce_before_pay_action','sanro_studio_pricing_before_pay_order',10,1);
     add_action('woocommerce_pre_payment_complete','sanro_studio_pricing_before_payment_complete',5,1);
+}
+
+/** Show the same native product or variation thumbnail as the classic cart. */
+function sanro_studio_pricing_checkout_thumbnail($quantity_html, $line) {
+    if (($line['sanro_studio_pricing_version'] ?? null) !== 1 || !(($line['data'] ?? null) instanceof WC_Product)) {
+        return $quantity_html;
+    }
+    $thumbnail = $line['data']->get_image('woocommerce_thumbnail', [
+        'width' => 48, 'height' => 48, 'style' => 'width:48px;height:auto;vertical-align:middle;margin-inline:0.5em',
+    ]);
+    return $quantity_html . wp_kses_post($thumbnail);
 }
 
 /** Friendly cart/checkout labels; never display tokens, private refs or browser prices. */

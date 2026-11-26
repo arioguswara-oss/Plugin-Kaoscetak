@@ -48,6 +48,12 @@ INSTALLED_AUTO_PRINT={
  'archive_sha256':'6c80d5f5cadb55998a7d6bb768aee2c0077f5f65329103e2411ac5caa3ca75aa',
  'version':'1.1.0','channel':'candidate','source_commit':'c5d1184ee968ae2f2fcafb8646c22670f231fd0e',
 }
+# Installed navigation candidate, bound to the exact staging rollback predecessor.
+INSTALLED_CHECKOUT_NAV={
+ 'manifest_sha256':'1831073a0750f8f28b279e566806ab08fdc74cfce08de063551e11ee0db6bdfd',
+ 'archive_sha256':'754e32773f596c25de5156ac8524bd69e4641dc9132334fe6bbb42ae701b0f2f',
+ 'version':'1.1.0','channel':'candidate','source_commit':'782271659669581abfe5588294428c564af7c049',
+}
 p=argparse.ArgumentParser();p.add_argument('--candidate',required=True);p.add_argument('--out',required=True);p.add_argument('--existing-manifest',required=True);p.add_argument('--existing-archive',required=True);p.add_argument('--verified-existing-tree-digest',required=True);a=p.parse_args()
 repo=pathlib.Path(__file__).resolve().parents[1];candidate=pathlib.Path(a.candidate);out=pathlib.Path(a.out);out.mkdir(parents=True,exist_ok=True)
 installer_source_commit=subprocess.check_output(['git','-C',str(repo),'rev-parse','HEAD'],text=True).strip()
@@ -64,7 +70,8 @@ is_installed_variable=(old_manifest_sha==INSTALLED_VARIABLE_E2E['manifest_sha256
 is_installed_correction=(old_manifest_sha==INSTALLED_LUMISE_CORRECTION['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_LUMISE_CORRECTION.items() if k not in ('manifest_sha256','archive_sha256')))
 is_installed_standard=(old_manifest_sha==INSTALLED_STANDARD_MOCKUP['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_STANDARD_MOCKUP.items() if k not in ('manifest_sha256','archive_sha256')))
 is_installed_auto=(old_manifest_sha==INSTALLED_AUTO_PRINT['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_AUTO_PRINT.items() if k not in ('manifest_sha256','archive_sha256')))
-if not (is_final or is_installed_ui or is_installed_ui_p1 or is_installed_catalog or is_installed_variable or is_installed_correction or is_installed_standard or is_installed_auto):raise SystemExit('existing manifest is not an exact approved Final Release or previously installed 1.1.0 staging candidate')
+is_installed_nav=(old_manifest_sha==INSTALLED_CHECKOUT_NAV['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_CHECKOUT_NAV.items() if k not in ('manifest_sha256','archive_sha256')))
+if not (is_final or is_installed_ui or is_installed_ui_p1 or is_installed_catalog or is_installed_variable or is_installed_correction or is_installed_standard or is_installed_auto or is_installed_nav):raise SystemExit('existing manifest is not an exact approved Final Release or previously installed 1.1.0 staging candidate')
 if hashlib.sha256(old_archive).hexdigest()!=old.get('archive_sha256'):raise SystemExit('existing release archive checksum mismatch')
 if is_installed_ui and old.get('archive_sha256')!=INSTALLED_UI_110['archive_sha256']:raise SystemExit('installed UI archive is not the previously verified staging archive')
 if is_installed_ui_p1 and old.get('archive_sha256')!=INSTALLED_UI_P1['archive_sha256']:raise SystemExit('installed P1 UI archive is not the previously verified staging archive')
@@ -73,6 +80,7 @@ if is_installed_variable and old.get('archive_sha256')!=INSTALLED_VARIABLE_E2E['
 if is_installed_correction and old.get('archive_sha256')!=INSTALLED_LUMISE_CORRECTION['archive_sha256']:raise SystemExit('installed correction archive is not the previously verified staging archive')
 if is_installed_standard and old.get('archive_sha256')!=INSTALLED_STANDARD_MOCKUP['archive_sha256']:raise SystemExit('installed standard-mockup archive mismatch')
 if is_installed_auto and old.get('archive_sha256')!=INSTALLED_AUTO_PRINT['archive_sha256']:raise SystemExit('installed automatic-sizing archive mismatch')
+if is_installed_nav and old.get('archive_sha256')!=INSTALLED_CHECKOUT_NAV['archive_sha256']:raise SystemExit('installed checkout-navigation archive mismatch')
 if hashlib.sha256(json.dumps(old.get('files',[]),sort_keys=True,separators=(',',':')).encode()).hexdigest()!=old.get('plugin_digest'):raise SystemExit('existing release manifest plugin digest mismatch')
 old_files=[*old.get('files',[]),old.get('build_marker',{})]
 rows=[]

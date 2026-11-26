@@ -6,12 +6,12 @@ function sanro_studio_ui_icon($name){
     return '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'.($paths[$name]??$paths['settings']).'"/></svg>';
 }
 /** Stay on the storefront so the Woo session and checkout authorization still apply. */
-function sanro_studio_ui_checkout_url() {
-    if (!function_exists('wc_get_checkout_url') || !function_exists('sanro_studio_classic_wc_page_id')) return '';
-    $page_id = sanro_studio_classic_wc_page_id('checkout');
+function sanro_studio_ui_cart_url() {
+    if (!function_exists('wc_get_cart_url') || !function_exists('sanro_studio_classic_wc_page_id')) return '';
+    $page_id = sanro_studio_classic_wc_page_id('cart');
     if (!$page_id) return '';
 
-    $url = wc_get_checkout_url();
+    $url = wc_get_cart_url();
     if (!is_string($url) || $url === '') return '';
     $target = wp_parse_url($url);
     $home = wp_parse_url(home_url('/'));
@@ -21,8 +21,8 @@ function sanro_studio_ui_checkout_url() {
         || ($target['port'] ?? null) !== ($home['port'] ?? null)
         || isset($target['user']) || isset($target['pass'])) return '';
 
-    // WooCommerce or a URL filter may return the site root instead of checkout.
-    // Keep plain WordPress permalinks such as /?page_id=17 working.
+    // WooCommerce or a URL filter may return the site root instead of the cart.
+    // Keep plain WordPress permalinks such as /?page_id=16 working.
     if (rtrim($target['path'] ?? '', '/') === rtrim($home['path'] ?? '', '/')) {
         wp_parse_str($target['query'] ?? '',$query);
         if (($query['page_id'] ?? '') !== (string)$page_id) return '';
@@ -31,17 +31,17 @@ function sanro_studio_ui_checkout_url() {
 }
 
 function sanro_studio_ui_header($label,$back=''){
-    $checkout = esc_url(sanro_studio_ui_checkout_url());
+    $cart_url = esc_url(sanro_studio_ui_cart_url());
     $wc = function_exists('WC') ? WC() : null;
     $cart = $wc->cart ?? null;
     $count = is_object($cart) && method_exists($cart,'get_cart_contents_count') ? $cart->get_cart_contents_count() : 0;
     $icon = sanro_studio_ui_icon('cart') . ($count ? '<span>' . (int)$count . '</span>' : '');
-    $checkout_control = $checkout !== ''
-        ? '<a class="sanro-cart-link" aria-label="Checkout WooCommerce" href="' . $checkout . '">' . $icon . '</a>'
-        : '<span class="sanro-cart-link" role="img" aria-label="Checkout belum tersedia" title="Checkout belum tersedia">' . $icon . '</span>';
+    $cart_control = $cart_url !== ''
+        ? '<a class="sanro-cart-link" aria-label="Keranjang WooCommerce" href="' . $cart_url . '">' . $icon . '</a>'
+        : '<span class="sanro-cart-link" role="img" aria-label="Keranjang belum tersedia" title="Keranjang belum tersedia">' . $icon . '</span>';
     echo '<header class="sanro-appbar">'
         . ($back ? '<a class="sanro-back" aria-label="Kembali pilih produk" href="' . esc_url($back) . '">' . sanro_studio_ui_icon('arrow') . '</a>' : '')
-        . '<h1>' . esc_html($label) . '</h1>' . $checkout_control . '</header>';
+        . '<h1>' . esc_html($label) . '</h1>' . $cart_control . '</header>';
 }
 function sanro_studio_ui_theme_scope($classes){$classes[]='sanro-studio-page';return $classes;}
 function sanro_studio_ui_admin_body_scope($classes){$page=isset($_GET['page'])&&is_string($_GET['page'])?sanitize_key(wp_unslash($_GET['page'])):'';if(strpos($page,'sanro-studio')===0)$classes.=' sanro-studio-admin';return $classes;}
