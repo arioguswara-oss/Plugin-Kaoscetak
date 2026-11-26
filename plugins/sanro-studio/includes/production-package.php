@@ -25,7 +25,7 @@ function sanro_studio_production_item_manifest($order, $item_id) {
         || ($record['product_id']??null)!==$item->get_product_id()
         || !sanro_studio_locked_record_has_item($record,$item_id)
         || !is_array($record['design']??null)
-        || empty(sanro_studio_validate_product_design($item->get_product_id(),$record['design'])['valid'])) return ['valid'=>false,'error'=>'production_binding_mismatch'];
+        || empty(sanro_studio_validate_product_design($item->get_product_id(),$record['design'],$record['checkout_quote']['print_limits'] ?? sanro_studio_print_categories())['valid'])) return ['valid'=>false,'error'=>'production_binding_mismatch'];
     $size=$item->get_meta('_sanro_studio_size',true);$qty=sanro_studio_pricing_quantity($item->get_quantity());
     $unit=$item->get_meta('_sanro_studio_unit_price',true);
     if (!is_string($size) || !in_array($size,['S','M','L','XL','2XL','3XL','4XL','5XL'],true)
@@ -41,7 +41,7 @@ function sanro_studio_production_item_manifest($order, $item_id) {
     $design=$record['design'];$hash=hash('sha256',maybe_serialize($design));
     $saved=$item->get_meta('_sanro_studio_design_snapshot',true);
     if (is_array($saved) && (($saved['design_id']??null)!==$id || ($saved['design_hash']??null)!==$hash)) return ['valid'=>false,'error'=>'production_snapshot_mismatch'];
-    $snapshot=sanro_studio_pricing_design_snapshot(['id'=>$id,'contract'=>['design'=>$design]]);
+    $snapshot=sanro_studio_pricing_design_snapshot(['id'=>$id,'contract'=>['design'=>$design,'quote'=>$record['checkout_quote']]]);
     $manifest=['version'=>1,'kind'=>'production_guide','print_ready'=>false,
         'order_id'=>$order->get_id(),'order_number'=>method_exists($order,'get_order_number')?(string)$order->get_order_number():(string)$order->get_id(),
         'item_id'=>$item_id,'product_id'=>$item->get_product_id(),'variation_id'=>$variation_id,

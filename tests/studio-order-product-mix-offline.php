@@ -86,6 +86,9 @@ $GLOBALS['woo']->cart = new class($cart->items) {
 sanro_studio_pricing_validate_order($order,[]);
 check_quote($order->items[11]->get_meta('_sanro_studio_design_snapshot',true)['sleeve_label'] === 'short'
     && $order->items[12]->get_meta('_sanro_studio_design_snapshot',true)['sleeve_label'] === 'long','same size keeps separate product price and snapshots');
+check_quote($order->items[11]->get_meta('_sanro_studio_design_snapshot',true)['sides']['front']['category'] === 'A3'
+    && $order->items[11]->get_meta('_sanro_studio_design_snapshot',true)['sides']['back']['category'] === null,
+    'order metadata stores the server tier and keeps blank side null');
 $records = [];
 foreach ([$a=>11,$b=>12] as $id=>$item_id) {
     $draft = $GLOBALS['options']['sanro_studio_draft_'.$id];

@@ -8,9 +8,9 @@
  for(const [key,title] of [['product','Warna, ukuran & jumlah'],['image','Gambar'],['text','Teks'],['advanced','Pilihan lanjutan']]){const el=document.createElement('section');el.className='sanro-tool-panel';el.dataset.toolPanel=key;const h=document.createElement('h2');h.textContent=title;el.append(h);controls.append(el);panels[key]=el;}
  const moving=new Set();
  function move(selector,to){const el=q(selector);if(!el)return;const node=el.closest('label')||el;moving.add(node);to.append(node);}
- ['#sanro-shirt-color','.sanro-size-qty','#sanro-qty-total','#sanro-category'].forEach(s=>move(s,panels.product));
- ['#sanro-image','#sanro-image-size','#sanro-center-image','#sanro-remove-image','#sanro-upload-master','#sanro-background-tolerance','#sanro-remove-background','#sanro-restore-background','#sanro-background-status','#sanro-master-upload-status'].forEach(s=>move(s,panels.image));
- ['#sanro-text-input','#sanro-font-size','#sanro-text-color','#sanro-center-text','#sanro-remove-text','#sanro-copy-text','#sanro-copy-status'].forEach(s=>move(s,panels.text));
+ ['#sanro-shirt-color','.sanro-size-qty','#sanro-qty-total'].forEach(s=>move(s,panels.product));
+ ['#sanro-image','#sanro-image-size','#sanro-image-rotation','#sanro-center-image','#sanro-remove-image','#sanro-upload-master','#sanro-background-tolerance','#sanro-remove-background','#sanro-restore-background','#sanro-background-status','#sanro-master-upload-status'].forEach(s=>move(s,panels.image));
+ ['#sanro-text-input','#sanro-font-size','#sanro-text-rotation','#sanro-text-color','#sanro-center-text','#sanro-remove-text','#sanro-copy-text','#sanro-copy-status'].forEach(s=>move(s,panels.text));
  ['#sanro-reopen-draft','#sanro-reopen-status','#sanro-upload-previews','#sanro-preview-upload-status','#sanro-server-quote','#sanro-server-quote-status','#sanro-reset-side','#sanro-validation'].forEach(s=>move(s,panels.advanced));
  const collection=q('#sanro-collection'),collectionView=document.createElement('section');collectionView.className='sanro-collection-view';collectionView.hidden=true;
  const heading=document.createElement('h2');heading.textContent='Desain Saya';const intro=document.createElement('p');intro.textContent='Buka kembali atau pesan ulang desainmu';collectionView.append(heading,intro);if(collection)collectionView.append(collection);const privacy=document.createElement('p');privacy.className='sanro-private-note';privacy.textContent='Desain privat milikmu';collectionView.append(privacy);root.append(collectionView);

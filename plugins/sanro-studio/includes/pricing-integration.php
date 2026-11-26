@@ -99,7 +99,8 @@ function sanro_studio_pricing_authorized_design($default, $design_id, $product_i
         || !is_string($record['wc_session_hash'] ?? null)
         || !hash_equals($record['wc_session_hash'], $session)
         || !is_array($record['design'] ?? null)
-        || empty(sanro_studio_validate_product_design($product_id, $record['design'])['valid'])
+        || empty(sanro_studio_validate_product_design($product_id,$record['design'],
+            $recovery ? ($record['checkout_quote']['print_limits'] ?? sanro_studio_print_categories()) : null)['valid'])
         || !sanro_studio_draft_image_binding_allowed(
             $record['design'], is_array($record['master_refs'] ?? null) ? $record['master_refs'] : [], $design_id
         ) || !sanro_studio_pricing_masters_ready(
@@ -417,9 +418,11 @@ function sanro_studio_pricing_design_snapshot($verified) {
         $entry = $design[$side] ?? [];
         $objects = [];
         foreach (($entry['objects'] ?? []) as $object) {
-            $objects[] = array_intersect_key($object,array_flip(['type','x','y','width','height']));
+            $objects[] = array_intersect_key($object,array_flip(['type','x','y','width','height','rotation']));
         }
-        $sides[$side] = ['category'=>$objects ? ($entry['category'] ?? null) : null,
+        $quoted_categories = $verified['contract']['quote']['categories'] ?? null;
+        $category = is_array($quoted_categories) ? ($quoted_categories[$side] ?? null) : ($entry['category'] ?? null);
+        $sides[$side] = ['category'=>$objects ? $category : null,
             'objects'=>$objects, 'text'=>$entry['text'] ?? '',
             'font_size'=>$entry['font_size'] ?? null,'text_color'=>$entry['text_color'] ?? null];
     }

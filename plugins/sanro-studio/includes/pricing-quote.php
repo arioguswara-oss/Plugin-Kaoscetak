@@ -36,8 +36,7 @@ function sanro_studio_product_quote($product_id, $design) {
     if($is_variable&&(!is_array($variation_map)||!isset($design['shirt_color'],$variation_map[$design['shirt_color']])))return ['valid'=>false,'error'=>'variation_unavailable'];
     $categories = ['front' => null, 'back' => null];
     foreach ($validated['sides'] as $side => $result) {
-        // An empty side is not charged, regardless of its selected category.
-        if (!$result['empty']) $categories[$side] = $design[$side]['category'];
+        $categories[$side] = $result['category'];
     }
     $lines = [];
     $pieces = $total = 0;
@@ -61,7 +60,7 @@ function sanro_studio_product_quote($product_id, $design) {
         'pricing_profile' => $config['pricing_profile'], 'currency' => 'IDR',
         'pricing_revision'=>$profile['revision']??null,
         'sleeve_label'=>$profile['sleeve_label']??'short',
-        'categories' => $categories, 'sides' => $validated['sides'],
+        'categories' => $categories, 'print_limits' => $config['categories'] ?? sanro_studio_product_print_categories($product_id), 'sides' => $validated['sides'],
         'lines' => $lines, 'pieces' => $pieces, 'total' => $total,
     ];
 }

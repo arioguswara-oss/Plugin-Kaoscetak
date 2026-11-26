@@ -10,7 +10,7 @@ class Product4 {function get_id(){return 7;}function update_meta_data($k,$v){$GL
 function wc_get_product($id){return $id===7?new Product4():false;}
 foreach(['print-area','product-area','pricing-profiles','editor-config','pricing-quote','quote','product-pricing','pricing-woocommerce','checkout-charges','checkout-policy','runtime-readiness'] as $f)require __DIR__.'/../includes/'.$f.'.php';
 $n=0;function ok4($v,$label){global $n;$n++;if(!$v)throw new RuntimeException('FAIL '.$label);}
-function side4($cat){return ['category'=>$cat,'objects'=>[['type'=>'image','x'=>0,'y'=>0,'width'=>10,'height'=>10]]];}
+function side4($cat){[$w,$h]=sanro_studio_print_categories()[$cat];return ['objects'=>[['type'=>'image','x'=>0,'y'=>0,'width'=>$w,'height'=>$h]]];}
 $prices=['M'=>[85000,95000,105000,110000],'L'=>[90000,100000,110000,115000],'XL'=>[95000,105000,115000,120000]];$cats=['A5','A4','A3','A3+'];$extras=[15000,25000,35000,40000];
 foreach($prices as $size=>$row)foreach($cats as $i=>$front)foreach([null,'A5','A4','A3','A3+'] as $back){
  $design=['front'=>side4($front),'quantities'=>[$size=>2]];if($back)$design['back']=side4($back);

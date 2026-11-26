@@ -72,7 +72,7 @@ function sanro_studio_saved_design_context($order,$id,$record,$ids,$items,$requi
         }
         $snapshot=$item->get_meta('_sanro_studio_design_snapshot',true);
         if(!is_array($snapshot)||!function_exists('sanro_studio_pricing_design_snapshot'))return ['valid'=>false,'error'=>'order_design_snapshot_mismatch'];
-        try{$expected_snapshot=sanro_studio_pricing_design_snapshot(['id'=>$id,'contract'=>['design'=>$record['design']]]);}catch(Throwable $error){return ['valid'=>false,'error'=>'order_design_snapshot_mismatch'];}
+        try{$expected_snapshot=sanro_studio_pricing_design_snapshot(['id'=>$id,'contract'=>['design'=>$record['design'],'quote'=>$record['checkout_quote']]]);}catch(Throwable $error){return ['valid'=>false,'error'=>'order_design_snapshot_mismatch'];}
         // Compare the full canonical payload, not just a copied ID/hash label.
         if(array_key_exists('sleeve_label',$snapshot)||array_key_exists('sleeve_label',$record['checkout_quote']))$expected_snapshot['sleeve_label']=$record['checkout_quote']['sleeve_label']??(!empty($record['design']['long_sleeve'])?'long':'short');
         if($snapshot!==$expected_snapshot)return ['valid'=>false,'error'=>'order_design_snapshot_mismatch'];

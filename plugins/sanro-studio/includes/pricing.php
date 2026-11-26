@@ -19,13 +19,17 @@ function sanro_studio_24s_price_table() {
     ];
 }
 
+function sanro_studio_default_second_side_prices() {
+    return [15000, 25000, 35000, 40000];
+}
+
 /**
  * Calculate one item from validated, nonempty print sides.
  * The price table and extras are server-controlled, never supplied by buyers.
  */
 function sanro_studio_24s_unit_price($size, $front_category, $back_category, $long_sleeve = false) {
     $categories = ['A5', 'A4', 'A3', 'A3+'];
-    $extras = [15000, 25000, 35000, 40000];
+    $extras = sanro_studio_default_second_side_prices();
     $table = sanro_studio_24s_price_table();
     if (!is_string($size) || !isset($table[$size]) || !is_bool($long_sleeve)) {
         return ['valid' => false, 'error' => 'invalid_variant'];

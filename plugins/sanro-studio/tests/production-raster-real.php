@@ -11,8 +11,18 @@ $ref=$id.'-back-'.hash('sha256',$png).'.png';file_put_contents($private.'/'.$ref
 $record=get_option($key);$record['master_refs']=['back'=>$ref];
 $record['design']['front']=['category'=>'A3+','objects'=>[['type'=>'text','x'=>0.0,'y'=>0.0,'width'=>32.0,'height'=>48.0]],'text'=>"SANRO École\nΩ Привет",'font_size'=>24,'text_color'=>'#171717'];
 $record['design']['back']=['category'=>'A5','objects'=>[['type'=>'image','x'=>1.0,'y'=>1.0,'width'=>2.0,'height'=>2.0],['type'=>'text','x'=>1.0,'y'=>4.0,'width'=>5.0,'height'=>2.0]],'text'=>"Belakang\né Ω",'font_size'=>24,'text_color'=>'#171717'];
+$record['checkout_quote']=sanro_studio_quote_size_quantities(7,$record['design'],$record['design']['quantities']);
 $record['preview_design_hash']=hash('sha256',serialize($record['design']));$GLOBALS['options'][$key]=$record;
-foreach($production->items as $item)$item->meta['_sanro_studio_design_snapshot']=sanro_studio_pricing_design_snapshot(['id'=>$id,'contract'=>['design'=>$record['design']]]);
+$production->update_meta_data('_sanro_studio_checkout_quote_hash',sanro_studio_frozen_quote_hash($record));
+foreach($production->items as $item){
+    $size=$item->get_meta('_sanro_studio_size');
+    $line=$record['checkout_quote']['items'][$size];
+    $item->unit=$line['unit_price'];$item->total=$line['subtotal'];
+    $item->update_meta_data('_sanro_studio_unit_price',$line['unit_price']);
+    $snapshot=sanro_studio_pricing_design_snapshot(['id'=>$id,'contract'=>['design'=>$record['design'],'quote'=>$record['checkout_quote']]]);
+    $snapshot['sleeve_label']=$record['checkout_quote']['sleeve_label'];
+    $item->update_meta_data('_sanro_studio_design_snapshot',$snapshot);
+}
 $plan=sanro_studio_dtf_layer_plan($production,71,'front');flow_check(!empty($plan['valid'])&&$plan['width_px']===3780&&$plan['height_px']===5669,'A3+ at300DPI fits complete 32x48cm canvas: '.json_encode($plan));
 $result=sanro_studio_dtf_prepare_order_item_candidates($production,71);flow_check(!empty($result['valid'])&&!empty($result['complete']),'real front/back batch persists and verifies: '.json_encode($result));
 foreach(['front','back'] as $side){$artifact=sanro_studio_dtf_verify_private_artifact($production,71,$side);flow_check(!empty($artifact['valid'])&&$artifact['dpi']===300&&$artifact['quality_approved']===false,'side verified exact dimensions/density/SHA, not print-approved');$bytes=sanro_studio_dtf_private_candidate_source($production,71,$side);$decoded=imagecreatefromstring($bytes['bytes']);flow_check(((imagecolorat($decoded,imagesx($decoded)-1,0)>>24)&127)===127,'transparent outer pixel preserved');imagedestroy($decoded);}

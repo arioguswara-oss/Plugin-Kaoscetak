@@ -4,7 +4,10 @@
  if(!root||!config||!config.safe_areas)return;
  const q=s=>root.querySelector(s),sides={front:{},back:{}};
  let legacyLongSleeve=false;
- const make=()=>({url:null,file:null,text:'',imageSize:60,fontSize:22,textColor:'#171717',imageX:10,imageY:10,textX:10,textY:65,category:'A5'});
+ const geometry=window.SanroStudioEstimate;
+ if(!geometry)return;
+ const make=()=>({url:null,file:null,text:'',imageSize:60,imageAspect:null,imageRotation:0,
+  fontSize:22,textColor:'#171717',textSize:null,textRotation:0,imageX:10,imageY:10,textX:10,textY:65});
  sides.front=make();sides.back=make();let side=(config.safe_areas[config.default_side]?config.default_side:(config.safe_areas.front?'front':'back'));
  const image=q('.sanro-safe img'),text=q('.sanro-text'),safe=q('.sanro-safe');
  const categories=config.categories;
@@ -26,9 +29,8 @@
  q('.sanro-shirt').style.setProperty('--sanro-shirt-color',shirtColor.value);
  const qtyInputs=Array.from(root.querySelectorAll('[data-size]'));
  syncVariationAvailability();
- function designCategory(d){return d.url||d.text.trim()?d.category:null;}
- function updateEstimate(){
-  const output=q('#sanro-price-estimate'),calc=window.SanroStudioEstimate;
+ function updateEstimate(measurements){
+  const output=q('#sanro-price-estimate'),calc=geometry;
   if(legacyLongSleeve&&config.pricing?.sleeve_label!=='long'){
    output.textContent='Untuk memesan ulang desain ini, buat desain baru pada produk lengan panjang.';
    return;
@@ -38,7 +40,12 @@
    output.textContent='Estimasi tidak tersedia: periksa jumlah per ukuran';return;
   }
   const qty=Object.fromEntries(qtyInputs.map(input=>[input.dataset.size,Number(input.value)]));
-  const result=calc.estimate(qty,designCategory(sides.front),designCategory(sides.back),false,config.pricing||null);
+  const [front,back]=measurements||['front','back'].map(measureSide);
+  if(!front.valid||!back.valid){
+   output.textContent='Estimasi belum tersedia. Periksa desain pada kedua sisi.';
+   return;
+  }
+  const result=calc.estimate(qty,front.category,back.category,false,config.pricing||null);
   output.textContent=result&&result.pieces>0?'Estimasi: '+new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(result.total)+' (belum final)':'Estimasi harga: lengkapi desain dan jumlah';
  }
  function updateQty(){
@@ -91,6 +98,70 @@
    if(layoutWasHidden)layout.hidden=true;
   }
  }
+ function objectAt(name,kind,width,height){
+  const d=sides[name],area=config.safe_areas[name];
+  return {type:kind,x:d[kind+'X']*area.width/100,y:d[kind+'Y']*area.height/100,
+   width,height,rotation:d[kind+'Rotation']};
+ }
+ function imageObject(name){
+  const d=sides[name],area=config.safe_areas[name];
+  if(!d.url||!d.imageAspect||!area)return null;
+  const width=d.imageSize*area.width/100;
+  return objectAt(name,'image',width,width*d.imageAspect);
+ }
+ function textPixels(d){
+  const previous={content:text.textContent,font:text.style.fontSize,transform:text.style.transform,hidden:text.hidden};
+  try{
+   text.hidden=false;text.textContent=d.text;text.style.fontSize=d.fontSize+'px';text.style.transform='none';
+   const {width,height}=text.getBoundingClientRect();
+   return {width,height};
+  }finally{
+   text.textContent=previous.content;text.style.fontSize=previous.font;
+   text.style.transform=previous.transform;text.hidden=previous.hidden;
+  }
+ }
+ function textObject(name,pixels){
+  const d=sides[name],area=config.safe_areas[name];
+  if(!d.text.trim()||!area)return null;
+  if(d.textSize)return objectAt(name,'text',d.textSize.width,d.textSize.height);
+  const zone=visualPrintZone(name);
+  const {width,height}=pixels||withPrintZone(name,()=>textPixels(d));
+  if(!width||!height)return null;
+  // Font sizes use a reference mockup. Resizing the viewport keeps physical dimensions.
+  return objectAt(name,'text',width*area.width/(390*zone.width/100),height*area.height/(420*zone.height/100));
+ }
+ function measureSide(name){
+  const d=sides[name],area=config.safe_areas[name];
+  if(!area)return {valid:true,category:null};
+  const picture=imageObject(name),caption=textObject(name);
+  if((d.url&&!picture)||(d.text.trim()&&!caption))return {valid:false,error:'not_ready'};
+  return geometry.printSize([picture,caption].filter(Boolean),area,categories);
+ }
+ function layerMatrix(object,width,height,pxPerCmX,pxPerCmY){
+  const radians=object.rotation*Math.PI/180,cos=Math.cos(radians),sin=Math.sin(radians);
+  const scaleX=object.width*pxPerCmX/width,scaleY=object.height*pxPerCmY/height;
+  const a=cos*scaleX,b=sin*pxPerCmY/pxPerCmX*scaleX;
+  const c=-sin*pxPerCmX/pxPerCmY*scaleY,d=cos*scaleY;
+  return [a,b,c,d,(width*scaleX-a*width-c*height)/2,(height*scaleY-b*width-d*height)/2];
+ }
+ function renderGeometry(){
+  const d=sides[side],area=config.safe_areas[side],rect=safe.getBoundingClientRect();
+  if(!area||!rect.width||!rect.height)return;
+  const pxX=rect.width/area.width,pxY=rect.height/area.height;
+  const picture=imageObject(side);
+  if(picture){
+   image.style.height=picture.height/area.height*100+'%';
+   image.style.transformOrigin='0 0';
+   image.style.transform='matrix('+layerMatrix(picture,picture.width*pxX,picture.height*pxY,pxX,pxY).join(',')+')';
+  }
+  if(d.text.trim()){
+   const pixels=textPixels(d),caption=textObject(side,pixels);
+   if(caption&&pixels.width&&pixels.height){
+    text.style.transformOrigin='0 0';
+    text.style.transform='matrix('+layerMatrix(caption,pixels.width,pixels.height,pxX,pxY).join(',')+')';
+   }
+  }
+ }
  function render(){
   // Rendering is not itself a user edit; revision changes only in input handlers.
   const d=sides[side];
@@ -113,76 +184,78 @@
   q('#sanro-text-input').value=d.text;
   q('#sanro-image-size').min=String(Math.min(10,d.imageSize));
   q('#sanro-image-size').value=d.imageSize;
-  q('#sanro-font-size').value=d.fontSize;q('#sanro-text-color').value=d.textColor;q('#sanro-category').value=d.category;
+  q('#sanro-font-size').value=d.fontSize;q('#sanro-text-color').value=d.textColor;
+  q('#sanro-image-rotation').value=d.imageRotation;q('#sanro-text-rotation').value=d.textRotation;
   image.hidden=!d.url;if(d.url&&image.getAttribute('src')!==d.url)image.setAttribute('src',d.url);if(!d.url)image.removeAttribute('src');
   image.style.left=d.imageX+'%';image.style.top=d.imageY+'%';image.style.width=d.imageSize+'%';image.style.height='auto';
-  text.hidden=!d.text;text.textContent=d.text;text.style.left=d.textX+'%';text.style.top=d.textY+'%';text.style.fontSize=d.fontSize+'px';text.style.color=d.textColor;
+  text.hidden=!d.text.trim();text.textContent=d.text;text.style.left=d.textX+'%';text.style.top=d.textY+'%';text.style.fontSize=d.fontSize+'px';text.style.color=d.textColor;
   root.querySelectorAll('[data-side]').forEach(b=>{b.disabled=!config.safe_areas[b.dataset.side];b.setAttribute('aria-pressed',String(b.dataset.side===side))});
-  q('#sanro-side-summary').textContent=['front','back'].map(name=>(name==='front'?'Depan':'Belakang')+': '+(sides[name].url||sides[name].text.trim()?'ada desain ('+sides[name].category+')':'kosong')).join(' · ');
-  updateEstimate();requestAnimationFrame(validate);
+  renderGeometry();
+  validate();
   root.dispatchEvent(new CustomEvent('sanro:render'));
   if(typeof refreshBackgroundControl==='function')refreshBackgroundControl();
  }
+ function validationMessage(name,result){
+  const label=name==='front'?'depan':'belakang';
+  if(result.error==='not_ready')return 'Sedang mengukur desain sisi '+label+'…';
+  if(result.error==='outside_safe_area')return 'Desain sisi '+label+' melewati area cetak. Pindahkan atau kecilkan objek.';
+  return 'Desain sisi '+label+' melebihi ukuran cetak maksimum. Kecilkan atau rapatkan objek.';
+ }
  function validate(){
-  const area=config.safe_areas[side],d=sides[side],rect=safe.getBoundingClientRect(),objects=[];
-  if(!area||!rect.width||!rect.height)return;
-  for(const [el,type,x,y] of [[image,'image',d.imageX,d.imageY],[text,'text',d.textX,d.textY]]){
-   if(el.hidden)continue;
-   if(type==='image' && (!image.complete || !image.naturalWidth || !image.naturalHeight)){
-    q('#sanro-validation').textContent='Memuat gambar untuk pemeriksaan area cetak…';return;
-   }
-   const box=el.getBoundingClientRect();
-   objects.push({type,x:x*area.width/100,y:y*area.height/100,width:box.width*area.width/rect.width,height:box.height*area.height/rect.height});
-  }
-  if(!objects.length){q('#sanro-validation').textContent='Belum ada objek cetak.';return}
-  const x1=Math.min(...objects.map(o=>o.x)),y1=Math.min(...objects.map(o=>o.y));
-  const x2=Math.max(...objects.map(o=>o.x+o.width)),y2=Math.max(...objects.map(o=>o.y+o.height));
-  const w=x2-x1,h=y2-y1,limit=Object.prototype.hasOwnProperty.call(categories,d.category)?categories[d.category]:null;
-  const outside=objects.some(o=>o.x<0||o.y<0||o.x+o.width>area.width+1e-6||o.y+o.height>area.height+1e-6);
-  const valid=!outside&&Array.isArray(limit)&&limit.length===2&&w<=limit[0]+1e-6&&h<=limit[1]+1e-6;
-  if(valid){
-   q('#sanro-validation').textContent='Sisi '+(side==='front'?'depan':'belakang')+' sesuai batas '+d.category+': '+w.toFixed(2)+' × '+h.toFixed(2)+' cm.';
-  }else if(outside){
-   const names=objects.filter(o=>o.x<0||o.y<0||o.x+o.width>area.width+1e-6||o.y+o.height>area.height+1e-6).map(o=>o.type==='image'?'gambar':'teks');
-   q('#sanro-validation').textContent='Sisi '+(side==='front'?'depan':'belakang')+': '+names.join(' dan ')+' melewati area cetak. Pindahkan atau kecilkan pada tab '+(names.includes('gambar')?'Gambar':'Teks')+'.';
-  }else{
-   q('#sanro-validation').textContent='Desain sisi '+(side==='front'?'depan':'belakang')+' '+w.toFixed(2)+' × '+h.toFixed(2)+' cm melebihi batas kategori '+d.category+'. Pilih kategori cetak yang lebih besar pada tab Produk.';
-  }
+  const measurements=['front','back'].map(measureSide);
+  const result=measurements[side==='front'?0:1];
+  q('#sanro-side-summary').textContent=measurements.map((value,i)=>(i?'Belakang':'Depan')+': '
+   +(!value.valid?'periksa desain':value.category?value.width.toFixed(1)+' × '+value.height.toFixed(1)+' cm':'kosong')).join(' · ');
+  q('#sanro-validation').textContent=!result.valid?validationMessage(side,result)
+   :result.category?'Desain berada di dalam area cetak.':'Belum ada objek cetak.';
+  updateEstimate(measurements);
+ }
+ function assertPrintSize(name,objects){
+  const result=geometry.printSize(objects,config.safe_areas[name],categories);
+  if(!result.valid)throw new Error(validationMessage(name,result));
+ }
+ function clampPosition(name,kind,x,y){
+  const d=sides[name],area=config.safe_areas[name];
+  const object=kind==='image'?imageObject(name):textObject(name);
+  if(!object)return;
+  const [left,top,right,bottom]=geometry.bounds({...object,x:0,y:0});
+  const clamp=(value,min,max)=>min<=max?Math.max(min,Math.min(max,value)):(min+max)/2;
+  d[kind+'X']=clamp(x*area.width/100,-left,area.width-right)/area.width*100;
+  d[kind+'Y']=clamp(y*area.height/100,-top,area.height-bottom)/area.height*100;
  }
  root.querySelectorAll('[data-side]').forEach(b=>b.addEventListener('click',()=>{if(config.safe_areas[b.dataset.side]){side=b.dataset.side;render()}}));
- q('#sanro-text-input').addEventListener('input',e=>{editRevision++;sides[side].text=e.target.value;render()});
+ q('#sanro-text-input').addEventListener('input',e=>{editRevision++;sides[side].text=e.target.value;sides[side].textSize=null;render()});
  q('#sanro-image-size').addEventListener('input',e=>{
   const d=sides[side],next=Number(e.target.value);
   if(!Number.isFinite(next)||next<Number(e.target.min)||next>100)return;
-  if(!d.url){editRevision++;d.imageSize=next;render();return;}
-  // Scale proportionally around the current center, then constrain within the safe area.
-  const ratio=next/d.imageSize;
-  const currentHeight=image.naturalWidth>0&&safe.clientHeight>0?d.imageSize*(safe.clientWidth/safe.clientHeight)*image.naturalHeight/image.naturalWidth:0;
-  const nextHeight=currentHeight*ratio;
-  if(nextHeight>100){
-   e.target.value=String(d.imageSize);
-   q('#sanro-validation').textContent='Ukuran gambar terlalu tinggi untuk area aman.';
-   return;
-  }
-  d.imageX=Math.max(0,Math.min(100-next,d.imageX+(d.imageSize-next)/2));
-  d.imageY=Math.max(0,Math.min(100-nextHeight,d.imageY+(currentHeight-nextHeight)/2));
-  editRevision++;d.imageSize=next;render();
+  if(!imageObject(side)){editRevision++;d.imageSize=next;render();return;}
+  const area=config.safe_areas[side],old=imageObject(side);
+  d.imageSize=next;
+  const sized=imageObject(side);
+  clampPosition(side,'image',d.imageX+(old.width-sized.width)/area.width*50,
+   d.imageY+(old.height-sized.height)/area.height*50);
+  editRevision++;render();
  });
- q('#sanro-font-size').addEventListener('input',e=>{editRevision++;sides[side].fontSize=Number(e.target.value);render()});
+ q('#sanro-font-size').addEventListener('input',e=>{
+  editRevision++;sides[side].fontSize=Number(e.target.value);sides[side].textSize=null;render();
+ });
+ for(const kind of ['image','text']){
+  q('#sanro-'+kind+'-rotation').addEventListener('input',event=>{
+   const angle=Number(event.target.value);
+   if(!Number.isFinite(angle)||Math.abs(angle)>180)return;
+   const d=sides[side];d[kind+'Rotation']=angle;
+   clampPosition(side,kind,d[kind+'X'],d[kind+'Y']);editRevision++;render();
+  });
+ }
  q('#sanro-text-color').addEventListener('input',e=>{editRevision++;sides[side].textColor=e.target.value;render()});
- q('#sanro-remove-text').addEventListener('click',()=>{editRevision++;sides[side].text='';render()});
- q('#sanro-center-text').addEventListener('click',()=>{
-  const d=sides[side];if(!d.text.trim())return;
-  const previous={content:text.textContent,font:text.style.fontSize,hidden:text.hidden};
-  text.hidden=false;text.textContent=d.text;text.style.fontSize=d.fontSize+'px';
-  const rect=safe.getBoundingClientRect(),box=text.getBoundingClientRect();
-  text.textContent=previous.content;text.style.fontSize=previous.font;text.hidden=previous.hidden;
-  if(!rect.width||!rect.height||!box.width||!box.height)return;
-  editRevision++;
-  d.textX=Math.max(0,(rect.width-box.width)/rect.width*50);
-  d.textY=Math.max(0,(rect.height-box.height)/rect.height*50);render();
- });
- q('#sanro-category').addEventListener('change',e=>{editRevision++;sides[side].category=e.target.value;render()});
+ q('#sanro-remove-text').addEventListener('click',()=>{editRevision++;sides[side].text='';sides[side].textSize=null;render()});
+ function centerObject(kind){
+  const area=config.safe_areas[side],object=kind==='image'?imageObject(side):textObject(side);
+  if(!object)return;
+  clampPosition(side,kind,(1-object.width/area.width)*50,(1-object.height/area.height)*50);
+  editRevision++;render();
+ }
+ q('#sanro-center-text').addEventListener('click',()=>centerObject('text'));
  q('#sanro-copy-text').addEventListener('click',()=>{
   const other=side==='front'?'back':'front',source=sides[side],target=sides[other],status=q('#sanro-copy-status');
   if(!config.safe_areas[other]){status.textContent='Sisi tujuan belum dikonfigurasi.';return}
@@ -191,7 +264,7 @@
   // Preserve relative placement and text style, but do not copy temporary images.
   target.text=source.text;target.fontSize=source.fontSize;target.textColor=source.textColor;
   target.textX=source.textX;target.textY=source.textY;
-  target.category=source.category;
+  target.textRotation=source.textRotation;target.textSize=null;
   editRevision++;render();
   status.textContent='Teks disalin ke sisi '+(other==='front'?'depan':'belakang')+'. Periksa batas cetaknya.';
  });
@@ -226,19 +299,13 @@
    if(target.url)URL.revokeObjectURL(target.url);
    target.url=url;target.file=file;target.pending=null;
    delete boundMasterRefs[uploadSide];
-   // Fit to the chosen category as well as the safe preview. Keep the
-   // category (and its price) fixed, including when the other side is active.
-   const rect=withPrintZone(uploadSide,()=>safe.getBoundingClientRect());
-   const area=config.safe_areas[uploadSide],limit=categories[target.category];
-   if(rect.width>0&&rect.height>0&&area&&limit){
-    const heightRatio=rect.width*height/(rect.height*width);
-    target.imageSize=Math.min(60,100/heightRatio,100*limit[0]/area.width,
-     100*limit[1]/(area.height*heightRatio));
-    // Tall images may need less than the slider's 10% minimum.
-    if(side===uploadSide)q('#sanro-image-size').min=String(Math.min(10,target.imageSize));
-    target.imageX=Math.max(0,(100-target.imageSize)/2);
-    target.imageY=Math.max(0,(100-target.imageSize*heightRatio)/2);
-   }
+   // Fit to the physical safe area; pricing follows the resulting dimensions.
+   const area=config.safe_areas[uploadSide];
+   target.imageAspect=height/width;target.imageRotation=0;
+   const heightRatio=area.width*target.imageAspect/area.height;
+   target.imageSize=Math.min(60,100/heightRatio);
+   target.imageX=(100-target.imageSize)/2;
+   target.imageY=(100-target.imageSize*heightRatio)/2;
    // A slow image load must never redraw or alter the currently selected opposite side.
    if(side===uploadSide)render();
    else updateEstimate();
@@ -246,16 +313,7 @@
   probe.onerror=()=>{if(target.pending===url){URL.revokeObjectURL(url);target.pending=null;if(side===uploadSide)q('#sanro-validation').textContent='Gambar tidak valid'}};
   probe.src=url;e.target.value='';
  });
- q('#sanro-center-image').addEventListener('click',()=>{
-  const d=sides[side];
-  if(!d.url||!image.complete||!image.naturalWidth||!image.naturalHeight)return;
-  const rect=safe.getBoundingClientRect(),box=image.getBoundingClientRect();
-  if(!rect.width||!rect.height||!box.width||!box.height)return;
-  // Center using the rendered dimensions, including tall-image aspect ratio.
-  d.imageX=Math.max(0,(rect.width-box.width)/rect.width*50);
-  d.imageY=Math.max(0,(rect.height-box.height)/rect.height*50);
-  editRevision++;render();
- });
+ q('#sanro-center-image').addEventListener('click',()=>centerObject('image'));
  q('#sanro-remove-image').addEventListener('click',()=>{editRevision++;const d=sides[side];if(d.url)URL.revokeObjectURL(d.url);if(d.pending)URL.revokeObjectURL(d.pending);d.url=null;d.file=null;d.pending=null;image.removeAttribute('src');render()});
  // Object URLs are browser-local temporary resources; never persist them as draft masters.
  window.addEventListener('pagehide',()=>{
@@ -276,13 +334,11 @@
   });
   el.addEventListener('pointermove',e=>{
    if(!start||e.pointerId!==start.pointerId||side!==start.side)return;
-   const d=sides[start.side],rect=safe.getBoundingClientRect();
+   const rect=safe.getBoundingClientRect();
    if(!rect.width||!rect.height)return;
-   const maxX=Math.max(0,100-el.offsetWidth/rect.width*100);
-   const maxY=Math.max(0,100-el.offsetHeight/rect.height*100);
    editRevision++;
-   d[prefix+'X']=Math.max(0,Math.min(maxX,start.px+(e.clientX-start.x)/rect.width*100));
-   d[prefix+'Y']=Math.max(0,Math.min(maxY,start.py+(e.clientY-start.y)/rect.height*100));
+   clampPosition(side,prefix,start.px+(e.clientX-start.x)/rect.width*100,
+    start.py+(e.clientY-start.y)/rect.height*100);
    render();
   });
   const finish=e=>{if(start&&e.pointerId===start.pointerId)start=null;};
@@ -293,10 +349,8 @@
  // Visual D-pad uses the same bounded geometry as native pointer dragging.
  root.sanroMoveObject=function(kind,dx,dy){
   if(!['image','text'].includes(kind))return;const el=kind==='image'?image:text;if(el.hidden)return;
-  const rect=safe.getBoundingClientRect();if(!rect.width||!rect.height)return;
   const d=sides[side];editRevision++;
-  d[kind+'X']=Math.max(0,Math.min(Math.max(0,100-el.offsetWidth/rect.width*100),d[kind+'X']+dx));
-  d[kind+'Y']=Math.max(0,Math.min(Math.max(0,100-el.offsetHeight/rect.height*100),d[kind+'Y']+dy));render();
+  clampPosition(side,kind,d[kind+'X']+dx,d[kind+'Y']+dy);render();
  };
  // Owner-bound draft session; master/preview APIs and checkout use independent server gates.
  const saveButton=q('#sanro-save-draft'),saveStatus=q('#sanro-save-status');
@@ -329,13 +383,13 @@
   if(!design||typeof design!=='object')throw new Error('Metadata draft tidak valid.');
   for(const name of ['front','back']){
    const entry=design[name];
-   if(!entry){
+   if(!entry||(Array.isArray(entry.objects)&&!entry.objects.length)){
     const d=sides[name];
     if(d.url&&d.url.startsWith('blob:'))URL.revokeObjectURL(d.url);
     Object.assign(d,make());
     continue;
    }
-   if(!config.safe_areas[name]||!categories[entry.category]||!Array.isArray(entry.objects)
+   if(!config.safe_areas[name]||!Array.isArray(entry.objects)
     ||entry.objects.length<1||entry.objects.length>2
     ||entry.objects.some(obj=>!['image','text'].includes(obj.type))
     ||new Set(entry.objects.map(obj=>obj.type)).size!==entry.objects.length)
@@ -348,9 +402,11 @@
     ||!/^#[0-9a-f]{6}$/i.test(entry.text_color)))throw new Error('Format teks draft tidak valid.');
    const area=config.safe_areas[name];
    for(const obj of entry.objects){
-    if(![obj.x,obj.y,obj.width,obj.height].every(Number.isFinite)||obj.width<=0||obj.height<=0
-     ||obj.x<0||obj.y<0||obj.x+obj.width>area.width+0.000001
-     ||obj.y+obj.height>area.height+0.000001)throw new Error('Geometri draft tidak valid.');
+    const rotation=obj.rotation??0;
+    const [left,top,right,bottom]=geometry.bounds(obj);
+    if(![obj.x,obj.y,obj.width,obj.height,rotation].every(Number.isFinite)||obj.width<=0||obj.height<=0
+     ||Math.abs(rotation)>180||left < -0.000001||top < -0.000001
+     ||right>area.width+0.000001||bottom>area.height+0.000001)throw new Error('Geometri draft tidak valid.');
    }
   }
   if(design.long_sleeve!==undefined&&typeof design.long_sleeve!=='boolean')
@@ -372,12 +428,14 @@
   }
   for(const name of ['front','back']){
    const entry=design[name];const d=sides[name];
-   if(!entry){d.text='';continue}
+   if(!entry||!entry.objects.length){d.text='';continue}
    const textObject=entry.objects.find(obj=>obj.type==='text');
    const imageObject=entry.objects.find(obj=>obj.type==='image');
-   d.text=textObject?entry.text:'';d.category=entry.category;
+   d.text=textObject?entry.text:'';d.textSize=null;
+   if(!imageObject){if(d.url)URL.revokeObjectURL(d.url);d.url=null;d.imageAspect=null;d.file=null;d.pending=null;}
    if(textObject){
     d.fontSize=entry.font_size;d.textColor=entry.text_color;
+    d.textRotation=textObject.rotation??0;d.textSize={width:textObject.width,height:textObject.height};
     d.textX=textObject.x/config.safe_areas[name].width*100;
     d.textY=textObject.y/config.safe_areas[name].height*100;
    }
@@ -387,6 +445,7 @@
     d.imageX=imageObject.x/config.safe_areas[name].width*100;
     d.imageY=imageObject.y/config.safe_areas[name].height*100;
     d.imageSize=imageObject.width/config.safe_areas[name].width*100;
+    d.imageAspect=imageObject.height/imageObject.width;d.imageRotation=imageObject.rotation??0;
    }
   }
   render();
@@ -443,28 +502,10 @@
    if(!area)continue;
    if((d.url||d.pending)&&!ignoreImages)throw new Error('Gambar belum dapat disimpan. Upload master privat terlebih dahulu.');
    if(!d.text.trim())continue;
-   // Measure the other side without switching editor state or touching inputs.
-   const {rect,box}=withPrintZone(name,()=>{
-    const previous={content:text.textContent,font:text.style.fontSize,left:text.style.left,top:text.style.top,hidden:text.hidden};
-    try{
-     text.hidden=false;text.textContent=d.text;text.style.fontSize=d.fontSize+'px';
-     text.style.left=d.textX+'%';text.style.top=d.textY+'%';
-     return {rect:safe.getBoundingClientRect(),box:text.getBoundingClientRect()};
-    }finally{
-     text.textContent=previous.content;text.style.fontSize=previous.font;
-     text.style.left=previous.left;text.style.top=previous.top;text.hidden=previous.hidden;
-    }
-   });
-   if(!rect.width||!rect.height||!box.width||!box.height)throw new Error('Ukuran pratinjau belum siap.');
-   const object={type:'text',x:d.textX*area.width/100,y:d.textY*area.height/100,
-    width:box.width*area.width/rect.width,height:box.height*area.height/rect.height};
-   const limit=categories[d.category];
-   if(!limit||object.x<0||object.y<0||object.x+object.width>area.width+0.000001
-    ||object.y+object.height>area.height+0.000001
-    ||object.width>limit[0]+0.000001||object.height>limit[1]+0.000001){
-    throw new Error('Teks di luar area aman atau kategori cetak.');
-   }
-   design[name]={category:d.category,objects:[object],text:d.text,font_size:d.fontSize,text_color:d.textColor};
+   const object=textObject(name);
+   if(!object)throw new Error('Ukuran teks belum siap.');
+   assertPrintSize(name,[object]);
+   design[name]={objects:[object],text:d.text,font_size:d.fontSize,text_color:d.textColor};
   }
   if(!Object.keys(design).length&&!allowEmpty)throw new Error('Tambahkan teks terlebih dahulu.');
   const quantities=Object.fromEntries(qtyInputs.map(input=>[input.dataset.size,Number(input.value)]));
@@ -480,33 +521,10 @@
    if(!faces.length)throw new Error('Font produksi belum tersedia. Muat ulang editor.');
   }
  }
- async function measureDraftImage(name){
-  const d=sides[name],area=config.safe_areas[name];
-  const [naturalWidth,naturalHeight]=await new Promise((resolve,reject)=>{
-   const probe=new Image();
-   probe.onload=()=>resolve([probe.naturalWidth,probe.naturalHeight]);
-   probe.onerror=()=>reject(new Error('Gambar '+name+' tidak dapat dibaca.'));
-   probe.src=d.url;
-  });
-  const rect=withPrintZone(name,()=>safe.getBoundingClientRect());
-  if(!area||!rect.width||!rect.height||!naturalWidth||!naturalHeight)
-   throw new Error('Area gambar belum siap.');
-  const width=d.imageSize*area.width/100;
-  const height=width*rect.width/rect.height*naturalHeight/naturalWidth*area.height/area.width;
-  const object={type:'image',x:d.imageX*area.width/100,y:d.imageY*area.height/100,width,height};
-  if(object.x<0||object.y<0||width<=0||height<=0
-   ||object.x+width>area.width+0.000001||object.y+height>area.height+0.000001)
-   throw new Error('Gambar '+(name==='front'?'depan':'belakang')+' di luar area aman.');
+ function measureDraftImage(name){
+  const object=imageObject(name);
+  if(!object)throw new Error('Ukuran gambar belum siap.');
   return object;
- }
- function validateDraftCategory(name,category,objects){
-  const limit=categories[category];
-  const spanX=Math.max(...objects.map(o=>o.x+o.width))-Math.min(...objects.map(o=>o.x));
-  const spanY=Math.max(...objects.map(o=>o.y+o.height))-Math.min(...objects.map(o=>o.y));
-  if(!limit||spanX>limit[0]+0.000001||spanY>limit[1]+0.000001){
-   const label=name==='front'?'depan':'belakang';
-   throw new Error('Desain '+label+' melebihi batas '+category+'. Kecilkan desain atau pilih kategori cetak untuk sisi '+label+'.');
-  }
  }
  async function exportBoundDraft(){
   await ensureProductionFont();
@@ -519,10 +537,10 @@
     throw new Error('Unggah gambar baru '+name+' sebelum menyimpan.');
    if(!boundMasterRefs[name])
     throw new Error('Master privat '+name+' belum terikat.');
-   const imageGeometry=await measureDraftImage(name);
-   if(!design[name])design[name]={category:d.category,objects:[]};
+   const imageGeometry=measureDraftImage(name);
+   if(!design[name])design[name]={objects:[]};
    design[name].objects.push(imageGeometry);
-   validateDraftCategory(name,d.category,design[name].objects);
+   assertPrintSize(name,design[name].objects);
   }
   if(!design.front&&!design.back)throw new Error('Tambahkan desain terlebih dahulu.');
   return design;
@@ -562,18 +580,26 @@
    const ctx=canvas.getContext('2d');
    if(!ctx)throw new Error('Canvas tidak tersedia.');
    ctx.clearRect(0,0,size,size);
+   const pxX=area?size/area.width:0,pxY=area?canvas.height/area.height:0;
+   function paint(object,width,height,draw){
+    ctx.save();
+    ctx.translate(object.x*pxX,object.y*pxY);
+    ctx.transform(...layerMatrix(object,width,height,pxX,pxY));
+    draw();ctx.restore();
+   }
    if(imagePreview){
-    const width=d.imageSize/100*size;
-    const height=width*imagePreview.naturalHeight/imagePreview.naturalWidth;
-    ctx.drawImage(imagePreview,d.imageX/100*size,d.imageY/100*canvas.height,width,height);
+    const object=measureDraftImage(name);
+    const width=object.width*pxX,height=object.height*pxY;
+    paint(object,width,height,()=>ctx.drawImage(imagePreview,0,0,width,height));
    }
    if(d.text.trim()){
-    const fontPx=Math.max(8,Math.round(d.fontSize*size/bounds.width));
-    const x=d.textX/100*size,y=d.textY/100*canvas.height;
-    ctx.fillStyle=d.textColor;
-    ctx.font=fontPx+'px SanroProduction';ctx.textBaseline='top';
-    d.text.split('\n').forEach((line,i)=>
-     ctx.fillText(line,x,y+i*fontPx*1.2,Math.max(0,size-x)));
+    const pixels=withPrintZone(name,()=>textPixels(d)),object=textObject(name,pixels);
+    if(!object||!pixels.width||!pixels.height)throw new Error('Ukuran teks preview belum siap.');
+    paint(object,pixels.width,pixels.height,()=>{
+     ctx.fillStyle=d.textColor;
+     ctx.font=d.fontSize+'px SanroProduction';ctx.textBaseline='top';
+     d.text.split('\n').forEach((line,i)=>ctx.fillText(line,0,i*d.fontSize*1.15));
+    });
    }
    const output=document.createElement('canvas');output.width=size;output.height=Math.round(size*420/390);
    const view=output.getContext('2d');if(!view)throw new Error('Canvas preview tidak tersedia.');
@@ -693,12 +719,12 @@
      const serverTextDesign=JSON.parse(JSON.stringify(currentDraft.design));
      for(const name of ['front','back']){
       if(!serverTextDesign[name])continue;
+      delete serverTextDesign[name].category;
       serverTextDesign[name].objects=serverTextDesign[name].objects.filter(item=>item.type!=='image');
       if(!serverTextDesign[name].objects.length)delete serverTextDesign[name];
      }
-     // A reopened text position may differ by <=1e-6 due to IEEE-754
-     // reconstruction. Normalize ONLY matching text x/y for comparison;
-     // do not modify the draft, hash, binding, or other metadata.
+     // Allow round-off from reconstructing the same physical text box.
+     // Compare on a copy so the server draft and stored hash stay intact.
      const comparableTextDesign=JSON.parse(JSON.stringify(localTextDesign));
      for(const name of ['front','back']){
       const local=comparableTextDesign[name],server=serverTextDesign[name];
@@ -707,7 +733,8 @@
       for(let i=0;i<local.objects.length;i++){
        const a=local.objects[i],b=server.objects[i];
        if(!a||!b||a.type!=='text'||b.type!=='text')continue;
-       for(const key of ['x','y']){
+       if(a.rotation===0&&b.rotation===undefined)b.rotation=0;
+       for(const key of ['x','y','width','height']){
         if(typeof a[key]==='number'&&Number.isFinite(a[key])
          &&typeof b[key]==='number'&&Number.isFinite(b[key])
          &&Math.abs(a[key]-b[key])<=0.000001)a[key]=b[key];
@@ -720,13 +747,12 @@
      // Server-side geometry and owner-bound master checks remain authoritative.
      const design=JSON.parse(JSON.stringify(currentDraft.design));
      for(const name of selected){
-      const category=sides[name].category;
-      const imageGeometry=await measureDraftImage(name);
-      if(!design[name])design[name]={category,objects:[]};
-      design[name].category=category;
+      const imageGeometry=measureDraftImage(name);
+      if(!design[name])design[name]={objects:[]};
+      delete design[name].category;
       design[name].objects=design[name].objects.filter(item=>item.type!=='image');
       design[name].objects.push(imageGeometry);
-      validateDraftCategory(name,category,design[name].objects);
+      assertPrintSize(name,design[name].objects);
      }
      const designHash=currentDraft.design_hash;
      const completed=[];
@@ -1008,5 +1034,7 @@
   });
  }
  image.addEventListener('load',validate);
- drag(image,'image');drag(text,'text');window.addEventListener('resize',validate);render();
+ if(document.fonts?.ready)document.fonts.ready.then(()=>{renderGeometry();validate();});
+ drag(image,'image');drag(text,'text');
+ window.addEventListener('resize',()=>{renderGeometry();validate();});render();
 })();

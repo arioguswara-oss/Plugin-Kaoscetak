@@ -87,7 +87,7 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
     $design = $record['design'];
     $areas = sanro_studio_product_safe_areas($product_id);
     if (!is_array($areas) || !isset($areas[$side])
-        || empty(sanro_studio_validate_product_design($product_id, $design)['valid'])) {
+        || empty(sanro_studio_validate_product_design($product_id,$design,$record['checkout_quote']['print_limits'] ?? sanro_studio_print_categories())['valid'])) {
         return ['valid' => false, 'error' => 'invalid_print_geometry'];
     }
     if (!array_key_exists($side, $design)) {
@@ -114,19 +114,9 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
             if ($text !== null) return ['valid' => false, 'error' => 'invalid_layers'];
             $text = $obj;
         }
-        foreach (['x','y','width','height'] as $field) {
-            if (!isset($obj[$field]) || !is_numeric($obj[$field])
-                || !is_finite((float) $obj[$field])) {
-                return ['valid' => false, 'error' => 'invalid_print_geometry'];
-            }
-        }
-        $x = (float) $obj['x']; $y = (float) $obj['y'];
-        $w = (float) $obj['width']; $h = (float) $obj['height'];
-        if ($x < 0 || $y < 0 || $w <= 0 || $h <= 0) {
-            return ['valid' => false, 'error' => 'invalid_print_geometry'];
-        }
-        $min_x = min($min_x, $x); $min_y = min($min_y, $y);
-        $max_x = max($max_x, $x + $w); $max_y = max($max_y, $y + $h);
+        [$left,$top,$right,$bottom] = sanro_studio_print_object_bounds($obj);
+        $min_x = min($min_x,$left); $min_y = min($min_y,$top);
+        $max_x = max($max_x,$right); $max_y = max($max_y,$bottom);
     }
     if (($text === null && array_key_exists('text', $entry))
         || ($text !== null && !isset($entry['text']))) {
@@ -189,13 +179,13 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
         $plan['image'] = [
             'x' => $to_px((float) $image['x'] - $min_x),
             'y' => $to_px((float) $image['y'] - $min_y),
-            'width' => $target_w, 'height' => $target_h,
+            'width' => $target_w, 'height' => $target_h, 'rotation' => $image['rotation'] ?? 0,
             'source_w' => $info[0], 'source_h' => $info[1],
             'sha256' => $source['sha256'], 'bytes' => $bytes,
         ];
-        if ($plan['image']['x'] < 0 || $plan['image']['y'] < 0
-            || $plan['image']['x'] + $target_w > $width_px
-            || $plan['image']['y'] + $target_h > $height_px) {
+        if ($plan['image']['rotation'] == 0 && ($plan['image']['x'] < 0 || $plan['image']['y'] < 0
+            || $plan['image']['x'] + $target_w > $width_px + 1
+            || $plan['image']['y'] + $target_h > $height_px + 1)) {
             return ['valid' => false, 'error' => 'dtf_layer_pixel_overflow'];
         }
     }
@@ -218,17 +208,19 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
             'y' => $to_px((float) $text['y'] - $min_y),
             'width' => $to_px((float) $text['width']),
             'height' => $to_px((float) $text['height']),
-            'text' => $value, 'color' => $entry['text_color'],
+            'text' => $value, 'color' => $entry['text_color'], 'rotation' => $text['rotation'] ?? 0,
         ];
-        if ($plan['text_layer']['x'] < 0 || $plan['text_layer']['y'] < 0
-            || $plan['text_layer']['width'] < 2 || $plan['text_layer']['height'] < 2
-            || $plan['text_layer']['x'] + $plan['text_layer']['width'] > $width_px
-            || $plan['text_layer']['y'] + $plan['text_layer']['height'] > $height_px) {
+        $layer = $plan['text_layer'];
+        if ($layer['width'] < 2 || $layer['height'] < 2
+            || ($layer['rotation'] == 0 && ($layer['x'] < 0 || $layer['y'] < 0
+                || $layer['x'] + $layer['width'] > $width_px + 1
+                || $layer['y'] + $layer['height'] > $height_px + 1))) {
             return ['valid' => false, 'error' => 'dtf_layer_pixel_overflow'];
         }
     }
     $source_pixels=$plan['image']?$plan['image']['source_w']*$plan['image']['source_h']:0;
-    if(!sanro_studio_dtf_memory_available($width_px,$height_px,$source_pixels))return ['valid'=>false,'error'=>'dtf_memory_limit'];
+    $rotated = ($plan['image']['rotation'] ?? 0) != 0 || ($plan['text_layer']['rotation'] ?? 0) != 0;
+    if(!sanro_studio_dtf_memory_available($width_px,$height_px,$source_pixels,$rotated))return ['valid'=>false,'error'=>'dtf_memory_limit'];
     $now=get_option('sanro_studio_draft_'.$design_id,false);
     if(!is_string($plan['source_fingerprint'])||$plan['source_fingerprint']!==sanro_studio_artifact_source_fingerprint($now,$order->get_id(),$item_id,$design_id,$side))return ['valid'=>false,'error'=>'dtf_source_snapshot_changed'];
     return $plan;
@@ -255,9 +247,10 @@ function sanro_studio_dtf_render_layer_side($order, $item_id, $side) {
             $source = @imagecreatefromstring($i['bytes']);
             if ($source === false) return ['valid' => false, 'error' => 'dtf_image_decode_failed'];
             try {
-                if (!imagecopyresampled($canvas, $source,
-                    $i['x'], $i['y'], 0, 0, $i['width'], $i['height'],
-                    $i['source_w'], $i['source_h'])) {
+                $paint = static function ($target,$x,$y) use ($source,$i) {
+                    return imagecopyresampled($target,$source,$x,$y,0,0,$i['width'],$i['height'],$i['source_w'],$i['source_h']);
+                };
+                if (!sanro_studio_dtf_composite_layer($canvas,$i,$paint)) {
                     return ['valid' => false, 'error' => 'dtf_image_composite_failed'];
                 }
             } finally {
@@ -276,10 +269,20 @@ function sanro_studio_dtf_render_layer_side($order, $item_id, $side) {
             if (!is_array($rgb) || count($rgb) !== 3) {
                 return ['valid' => false, 'error' => 'dtf_text_color_invalid'];
             }
-            $color = imagecolorallocatealpha($canvas, $rgb[0], $rgb[1], $rgb[2], 0);
-            foreach($layout['lines'] as $index=>$line){if($line==='')continue;$box=imagettfbbox($layout['size'],0,$font,$line);
-                $draw=@imagettftext($canvas,$layout['size'],0,$t['x']-min($box[0],$box[2],$box[4],$box[6]),$t['y']+$index*$layout['lineheight']-min($box[1],$box[3],$box[5],$box[7]),$color,$font,$line);
-                if(!is_array($draw))return ['valid'=>false,'error'=>'dtf_text_draw_failed'];
+            $paint = static function ($target,$x,$y) use ($layout,$font,$rgb) {
+                $color = imagecolorallocatealpha($target,$rgb[0],$rgb[1],$rgb[2],0);
+                foreach ($layout['lines'] as $index => $line) {
+                    if ($line === '') continue;
+                    $box = imagettfbbox($layout['size'],0,$font,$line);
+                    $draw = @imagettftext($target,$layout['size'],0,
+                        $x-min($box[0],$box[2],$box[4],$box[6]),
+                        $y+$index*$layout['lineheight']-min($box[1],$box[3],$box[5],$box[7]),$color,$font,$line);
+                    if (!is_array($draw)) return false;
+                }
+                return true;
+            };
+            if (!sanro_studio_dtf_composite_layer($canvas,$t,$paint)) {
+                return ['valid'=>false,'error'=>'dtf_text_draw_failed'];
             }
         }
         if (!imageresolution($canvas, 300, 300)) {

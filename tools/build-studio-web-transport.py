@@ -36,6 +36,12 @@ INSTALLED_LUMISE_CORRECTION={
  'archive_sha256':'60c9bd4096765c854f70aa46dbe1bbfa606052f01aec0d13d01b1d184b967aed',
  'version':'1.1.0','channel':'candidate','source_commit':'964e428442e21cbae05bd336b81f8aef82cac424',
 }
+# Standard-mockup predecessor recorded by the locked staging install.
+INSTALLED_STANDARD_MOCKUP={
+ 'manifest_sha256':'2fd4d92199c3c724019d9544336c99b18f919797af6b090f420888dfff4b821c',
+ 'archive_sha256':'ce74fc6f3140b5c9b0e6f30cf1319af12996014a2ca881e5fc532729295b63b7',
+ 'version':'1.1.0','channel':'candidate','source_commit':'094a511b7b315358dd6641bbca7ee9c4664619a9',
+}
 p=argparse.ArgumentParser();p.add_argument('--candidate',required=True);p.add_argument('--out',required=True);p.add_argument('--existing-manifest',required=True);p.add_argument('--existing-archive',required=True);p.add_argument('--verified-existing-tree-digest',required=True);a=p.parse_args()
 repo=pathlib.Path(__file__).resolve().parents[1];candidate=pathlib.Path(a.candidate);out=pathlib.Path(a.out);out.mkdir(parents=True,exist_ok=True)
 installer_source_commit=subprocess.check_output(['git','-C',str(repo),'rev-parse','HEAD'],text=True).strip()
@@ -50,13 +56,15 @@ is_installed_ui_p1=(old_manifest_sha==INSTALLED_UI_P1['manifest_sha256'] and all
 is_installed_catalog=(old_manifest_sha==INSTALLED_CATALOG_P1['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_CATALOG_P1.items() if k not in ('manifest_sha256','archive_sha256')))
 is_installed_variable=(old_manifest_sha==INSTALLED_VARIABLE_E2E['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_VARIABLE_E2E.items() if k not in ('manifest_sha256','archive_sha256')))
 is_installed_correction=(old_manifest_sha==INSTALLED_LUMISE_CORRECTION['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_LUMISE_CORRECTION.items() if k not in ('manifest_sha256','archive_sha256')))
-if not (is_final or is_installed_ui or is_installed_ui_p1 or is_installed_catalog or is_installed_variable or is_installed_correction):raise SystemExit('existing manifest is not an exact approved Final Release or previously installed 1.1.0 staging candidate')
+is_installed_standard=(old_manifest_sha==INSTALLED_STANDARD_MOCKUP['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_STANDARD_MOCKUP.items() if k not in ('manifest_sha256','archive_sha256')))
+if not (is_final or is_installed_ui or is_installed_ui_p1 or is_installed_catalog or is_installed_variable or is_installed_correction or is_installed_standard):raise SystemExit('existing manifest is not an exact approved Final Release or previously installed 1.1.0 staging candidate')
 if hashlib.sha256(old_archive).hexdigest()!=old.get('archive_sha256'):raise SystemExit('existing release archive checksum mismatch')
 if is_installed_ui and old.get('archive_sha256')!=INSTALLED_UI_110['archive_sha256']:raise SystemExit('installed UI archive is not the previously verified staging archive')
 if is_installed_ui_p1 and old.get('archive_sha256')!=INSTALLED_UI_P1['archive_sha256']:raise SystemExit('installed P1 UI archive is not the previously verified staging archive')
 if is_installed_catalog and old.get('archive_sha256')!=INSTALLED_CATALOG_P1['archive_sha256']:raise SystemExit('installed catalog archive is not the previously verified staging archive')
 if is_installed_variable and old.get('archive_sha256')!=INSTALLED_VARIABLE_E2E['archive_sha256']:raise SystemExit('installed variable-product archive is not the previously verified staging archive')
 if is_installed_correction and old.get('archive_sha256')!=INSTALLED_LUMISE_CORRECTION['archive_sha256']:raise SystemExit('installed correction archive is not the previously verified staging archive')
+if is_installed_standard and old.get('archive_sha256')!=INSTALLED_STANDARD_MOCKUP['archive_sha256']:raise SystemExit('installed standard-mockup archive mismatch')
 if hashlib.sha256(json.dumps(old.get('files',[]),sort_keys=True,separators=(',',':')).encode()).hexdigest()!=old.get('plugin_digest'):raise SystemExit('existing release manifest plugin digest mismatch')
 old_files=[*old.get('files',[]),old.get('build_marker',{})]
 rows=[]

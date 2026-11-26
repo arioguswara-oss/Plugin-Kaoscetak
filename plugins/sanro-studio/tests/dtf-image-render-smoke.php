@@ -193,6 +193,12 @@ if (function_exists('imagecreatefromstring') && function_exists('imageresolution
         'render output is RGBA PNG with exact physical pixel dimensions');
     check133(hash_equals(hash('sha256',$result['bytes']),$result['sha256'])
         && !isset($result['source_bytes']), 'render digest valid, raw source not in output metadata');
+    if (function_exists('imagerotate')) {
+        $GLOBALS['record133']['design']['front']['objects'][0]['rotation']=45;
+        $rotated=sanro_studio_dtf_render_image_side($order,71,'front');
+        check133(!empty($rotated['valid']) && $rotated['width_px']===17 && $rotated['height_px']===17,
+            'rotated image expands physical raster to its footprint');
+    }
     echo "PHP_GD_RASTER: PASS (actual PNG decoded and verified)\n";
 } else {
     check133(($result['error']??null)==='dtf_gd_unavailable',

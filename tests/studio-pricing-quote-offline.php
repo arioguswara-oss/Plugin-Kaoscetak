@@ -12,6 +12,7 @@ function get_post_meta($id, $key, $single) {
     if ($key === '_sanro_studio_pricing_profile') return $GLOBALS['profile'];
     if ($key === '_sanro_studio_product_sleeve') return $id === 8 ? 'long' : '';
     if ($key === '_sanro_studio_price_table') return $id === 8 ? ($GLOBALS['long_table'] ?? '') : '';
+    if ($key === '_sanro_studio_second_side_prices') return $GLOBALS['custom_sides'] ?? '';
     return $GLOBALS['areas'];
 }
 function wc_get_product($id) {
@@ -29,7 +30,10 @@ function check_quote($condition, $label) {
     $checks++;
     if (!$condition) throw new RuntimeException('FAIL: ' . $label);
 }
-function side($category, $width = 10, $height = 10) {
+function side($category, $width = null, $height = null) {
+    [$limit_w,$limit_h] = sanro_studio_print_categories()[$category];
+    $width = $width ?? $limit_w;
+    $height = $height ?? $limit_h;
     return ['category' => $category, 'objects' => [['type' => 'image', 'x' => 0, 'y' => 0, 'width' => $width, 'height' => $height]]];
 }
 function design() { return ['front' => side('A3'), 'back' => side('A5'), 'quantities' => ['S' => 2, 'L' => 1]]; }
@@ -64,6 +68,9 @@ foreach ($official as $size => $prices) {
     }
 }
 check_quote(sanro_studio_product_quote(7, design())['total'] === 297000, 'multi-size quantity totals');
+$GLOBALS['custom_sides'] = [12500,25000,35000,40000];
+check_quote(sanro_studio_product_quote(7,design())['total'] === 289500, 'shop second-side rate uses the computed smaller tier');
+unset($GLOBALS['custom_sides']);
 $q = sanro_studio_product_quote(7, ['front' => side('A5'), 'quantities' => ['S' => 1], 'long_sleeve' => true]);
 check_quote($q['error'] === 'select_long_sleeve_product', 'legacy long sleeve requires the separate product');
 check_quote(!sanro_studio_product_quote(8,design())['valid'], 'long sleeve product requires its own table');
@@ -77,10 +84,12 @@ foreach ($categories as $category) {
     $d = ['front' => side($category, $w, $h), 'quantities' => ['S' => 1]];
     check_quote(sanro_studio_product_quote(7, $d)['valid'], 'exact category boundary');
     $d['front']['objects'][0]['width'] += 0.01;
-    check_quote(!sanro_studio_product_quote(7, $d)['valid'], 'category exceeded');
+    $result = sanro_studio_product_quote(7,$d);
+    $next = $categories[array_search($category,$categories,true)+1] ?? null;
+    check_quote($next === null ? !$result['valid'] : $result['categories']['front'] === $next, 'size beyond boundary advances tier or rejects');
 }
 $d = design(); $d['front']['objects'][] = ['type'=>'text','x'=>25,'y'=>0,'width'=>5,'height'=>5];
-check_quote(!sanro_studio_product_quote(7, $d)['valid'], 'combined image/text bounding box');
+check_quote(sanro_studio_product_quote(7,$d)['categories']['front'] === 'A3+', 'combined image/text bounding box advances tier');
 $d = design(); $d['back'] = ['category'=>'A3+', 'objects'=>[]];
 check_quote(sanro_studio_product_quote(7, $d)['total'] === 252000, 'empty side not charged');
 foreach ([[], ['S'=>0], ['S'=>-1], ['S'=>1.5], ['S'=>'1'], ['S'=>1000], ['XXL'=>1], null,
@@ -97,7 +106,7 @@ foreach ([null, 1, 'true'] as $value) {
     check_quote(!sanro_studio_product_quote(7, $d)['valid'], 'strict sleeve boolean');
 }
 $d = design(); $d['front']['category'] = 'A2';
-check_quote(!sanro_studio_product_quote(7, $d)['valid'], 'unknown category');
+check_quote(sanro_studio_product_quote(7,$d)['categories']['front'] === 'A3','claimed category never changes price');
 $d = design(); $d['front']['objects'][0]['width'] = INF;
 check_quote(!sanro_studio_product_quote(7, $d)['valid'], 'non-finite geometry');
 $GLOBALS['areas']['front']['width'] = 5;

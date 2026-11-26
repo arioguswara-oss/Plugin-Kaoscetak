@@ -114,6 +114,13 @@ if ($font_ready && function_exists('imagettfbbox') && function_exists('imagecrea
     }
     imagedestroy($decoded);
     check135($painted, 'actual private font glyphs painted over transparent pixels');
+    if (function_exists('imagerotate')) {
+        $GLOBALS['record133']['design']['front']['objects'][0]['rotation']=90;
+        $GLOBALS['record133']['design']['front']['objects'][1]['rotation']=35;
+        $rotated=sanro_studio_dtf_render_layer_side($order,71,'front');
+        check135(!empty($rotated['valid']) && $rotated['height_px']>$render['height_px'],
+            'layered raster respects rotated text and image footprint');
+    }
     echo "DTF_LAYER_REAL: PASS (both image and text pixels rasterized)\n";
 } else {
     $render = sanro_studio_dtf_render_layer_side($order,71,'front');

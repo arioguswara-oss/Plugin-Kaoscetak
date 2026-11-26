@@ -15,6 +15,16 @@ function sanro_studio_validate_product_price_table($table,$sizes) {
         foreach($table[$size] as $price)if(!is_int($price)||$price<1||$price>1000000)return false;
     }return true;
 }
+function sanro_studio_product_second_side_prices($product_id) {
+    $stored = get_post_meta($product_id,'_sanro_studio_second_side_prices',true);
+    if (is_array($stored) && array_keys($stored) === [0,1,2,3]) {
+        foreach ($stored as $amount) {
+            if (!is_int($amount) || $amount < 0 || $amount > 1000000) return sanro_studio_default_second_side_prices();
+        }
+        return $stored;
+    }
+    return sanro_studio_default_second_side_prices();
+}
 function sanro_studio_product_pricing_config($product_id) {
     $presets=sanro_studio_pricing_presets();$key=get_post_meta($product_id,'_sanro_studio_pricing_profile',true);
     if(!is_string($key)||!isset($presets[$key]))return ['valid'=>false,'error'=>'pricing_profile_unconfigured'];
@@ -29,14 +39,16 @@ function sanro_studio_product_pricing_config($product_id) {
     if ($sleeve === 'long' && empty($override['table'])) {
         return ['valid'=>false,'error'=>'long_sleeve_price_table_required'];
     }
-    return ['valid'=>true,'profile'=>$key,'sleeve_label'=>$sleeve,
-        'revision'=>hash('sha256',json_encode([$key,$profile['table'],$sleeve]))]+$profile;
+    $extras = sanro_studio_product_second_side_prices($product_id);
+    return ['valid'=>true,'profile'=>$key,'sleeve_label'=>$sleeve,'second_side'=>$extras,
+        'revision'=>hash('sha256',json_encode([$key,$profile['table'],$sleeve,$extras,
+            function_exists('sanro_studio_product_print_categories') ? sanro_studio_product_print_categories($product_id) : null]))]+$profile;
 }
 function sanro_studio_profile_unit_price($config,$size,$front,$back,$long=false) {
     if(empty($config['valid'])||!is_string($size)||!isset($config['table'][$size])||!is_bool($long))return ['valid'=>false,'error'=>'invalid_variant'];
     $categories=['A5','A4','A3','A3+'];$active=[];
     foreach([$front,$back] as $category){if($category===null)continue;$i=is_string($category)?array_search($category,$categories,true):false;if($i===false)return ['valid'=>false,'error'=>'invalid_category'];$active[]=$i;}
-    if(!$active)return ['valid'=>false,'error'=>'empty_design'];rsort($active,SORT_NUMERIC);$extras=[15000,25000,35000,40000];
+    if(!$active)return ['valid'=>false,'error'=>'empty_design'];rsort($active,SORT_NUMERIC);$extras=$config['second_side']??sanro_studio_default_second_side_prices();
     $price=$config['table'][$size][$active[0]]+(count($active)===2?$extras[$active[1]]:0);
     return ['valid'=>true,'currency'=>'IDR','unit_price'=>$price];
 }

@@ -65,7 +65,7 @@ register_shutdown_function(function () {
         'collection empty/locked states explicit'=>strpos($collection_js,'Koleksi privat. Verifikasi email')!==false&&strpos($collection_js,'Belum ada desain tersimpan')!==false,
         'saved image draft exposes upload next action'=>strpos($buyer_js,'Lanjut unggah gambar')!==false&&strpos($buyer_js,"sanro:show-panel")!==false,
         'background control refreshed after local file cleanup'=>strpos($buyer_js,'for(const name of completed)sides[name].file=null;')<strpos($buyer_js,'await refreshBackgroundControl();'),
-        'validation points to side and repair controls'=>strpos($buyer_js,'Pindahkan atau kecilkan pada tab')!==false&&strpos($buyer_js,'Pilih kategori cetak yang lebih besar pada tab Produk')!==false,
+        'automatic print sizing controls'=>strpos($buyer_js,'Pindahkan atau kecilkan objek.')!==false && strpos($html,'sanro-category')===false && strpos($html,'sanro-image-rotation')!==false,
         'theme chrome suppression is limited to opted-in Studio body'=>strpos($buyer_css,'body.sanro-studio-page :is(#masthead,#colophon')!==false,
         'no size preview or sleeve selector'=>strpos($html,'sanro-mockup-size')===false&&strpos($html,'sanro-sleeve')===false,
         'size order quantities remain'=>strpos($html,'data-size="S"')!==false&&strpos($html,'data-size="L"')!==false,

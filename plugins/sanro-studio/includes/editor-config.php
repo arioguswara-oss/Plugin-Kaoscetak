@@ -52,7 +52,7 @@ function sanro_studio_public_editor_config($product_id, $allow_inactive = false)
         'palette' => function_exists('sanro_studio_mockup_palette') ? sanro_studio_mockup_palette($product_id) : [],
         'variations' => is_array($variation_map)?$variation_map:[],
         'pricing_profile' => $pricing['profile'],
-        'pricing' => isset($pricing['table'])?array_intersect_key($pricing,array_flip(['table','sizes','sleeve_label','revision'])):null,
+        'pricing' => isset($pricing['table'])?array_intersect_key($pricing,array_flip(['table','sizes','sleeve_label','second_side','revision'])):null,
         // Public, verified Media Library image URLs only. Never private DTF masters.
         'mockups' => function_exists('sanro_studio_product_mockup_urls')
             ? sanro_studio_product_mockup_urls($product_id) : [],

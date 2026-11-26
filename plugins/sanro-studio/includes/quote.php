@@ -26,14 +26,8 @@ function sanro_studio_quote_product_design($product_id, $design, $size, $long_sl
     }
     $validated = sanro_studio_validate_product_design($product_id, $design);
     if (empty($validated['valid'])) return $validated;
-    $front = null;
-    $back = null;
-    foreach (['front', 'back'] as $side) {
-        if (!empty($validated['sides'][$side]) && empty($validated['sides'][$side]['empty'])) {
-            if ($side === 'front') $front = $design[$side]['category'];
-            else $back = $design[$side]['category'];
-        }
-    }
+    $front = $validated['sides']['front']['category'] ?? null;
+    $back = $validated['sides']['back']['category'] ?? null;
     $pricing = function_exists('sanro_studio_product_pricing_config') ? sanro_studio_product_pricing_config($product_id) : null;
     $quote = $pricing === null ? sanro_studio_24s_unit_price($size, $front, $back, $long_sleeve)
         : sanro_studio_profile_unit_price($pricing,$size,$front,$back,$long_sleeve);
@@ -87,10 +81,9 @@ function sanro_studio_quote_size_quantities($product_id, $design, $quantities, $
             'total_quantity' => $quote['pieces'],
             'total_price' => $quote['total'],
             'pricing_profile'=>$quote['pricing_profile'],'pricing_revision'=>$quote['pricing_revision']??null,'sleeve_label'=>$quote['sleeve_label']??null,
-            'shirt_color'=>$quote['shirt_color']??'',
+            'shirt_color'=>$quote['shirt_color']??'', 'categories'=>$quote['categories'], 'print_limits'=>$quote['print_limits'],
         ];
     }
-    $allowed = sanro_studio_24s_price_table();
     // Validate the design and product price profile once, even when a quote
     // contains multiple sizes. Never accept a browser-provided unit price.
     $product_id = absint($product_id);
@@ -109,8 +102,10 @@ function sanro_studio_quote_size_quantities($product_id, $design, $quantities, $
     }
     $validated = sanro_studio_validate_product_design($product_id, $design);
     if (empty($validated['valid'])) return $validated;
-    $front = !empty($validated['sides']['front']) && empty($validated['sides']['front']['empty']) ? $design['front']['category'] : null;
-    $back = !empty($validated['sides']['back']) && empty($validated['sides']['back']['empty']) ? $design['back']['category'] : null;
+    $front = $validated['sides']['front']['category'] ?? null;
+    $back = $validated['sides']['back']['category'] ?? null;
+    $pricing = function_exists('sanro_studio_product_pricing_config') ? sanro_studio_product_pricing_config($product_id) : null;
+    $allowed = $pricing['table'] ?? sanro_studio_24s_price_table();
     $rows = [];
     $total_quantity = 0;
     $total_price = 0;
@@ -124,7 +119,8 @@ function sanro_studio_quote_size_quantities($product_id, $design, $quantities, $
         if ($total_quantity > 5000) {
             return ['valid' => false, 'error' => 'invalid_quantities'];
         }
-        $quote = sanro_studio_24s_unit_price($size, $front, $back, $long_sleeve);
+        $quote = $pricing === null ? sanro_studio_24s_unit_price($size, $front, $back, $long_sleeve)
+            : sanro_studio_profile_unit_price($pricing,$size,$front,$back,$long_sleeve);
         if (empty($quote['valid'])) return $quote;
         $subtotal = $quote['unit_price'] * $quantity;
         $total_price += $subtotal;
@@ -141,5 +137,6 @@ function sanro_studio_quote_size_quantities($product_id, $design, $quantities, $
         'items' => $rows,
         'total_quantity' => $total_quantity,
         'total_price' => $total_price,
+        'categories' => ['front'=>$front,'back'=>$back], 'print_limits' => sanro_studio_product_print_categories($product_id),
     ];
 }

@@ -205,16 +205,17 @@ function sanro_studio_render_buyer_editor() {
     echo '<p id="sanro-price-estimate" role="status">Estimasi harga: pilih desain dan jumlah. Harga final dihitung saat checkout.</p>';
     echo '<label>Gambar PNG/JPEG maks. 10 MB<input type="file" id="sanro-image" accept="image/png,image/jpeg"></label>';
     echo '<label>Ukuran gambar<input type="range" id="sanro-image-size" min="10" max="100" value="60"></label>';
+    echo '<label>Rotasi gambar (°)<input type="range" id="sanro-image-rotation" min="-180" max="180" value="0"></label>';
     echo '<button type="button" id="sanro-center-image">Posisikan gambar ke tengah</button>';
     echo '<button type="button" id="sanro-remove-image">Hapus gambar</button>';
     echo '<label>Teks<textarea id="sanro-text-input" maxlength="300" rows="3"></textarea></label>';
     echo '<label>Ukuran teks<input type="range" id="sanro-font-size" min="10" max="48" value="22"></label>';
+    echo '<label>Rotasi teks (°)<input type="range" id="sanro-text-rotation" min="-180" max="180" value="0"></label>';
     echo '<label>Warna teks<input type="color" id="sanro-text-color" value="#171717"></label>';
     echo '<button type="button" id="sanro-center-text">Posisikan teks ke tengah</button>';
     echo '<button type="button" id="sanro-remove-text">Hapus teks sisi ini</button>';
     echo '<button type="button" id="sanro-copy-text">Salin teks ke sisi lainnya</button>';
     echo '<p id="sanro-copy-status" role="status" aria-live="polite"></p>';
-    echo '<label>Kategori cetak<select id="sanro-category"><option>A5</option><option>A4</option><option>A3</option><option>A3+</option></select></label>';
     echo '<button type="button" id="sanro-reset-side">Kosongkan desain sisi ini</button>';
     echo '<p id="sanro-validation" role="status">Belum ada desain.</p>';
     if (!empty($config['draft_api'])) {

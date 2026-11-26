@@ -25,7 +25,35 @@ function sanro_studio_product_safe_areas($product_id) {
     return $areas;
 }
 
-function sanro_studio_validate_product_design($product_id, $design) {
+/** Product-specific size limits, ordered from the smallest to the largest tier. */
+function sanro_studio_validate_print_categories($limits) {
+    $defaults = sanro_studio_print_categories();
+    if (!is_array($limits) || count($limits) !== count($defaults)) return false;
+    $normalized = [];
+    $previous = [0,0];
+    foreach ($defaults as $category => $_) {
+        $pair = $limits[$category] ?? null;
+        if (!is_array($pair) || array_keys($pair) !== [0,1]) return false;
+        foreach ($pair as $axis => $value) {
+            if (!is_numeric($value) || !is_finite((float)$value)
+                || (float)$value < 0.1 || (float)$value > 100 || (float)$value < $previous[$axis]) {
+                return false;
+            }
+        }
+        $pair = array_map('floatval',$pair);
+        if ($pair === $previous) return false;
+        $normalized[$category] = $previous = $pair;
+    }
+    return $normalized;
+}
+
+function sanro_studio_product_print_categories($product_id) {
+    $stored = get_post_meta($product_id,'_sanro_studio_print_categories',true);
+    $limits = sanro_studio_validate_print_categories($stored);
+    return $limits === false ? sanro_studio_print_categories() : $limits;
+}
+
+function sanro_studio_validate_product_design($product_id, $design, $frozen_categories = null) {
     $areas = sanro_studio_product_safe_areas($product_id);
     if (!$areas) return ['valid' => false, 'error' => 'product_area_unconfigured'];
     // Draft text is printable metadata; geometry validation still owns all
@@ -86,7 +114,7 @@ function sanro_studio_validate_product_design($product_id, $design) {
             unset($geometry[$side]['text']);
         }
     }
-    return sanro_studio_validate_print_design($geometry, $areas);
+    return sanro_studio_validate_print_design($geometry, $areas, $frozen_categories ?? sanro_studio_product_print_categories($product_id));
 }
 
 /** Product edit screen only; never shown to shoppers. */
@@ -104,6 +132,16 @@ function sanro_studio_product_area_fields() {
                 'custom_attributes' => ['step' => '0.1', 'min' => '0.1', 'max' => '100'],
                 'value' => isset($areas[$side][$axis]) ? $areas[$side][$axis] : '',
                 'description' => 'Batas fisik maksimum, bukan ukuran desain wajib.',
+            ]);
+        }
+    }
+    echo '<p><strong>Batas kategori cetak otomatis (cm)</strong></p>';
+    foreach (sanro_studio_product_print_categories($id) as $category => $pair) {
+        foreach (['w'=>'Lebar','h'=>'Tinggi'] as $axis => $label) {
+            woocommerce_wp_text_input([
+                'id'=>'_sanro_print_'.str_replace('+','_plus',$category).'_'.$axis, 'label'=>$category.' — '.$label.' (cm)',
+                'type'=>'number', 'value'=>$pair[$axis === 'w' ? 0 : 1],
+                'custom_attributes'=>['step'=>'0.1','min'=>'0.1','max'=>'100'],
             ]);
         }
     }
@@ -130,6 +168,22 @@ function sanro_studio_save_product_areas($product) {
         if (count($values) === 1) return; // Never persist a partial rectangle.
         if (count($values) === 2) $areas[$side] = $values;
     }
+    $limits = [];
+    foreach (sanro_studio_print_categories() as $category => $_) {
+        $width = $_POST['_sanro_print_'.str_replace('+','_plus',$category).'_w'] ?? null;
+        $height = $_POST['_sanro_print_'.str_replace('+','_plus',$category).'_h'] ?? null;
+        if ($width !== null || $height !== null) {
+            $limits[$category] = [is_scalar($width) ? wp_unslash($width) : null, is_scalar($height) ? wp_unslash($height) : null];
+        }
+    }
+    if ($limits) {
+        $normalized = sanro_studio_validate_print_categories($limits);
+        if ($normalized === false) {
+            if (class_exists('WC_Admin_Meta_Boxes')) WC_Admin_Meta_Boxes::add_error('Batas kategori harus bertambah dari A5 sampai A3+.');
+            return;
+        }
+        $product->update_meta_data('_sanro_studio_print_categories',$normalized);
+    }
     // Empty settings intentionally disable public design acceptance for this product.
     $product->update_meta_data('_sanro_studio_safe_areas', $areas);
 }
@@ -145,7 +199,7 @@ function sanro_studio_editor_area_config($product_id) {
         'valid' => true,
         'unit' => 'cm',
         'safe_areas' => $areas,
-        'categories' => sanro_studio_print_categories(),
+        'categories' => sanro_studio_product_print_categories($product_id),
     ];
 }
 

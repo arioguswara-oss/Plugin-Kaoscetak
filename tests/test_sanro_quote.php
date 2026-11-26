@@ -26,7 +26,7 @@ function check_quote($expected, $actual, $label) {
     $checks++;
 }
 $img = ['type' => 'image', 'x' => 1, 'y' => 1, 'width' => 10, 'height' => 10];
-$front = ['category' => 'A4', 'objects' => [$img]];
+$front = ['category' => 'A4', 'objects' => [array_replace($img,['width'=>18])]];
 $back = ['category' => 'A5', 'objects' => [$img]];
 check_quote(90000, sanro_studio_quote_product_design(17, ['front' => $front, 'back' => $back], 'M')['unit_price'], 'two sides M');
 check_quote(90000, sanro_studio_quote_product_design(17, ['front' => $back, 'back' => $front], 'M')['unit_price'], 'symmetric');
@@ -35,7 +35,7 @@ check_quote(75000, sanro_studio_quote_product_design(17, ['back' => $front], 'M'
 check_quote('select_long_sleeve_product', sanro_studio_quote_product_design(17, ['front' => $front, 'back' => $back], 'M', true)['error'], 'legacy sleeve flag cannot switch products');
 check_quote('pricing_profile_unconfigured', sanro_studio_quote_product_design(18, ['front' => $front], 'M')['error'], 'unknown profile rejected');
 check_quote('invalid_design', sanro_studio_quote_product_design(17, ['front' => $front + ['price' => 1]], 'M')['error'], 'injected price rejected');
-check_quote('category_exceeded', sanro_studio_quote_product_design(17, ['front' => ['category' => 'A5', 'objects' => [['type' => 'image', 'x' => 0, 'y' => 0, 'width' => 20, 'height' => 20]]]], 'M')['error'], 'oversize rejected');
+check_quote('outside_safe_area', sanro_studio_quote_product_design(17, ['front' => ['category' => 'A5', 'objects' => [['type' => 'image', 'x' => 0, 'y' => 0, 'width' => 33, 'height' => 20]]]], 'M')['error'], 'oversize rejected');
 check_quote('invalid_variant', sanro_studio_quote_product_design(17, ['front' => $front], '6XL')['error'], 'unknown size rejected');
 check_quote('empty_design', sanro_studio_quote_product_design(17, ['front' => ['category' => 'A4', 'objects' => []]], 'M')['error'], 'empty rejected');
 check_quote('invalid_product', sanro_studio_quote_product_design(0, ['front' => $front], 'M')['error'], 'invalid product');

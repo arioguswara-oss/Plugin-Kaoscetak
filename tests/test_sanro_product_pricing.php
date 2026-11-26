@@ -44,4 +44,12 @@ verify_profile(['short'=>'Lengan pendek','long'=>'Lengan panjang'], $GLOBALS['re
 $_POST = ['_sanro_studio_pricing_profile'=>'cotton_combed_24s','_sanro_studio_product_sleeve'=>'long'];
 sanro_studio_save_product_pricing($p);
 verify_profile([], $p->changes, 'a separate long sleeve price table is required');
+$_POST = ['_sanro_studio_pricing_profile'=>'cotton_combed_24s','_sanro_extra_side_0'=>'0',
+    '_sanro_extra_side_1'=>'21000','_sanro_extra_side_2'=>'33000','_sanro_extra_side_3'=>'45000'];
+sanro_studio_save_product_pricing($p);
+verify_profile([0,21000,33000,45000],$p->changes['_sanro_studio_second_side_prices'],'authorized second-side rates saved by tier');
+$p->changes = [];
+unset($_POST['_sanro_extra_side_3']);
+sanro_studio_save_product_pricing($p);
+verify_profile([],$p->changes,'partial tariff change rejected');
 echo "SANRO product pricing profile: {$checks} assertions PASS, 0 FAIL\n";

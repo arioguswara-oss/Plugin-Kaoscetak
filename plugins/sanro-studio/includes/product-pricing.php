@@ -32,6 +32,18 @@ function sanro_studio_product_pricing_fields() {
         woocommerce_wp_textarea_input(['id'=>'_sanro_studio_price_table_json','label'=>'SANRO Studio — Tabel khusus produk (JSON)','value'=>is_array($override)&&isset($override['table'])?json_encode($override['table'],JSON_PRETTY_PRINT):'',
             'description'=>'Kosong = preset resmi. Setiap size profil wajib memiliki empat harga IDR berurutan A5/A4/A3/A3+. Tidak mengubah produk lain atau preset.','desc_tip'=>true]);
     }
+    if (function_exists('woocommerce_wp_text_input') && function_exists('sanro_studio_product_second_side_prices')) {
+        echo '<p><strong>Tarif cetak sisi tambahan (IDR)</strong></p>';
+        $extras = sanro_studio_product_second_side_prices($product_id);
+        foreach (['A5','A4','A3','A3+'] as $index => $category) {
+            woocommerce_wp_text_input([
+                'id'=>'_sanro_extra_side_'.$index, 'label'=>$category,
+                'type'=>'number', 'value'=>$extras[$index],
+                'custom_attributes'=>['step'=>'1','min'=>'0','max'=>'1000000'],
+            ]);
+        }
+    }
+
 }
 
 
@@ -64,6 +76,22 @@ function sanro_studio_save_product_pricing($product) {
         if (class_exists('WC_Admin_Meta_Boxes')) WC_Admin_Meta_Boxes::add_error('SANRO Studio: isi tabel harga khusus untuk produk lengan panjang.');
         return;
     }
+    $extras = [];
+    for ($index = 0; $index < 4; $index++) {
+        $key = '_sanro_extra_side_'.$index;
+        if (!array_key_exists($key,$_POST)) continue;
+        $amount = $_POST[$key];
+        if (!is_string($amount) || !preg_match('/^(0|[1-9][0-9]{0,6})$/D',$amount) || (int)$amount > 1000000) {
+            if (class_exists('WC_Admin_Meta_Boxes')) WC_Admin_Meta_Boxes::add_error('Tarif sisi tambahan harus bilangan bulat IDR.');
+            return;
+        }
+        $extras[$index] = (int)$amount;
+    }
+    if ($extras && count($extras) !== 4) {
+        if (class_exists('WC_Admin_Meta_Boxes')) WC_Admin_Meta_Boxes::add_error('Lengkapi keempat tarif sisi tambahan.');
+        return;
+    }
+    if ($extras) $product->update_meta_data('_sanro_studio_second_side_prices',$extras);
     $product->update_meta_data('_sanro_studio_product_sleeve', $sleeve);
     if($override!==null)$product->update_meta_data('_sanro_studio_price_table',$override);
     $product->update_meta_data('_sanro_studio_pricing_profile', $profile);

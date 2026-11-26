@@ -11,9 +11,9 @@ const draftEnd=source.indexOf(' // Derived private JPEG preview',draftStart);
 assert(start>=0&&middle>start&&draftStart>middle&&draftEnd>draftStart,
  'Source geometry/draft functions must be present');
 const factory=new Function('env',
- 'const {config,safe,text,sides,categories,qtyInputs,shirtColor,q,boundMasterRefs,Image,document}=env;'
- +source.slice(start,middle)+source.slice(draftStart,draftEnd)
- +'\nreturn {visualPrintZone,withPrintZone,exportTextDraft,exportBoundDraft,validateDraftCategory};');
+ 'const {config,safe,text,sides,categories,qtyInputs,shirtColor,q,boundMasterRefs,Image,document,geometry}=env;const legacyLongSleeve=false;'
+ +source.slice(start,middle)+source.slice(source.indexOf(' function validationMessage'),source.indexOf(' function clampPosition'))+source.slice(draftStart,draftEnd)
+ +'\nreturn {visualPrintZone,withPrintZone,exportTextDraft,exportBoundDraft,assertPrintSize};');
 const initial={left:'27%',top:'22%',width:'46%',height:'54%'};
 const layout={hidden:false};
 const safe={
@@ -25,12 +25,12 @@ const safe={
  }}
 };
 const text={
- textContent:'',hidden:true,style:{fontSize:'22px',left:'10%',top:'10%'},
+ textContent:'',hidden:true,style:{fontSize:'22px',left:'10%',top:'10%',transform:''},
  getBoundingClientRect(){return {width:90,height:20}}
 };
 const side=()=>({
  text:'SANRO',fontSize:22,textX:10,textY:10,
- textColor:'#171717',category:'A3',
+ textColor:'#171717',textRotation:0,imageRotation:0,imageAspect:1,
  url:null,file:null,pending:null,imageSize:40,imageX:5,imageY:5
 });
 const sides={front:side(),back:side()};
@@ -52,7 +52,7 @@ class ImageProbe{
 const runtime=factory({config,safe,text,sides,categories,
  qtyInputs:[{dataset:{size:'M'},value:'1'}],
  shirtColor:{value:'#ffffff'},q:()=>({value:'short'}),
- boundMasterRefs,Image:ImageProbe,document:{fonts:{load:async()=>[{}]}}});
+ boundMasterRefs,Image:ImageProbe,geometry:require('../assets/estimate.js'),document:{fonts:{load:async()=>[{}]}}});
 let checks=0;
 const check=(ok,label)=>{assert(ok,label);checks++};
 const equal=(actual,expected,label)=>{
@@ -98,12 +98,12 @@ async function checkInitialImageSave(){
 }
 (async()=>{
  const result=runtime.exportTextDraft();
- near(result.front.objects[0].width,90*30/184,'front text uses 46 percent front width');
- near(result.back.objects[0].width,90*30/120,'back text uses 30 percent back width');
+ near(result.front.objects[0].width,90*30/(390*0.46),'front text uses 46 percent front width');
+ near(result.back.objects[0].width,90*30/(390*0.30),'back text uses 30 percent back width');
  check(result.front.objects[0].width<result.back.objects[0].width,
   'different visual zones have independent centimeter measurements');
  equal(safe.style,initial,'export restores currently visible print zone');
- equal(text.style,{fontSize:'22px',left:'10%',top:'10%'},
+ equal(text.style,{fontSize:'22px',left:'10%',top:'10%',transform:''},
   'export restores visible text editor styles');
  runtime.withPrintZone('back',()=>{
   equal(safe.style.width,'30%','inactive zone is applied for measurement');
@@ -136,15 +136,12 @@ async function checkInitialImageSave(){
  const bound=await runtime.exportBoundDraft();
  const frontImg=bound.front.objects.find(obj=>obj.type==='image');
  const backImg=bound.back.objects.find(obj=>obj.type==='image');
- near(frontImg.height,12*(184/(54*4.2))*(40/30),
-  'front master geometry uses front preview aspect');
- near(backImg.height,12*(120/(50*4.2))*(40/30),
-  'back master geometry uses back preview aspect');
- check(frontImg.height>backImg.height,'front and back image heights differ appropriately');
- categories.A5=[14.8,21];
- assert.throws(()=>runtime.validateDraftCategory('front','A5',[
-  {x:0,y:0,width:12,height:12},{x:10,y:0,width:6,height:6}
- ]),/Desain depan melebihi batas A5/);
+ near(frontImg.height,12,'front master uses physical image aspect');
+ near(backImg.height,12,'back master uses the same physical image aspect');
+ check(!('category' in bound.front)&&!('category' in bound.back),'draft sends geometry without a price category');
+ assert.throws(()=>runtime.assertPrintSize('front',[
+  {x:0,y:0,width:12,height:12},{x:28,y:0,width:6,height:6}
+ ]),/melewati area cetak/);
  checks++;
  equal(safe.style,initial,'master export restores active zone');
  delete boundMasterRefs.back;

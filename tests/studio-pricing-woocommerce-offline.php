@@ -78,7 +78,7 @@ $GLOBALS['currency'] = 'IDR';
 $GLOBALS['areas']['front']['width'] = 5;
 check_quote(!sanro_studio_pricing_add_validation(true,7,1,0,[],pricing_line()), 'fresh safe area change blocks stale draft');
 $GLOBALS['areas']['front']['width'] = 32;
-$GLOBALS['resolved_design']['front']['category'] = 'A4';
+$GLOBALS['resolved_design']['front'] = side('A4');
 sanro_studio_pricing_totals($cart);
 check_quote($cart->cart_contents['L']['data']->get_price() === '93000', 'current draft category recalculated at totals');
 $cart->cart_contents = [];

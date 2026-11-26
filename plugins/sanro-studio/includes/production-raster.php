@@ -5,9 +5,40 @@ require_once __DIR__.'/production-memory.php';
 require_once __DIR__.'/production-provenance.php';
 
 /** Covers A3+ (3780x5669 at 300 DPI); refuse before allocating beyond worker memory. */
-function sanro_studio_dtf_memory_available($width,$height,$source_pixels=0) {
+function sanro_studio_dtf_memory_available($width,$height,$source_pixels=0,$rotated=false) {
     if($width<1||$height<1||$width>6000||$height>6000||$width*$height>24000000)return false;
-    return sanro_studio_memory_bytes_available($width*$height*12+$source_pixels*6+33554432);
+    return sanro_studio_memory_bytes_available($width*$height*($rotated ? 20 : 12)+$source_pixels*6+33554432);
+}
+
+/** Paint one physical layer, rotating clockwise about its center if needed. */
+function sanro_studio_dtf_composite_layer($canvas,$layer,$paint) {
+    $angle = $layer['rotation'] ?? 0;
+    if ($angle == 0) return $paint($canvas,$layer['x'],$layer['y']);
+    if (!function_exists('imagerotate') || !function_exists('imagecopy')
+        || !sanro_studio_dtf_memory_available($layer['width'],$layer['height'])) return false;
+    $surface = imagecreatetruecolor($layer['width'],$layer['height']);
+    if ($surface === false) return false;
+    try {
+        $transparent = imagecolorallocatealpha($surface,0,0,0,127);
+        imagealphablending($surface,false);
+        imagesavealpha($surface,true);
+        imagefill($surface,0,0,$transparent);
+        if (!$paint($surface,0,0)) return false;
+        $rotated = imagerotate($surface,-$angle,$transparent);
+        if ($rotated === false) return false;
+        try {
+            imagesavealpha($rotated,true);
+            $width = imagesx($rotated);
+            $height = imagesy($rotated);
+            $x = $layer['x'] + (int) round(($layer['width']-$width)/2);
+            $y = $layer['y'] + (int) round(($layer['height']-$height)/2);
+            return imagecopy($canvas,$rotated,$x,$y,0,0,$width,$height);
+        } finally {
+            imagedestroy($rotated);
+        }
+    } finally {
+        imagedestroy($surface);
+    }
 }
 
 /** Physical output validation is machine-checkable, not a human print approval. */

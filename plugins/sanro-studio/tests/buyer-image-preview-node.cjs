@@ -12,10 +12,10 @@ const start=source.indexOf(' async function ensureProductionFont(){');
 const end=source.indexOf(' let backgroundScan=0;',start);
 assert(zoneStart>=0&&zoneEnd>zoneStart&&start>=0&&end>start,
  'SANRO buyer image and print-zone helper functions missing');
-let drawCalls=0,textCalls=0,previewWidth=0,canvasWrites=0;
+let drawCalls=0,textCalls=0,previewWidth=0,canvasWrites=0,rotated=false;
 const d={
   url:'blob:owner-bound',file:null,pending:null,text:'',textColor:'#171717',
-  fontSize:22,textX:10,textY:10,imageX:10,imageY:20,imageSize:40
+  fontSize:22,textX:10,textY:10,imageX:10,imageY:20,imageSize:40,imageAspect:1,imageRotation:30,textRotation:0
 };
 const refs={front:'verified-server-bound-id'};
 class ImageProbe {
@@ -30,6 +30,7 @@ const env={
   sides:{front:d,back:{url:null,text:''}},
   config:{safe_areas:{front:{width:30,height:40}}},
   boundMasterRefs:refs,
+  text:{style:{transform:''},getBoundingClientRect:()=>({width:60,height:20})},
   safe:{style:{left:'27%',top:'22%',width:'46%',height:'54%'},
    getBoundingClientRect:()=>({width:200,height:200})},
   shirtColor:{value:'#ffffff'},mockupSize:{value:'M'},mappedMockup:()=>null,
@@ -38,7 +39,7 @@ const env={
   document:{createElement:()=>{
     const canvas={width:0,height:0};
     canvas.getContext=()=>({
-      fillRect(){},clearRect(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){},drawImage(){drawCalls++;},fillText(){textCalls++;}
+      save(){},restore(){},translate(){},transform(a,b){if(b!==0)rotated=true;},fillRect(){},clearRect(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){},drawImage(){drawCalls++;},fillText(){textCalls++;}
     });
     canvas.toBlob=cb=>{
       canvasWrites++;previewWidth=canvas.width;
@@ -57,7 +58,7 @@ function check(ok,message){assert(ok,message);checks++;}
 
 (async()=>{
   check(await built.makeDesignPreview('front')==='cHJldmlldw=='
-    &&drawCalls>0&&previewWidth===480&&canvasWrites>4,
+    &&drawCalls>0&&previewWidth===480&&canvasWrites>4&&rotated,
     'bound image creates a derived JPEG with 50 KiB fallback');
   d.file={name:'new-unbound.png'};
   await assert.rejects(()=>built.exportBoundDraft(),/Unggah gambar baru/);
