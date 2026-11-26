@@ -394,6 +394,8 @@ function sanro_studio_pricing_store_api_cart_images($images, $line, $key = '') {
     $image->src = $url;
     $image->thumbnail = $url;
     $image->srcset = $url . ' 1x';
+    // The WooCommerce 11.3 Interactivity API drawer binds this thumbnail field.
+    $image->thumbnail_srcset = $image->srcset;
     $image->sizes = '';
     $image->alt = 'Preview desain';
     return [$image];

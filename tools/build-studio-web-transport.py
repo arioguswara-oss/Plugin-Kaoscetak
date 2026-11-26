@@ -42,6 +42,12 @@ INSTALLED_DRAWER_API={
  'archive_sha256':'95e30d0bf85bd482225953e7770f07caa37305a8958f0d7277f75ae6bc084498',
  'version':'1.1.0','channel':'candidate','source_commit':'0a15c107032bbdef1adc7d966269d7af1cc09541',
 }
+# Exact responsive drawer candidate verified on staging through both HTTPS gates.
+INSTALLED_RESPONSIVE_DRAWER={
+ 'manifest_sha256':'6b66a283be57a9e93265149ae38bae681dc239b8bf3ccfaf665d02bd9790caf6',
+ 'archive_sha256':'c923726b405c7de0c22bb3f19d8cdee3c96f5dd95e0dc6a0da56d6a3d6703d7d',
+ 'version':'1.1.0','channel':'candidate','source_commit':'d6defee4f14f87274e24242b8732796460010f82',
+}
 # Exact P1-corrected 1.1.0 candidate most recently verified on staging.
 INSTALLED_UI_P1={
  'manifest_sha256':'bae045a6d8255a482bba191c2a7a5983c83234f7cee887d9302d02231bfabd15',
@@ -109,7 +115,8 @@ is_installed_auto=(old_manifest_sha==INSTALLED_AUTO_PRINT['manifest_sha256'] and
 is_installed_nav=(old_manifest_sha==INSTALLED_CHECKOUT_NAV['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_CHECKOUT_NAV.items() if k not in ('manifest_sha256','archive_sha256')))
 is_installed_home=(old_manifest_sha==INSTALLED_HOME_NAVIGATION['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_HOME_NAVIGATION.items() if k not in ('manifest_sha256','archive_sha256')))
 is_installed_drawer_api=(old_manifest_sha==INSTALLED_DRAWER_API['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_DRAWER_API.items() if k not in ('manifest_sha256','archive_sha256')))
-if not (is_final or is_installed_ui or is_installed_guest_cart_p0 or is_installed_final_cart_visual or is_installed_final_staging or is_installed_home or is_installed_drawer_api or is_installed_ui_p1 or is_installed_catalog or is_installed_variable or is_installed_correction or is_installed_standard or is_installed_auto or is_installed_nav):raise SystemExit('existing manifest is not an exact approved Final Release or previously installed 1.1.0 staging candidate')
+is_installed_responsive_drawer=(old_manifest_sha==INSTALLED_RESPONSIVE_DRAWER['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_RESPONSIVE_DRAWER.items() if k not in ('manifest_sha256','archive_sha256')))
+if not (is_final or is_installed_ui or is_installed_guest_cart_p0 or is_installed_final_cart_visual or is_installed_final_staging or is_installed_home or is_installed_drawer_api or is_installed_responsive_drawer or is_installed_ui_p1 or is_installed_catalog or is_installed_variable or is_installed_correction or is_installed_standard or is_installed_auto or is_installed_nav):raise SystemExit('existing manifest is not an exact approved Final Release or previously installed 1.1.0 staging candidate')
 if hashlib.sha256(old_archive).hexdigest()!=old.get('archive_sha256'):raise SystemExit('existing release archive checksum mismatch')
 if is_installed_ui and old.get('archive_sha256')!=INSTALLED_UI_110['archive_sha256']:raise SystemExit('installed UI archive is not the previously verified staging archive')
 if is_installed_guest_cart_p0 and old.get('archive_sha256')!=INSTALLED_GUEST_CART_P0['archive_sha256']:raise SystemExit('installed guest-cart P0 archive is not the previously verified staging archive')
@@ -117,6 +124,7 @@ if is_installed_final_cart_visual and old.get('archive_sha256')!=INSTALLED_FINAL
 if is_installed_final_staging and old.get('archive_sha256')!=INSTALLED_FINAL_STAGING_ACCEPTANCE['archive_sha256']:raise SystemExit('installed final staging archive is not the previously verified staging archive')
 if is_installed_home and old.get('archive_sha256')!=INSTALLED_HOME_NAVIGATION['archive_sha256']:raise SystemExit('installed Home archive mismatch')
 if is_installed_drawer_api and old.get('archive_sha256')!=INSTALLED_DRAWER_API['archive_sha256']:raise SystemExit('installed drawer API archive mismatch')
+if is_installed_responsive_drawer and old.get('archive_sha256')!=INSTALLED_RESPONSIVE_DRAWER['archive_sha256']:raise SystemExit('installed responsive drawer archive mismatch')
 if is_installed_ui_p1 and old.get('archive_sha256')!=INSTALLED_UI_P1['archive_sha256']:raise SystemExit('installed P1 UI archive is not the previously verified staging archive')
 if is_installed_catalog and old.get('archive_sha256')!=INSTALLED_CATALOG_P1['archive_sha256']:raise SystemExit('installed catalog archive is not the previously verified staging archive')
 if is_installed_variable and old.get('archive_sha256')!=INSTALLED_VARIABLE_E2E['archive_sha256']:raise SystemExit('installed variable-product archive is not the previously verified staging archive')
