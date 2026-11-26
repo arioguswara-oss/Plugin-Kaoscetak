@@ -269,6 +269,8 @@ function sanro_studio_register_pricing_integration_hooks() {
     add_filter('woocommerce_cart_subtotal','sanro_studio_pricing_display_total',20);
     add_filter('woocommerce_cart_totals_order_total_html','sanro_studio_pricing_display_total',20);
     add_filter('woocommerce_get_item_data','sanro_studio_pricing_cart_item_data',20,2);
+    add_action('woocommerce_before_cart_table','sanro_studio_pricing_group_summary',10);
+    add_action('woocommerce_checkout_before_order_review','sanro_studio_pricing_group_summary',10);
     add_filter('woocommerce_checkout_cart_item_quantity', 'sanro_studio_pricing_checkout_thumbnail', 20, 2);
     add_filter('woocommerce_cart_item_thumbnail', 'sanro_studio_pricing_cart_thumbnail', 20, 3);
     add_action('wp_ajax_sanro_studio_cart_preview', 'sanro_studio_pricing_deliver_cart_preview');
@@ -354,6 +356,56 @@ function sanro_studio_pricing_checkout_thumbnail($quantity_html, $line) {
         'width'=>112, 'height'=>112, 'style'=>'width:112px;max-width:100%;height:auto;vertical-align:middle',
     ]);
     return $quantity_html . '<span style="display:block;margin-top:0.5em">' . wp_kses_post($thumbnail) . '</span>';
+}
+
+
+/** Read-only grouping: native WooCommerce rows, quantities and totals remain authoritative. */
+function sanro_studio_pricing_summary_groups($lines) {
+    $groups = [];
+    foreach ($lines as $line) {
+        if (!is_array($line) || ($line['sanro_studio_pricing_version'] ?? null) !== 1) continue;
+        $id = $line['sanro_studio_design_id'] ?? '';
+        $color = $line['sanro_studio_color'] ?? '';
+        $product = $line['product_id'] ?? 0;
+        $size = $line['sanro_studio_size'] ?? '';
+        $qty = $line['quantity'] ?? 0;
+        if (!is_string($id) || !preg_match('/^[a-f0-9-]{36}$/iD',$id)
+            || !is_string($color) || !preg_match('/^#[a-f0-9]{6}$/D',$color)
+            || !is_int($product) || $product < 1 || !is_string($size)
+            || !in_array($size,['S','M','L','XL','2XL','3XL','4XL','5XL'],true)
+            || !is_numeric($qty) || $qty < 1
+            || !(($line['data'] ?? null) instanceof WC_Product)) continue;
+        $key = $product . ':' . $id . ':' . $color;
+        if (!isset($groups[$key])) $groups[$key] = ['line'=>$line,'sizes'=>[]];
+        $groups[$key]['sizes'][] = ['size'=>$size,'qty'=>$qty,
+            'unit'=>$line['data']->get_price()];
+    }
+    return $groups;
+}
+
+/** Compact grouped reference, without hiding native cart controls or financial totals. */
+function sanro_studio_pricing_group_summary() {
+    $cart = sanro_studio_pricing_wc_cart();
+    if (!is_object($cart) || !method_exists($cart,'get_cart')) return;
+    $groups = sanro_studio_pricing_summary_groups($cart->get_cart());
+    if (!$groups) return;
+    echo '<section class="sanro-studio-group-summary" aria-label="Ringkasan desain"><h3>Ringkasan desain</h3>';
+    foreach ($groups as $group) {
+        $line = $group['line'];
+        $palette = sanro_studio_mockup_palette($line['product_id']);
+        $color = $palette[$line['sanro_studio_color']] ?? $line['sanro_studio_color'];
+        echo '<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #ddd">';
+        $image = sanro_studio_pricing_preview_markup($line,96);
+        if ($image !== '') echo wp_kses_post($image);
+        echo '<div style="min-width:0;flex:1"><strong>' . esc_html($line['data']->get_name()) . '</strong>';
+        echo '<div style="overflow-wrap:anywhere">Design ID: ' . esc_html($line['sanro_studio_design_id']) . '</div>';
+        echo '<div>Warna: ' . esc_html($color) . '</div>';
+        foreach ($group['sizes'] as $row) {
+            echo '<div>' . esc_html($row['size'] . ' × ' . $row['qty']) . '</div>';
+        }
+        echo '</div></div>';
+    }
+    echo '</section>';
 }
 
 /** Friendly cart/checkout labels; never display tokens, private refs or browser prices. */
