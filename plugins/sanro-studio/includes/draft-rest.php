@@ -392,9 +392,11 @@ function sanro_studio_draft_creation_budget() {
         ? $_SERVER['REMOTE_ADDR'] : '';
     if (!filter_var($ip, FILTER_VALIDATE_IP)) return false;
     $key = 'sanro_draft_limit_' . substr(hash_hmac('sha256', $ip, wp_salt('auth')), 0, 32);
-    $count = get_transient($key);
-    if ($count !== false && (!is_int($count) || $count >= 20)) return false;
-    return set_transient($key, $count === false ? 1 : $count + 1, HOUR_IN_SECONDS);
+    // WordPress may return an option-backed transient as a numeric string.
+    // Keep the same limit and reject malformed values rather than resetting it.
+    $count = sanro_studio_normalize_master_budget_count(get_transient($key));
+    if ($count === null || $count >= 20) return false;
+    return set_transient($key, $count + 1, HOUR_IN_SECONDS);
 }
 
 /** Only compact geometry/text metadata; reject embedded images or oversized JSON. */

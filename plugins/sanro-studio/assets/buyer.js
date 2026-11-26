@@ -73,8 +73,13 @@
  // Measure an inactive side using its own visual geometry, then restore the
  // currently displayed side before the browser can paint another frame.
  function withPrintZone(name,measure){
+  // Desain Saya hides the layout. Temporarily expose it for synchronous
+  // measurement so saving to the collection can still render its previews.
+  const layout=safe.closest?.('.sanro-layout');
+  const layoutWasHidden=layout?.hidden===true;
   const previous={left:safe.style.left,top:safe.style.top,width:safe.style.width,height:safe.style.height};
   const zone=visualPrintZone(name);
+  if(layoutWasHidden)layout.hidden=false;
   safe.style.left=zone.x+'%';
   safe.style.top=zone.y+'%';
   safe.style.width=zone.width+'%';
@@ -84,6 +89,7 @@
    safe.style.top=previous.top;
    safe.style.width=previous.width;
    safe.style.height=previous.height;
+   if(layoutWasHidden)layout.hidden=true;
   }
  }
  function render(){
@@ -221,15 +227,18 @@
    if(target.url)URL.revokeObjectURL(target.url);
    target.url=url;target.file=file;target.pending=null;
    delete boundMasterRefs[uploadSide];
-   // Fit the image into the safe preview without changing its aspect ratio.
-   const safeWidth=safe.clientWidth,safeHeight=safe.clientHeight;
-   if(safeWidth>0&&safeHeight>0&&probe.naturalWidth>0&&probe.naturalHeight>0){
-    const maxWidth=Math.min(100,100*safeHeight*probe.naturalWidth/(safeWidth*probe.naturalHeight));
-    target.imageSize=Math.min(60,maxWidth);
+   // Fit to the chosen category as well as the safe preview. Keep the
+   // category (and its price) fixed, including when the other side is active.
+   const rect=withPrintZone(uploadSide,()=>safe.getBoundingClientRect());
+   const area=config.safe_areas[uploadSide],limit=categories[target.category];
+   if(rect.width>0&&rect.height>0&&area&&limit){
+    const heightRatio=rect.width*height/(rect.height*width);
+    target.imageSize=Math.min(60,100/heightRatio,100*limit[0]/area.width,
+     100*limit[1]/(area.height*heightRatio));
     // Tall images may need less than the slider's 10% minimum.
     if(side===uploadSide)q('#sanro-image-size').min=String(Math.min(10,target.imageSize));
     target.imageX=Math.max(0,(100-target.imageSize)/2);
-    target.imageY=Math.max(0,(100-target.imageSize*safeWidth*probe.naturalHeight/(safeHeight*probe.naturalWidth))/2);
+    target.imageY=Math.max(0,(100-target.imageSize*heightRatio)/2);
    }
    // A slow image load must never redraw or alter the currently selected opposite side.
    if(side===uploadSide)render();
@@ -476,6 +485,34 @@
    if(!faces.length)throw new Error('Font produksi belum tersedia. Muat ulang editor.');
   }
  }
+ async function measureDraftImage(name){
+  const d=sides[name],area=config.safe_areas[name];
+  const [naturalWidth,naturalHeight]=await new Promise((resolve,reject)=>{
+   const probe=new Image();
+   probe.onload=()=>resolve([probe.naturalWidth,probe.naturalHeight]);
+   probe.onerror=()=>reject(new Error('Gambar '+name+' tidak dapat dibaca.'));
+   probe.src=d.url;
+  });
+  const rect=withPrintZone(name,()=>safe.getBoundingClientRect());
+  if(!area||!rect.width||!rect.height||!naturalWidth||!naturalHeight)
+   throw new Error('Area gambar belum siap.');
+  const width=d.imageSize*area.width/100;
+  const height=width*rect.width/rect.height*naturalHeight/naturalWidth*area.height/area.width;
+  const object={type:'image',x:d.imageX*area.width/100,y:d.imageY*area.height/100,width,height};
+  if(object.x<0||object.y<0||width<=0||height<=0
+   ||object.x+width>area.width+0.000001||object.y+height>area.height+0.000001)
+   throw new Error('Gambar '+(name==='front'?'depan':'belakang')+' di luar area aman.');
+  return object;
+ }
+ function validateDraftCategory(name,category,objects){
+  const limit=categories[category];
+  const spanX=Math.max(...objects.map(o=>o.x+o.width))-Math.min(...objects.map(o=>o.x));
+  const spanY=Math.max(...objects.map(o=>o.y+o.height))-Math.min(...objects.map(o=>o.y));
+  if(!limit||spanX>limit[0]+0.000001||spanY>limit[1]+0.000001){
+   const label=name==='front'?'depan':'belakang';
+   throw new Error('Desain '+label+' melebihi batas '+category+'. Kecilkan desain atau pilih kategori cetak untuk sisi '+label+'.');
+  }
+ }
  async function exportBoundDraft(){
   await ensureProductionFont();
   const design=exportTextDraft(true,true);
@@ -487,25 +524,10 @@
     throw new Error('Unggah gambar baru '+name+' sebelum menyimpan.');
    if(!boundMasterRefs[name])
     throw new Error('Master privat '+name+' belum terikat.');
-   const dimensions=await new Promise((resolve,reject)=>{
-    const probe=new Image();
-    probe.onload=()=>resolve([probe.naturalWidth,probe.naturalHeight]);
-    probe.onerror=()=>reject(new Error('Gambar '+name+' tidak dapat dibaca.'));
-    probe.src=d.url;
-   });
-   const rect=withPrintZone(name,()=>safe.getBoundingClientRect());
-   if(!rect.width||!rect.height||!dimensions[0]||!dimensions[1])
-    throw new Error('Area gambar belum siap.');
-   const width=d.imageSize*area.width/100;
-   const height=width*rect.width/rect.height*dimensions[1]/dimensions[0]*area.height/area.width;
-   const imageGeometry={type:'image',x:d.imageX*area.width/100,
-    y:d.imageY*area.height/100,width,height};
-   if(imageGeometry.x<0||imageGeometry.y<0
-    ||imageGeometry.x+width>area.width+0.000001
-    ||imageGeometry.y+height>area.height+0.000001)
-    throw new Error('Gambar '+name+' di luar area aman.');
+   const imageGeometry=await measureDraftImage(name);
    if(!design[name])design[name]={category:d.category,objects:[]};
    design[name].objects.push(imageGeometry);
+   validateDraftCategory(name,d.category,design[name].objects);
   }
   if(!design.front&&!design.back)throw new Error('Tambahkan desain terlebih dahulu.');
   return design;
@@ -699,6 +721,18 @@
      }
      if(JSON.stringify(comparableTextDesign)!==JSON.stringify(serverTextDesign))
       throw new Error('Metadata teks, jumlah, atau warna berubah. Simpan draft teks sebelum upload master.');
+     // Validate the geometry of each selected side before sending master data.
+     // Server-side geometry and owner-bound master checks remain authoritative.
+     const design=JSON.parse(JSON.stringify(currentDraft.design));
+     for(const name of selected){
+      const category=sides[name].category;
+      const imageGeometry=await measureDraftImage(name);
+      if(!design[name])design[name]={category,objects:[]};
+      design[name].category=category;
+      design[name].objects=design[name].objects.filter(item=>item.type!=='image');
+      design[name].objects.push(imageGeometry);
+      validateDraftCategory(name,category,design[name].objects);
+     }
      const designHash=currentDraft.design_hash;
      const completed=[];
      for(const name of selected){
@@ -742,30 +776,6 @@
      if(editRevision!==revisionAtStart)throw new Error('Desain berubah selama upload. Simpan ulang.');
      // Commit only geometry, never image bytes or a client-provided master ID.
      // The server verifies every image side against its owner-bound private master.
-     const design=JSON.parse(JSON.stringify(currentDraft.design));
-     for(const name of completed){
-      const d=sides[name],area=config.safe_areas[name];
-      const dimensions=await new Promise((resolve,reject)=>{
-       const probe=new Image();
-       probe.onload=()=>resolve([probe.naturalWidth,probe.naturalHeight]);
-       probe.onerror=()=>reject(new Error('Dimensi gambar '+name+' tidak tersedia.'));
-       probe.src=d.url;
-      });
-      const rect=safe.getBoundingClientRect();
-      if(!rect.width||!rect.height||!dimensions[0]||!dimensions[1])
-       throw new Error('Area cetak belum siap.');
-      const width=d.imageSize*area.width/100;
-      const height=width*rect.width/rect.height*dimensions[1]/dimensions[0]*area.height/area.width;
-      const object={type:'image',x:d.imageX*area.width/100,y:d.imageY*area.height/100,width,height};
-      if(object.x<0||object.y<0||object.x+width>area.width+0.000001
-       ||object.y+height>area.height+0.000001)
-       throw new Error('Gambar '+name+' di luar area aman.');
-      if(!design[name])design[name]={category:d.category,objects:[]};
-      design[name].category=d.category;
-      design[name].objects=design[name].objects.filter(item=>item.type!=='image');
-      design[name].objects.push(object);
-     }
-     if(editRevision!==revisionAtStart)throw new Error('Desain berubah sebelum metadata disimpan.');
      const commit=await fetch(config.draft_api.url+'/'+encodeURIComponent(savedId),{
       method:'POST',credentials:'same-origin',cache:'no-store',
       headers:{'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{}),
@@ -961,10 +971,10 @@
   }
   saveButton.addEventListener('click',async()=>{
    if(saving||uploadingMaster){saveStatus.textContent='Tunggu penyimpanan atau upload master selesai.';return;}
-   let design;
+   let design,hasLocalImage;
    try{
     await ensureProductionFont();
-    const hasLocalImage=['front','back'].some(name=>sides[name].url||sides[name].pending);
+    hasLocalImage=['front','back'].some(name=>sides[name].file||sides[name].pending);
     design=savedId?await exportBoundDraft()
      :hasLocalImage&&config.master_upload_enabled
       ?exportTextDraft(true,true):exportTextDraft();
