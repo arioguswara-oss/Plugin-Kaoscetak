@@ -24,8 +24,18 @@ Before packaging, read-only SSH confirmed staging still had V1.1.0 active and th
 
 The new candidate has **not** been installed. The mandatory HTTPS Web SAPI gate and install route require an authenticated WordPress account with `install_plugins` and `manage_options`. The previously used official method creates a temporary application password and revokes it after install. The latest Owner instruction makes credential creation approval-only; SSH access does not provide an authenticated HTTPS REST session. No credential was created, no gate was bypassed, and the active staging installation was not changed. Latest-candidate guest Mini Cart, Cart and Checkout acceptance therefore remains pending installation.
 
+## Final staging acceptance execution — 26 November 2026
+
+Candidate ZIP, manifest, and transport SHA256 values were rechecked against the recorded build evidence and matched exactly. The repository HEAD and `origin/work/studio-mobile-checkout-integration-20261123` both resolve to checkpoint `021a36579939c4e476f7e016f8b2027cd76759d4`.
+
+The public staging homepage returned HTTPS 200 and exposed `PHP/8.3.37` with Hostinger/LiteSpeed edge headers. This is reachability evidence only; it does not satisfy the authenticated HTTPS Web SAPI gate. The SSH request to the configured `kaoscetak-staging` host was rejected (`Permission denied (publickey,password)`). The Hostinger connector was unavailable in this execution. As a result, the temporary WordPress Application Password could not be created, the mandatory gate and candidate installation were not run, and no credential was created that would require revocation.
+
+Fresh Guest Buyer acceptance on the new candidate, including populated Mini Cart, thumbnails, Edit Desain, multi-size, Cart and Checkout, remains **NOT RUN** because the candidate could not be installed. No staging files or plugin state were changed. Existing predecessor evidence is retained but is not counted as acceptance of source `644739c`. The local fixture's native buyer drag assertion remains **UNRESOLVED**; no safe staging reproduction or code change was possible in this execution. No order or payment was submitted.
+
+Detailed sanitized execution evidence: [final-staging-execution.json](../../artifacts/studio-v1/final-cart-visual-20261126/final-staging-execution.json).
+
 ## Status
 
-Official development baseline remains **96.50% → 96.50%, delta 0.00**. No merge, production deployment, order submission, payment, DTF activation or Google Drive activation occurred. Google Drive live OAuth remains deferred.
+Official development baseline remains **96.50% → 96.50%, delta 0.00**. Final staging acceptance is **BLOCKED** on staging SSH/authenticated HTTPS access; candidate installation, guest acceptance and credential revocation remain pending. No merge, production deployment, order submission, payment, DTF activation or Google Drive activation occurred. Google Drive live OAuth remains deferred.
 
 [Build/install evidence and hashes](../../artifacts/studio-v1/final-cart-visual-20261126/build-evidence.json) · [Reproducible candidate ZIP](../../artifacts/studio-v1/final-cart-visual-20261126/sanro-studio-staging-candidate.zip) · [Predecessor guest screenshots](../../artifacts/studio-v1/final-cart-visual-20261126/previous-candidate-608/)

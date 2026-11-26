@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "repository": "arioguswara-oss/Plugin-Kaoscetak",
+  "pull_request": 52,
+  "target_branch": "work/studio-mobile-checkout-integration-20261123",
+  "checkpoint": "021a36579939c4e476f7e016f8b2027cd76759d4",
+  "candidate_source": "644739c88e8bacebd4a42d7272da93eff8fec419",
+  "version": "1.1.0",
+  "candidate_integrity": {
+    "zip_sha256": "ee039c9b60b1eab65b257e4545f0da63e30cc44ecf0919d955589002a7281f17",
+    "manifest_sha256": "bd38a4a14208df0be483ef8a86f2c521ed1ac53b57219c63567c6da0604d6976",
+    "transport_sha256": "00abb9ae37a4c966028e5d03ade56555ff64462422aaa89b18e9115c9d73ab68",
+    "result": "PASS_MATCHED_RECORDED_EVIDENCE"
+  },
+  "staging": {
+    "public_homepage_https_status": 200,
+    "public_response_php_header": "PHP/8.3.37",
+    "authenticated_web_sapi_gate": "NOT_RUN",
+    "ssh_result": "DENIED_PUBLICKEY_PASSWORD",
+    "candidate_install": "NOT_RUN",
+    "credential_created": false,
+    "credential_revocation": "NOT_APPLICABLE_NO_CREDENTIAL_CREATED",
+    "plugin_state_changed": false
+  },
+  "acceptance": {
+    "fresh_guest_buyer_candidate": "NOT_RUN_INSTALL_BLOCKED",
+    "mini_cart": "NOT_RUN_INSTALL_BLOCKED",
+    "artwork_thumbnails": "NOT_RUN_INSTALL_BLOCKED",
+    "edit_design": "NOT_RUN_INSTALL_BLOCKED",
+    "multi_size": "NOT_RUN_INSTALL_BLOCKED",
+    "cart": "NOT_RUN_INSTALL_BLOCKED",
+    "checkout": "NOT_RUN_INSTALL_BLOCKED",
+    "local_native_buyer_drag_assertion": "UNRESOLVED",
+    "order_submitted": false,
+    "payment": false
+  },
+  "blocker": "Staging SSH identity was rejected and no Hostinger connector was available to establish the authorized authenticated WordPress session for the mandatory gate/install workflow.",
+  "baseline": "96.50%",
+  "production_deployment": false,
+  "merge": false,
+  "dtf_activation": false,
+  "google_drive_activation": false
+}
