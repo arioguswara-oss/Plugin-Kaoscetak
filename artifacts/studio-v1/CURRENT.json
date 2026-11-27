@@ -373,13 +373,15 @@
     "evidence": "artifacts/studio-v1/final-candidate-20261127/closure-evidence-20261128.json",
     "owner_android_visual": "ACCEPTED_BUYER_UI_CONCEPT",
     "desktop_visual": "PASS_CATALOG_AND_EDITOR_LAYOUT",
-    "pagination": "SEARCH_AND_EMPTY_SECOND_PAGE_PASS_POSITIVE_FIXTURE_OPEN",
+    "pagination": "PASS_POSITIVE_LIVE_PRODUCT_49",
     "runtime_gates": "OPEN",
     "final_release": false,
     "admin_runtime_evidence": "artifacts/studio-v1/final-candidate-20261127/admin-runtime-followup-20261128.json",
     "admin_authentication": "PASS",
     "hpos_pdf_readback": "PASS_ORDER_56_FIRST_GUIDE",
     "variation_mapping": "PASS_ADMIN_READBACK_6_CHECKOUT_RUNTIME_OPEN",
-    "atomic_lock_runtime": "ISOLATED_DATABASE_CAS_PASS_ROLLBACK_VERIFIED"
+    "atomic_lock_runtime": "ISOLATED_DATABASE_CAS_PASS_ROLLBACK_VERIFIED",
+    "pagination_runtime_evidence": "artifacts/studio-v1/final-candidate-20261127/pagination-runtime-20261128.json",
+    "hpos_order_write": "AUTHORIZED_TRANSPORT_DISPATCH_DISABLED"
   }
 }
