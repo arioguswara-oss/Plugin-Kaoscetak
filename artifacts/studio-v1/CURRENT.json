@@ -2,12 +2,12 @@
   "schema": 1,
   "release_version": "1.1.0",
   "release_source": "4f5d31ee2a1244674a8a7111cd43f3e695bbf218",
-  "candidate_source": "ec57148f1dbbd09462c92904616c5a721487fd6e",
-  "artifact_directory": "artifacts/studio-v1/final-blocker-fix-20261127",
+  "candidate_source": "7aa6eb23d226272bc8a523b28854ccbed64ae497",
+  "artifact_directory": "artifacts/studio-v1/final-candidate-20261127",
   "archive": "sanro-studio-staging-candidate.zip",
-  "archive_sha256": "e5cd30b1de03d7929ce653882da2b541bca0f6673a5bd14cb69cb90a37d4d3fa",
-  "manifest_sha256": "5135d37cc50026bd7fb78b7e0052c2d6cab923e301c1c7f1545820ca4720a74d",
-  "plugin_digest": "aa66a8f8dc5379762409ac12f38c08a10a6e87e7ae027027845bdb1f6e1361e8",
+  "archive_sha256": "8ed2ffc94f524231123e242dbc7c9d0add7d8ae723715f6ef6dae374bc7e22bb",
+  "manifest_sha256": "8cafd62d8f9b345c6d00b5556d9ca51c06f13f38ff8f028d76e22b993a85bda3",
+  "plugin_digest": "8cc60d8c9d69e34a94dd3764df928d5557955d359739782a5791dfeee3972644",
   "deployment_authorized": false,
   "staging_installation_authorized": true,
   "runtime_e2e": "ec57148 HTTPS gates, #107 correction, isolated CAS, desktop Guest Checkout review PASS. Mixed live submit, exact mobile and metadata edge cases open.",
@@ -290,7 +290,7 @@
     "final_release": false,
     "superseded_by": "bf8ba02c4dbb073bc140085d0e6c703ffbe79beb"
   },
-  "candidate_state": "INSTALLED_VERIFIED_STAGING_ACCEPTANCE_PARTIAL",
+  "candidate_state": "BUILT_VERIFIED_NOT_INSTALLED_CHATGPT_WORK_HANDOFF",
   "latest_release_gate": {
     "source": "ec57148f1dbbd09462c92904616c5a721487fd6e",
     "report": "docs/qa/studio-final-blocker-fix-handoff-20261127.md",
@@ -329,7 +329,7 @@
   "latest_development_correction": {
     "base_source": "8bfa9b3c3fb5374439821811ce0d5b171fda8d4a",
     "report": "docs/qa/studio-release-blocker-fix-20261127.md",
-    "state": "TARGETED_LOCAL_REGRESSION_PASS_NOT_BUILT",
+    "state": "TARGETED_TESTS_REUSED_CANDIDATE_BUILT_NOT_INSTALLED",
     "findings": {
       "ST-03": "PASS_LOCAL_FROZEN_CONFIG",
       "ST-02": "PASS_LOCAL_PA_WARNA_PA_UKURAN",
@@ -337,9 +337,29 @@
       "ST-01": "PASS_LOCAL_STRICT_COUNTER_NORMALIZATION",
       "ST-R01": "PASS_LOCAL_CLASSIC_AND_STORE_API_FAIL_CLOSED"
     },
-    "targeted_tests": "PASS_SYNTHETIC_WP_WC_SIMULATION",
+    "targeted_tests": "PASS_SYNTHETIC_WP_WC_SIMULATION_REUSED_FROM_CHECKPOINT",
     "baseline_percent": 96.6,
     "staging_installation": "NOT_RUN",
-    "final_release": false
+    "final_release": false,
+    "source": "7aa6eb23d226272bc8a523b28854ccbed64ae497"
+  },
+  "latest_candidate_build": {
+    "source": "7aa6eb23d226272bc8a523b28854ccbed64ae497",
+    "version": "1.1.0",
+    "artifact_directory": "artifacts/studio-v1/final-candidate-20261127",
+    "archive": "sanro-studio-staging-candidate.zip",
+    "archive_sha256": "8ed2ffc94f524231123e242dbc7c9d0add7d8ae723715f6ef6dae374bc7e22bb",
+    "manifest": "candidate-manifest.json",
+    "manifest_sha256": "8cafd62d8f9b345c6d00b5556d9ca51c06f13f38ff8f028d76e22b993a85bda3",
+    "plugin_digest": "8cc60d8c9d69e34a94dd3764df928d5557955d359739782a5791dfeee3972644",
+    "packaged_source_files": 89,
+    "zip_members": 90,
+    "reproducible_two_builds": true,
+    "staging_installation": "NOT_RUN",
+    "runtime_acceptance": "NOT_TESTED",
+    "baseline_percent": 96.6,
+    "final_release": false,
+    "report": "docs/qa/studio-final-candidate-build-20261127.md",
+    "handoff": "artifacts/studio-v1/final-candidate-20261127/INSTALL-HANDOFF.md"
   }
 }
