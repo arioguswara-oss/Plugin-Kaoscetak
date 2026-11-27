@@ -1,0 +1,152 @@
+{
+  "schema": 1,
+  "date_wib": "2026-11-27",
+  "repository": "arioguswara-oss/Plugin-Kaoscetak",
+  "branch": "work/studio-mobile-checkout-integration-20261123",
+  "pull_request": 52,
+  "inspected_head": "7718fc60b7cb68bc799cde26dcd27a7f9fbc19e0",
+  "staging_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "install": {
+    "source": "0d0ea5f1795c5148e763d88281e8964f6672fbce",
+    "archive_sha256": "1690c709da2e2921e036bdefb7bfcd2442fe0eb3b080839437119fba511c3fd4",
+    "manifest_sha256": "f034d76e8bea7830d48f643562418b325798bd792348545d5b59f660d4d4e6a7",
+    "version": "1.1.0",
+    "expected_tree_digest": "53afcc58aba2e51703ad3fa7a9aec004c748cf992d899bc005f57f70264c5cf1",
+    "files": 89,
+    "predecessor_source": "c5ca4c442cf9ac1b1bad8c48290f4165b00ddb35",
+    "predecessor_tree_digest": "0ee4ec4ffffd0067c3fa53fbc6c2803009b5852bb796a871d6d1ec91b3dcb0f5",
+    "base_transport_sha256": "7fe92b344b37708ff721c37b10e22fa776ff27c07b2bde4dc2c8a4320f2b968b",
+    "transport_sha256": "f6cd853b870bc41124ac04589b78d92b2ad85036af3dc3fff27ef792065a44d4",
+    "gates": {
+      "authenticated_https_pre": "PASS",
+      "authenticated_https_post_fresh_get": "PASS",
+      "predecessor_verified_by_tree_and_committed_journal": true,
+      "php": "8.3.37",
+      "sapi": "litespeed",
+      "rollback_retained": true,
+      "private_roots": "PASS",
+      "writer_flags": "OFF",
+      "transaction": "committed",
+      "transport_afterwards": "inactive",
+      "studio_active": "1.1.0",
+      "woo_active": "11.3.1"
+    },
+    "installed_tree_digest": "53afcc58aba2e51703ad3fa7a9aec004c748cf992d899bc005f57f70264c5cf1"
+  },
+  "guest": {
+    "wordpress_signed_out": true,
+    "initial_cart_count": 0,
+    "test_product_id": 53,
+    "design_id": "ID-00101",
+    "color": "Biru",
+    "items": [
+      {
+        "size": "S",
+        "qty": 1,
+        "unit_idr": 82000
+      },
+      {
+        "size": "M",
+        "qty": 1,
+        "unit_idr": 85000
+      }
+    ],
+    "total_idr": 167000,
+    "preview": {
+      "studio_mini_cart": "PASS 2 artwork entries",
+      "woo_mini_cart": "PASS 2 rendered session-private currentSrc and srcset, 640×689 each",
+      "classic_cart": "PASS",
+      "checkout_review": "PASS",
+      "cart_cleaned": true
+    }
+  },
+  "editor": {
+    "platform": "Chrome desktop pointer",
+    "viewport_css_px": [
+      1348,
+      936
+    ],
+    "corner_handles_visible": 4,
+    "rotation_handles_visible": 1,
+    "proportional_resize": {
+      "scale_percent": [
+        60,
+        91,
+        52
+      ],
+      "grow_image_box_px": [
+        [
+          112,
+          100
+        ],
+        [
+          169,
+          152
+        ]
+      ]
+    },
+    "rotate_deg": [
+      0,
+      32
+    ],
+    "drag_top_percent": [
+      19.6667,
+      21.5512
+    ],
+    "image_size_and_rotation_sliders_visible": false,
+    "background_tolerance": "hidden by default, shown only after explicit Hapus Background",
+    "dirty_cart_auto_saved": true,
+    "cart_blocked_without_verified_master": true,
+    "oversize_geometry_upload": "rejected by print boundary; shrunk before retry",
+    "png_master_upload": "PASS verified front master and position",
+    "save_status": "Tersimpan · ID-00101.",
+    "reopen": "PASS via Edit Desain with image size 52%, rotation 32°, position and quantities retained",
+    "ux_issue": "Old cart message still told buyer to upload/save the front master after upload verification and explicit save. A subsequent Cart click succeeded."
+  },
+  "devices": {
+    "browser_desktop_pointer": "VERIFIED",
+    "browser_touch_emulation": "NOT TESTED",
+    "exact_mobile_layout": "NOT TESTED",
+    "physical_android_current_source": "NOT TESTED",
+    "owner_physical_android_prior_source": {
+      "reference": "c5ca4c4",
+      "verified_by_owner": [
+        "Home",
+        "image upload",
+        "drag",
+        "two-finger pinch",
+        "Mini Cart",
+        "Cart",
+        "Checkout"
+      ],
+      "changed_handles_and_save": "NOT TESTED on current revision"
+    }
+  },
+  "scope": {
+    "no_new_order": true,
+    "no_payment": true,
+    "no_production": true,
+    "no_merge": true,
+    "dtf_and_drive": "OFF",
+    "existing_order_56_evidence_reused": true,
+    "prior_thumbnail_isolation_mariadb_and_build_evidence_reused": true
+  },
+  "screenshots": [
+    "editor-handles.jpg",
+    "cart-waits-for-master.jpg",
+    "editor-saved.jpg",
+    "native-mini-cart.jpg",
+    "checkout-review.jpg"
+  ],
+  "baseline_percent": {
+    "before": 96.5,
+    "after": 96.5,
+    "delta_points": 0
+  },
+  "decision": {
+    "staging": "GO",
+    "desktop_core_flow": "PASS",
+    "owner_uiux_acceptance": "PARTIAL",
+    "final_release": "NO_GO"
+  }
+}

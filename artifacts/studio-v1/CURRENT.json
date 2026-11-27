@@ -10,12 +10,12 @@
   "plugin_digest": "cab430b9a596823c01b675882c46fc0d966d5705c02e97d4c2eadb9daf28525f",
   "deployment_authorized": false,
   "staging_installation_authorized": true,
-  "runtime_e2e": "Guest editor, private PNG upload, native Mini Cart artwork, Cart and Checkout review PASS. Physical Android touch/pinch and live mixed-cart after-validation/lock are open.",
-  "staging_installation_state": "V1.1.0_C5CA4C4_INSTALLED_ACTIVE_AUTHENTICATED_HTTPS_GATES_PASS",
+  "runtime_e2e": "Owner revision guest Chrome desktop: transformations, save/reopen, private PNG and Cart/Checkout review PASS. Owner UX partial pending stale Cart message and touch verification on current source.",
+  "staging_installation_state": "V1.1.0_0D0EA5F_INSTALLED_ACTIVE_AUTHENTICATED_HTTPS_GATES_PASS",
   "staging_installed_version": "1.1.0",
-  "currently_installed_source": "c5ca4c442cf9ac1b1bad8c48290f4165b00ddb35",
-  "installed_tree_digest": "0ee4ec4ffffd0067c3fa53fbc6c2803009b5852bb796a871d6d1ec91b3dcb0f5",
-  "execution_evidence": "artifacts/studio-v1/native-thumbnail-srcset-20261127/runtime-acceptance.json",
+  "currently_installed_source": "0d0ea5f1795c5148e763d88281e8964f6672fbce",
+  "installed_tree_digest": "53afcc58aba2e51703ad3fa7a9aec004c748cf992d899bc005f57f70264c5cf1",
+  "execution_evidence": "artifacts/studio-v1/owner-uiux-correction-20261127/runtime-acceptance.json",
   "owner_scope_revision": "f415ec55dd5b360da89b76804512624a3611288d",
   "drive_configuration": "NOT CONFIGURED",
   "final_release": true,
@@ -224,6 +224,22 @@
     "installed_tree_digest": "0ee4ec4ffffd0067c3fa53fbc6c2803009b5852bb796a871d6d1ec91b3dcb0f5",
     "report": "docs/qa/studio-final-staging-takeover-20261127.md",
     "evidence": "artifacts/studio-v1/native-thumbnail-srcset-20261127/runtime-acceptance.json",
-    "final_acceptance": "NO_GO_ANDROID_TOUCH_OWNER_VISUAL_AND_LIVE_MIXED_CHECKOUT_OPEN"
+    "final_acceptance": "NO_GO_ANDROID_TOUCH_OWNER_VISUAL_AND_LIVE_MIXED_CHECKOUT_OPEN",
+    "superseded_by": "0d0ea5f1795c5148e763d88281e8964f6672fbce"
+  },
+  "owner_uiux_correction": {
+    "source": "0d0ea5f1795c5148e763d88281e8964f6672fbce",
+    "version": "1.1.0",
+    "branch_head_at_install": "7718fc60b7cb68bc799cde26dcd27a7f9fbc19e0",
+    "artifact_directory": "artifacts/studio-v1/owner-uiux-correction-20261127",
+    "archive_sha256": "1690c709da2e2921e036bdefb7bfcd2442fe0eb3b080839437119fba511c3fd4",
+    "manifest_sha256": "f034d76e8bea7830d48f643562418b325798bd792348545d5b59f660d4d4e6a7",
+    "transport_sha256": "f6cd853b870bc41124ac04589b78d92b2ad85036af3dc3fff27ef792065a44d4",
+    "installed_tree_digest": "53afcc58aba2e51703ad3fa7a9aec004c748cf992d899bc005f57f70264c5cf1",
+    "state": "INSTALLED_ACTIVE_HTTPS_PASS_DESKTOP_CORE_FLOW_PASS",
+    "owner_uiux_acceptance": "PARTIAL_STALE_CART_MESSAGE_ANDROID_CURRENT_SOURCE_OPEN",
+    "evidence": "artifacts/studio-v1/owner-uiux-correction-20261127/runtime-acceptance.json",
+    "report": "docs/qa/studio-owner-uiux-correction-20261127.md",
+    "final_release": false
   }
 }
