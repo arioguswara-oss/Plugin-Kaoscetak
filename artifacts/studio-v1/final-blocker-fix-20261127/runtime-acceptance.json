@@ -1,0 +1,88 @@
+{
+  "source": "ec57148f1dbbd09462c92904616c5a721487fd6e",
+  "version": "1.1.0",
+  "head_at_install": "0290ceb199856fdd24aa7a4a77587ff6ef298838",
+  "predecessor": "bf8ba02c4dbb073bc140085d0e6c703ffbe79beb",
+  "predecessor_digest": "ec1ea86b6b21fd01b8014169164f74dceb45b48178c90fc8857d4addfc740d1d",
+  "installed_tree_digest": "3c73a6874497d367d167d740f3fdbd034146df583044cc653b99aaaa4aa11a06",
+  "zip_sha256": "e5cd30b1de03d7929ce653882da2b541bca0f6673a5bd14cb69cb90a37d4d3fa",
+  "manifest_sha256": "5135d37cc50026bd7fb78b7e0052c2d6cab923e301c1c7f1545820ca4720a74d",
+  "transport_sha256": "7b9465c922023f00a74b90345e6b15e9a1cbcdb8ee9d929e50f7d651bc17be98",
+  "authenticated_pre_gate": "PASS",
+  "authenticated_post_gate": "PASS",
+  "web_php": "8.3.37 litespeed",
+  "rollback_retained": true,
+  "admin": {
+    "fixture_107": "PASS_UNMAPPED_SELECTABLE_EXPLICIT_ADD_DISABLED_INCOMPLETE_REJECTED_CONFIG_SAVE_ACTIVATE_BUYER_VISIBLE_DISABLE_HIDDEN_ARCHIVE_RESTORE_DISABLED",
+    "fixture_107_after": "WooCommerce Draft; initial blank native price restored; synthetic Studio configuration retained with disabled mapping.",
+    "fixture_76": "PASS_RESTORE_ACTIVE_THEN_RETURN_TO_ARCHIVE; prior variation mapping preserved.",
+    "variable_new_add": "NOT_TESTED",
+    "explicit_missing_legacy_live_metadata": "NOT_TESTED; local legacy contract PASS"
+  },
+  "orders": {
+    "ids_before": [
+      56,
+      52
+    ],
+    "ids_after_admin_and_probe": [
+      56,
+      52
+    ],
+    "guest_checkout_submit": false,
+    "production_package_order_56": "PRIOR PASS REUSED",
+    "new_payment": false
+  },
+  "mixed_checkout": {
+    "state": "NOT_TESTED LIVE",
+    "reason": "Managed Chromium disables Incognito and no separate authenticated admin plus guest session was available.",
+    "guard_arm": false,
+    "submit": false,
+    "duplicate_checkout": "NOT TESTED",
+    "negative_checkout": "NOT TESTED"
+  },
+  "cas": {
+    "state": "ISOLATED_DATABASE_CAS_PASS",
+    "stale_batch_atomic_denial": true,
+    "two_row_lock_readback": true,
+    "duplicate_stale_submission_denied": true,
+    "rollback_verified": true,
+    "real_drafts_or_orders_touched": false
+  },
+  "guest": {
+    "width": 1363,
+    "no_horizontal_overflow": true,
+    "upload": true,
+    "rotate_resize_drag": true,
+    "swatch": "Biru",
+    "save_clicks": 1,
+    "public_id": "ID-00110",
+    "sizes": {
+      "S": 1,
+      "5XL": 1
+    },
+    "mini_cart": true,
+    "cart": true,
+    "classic_guest_checkout_review": true,
+    "total_idr": 187000,
+    "cart_empty_after": true,
+    "screenshot": "artifacts/studio-v1/final-blocker-fix-20261127/staging-guest-editor.jpg"
+  },
+  "exact_live_widths": "NOT TESTED",
+  "physical_android": "OWNER PENDING",
+  "cleanup": {
+    "temporary_options_readback": [
+      false,
+      false,
+      false
+    ],
+    "transport_active": false,
+    "studio_active": true,
+    "woocommerce_active": true,
+    "dtf": false,
+    "drive": false,
+    "gc": false
+  },
+  "development_baseline_before": 96.6,
+  "development_baseline_after": 96.6,
+  "release": "NO_GO"
+}

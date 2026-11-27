@@ -1,6 +1,10 @@
 # SANRO Studio — satu baseline resmi development
 
-## LATEST — final blocker fix candidate / handoff ChatGPT Work
+## LATEST — ec57148 staging runtime acceptance
+
+27 November 2026 WIB. `ec57148` terpasang pada staging, gate HTTPS pra/pasca **PASS**, rollback retained, installed digest `3c73a687…11a06`, DTF/Drive/GC OFF. Koreksi #107 explicit Add dan lifecycle **PASS**. CAS DB terisolasi dua baris dan rollback **PASS**. Fresh Guest desktop ID-00110 **PASS** sampai review Classic Checkout Rp187.000. Mixed live submit/duplicate, variable Add baru, legacy metadata live dan exact mobile 320/390/430 masih terbuka. Transport nonaktif, Cart bersih, order #52/#56 tetap dua pada readback admin. **96,60% → 96,60% (Δ 0,00). GO staging; NO-GO Final Release.** [Runtime dan bukti](../qa/studio-final-blocker-runtime-20261127.md).
+
+## Historis — final blocker fix candidate / handoff ChatGPT Work
 
 27 November 2026 WIB. Checkpoint `f05ac3a` dibaca; source terpasang `bf8ba02`, digest `ec1ea86b6b21fd01b8014169164f74dceb45b48178c90fc8857d4addfc740d1d`, gate/runtime ChatGPT Work tetap bukti historis yang berlaku. Koreksi source **`ec57148f1dbbd09462c92904616c5a721487fd6e`** memperbaiki false legacy mapping dari default zone native, memberi produk baru/duplikat marker unmapped, mempertahankan legacy valid, dan menolak buyer pada konfigurasi incomplete. Reproduksi old/new memakai writer native asli: mapped/active → unmapped. PHP lifecycle43, validator38, mixed8 (dependency quote533), variable10, guard HTTPS29 dan CAS transport6 DB-double **PASS**; lint/preflight/checksum PASS. Pengaman mixed after-validation dan probe SQL produksi pada dua option QA dengan rollback disiapkan dalam transport HTTPS terpisah, tanpa new-order/DTF dispatcher. Dua build aplikasi/manifest/transport identik. **Kandidat belum terpasang dan runtime belum diuji dalam sesi ini.** Tidak ada SSH/credential/staging mutation/order/payment. [Handoff lengkap tujuh bagian](../qa/studio-final-blocker-fix-handoff-20261127.md), [ZIP/manifest/SHA256SUMS/evidence](../../artifacts/studio-v1/final-blocker-fix-20261127/).
 
