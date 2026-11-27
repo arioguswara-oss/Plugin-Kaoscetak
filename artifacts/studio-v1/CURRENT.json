@@ -10,11 +10,11 @@
   "plugin_digest": "cab430b9a596823c01b675882c46fc0d966d5705c02e97d4c2eadb9daf28525f",
   "deployment_authorized": false,
   "staging_installation_authorized": true,
-  "runtime_e2e": "D6DEFEE guest Home, Edit Design, Studio Mini Cart, two sizes, Cart and Checkout review PASS; native drawer thumbnail FAIL. New candidate awaits authenticated runtime verification.",
-  "staging_installation_state": "V1.1.0_D6DEFEE_LAST_AUTHENTICATED_INSTALL_VERIFIED_CURRENT_RUNTIME_RECHECK_REQUIRED",
+  "runtime_e2e": "Guest editor, private PNG upload, native Mini Cart artwork, Cart and Checkout review PASS. Physical Android touch/pinch and live mixed-cart after-validation/lock are open.",
+  "staging_installation_state": "V1.1.0_C5CA4C4_INSTALLED_ACTIVE_AUTHENTICATED_HTTPS_GATES_PASS",
   "staging_installed_version": "1.1.0",
-  "currently_installed_source": "d6defee4f14f87274e24242b8732796460010f82",
-  "installed_tree_digest": "20f5ab23e2852957d9f9b894ca3e0e3bb664fd28ebb20e87abcc7182e1a05f7d",
+  "currently_installed_source": "c5ca4c442cf9ac1b1bad8c48290f4165b00ddb35",
+  "installed_tree_digest": "0ee4ec4ffffd0067c3fa53fbc6c2803009b5852bb796a871d6d1ec91b3dcb0f5",
   "execution_evidence": "artifacts/studio-v1/native-thumbnail-srcset-20261127/runtime-acceptance.json",
   "owner_scope_revision": "f415ec55dd5b360da89b76804512624a3611288d",
   "drive_configuration": "NOT CONFIGURED",
@@ -211,14 +211,19 @@
     "artifact_directory": "artifacts/studio-v1/responsive-drawer-followup-20261127",
     "state": "INSTALLED_AND_VERIFIED_HTTPS_NATIVE_DRAWER_FAIL",
     "final_release": false,
-    "installed_tree_digest": "20f5ab23e2852957d9f9b894ca3e0e3bb664fd28ebb20e87abcc7182e1a05f7d"
+    "installed_tree_digest": "20f5ab23e2852957d9f9b894ca3e0e3bb664fd28ebb20e87abcc7182e1a05f7d",
+    "superseded_by": "c5ca4c442cf9ac1b1bad8c48290f4165b00ddb35"
   },
   "native_thumbnail_srcset_followup": {
     "candidate_source": "c5ca4c442cf9ac1b1bad8c48290f4165b00ddb35",
     "artifact_directory": "artifacts/studio-v1/native-thumbnail-srcset-20261127",
-    "state": "BUILT_CONTRACT_AND_ISOLATED_SQL_PASS_STAGING_AUTH_AND_RECHECK_PENDING",
+    "state": "INSTALLED_ACTIVE_GATE_AND_NATIVE_DRAWER_ARTWORK_PASS",
     "expected_installed_tree_digest": "0ee4ec4ffffd0067c3fa53fbc6c2803009b5852bb796a871d6d1ec91b3dcb0f5",
-    "last_verified_installed_source": "d6defee4f14f87274e24242b8732796460010f82",
-    "final_release": false
+    "last_verified_installed_source": "c5ca4c442cf9ac1b1bad8c48290f4165b00ddb35",
+    "final_release": false,
+    "installed_tree_digest": "0ee4ec4ffffd0067c3fa53fbc6c2803009b5852bb796a871d6d1ec91b3dcb0f5",
+    "report": "docs/qa/studio-final-staging-takeover-20261127.md",
+    "evidence": "artifacts/studio-v1/native-thumbnail-srcset-20261127/runtime-acceptance.json",
+    "final_acceptance": "NO_GO_ANDROID_TOUCH_OWNER_VISUAL_AND_LIVE_MIXED_CHECKOUT_OPEN"
   }
 }

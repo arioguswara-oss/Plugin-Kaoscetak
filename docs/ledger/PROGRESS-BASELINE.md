@@ -1,10 +1,14 @@
 # SANRO Studio — satu baseline resmi development
 
-## LATEST — d6defee terpasang, koreksi drawer c5ca4c4 siap
+## LATEST — `c5ca4c4` aktif dan artwork drawer native lulus
+
+27 November 2026 WIB. SANRO Studio 1.1.0 `c5ca4c4` terpasang di WordPress staging. Gate HTTPS pra dan pascainstalasi **PASS**, digest aktif `0ee4ec4f…3dcb0f5` cocok dengan 89 file ZIP, transaksi committed, rollback tersedia, private roots **PASS**. Transport staging dinonaktifkan. Guest dengan keranjang kosong memverifikasi dua gambar artwork privat di drawer native. Cart dan Checkout mempertahankan ID-00099, Biru, S × 1, M × 1 dan Rp217.000. Unggah PNG master privat sisi depan dan simpan dengan ID yang sama **PASS**. Kontrol katalog admin terlihat. Bukti kontrak thumbnail, isolasi sesi, build reproducible dan concurrency MariaDB dipakai ulang. **96,50% → 96,50%, Δ 0,00 poin. GO staging. NO-GO Final Release V1.1.0** sampai touch/pinch Android, visual Owner, serta validasi dan lock checkout campuran live lulus. [Bukti dan paket](../qa/studio-final-staging-takeover-20261127.md).
+
+## Historis — d6defee terpasang, koreksi drawer c5ca4c4 siap
 
 27 November 2026 WIB. Gate HTTPS pra/pascainstalasi `d6defee` **PASS**, digest `20f5ab23…f7d` cocok dengan paket. Guest Home, Edit Desain, Mini Cart Studio, S/M, Cart dan Checkout **PASS** dengan ID-00098 dan total Rp157.000. Drawer WooCommerce native **FAIL** karena `thumbnail_srcset` tetap katalog. Koreksi `c5ca4c4` lulus lint, kontrak preview dan build reproducible. Concurrency Design ID **PASS** pada MariaDB terisolasi. Saat pemulihan, transport dilaporkan aktif dan login ulang timeout, sehingga state terkini perlu readback sebelum instalasi berikutnya. **96,50% → 96,50%, delta 0,00 poin. NO-GO Final Release.** [Bukti dan paket](../qa/studio-final-staging-takeover-20261127.md).
 
-## LATEST — 0a15c10 aktif, responsive drawer belum lulus visual
+## Historis — 0a15c10 aktif, responsive drawer belum lulus visual
 
 27 November 2026 WIB. Kandidat `0a15c10` terpasang melalui gate HTTPS WordPress sebelum dan sesudah (**PASS**). Installed tree `274df921…02cd0fc` cocok dengan ZIP. Guest baru melihat ID-00066, dua baris dan Rp167.000. Store API sudah mengembalikan artwork privat dan `srcset` kosong, tetapi atribut responsif HTML drawer tetap mengarah ke katalog, jadi artwork drawer live **FAIL**. Patch `d6defee` memasang URL privat juga pada `srcset`, menghapus kaitan attachment katalog dan mencegah pembacaan ID mengonsumsi alokasi baru. Tes terarah dan dua build identik PASS. Kandidat patch belum terpasang. **96,50% → 96,50%, Δ 0,00. GO review staging, NO-GO Final Release.** [Bukti runtime dan gap](../qa/studio-takeover-acceptance-20261126.md).
 
