@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 13412)
-Total output lines: 844
-
 <?php
 defined('ABSPATH') || exit;
 require_once __DIR__.'/checkout-recovery.php';
@@ -386,7 +383,100 @@ function sanro_studio_pricing_store_api_cart_images($images, $line, $key = '') {
     $preview = sanro_studio_pricing_cart_preview($line);
     $design = $line['sanro_studio_design_id'] ?? null;
     if (!$preview || !is_string($design)) return $images;
-    $url = add_query_arg(['action'=>'sanro_studio_cart_pr…1412 tokens truncated…et_permalink($page));
+    $url = add_query_arg(['action'=>'sanro_studio_cart_preview','design'=>$design], admin_url('admin-ajax.php'));
+    if (!is_string($url) || !wp_parse_url($url, PHP_URL_HOST)) return $images;
+    // The native drawer binds src and srcset independently. Give both a
+    // private source and avoid retaining the public catalog attachment ID.
+    $image = $images[0];
+    if (is_array($image) && isset($image['id'])) $image = (object)$image;
+    if (!is_object($image)) return $images;
+    $image = clone $image;
+    $image->id = 0;
+    $image->src = $url;
+    $image->thumbnail = $url;
+    $image->srcset = $url . ' 1x';
+    // The WooCommerce 11.3 Interactivity API drawer binds this thumbnail field.
+    $image->thumbnail_srcset = $image->srcset;
+    $image->sizes = '';
+    $image->alt = 'Preview desain';
+    return [$image];
+}
+
+function sanro_studio_pricing_checkout_thumbnail($quantity_html, $line) {
+    if (($line['sanro_studio_pricing_version'] ?? null) !== 1 || !(($line['data'] ?? null) instanceof WC_Product)) return $quantity_html;
+    $thumbnail = sanro_studio_pricing_preview_markup($line, 112);
+    if ($thumbnail === '') $thumbnail = $line['data']->get_image('woocommerce_thumbnail', [
+        'width'=>112, 'height'=>112, 'style'=>'width:112px;max-width:100%;height:auto;vertical-align:middle',
+    ]);
+    return $quantity_html . '<span style="display:block;margin-top:0.5em">' . wp_kses_post($thumbnail) . '</span>';
+}
+
+
+/** Return to the configured Studio catalog, never a hard-coded production URL. */
+function sanro_studio_pricing_continue_designing() {
+    $cart = sanro_studio_pricing_wc_cart();
+    if (!is_object($cart) || !method_exists($cart,'get_cart')) return;
+    $has_studio = false;
+    foreach ($cart->get_cart() as $line) {
+        if (sanro_studio_pricing_is_line($line)) { $has_studio = true; break; }
+    }
+    if (!$has_studio || !function_exists('sanro_studio_frontend_enabled') || !sanro_studio_frontend_enabled()) return;
+    $page = (int) get_option('sanro_studio_editor_page_id',0);
+    if (!$page || get_post_type($page) !== 'page' || get_post_status($page) !== 'publish') return;
+    $url = get_permalink($page);
+    if (!$url) return;
+    echo '<p class="sanro-studio-continue"><a class="button" href="' . esc_url($url) . '">Lanjut Belanja</a></p>';
+}
+
+/** Read-only grouping: native WooCommerce rows, quantities and totals remain authoritative. */
+function sanro_studio_pricing_summary_groups($lines) {
+    $groups = [];
+    foreach ($lines as $line) {
+        if (!is_array($line) || ($line['sanro_studio_pricing_version'] ?? null) !== 1) continue;
+        $id = $line['sanro_studio_design_id'] ?? '';
+        $color = $line['sanro_studio_color'] ?? '';
+        $product = $line['product_id'] ?? 0;
+        $size = $line['sanro_studio_size'] ?? '';
+        $qty = $line['quantity'] ?? 0;
+        if (!is_string($id) || !preg_match('/^[a-f0-9-]{36}$/iD',$id)
+            || !is_string($color) || !preg_match('/^#[a-f0-9]{6}$/D',$color)
+            || !is_int($product) || $product < 1 || !is_string($size)
+            || !in_array($size,['S','M','L','XL','2XL','3XL','4XL','5XL'],true)
+            || !is_numeric($qty) || $qty < 1
+            || !(($line['data'] ?? null) instanceof WC_Product)) continue;
+        $key = $product . ':' . $id . ':' . $color;
+        if (!isset($groups[$key])) $groups[$key] = ['line'=>$line,'sizes'=>[]];
+        $groups[$key]['sizes'][] = ['size'=>$size,'qty'=>$qty,'product'=>$line['data'],'line'=>$line];
+    }
+    return $groups;
+}
+
+/** Compact grouped reference, without hiding native cart controls or financial totals. */
+function sanro_studio_pricing_group_summary() {
+    $cart = sanro_studio_pricing_wc_cart();
+    if (!is_object($cart) || !method_exists($cart,'get_cart')
+        || !method_exists($cart,'get_product_price') || !method_exists($cart,'get_product_subtotal')) return;
+    $groups = sanro_studio_pricing_summary_groups($cart->get_cart());
+    if (!$groups) return;
+    $on_cart = function_exists('is_cart') && is_cart();
+    echo '<details class="sanro-studio-group-summary" aria-label="Ringkasan desain"' . ($on_cart ? ' open' : '') . '><summary style="cursor:pointer;font-weight:600">Ringkasan desain (' . count($groups) . ')</summary>';
+    foreach ($groups as $group) {
+        $line = $group['line'];
+        $palette = sanro_studio_mockup_palette($line['product_id']);
+        $color = $palette[$line['sanro_studio_color']] ?? $line['sanro_studio_color'];
+        echo '<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #ddd">';
+        $image = sanro_studio_pricing_preview_markup($line,96);
+        if ($image !== '') echo wp_kses_post($image);
+        echo '<div style="min-width:0;flex:1"><strong>' . esc_html($line['data']->get_name()) . '</strong>';
+        $public_id=function_exists('sanro_studio_public_design_id')?sanro_studio_public_design_id($line['sanro_studio_design_id']):null;
+        echo '<div style="overflow-wrap:anywhere">Design ID: ' . esc_html(is_string($public_id)?$public_id:'tersedia') . '</div>';
+        echo '<div>Warna: ' . esc_html($color) . '</div>';
+        if (function_exists('is_cart') && is_cart() && function_exists('sanro_studio_frontend_enabled')
+            && sanro_studio_frontend_enabled() && sanro_studio_pricing_cart_preview($line)) {
+            $page = (int) get_option('sanro_studio_editor_page_id',0);
+            if ($page && get_post_type($page) === 'page' && get_post_status($page) === 'publish' && get_permalink($page)) {
+                $url = add_query_arg(['sanro_studio_editor'=>'1','product_id'=>$line['product_id'],
+                    'sanro_design'=>$line['sanro_studio_design_id']],get_permalink($page));
                 echo '<p><a class="button sanro-studio-edit-design" href="' . esc_url($url) . '">Edit Desain</a></p>';
             }
         }
