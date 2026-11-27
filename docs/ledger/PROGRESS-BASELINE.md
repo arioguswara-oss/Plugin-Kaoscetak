@@ -1,5 +1,9 @@
 # SANRO Studio — satu baseline resmi development
 
+## LATEST — 7aa6eb2 staging runtime acceptance
+
+28 November 2026 WIB. `7aa6eb2` V1.1.0 aktif, gate HTTPS pra/pasca **PASS**, rollback dipertahankan, digest terpasang `04489eaa…30dab`. Pricing pulih dan 50 cek terarah **PASS**. Buyer desktop tanpa login: arahan qty kosong, Hitam, simpan ID-00112, S × 1 + M × 2 dan review Classic Checkout Rp192.000 **PASS**. Keranjang bersih. HPOS baca fixture #56 PASS. Transport, DTF, Drive, GC OFF. Runtime ST-01/02/03/04, ST-R01, mixed/duplicate/Store API dan exact mobile masih terbuka. **96,60% → 96,60%, Δ 0,00 poin. GO review staging. NO-GO Final Release.** [Laporan](../qa/studio-final-candidate-runtime-20261128.md).
+
 ## LATEST — ec57148 staging runtime acceptance
 
 27 November 2026 WIB. `ec57148` terpasang pada staging, gate HTTPS pra/pasca **PASS**, rollback retained, installed digest `3c73a687…11a06`, DTF/Drive/GC OFF. Koreksi #107 explicit Add dan lifecycle **PASS**. CAS DB terisolasi dua baris dan rollback **PASS**. Fresh Guest desktop ID-00110 **PASS** sampai review Classic Checkout Rp187.000. Mixed live submit/duplicate, variable Add baru, legacy metadata live dan exact mobile 320/390/430 masih terbuka. Transport nonaktif, Cart bersih, order #52/#56 tetap dua pada readback admin. **96,60% → 96,60% (Δ 0,00). GO staging; NO-GO Final Release.** [Runtime dan bukti](../qa/studio-final-blocker-runtime-20261127.md).
