@@ -1,12 +1,25 @@
-# SANRO Studio — final admin and release gate
+# SANRO Studio — final admin integration and release acceptance
 
-Date: 27 November 2026 (WIB)
-Repository: `arioguswara-oss/Plugin-Kaoscetak`
-PR #52 · branch `work/studio-mobile-checkout-integration-20261123`
+27 November 2026 WIB · PR #52 · official baseline 96,60% → 96,60% (Δ 0,00).
 
-## Result
+**GO staging. Final Release NO-GO.** Candidate `bf8ba02c4dbb073bc140085d0e6c703ffbe79beb` (V1.1.0) is active on Hostinger staging. The pinned ZIP and manifest matched. Authenticated pre/post gates passed in LiteSpeed PHP 8.3.37. Installed digest `ec1ea86b6b21fd01b8014169164f74dceb45b48178c90fc8857d4addfc740d1d`. The journal committed, rollback is retained, the transport is inactive, and DTF and Drive stayed OFF.
 
-**Development change PASS. Final Release NO-GO.** The legacy catalog mapping gap is fixed and the V1.1.0 candidate is reproducible. The candidate was not installed: SSH stopped before reaching staging because the system SSH configuration file `/etc/ssh/ssh_config.d/20-systemd-ssh-proxy.conf` is rejected for unsafe ownership/permissions. No global permission or SSH configuration was changed. Authenticated HTTPS pre/post gates and live acceptance therefore remain open.
+| Gate | Live result |
+| --- | --- |
+| Admin lifecycle | **PASS** native form, native WooCommerce edit while archived, #53 Studio config save, disable/archive/restore/activate and buyer visibility. #76 variable restored to active, added to Cart and returned to archive. |
+| Add existing mapping | **FAIL**. Newly published synthetic simple WooCommerce #107 was labeled Aktif with incomplete configuration before explicit Studio mapping and absent from the Add selector. Returned fixture to WooCommerce Draft and retained the product. Exact metadata cause is unverified. |
+| Legacy mapping | Prior offline regression **PASS**. No independent live check of absent status metadata. |
+| Order #56 | Existing record integrity **PASS**, three line items, unpaid. Existing manifest/private previews/Unicode PDF evidence retained. |
+| Mixed Cart | **PASS** for #76 variable Putih M ×1 ID-00107 Rp85.000 and #53 simple Putih S ×1 ID-00108 Rp72.000. Total Rp157.000, then clean cart. |
+| Mixed after-validation and locking | **NOT TESTED live**. The existing authorized classic hook is scoped to product #24, historical #56 and one Rp240.000 quote. It cannot certify this mixed Cart. Offline checks reused. No checkout submitted or order/payment created. |
+| Fresh Guest desktop 1363 px | **PASS** for image upload, four handles, resize 60%→72%, rotation and drag, blue swatch, one-click save at zero qty ID-00109, S ×1 + 5XL ×1, Mini Cart and Cart Rp187.000, then clean cart. Guest Checkout link visible. Checkout review and submit were not run. |
+| Mobile | Local Chromium 320/390/430 px prior evidence reused. Exact live widths **NOT TESTED**. Owner physical-device test **PENDING**. |
+
+SANRO-7-v1 contributions remain 23,75 + 9,50 + 14,40 + 9,60 + 9,80 + 19,40 + 10,00 + 0,15 historical balance = 96,60%. The existing admin implementation is already credited at 95% and fresh runtime exposed a mapping failure. QA acceptance provided new evidence, but stage 7 has already reached its 100% cap. No new subfeature weights were assigned.
+
+[Runtime evidence](../../artifacts/studio-v1/final-admin-release-gate-20261127/runtime-acceptance.json) · [Candidate SHA256](../../artifacts/studio-v1/final-admin-release-gate-20261127/SHA256SUMS) · [Admin screenshot](../../artifacts/studio-v1/final-admin-release-gate-20261127/staging-admin-catalog.jpg) · [Guest editor screenshot](../../artifacts/studio-v1/final-admin-release-gate-20261127/staging-guest-editor.jpg)
+
+## Offline checkpoint before staging installation
 
 ## Admin lifecycle revision
 

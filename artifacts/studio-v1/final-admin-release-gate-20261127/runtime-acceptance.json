@@ -1,0 +1,88 @@
+{
+  "source": "bf8ba02c4dbb073bc140085d0e6c703ffbe79beb",
+  "version": "1.1.0",
+  "predecessor": "7217663cbf3626298274ececf3c9e73a0996a4bc",
+  "head_at_install": "f1f362657990ae66dd1e9c91e520929ae5746d79",
+  "zip_sha256": "fc9496e168b63ba69e9a7bb46b9f52043cda6cfd8c7e55c3783a7b08ccae6f25",
+  "manifest_sha256": "8de4376a75a27cbe67ceb220c625fd42f7ee817cda308c2b2fbeb65ecd7d6d2a",
+  "transport_sha256": "5aff8ed2efdbfbd11fd1c3f14ce5e3663786bf2c044b55c68a7f8439211c9aa7",
+  "installed_tree_digest": "ec1ea86b6b21fd01b8014169164f74dceb45b48178c90fc8857d4addfc740d1d",
+  "pre_install": "PASS",
+  "post_install": "PASS",
+  "php": "8.3.37 litespeed",
+  "rollback_retained": true,
+  "transport_active": false,
+  "dtf": false,
+  "drive": false,
+  "order_writes": 0,
+  "payments": 0,
+  "admin": {
+    "native_create_form": "PASS",
+    "native_edit_published_after_studio_archive": "PASS",
+    "studio_edit_save": "PASS",
+    "simple_53": "PASS_DISABLE_ARCHIVE_RESTORE_ACTIVATE_BUYER_VISIBILITY",
+    "variable_76": "PASS_RESTORE_ACTIVE_VISIBLE_REARCHIVE",
+    "legacy_without_explicit_status": "OFFLINE_PASS_LIVE_META_NOT_READ",
+    "add_existing": "FAIL",
+    "add_existing_fixture": {
+      "id": 107,
+      "observed": "Fresh native Published fixture classified Active with incomplete Studio config and absent from Add selector.",
+      "cleanup": "WooCommerce Draft; product retained."
+    }
+  },
+  "mixed_cart": {
+    "state": "PASS",
+    "variable": {
+      "product": 76,
+      "design": "ID-00107",
+      "color": "Putih",
+      "size": "M",
+      "qty": 1,
+      "idr": 85000
+    },
+    "simple": {
+      "product": 53,
+      "design": "ID-00108",
+      "color": "Putih",
+      "size": "S",
+      "qty": 1,
+      "idr": 72000
+    },
+    "total_idr": 157000,
+    "cart_cleanup": "PASS",
+    "live_after_validation": "NOT TESTED — existing staging hook is classic, product 24 and prior order #56 specific; evidence checks a sole 240000 quote.",
+    "live_order_lock": "NOT TESTED"
+  },
+  "existing_order_56": {
+    "integrity": "PASS",
+    "items": 3,
+    "state": "verified_unpaid",
+    "production_package": "PASS_MANIFEST_PRIVATE_PREVIEWS_UNICODE_PDF"
+  },
+  "guest_desktop": {
+    "viewport_px": 1363,
+    "authenticated": false,
+    "design": "ID-00109",
+    "image_transform": "PASS",
+    "resize_percent": [
+      60,
+      72
+    ],
+    "one_click_save_at_zero_quantity": "PASS",
+    "swatch": "Biru",
+    "sizes": {
+      "S": 1,
+      "5XL": 1
+    },
+    "mini_cart_and_cart": "PASS",
+    "total_idr": 187000,
+    "cart_cleanup": "PASS",
+    "guest_checkout": "LINK_VISIBLE_REVIEW_NOT_ENTERED"
+  },
+  "mobile_viewport_live": "NOT TESTED 320/390/430",
+  "mobile_viewport_fixture": "PASS REUSED 320/390/430 PRIOR BUYER SOURCE",
+  "physical_phone": "PENDING OWNER",
+  "baseline_before": 96.6,
+  "baseline_after": 96.6,
+  "final_release": "NO_GO"
+}

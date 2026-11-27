@@ -10,12 +10,12 @@
   "plugin_digest": "2751856a57e30f80ed8d9ada7a996609bbe7c27cc22cb536b4b9244ba381c2ba",
   "deployment_authorized": false,
   "staging_installation_authorized": true,
-  "runtime_e2e": "Guest staging desktop PASS through Cart. Local Chromium exact widths PASS. Live narrow widths and Owner physical Android pending.",
-  "staging_installation_state": "BLOCKED_BEFORE_CONNECTION_BY_SYSTEM_SSH_CONFIG_PERMISSION_CHECK",
+  "runtime_e2e": "bf8ba02 authenticated HTTPS gates PASS; admin lifecycle partial (newly published mapping FAIL); mixed Cart and desktop Guest PASS; checkout and exact mobile open.",
+  "staging_installation_state": "V1.1.0_BF8BA02_INSTALLED_ACTIVE_AUTHENTICATED_HTTPS_GATES_PASS",
   "staging_installed_version": "1.1.0",
-  "currently_installed_source": "7217663",
-  "installed_tree_digest": "1ed56bf80b26469974272d1ef2c6c08cda885669000081e88c124a9af6658444",
-  "execution_evidence": "artifacts/studio-v1/final-admin-release-gate-20261127/build-and-gate-evidence.json",
+  "currently_installed_source": "bf8ba02c4dbb073bc140085d0e6c703ffbe79beb",
+  "installed_tree_digest": "ec1ea86b6b21fd01b8014169164f74dceb45b48178c90fc8857d4addfc740d1d",
+  "execution_evidence": "artifacts/studio-v1/final-admin-release-gate-20261127/runtime-acceptance.json",
   "owner_scope_revision": "f415ec55dd5b360da89b76804512624a3611288d",
   "drive_configuration": "NOT CONFIGURED",
   "final_release": false,
@@ -287,7 +287,8 @@
     "physical_phone_owner": "PENDING",
     "report": "docs/qa/studio-buyer-ux-single-save-20261127.md",
     "evidence": "artifacts/studio-v1/buyer-ux-20261127/runtime-acceptance.json",
-    "final_release": false
+    "final_release": false,
+    "superseded_by": "bf8ba02c4dbb073bc140085d0e6c703ffbe79beb"
   },
   "candidate_state": "BUILT_REPRODUCIBLY_PREFLIGHT_PLAN_ONLY_NOT_INSTALLED",
   "latest_release_gate": {
@@ -295,11 +296,12 @@
     "report": "docs/qa/studio-final-admin-release-gate-20261127.md",
     "zip": "artifacts/studio-v1/final-admin-release-gate-20261127/sanro-studio-staging-candidate.zip",
     "manifest": "artifacts/studio-v1/final-admin-release-gate-20261127/candidate-manifest.json",
-    "preinstall_https": "NOT_RUN",
-    "postinstall_https": "NOT_RUN",
-    "installed_candidate_digest": null,
-    "admin_runtime": "OPEN",
-    "mixed_checkout_after_validation_runtime": "OPEN",
-    "final_release": false
+    "preinstall_https": "PASS",
+    "postinstall_https": "PASS",
+    "installed_candidate_digest": "ec1ea86b6b21fd01b8014169164f74dceb45b48178c90fc8857d4addfc740d1d",
+    "admin_runtime": "PARTIAL_ADD_EXISTING_FAIL",
+    "mixed_checkout_after_validation_runtime": "NOT_TESTED_BOUNDARY_UNSUPPORTED",
+    "final_release": false,
+    "runtime_evidence": "artifacts/studio-v1/final-admin-release-gate-20261127/runtime-acceptance.json"
   }
 }
