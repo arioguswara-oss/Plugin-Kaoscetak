@@ -37,3 +37,12 @@ Login Administrator di browser staging. Positive pagination memerlukan 46 produk
 ## 7. Keputusan
 
 **GO review staging dan konsep visual buyer. NO-GO Final Release** sampai gate runtime tersisa memiliki bukti.
+
+## Tindak lanjut setelah login Administrator
+
+- **PASS — artefak #56.** Preview depan dan belakang pada item pertama berhasil dimuat. PDF Panduan item pertama diunduh melalui jalur privat admin, 783.951 byte, signature PDF dan EOF valid. Panel masih menampilkan paket belum lengkap dan tidak menyediakan tautan manifest.
+- **PASS — mapping admin #76.** Fixture tetap di Arsip. Mapping tersimpan Putih M/L/XL → 77/78/79 dan Hitam M/L/XL → 80/81/82. Quote/checkout dengan variasi masih terbuka.
+- **PASS — CAS database kandidat.** Dua baris uji diverifikasi, klaim kedaluwarsa ditolak secara atomik, duplikat ditolak, dan rollback terverifikasi. Arm dan bukti sementara kosong sesudah cleanup, lalu transport dinonaktifkan. Pesanan dan draft nyata tidak tersentuh. Bukti ini meliputi probe database terisolasi.
+- HPOS write, mixed Classic submit, Store API, frozen config, repeat discount, positive pagination dan viewport mobile masih menjadi gate. Autentikasi Administrator sudah lulus pada siklus ini. Persetujuan untuk fixture baru masih menunggu.
+
+[Bukti runtime terstruktur](../../artifacts/studio-v1/final-candidate-20261127/admin-runtime-followup-20261128.json)

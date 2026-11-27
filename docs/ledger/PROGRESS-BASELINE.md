@@ -1,5 +1,9 @@
 # SANRO Studio — satu baseline resmi development
 
+## LATEST — HPOS PDF, mapping admin dan CAS 7aa6eb2
+
+28 November 2026 WIB. Autentikasi Administrator **PASS**. PDF panduan #56 via jalur privat **PASS**, panel paket belum lengkap. Mapping tersimpan 6 variasi #76 terbaca **PASS**, fixture tetap di Arsip. CAS dua baris, penolakan stale/duplikat, dan rollback **PASS**. Transport nonaktif setelah cleanup. **96,60% → 96,60%, Δ 0,00 poin. NO-GO Final Release.** [Laporan closure](../qa/studio-final-acceptance-closure-20261128.md).
+
 ## LATEST — Acceptance closure 7aa6eb2, bukti Owner Android
 
 28 November 2026 WIB. Owner menerima konsep UI buyer setelah mencoba Android fisik. Desktop 1363 CSS px tanpa overflow, pencarian #53 dan kondisi kosong halaman kedua **PASS**. WordPress Connector mencatat tiga produk terbit. Positive pagination, frozen config, native variation mapping, repeat, mixed/duplicate, fail-closed dan HPOS write terbuka. Jalur admin meminta autentikasi. **96,60% → 96,60%, Δ 0,00 poin. NO-GO Final Release.** [Laporan closure](../qa/studio-final-acceptance-closure-20261128.md).

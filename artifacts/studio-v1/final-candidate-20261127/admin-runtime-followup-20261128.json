@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "date_wib": "2026-11-28",
+  "source": "7aa6eb23d226272bc8a523b28854ccbed64ae497",
+  "previous_checkpoint": "8e42818cd6817b107630b3c208b4a2bf733a41e0",
+  "installed_tree_digest": "04489eaa179a2c2cbe09d5f9fda5a91b712c8765d1503d48fb35e4f91c030dab",
+  "admin_authentication": "PASS",
+  "hpos_fixture": {
+    "id": 56,
+    "preview_front_back_first_item": "PASS_IMAGE_LOAD",
+    "pdf": {
+      "status": "PASS_FIRST_GUIDE_NATIVE_AUTHENTICATED_DOWNLOAD",
+      "bytes": 783951,
+      "sha256": "aa2d32b4e217d7cc7ac70d1deaa67bfe06aee066415f280785b92629002e3476",
+      "pdf_signature": true,
+      "eof_marker": true
+    },
+    "manifest_link_visible": false,
+    "production_panel": "Paket pesanan: belum lengkap",
+    "write": "PENDING_SYNTHETIC_ORDER_APPROVAL"
+  },
+  "mapping": {
+    "fixture": 76,
+    "studio_status": "archived",
+    "woocommerce_status": "published",
+    "stored": {
+      "Putih": {
+        "M": 77,
+        "L": 78,
+        "XL": 79
+      },
+      "Hitam": {
+        "M": 80,
+        "L": 81,
+        "XL": 82
+      }
+    },
+    "admin_readback": "PASS",
+    "checkout_runtime": "OPEN"
+  },
+  "atomic_lock": {
+    "state": "ISOLATED_DATABASE_CAS_PASS",
+    "duplicate_stale_submission_denied": true,
+    "real_drafts_or_orders_touched": false,
+    "rollback_verified": true,
+    "stale_batch_atomic_denial": true,
+    "two_row_lock_readback": true
+  },
+  "checkout": {
+    "classic_mixed_live_submission": "OPEN",
+    "store_api_submission": "OPEN",
+    "arm_evidence_removed": true,
+    "transport_inactive_verified": true
+  },
+  "new_orders_created": 0,
+  "new_payments_attempted": 0,
+  "baseline_percent": 96.6,
+  "final_release": false
+}
