@@ -367,5 +367,14 @@
     "report": "docs/qa/studio-final-candidate-build-20261127.md",
     "handoff": "artifacts/studio-v1/final-candidate-20261127/INSTALL-HANDOFF.md",
     "runtime_report": "docs/qa/studio-final-candidate-runtime-20261128.md"
+  },
+  "closure_checkpoint": {
+    "report": "docs/qa/studio-final-acceptance-closure-20261128.md",
+    "evidence": "artifacts/studio-v1/final-candidate-20261127/closure-evidence-20261128.json",
+    "owner_android_visual": "ACCEPTED_BUYER_UI_CONCEPT",
+    "desktop_visual": "PASS_CATALOG_AND_EDITOR_LAYOUT",
+    "pagination": "SEARCH_AND_EMPTY_SECOND_PAGE_PASS_POSITIVE_FIXTURE_OPEN",
+    "runtime_gates": "OPEN",
+    "final_release": false
   }
 }

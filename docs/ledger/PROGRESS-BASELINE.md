@@ -1,5 +1,9 @@
 # SANRO Studio — satu baseline resmi development
 
+## LATEST — Acceptance closure 7aa6eb2, bukti Owner Android
+
+28 November 2026 WIB. Owner menerima konsep UI buyer setelah mencoba Android fisik. Desktop 1363 CSS px tanpa overflow, pencarian #53 dan kondisi kosong halaman kedua **PASS**. WordPress Connector mencatat tiga produk terbit. Positive pagination, frozen config, native variation mapping, repeat, mixed/duplicate, fail-closed dan HPOS write terbuka. Jalur admin meminta autentikasi. **96,60% → 96,60%, Δ 0,00 poin. NO-GO Final Release.** [Laporan closure](../qa/studio-final-acceptance-closure-20261128.md).
+
 ## LATEST — 7aa6eb2 staging runtime acceptance
 
 28 November 2026 WIB. `7aa6eb2` V1.1.0 aktif, gate HTTPS pra/pasca **PASS**, rollback dipertahankan, digest terpasang `04489eaa…30dab`. Pricing pulih dan 50 cek terarah **PASS**. Buyer desktop tanpa login: arahan qty kosong, Hitam, simpan ID-00112, S × 1 + M × 2 dan review Classic Checkout Rp192.000 **PASS**. Keranjang bersih. HPOS baca fixture #56 PASS. Transport, DTF, Drive, GC OFF. Runtime ST-01/02/03/04, ST-R01, mixed/duplicate/Store API dan exact mobile masih terbuka. **96,60% → 96,60%, Δ 0,00 poin. GO review staging. NO-GO Final Release.** [Laporan](../qa/studio-final-candidate-runtime-20261128.md).
