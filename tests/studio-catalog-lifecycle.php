@@ -46,14 +46,37 @@ catalog_action(53, 'disable');
 catalog_action(53, 'archive');
 catalog_action(53, 'restore');
 catalog_check(sanro_studio_catalog_status(53) === 'disabled', 'restore preserves prior disabled state');
+$GLOBALS['meta'][53] = ['_sanro_studio_pricing_profile' => 'cotton_combed_24s'];
+catalog_check(sanro_studio_catalog_is_mapped(53), 'legacy Studio config is recognized without lifecycle status metadata');
+catalog_check(sanro_studio_catalog_status(53) === 'active' && sanro_studio_catalog_is_buyer_visible(53), 'legacy listing keeps its buyer-visible status');
+try { catalog_action(53, 'add'); throw new RuntimeException('FAIL legacy duplicate mapping accepted'); }
+catch (RuntimeException $error) { catalog_check(strpos($error->getMessage(), 'sudah ada') !== false, 'legacy mapped product cannot be added twice'); }
+catalog_action(53, 'disable');
+catalog_check(sanro_studio_catalog_status(53) === 'disabled' && !sanro_studio_catalog_is_buyer_visible(53), 'legacy mapping can be deactivated');
+catalog_action(53, 'archive');
+catalog_action(53, 'restore');
+catalog_check(sanro_studio_catalog_status(53) === 'disabled', 'legacy mapping can be archived and restored without enabling it');
+$GLOBALS['meta'][53] = [];
+try { catalog_action(53, 'disable'); throw new RuntimeException('FAIL unmanaged Woo product accepted for catalog lifecycle'); }
+catch (RuntimeException $error) { catalog_check(strpos($error->getMessage(), 'Petakan produk') !== false, 'unmapped product lifecycle mutation rejected'); }
 $GLOBALS['product_type'] = 'variable';
 $GLOBALS['meta'][53] = [];
 catalog_check(catalog_action(53, 'add') === 53 && sanro_studio_catalog_status(53) === 'disabled', 'variable product can be mapped into Studio lifecycle');
+$GLOBALS['catalog_ready'] = true;
+catalog_action(53, 'activate');
+catalog_check(sanro_studio_catalog_is_buyer_visible(53), 'configured variable product activates');
+catalog_action(53, 'disable');
+catalog_check(!sanro_studio_catalog_is_buyer_visible(53), 'variable listing deactivates independently');
+catalog_action(53, 'archive');
+catalog_check(sanro_studio_catalog_status(53) === 'archived', 'variable product archives without deleting WooCommerce product');
+catalog_action(53, 'restore');
+catalog_check(sanro_studio_catalog_status(53) === 'disabled', 'variable archived mapping restores its prior inactive state');
 $GLOBALS['meta'][53] = [];
 $GLOBALS['product_type'] = 'grouped';
 try { catalog_action(53, 'add'); throw new RuntimeException('FAIL unsupported product type accepted'); }
 catch (RuntimeException $error) { catalog_check(strpos($error->getMessage(), 'simple atau variable') !== false, 'unsupported product type rejected'); }
 $GLOBALS['product_type'] = 'simple';
+$GLOBALS['meta'][53] = ['_sanro_studio_catalog_status' => 'disabled'];
 $GLOBALS['catalog_ready'] = false;
 try { catalog_action(53, 'activate'); throw new RuntimeException('FAIL incomplete config activated'); }
 catch (RuntimeException $error) { catalog_check(strpos($error->getMessage(), 'belum siap') !== false, 'incomplete configuration cannot activate'); }
