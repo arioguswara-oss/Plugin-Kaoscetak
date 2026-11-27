@@ -1,6 +1,13 @@
 # SANRO Studio — satu baseline resmi development
 
-## LATEST — Admin integration runtime `bf8ba02`
+## LATEST — final blocker fix candidate / handoff ChatGPT Work
+
+27 November 2026 WIB. Checkpoint `f05ac3a` dibaca; source terpasang `bf8ba02`, digest `ec1ea86b6b21fd01b8014169164f74dceb45b48178c90fc8857d4addfc740d1d`, gate/runtime ChatGPT Work tetap bukti historis yang berlaku. Koreksi source **`ec57148f1dbbd09462c92904616c5a721487fd6e`** memperbaiki false legacy mapping dari default zone native, memberi produk baru/duplikat marker unmapped, mempertahankan legacy valid, dan menolak buyer pada konfigurasi incomplete. Reproduksi old/new memakai writer native asli: mapped/active → unmapped. PHP lifecycle43, validator38, mixed8 (dependency quote533), variable10, guard HTTPS29 dan CAS transport6 DB-double **PASS**; lint/preflight/checksum PASS. Pengaman mixed after-validation dan probe SQL produksi pada dua option QA dengan rollback disiapkan dalam transport HTTPS terpisah, tanpa new-order/DTF dispatcher. Dua build aplikasi/manifest/transport identik. **Kandidat belum terpasang dan runtime belum diuji dalam sesi ini.** Tidak ada SSH/credential/staging mutation/order/payment. [Handoff lengkap tujuh bagian](../qa/studio-final-blocker-fix-handoff-20261127.md), [ZIP/manifest/SHA256SUMS/evidence](../../artifacts/studio-v1/final-blocker-fix-20261127/).
+
+**Baseline resmi tetap 96,60% → 96,60%, Δ 0,00.** Kontribusi SANRO-7-v1 tetap 23,75 + 9,50 + 14,40 + 9,60 + 9,80 + 19,40 + 10,00 = 96,45; tambah saldo Owner0,15 =96,60. Tahap admin95% sudah mencakup lifecycle yang sedang dikoreksi, dan QA100% adalah kredit historis cap; tidak ada bobot resmi baru untuk kredit ganda. Development revision **PASS lokal**, acceptance kandidat **PENDING WORK**; **GO kandidat, NO-GO Final Release** sampai Add/mapping runtime, authenticated pre/post gate, mixed boundary + DB probe, Guest Checkout serta exact staging320/390/430 selesai. Reuse order#56 dan mixed Cart157.000 yang sudah PASS; tidak menyamakan offline PASS dengan runtime.
+
+
+## Historis — Admin integration runtime `bf8ba02`
 
 27 November 2026 WIB. V1.1.0 `bf8ba02` aktif pada staging. HTTPS pra/pasca **PASS**, installed digest `ec1ea86b…40d1d`, rollback tersedia dan transport nonaktif. Lifecycle #53/#76, edit Studio/native, order #56 yang sudah ada, mixed Cart Rp157.000, Guest desktop sampai Cart Rp187.000 **PASS**. Tambah produk existing **FAIL** untuk fixture #107 yang otomatis berlabel Aktif dan hilang dari selector Tambah. Fixture telah dikembalikan ke Draft. Mixed after-validation/locking live, Guest Checkout, dan mobile staging lebar tepat masih terbuka. **96,60% → 96,60%, Δ 0,00 poin.** Tahap 2 tetap 95% setelah gap mapping ditemukan, tahap 7 telah 100%. GO staging, **NO-GO Final Release**. [Bukti dan screenshot](../qa/studio-final-admin-release-gate-20261127.md).
 

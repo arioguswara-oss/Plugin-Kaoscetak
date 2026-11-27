@@ -1,5 +1,11 @@
 # SANRO Studio — final admin integration and release acceptance
 
+## Follow-up source correction — ready for Work
+
+Koreksi dari checkpoint `f05ac3a` tersedia pada candidate source `ec57148f1dbbd09462c92904616c5a721487fd6e`. False positive mapping direproduksi dengan writer native dan fungsi lama pada metadata default yang sama; metadata live #107 persis tidak dibaca. Produk baru kini unmapped, legacy memerlukan validator lengkap, dan buyer tetap fail closed. Transport HTTPS mixed/no-order dan isolated database CAS rollback probe sudah disiapkan terpisah dari ZIP aplikasi. Kandidat baru **belum terpasang**; bukti runtime `bf8ba02` di bawah tetap historis dan tidak diubah menjadi PASS untuk source baru. Baseline tetap96,60%, Final Release **NO-GO**. [Handoff lengkap dan acceptance](studio-final-blocker-fix-handoff-20261127.md) · [Paket koreksi/checksum](../../artifacts/studio-v1/final-blocker-fix-20261127/).
+
+## Installed checkpoint bf8ba02 (historical runtime evidence)
+
 27 November 2026 WIB · PR #52 · official baseline 96,60% → 96,60% (Δ 0,00).
 
 **GO staging. Final Release NO-GO.** Candidate `bf8ba02c4dbb073bc140085d0e6c703ffbe79beb` (V1.1.0) is active on Hostinger staging. The pinned ZIP and manifest matched. Authenticated pre/post gates passed in LiteSpeed PHP 8.3.37. Installed digest `ec1ea86b6b21fd01b8014169164f74dceb45b48178c90fc8857d4addfc740d1d`. The journal committed, rollback is retained, the transport is inactive, and DTF and Drive stayed OFF.

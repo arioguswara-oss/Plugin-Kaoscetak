@@ -1,0 +1,60 @@
+{
+  "source": "ec57148f1dbbd09462c92904616c5a721487fd6e",
+  "catalog_lifecycle": {
+    "result": "PASS",
+    "assertions": 43,
+    "scope": "real native zone writer reproduction; simple/variable/legacy; creation auto-draft and duplication; capability/nonce/lifecycle"
+  },
+  "real_editor_config": {
+    "result": "PASS",
+    "assertions": 38
+  },
+  "mixed_checkout_existing_regression": {
+    "result": "PASS",
+    "mixed_assertions": 8,
+    "dependency_server_quote_assertions": 533,
+    "scope": "offline; same pre-existing fixture; not new runtime credit"
+  },
+  "variable_mapping_quote_order_contract": {
+    "result": "PASS",
+    "checks": 10
+  },
+  "mixed_https_guard": {
+    "result": "PASS",
+    "assertions": 29,
+    "scope": "offline authorization doubles, no production HTTP or DB"
+  },
+  "isolated_lock_transport": {
+    "result": "PASS",
+    "assertions": 6,
+    "scope": "production CAS function called against DB double, not live DB atomicity proof"
+  },
+  "native_admin_permissions_order_hooks": {
+    "result": "PASS",
+    "assertions": 71
+  },
+  "buyer_render": {
+    "result": "PASS",
+    "assertions": 24
+  },
+  "historical_normal_checkout_guard": "PASS_OFFLINE_REUSED_CONTRACT",
+  "changed_php_lint": "PASS",
+  "python_builder_syntax": "PASS",
+  "javascript_lint": "NOT_APPLICABLE_NO_JS_CHANGED",
+  "candidate_security_preflight_unit_tests": {
+    "result": "PASS",
+    "tests": 7
+  },
+  "git_diff_check": "PASS",
+  "prior_576_assertions": "REUSED_WHERE_UNCHANGED; counts above are overlapping, not an additive progress rubric",
+  "runtime_staging": "NOT_RUN",
+  "new_orders": 0,
+  "payment": false,
+  "ssh_attempts": 0,
+  "credentials_created": 0,
+  "baseline": {
+    "before": 96.6,
+    "after": 96.6,
+    "delta": 0
+  }
+}
