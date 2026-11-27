@@ -1,8 +1,8 @@
 # SANRO Studio — satu baseline resmi development
 
-## LATEST — Simpan sekali dan arahan jumlah Cart
+## LATEST — Simpan sekali dan arahan jumlah Cart aktif di staging
 
-27 November 2026 WIB. Source `7217663` masuk PR #52. Buyer menyimpan gambar dan desain sekaligus, mendapat arahan jumlah untuk Cart, dan mengedit objek langsung di mockup. Tes terarah, Chromium fixture 320/390/430/1280 px, dua build identik dan preflight lokal **PASS**. Kandidat V1.1.0 siap untuk gate staging. Autentikasi resmi WordPress terhenti saat menunggu; gate HTTPS dan Guest Buyer untuk kandidat ini **belum diuji**. Staging terakhir terverifikasi pada `ef8df0d`. **96,50% → 96,50%, Δ 0,00 poin. NO-GO final acceptance.** [Bukti dan checksum](../qa/studio-buyer-ux-single-save-20261127.md).
+27 November 2026 WIB. SANRO Studio V1.1.0 source `7217663` menggantikan `ef8df0d`. Gate HTTPS pra dan pascainstalasi **PASS**, installed digest `1ed56bf8…58444`, rollback tersedia, transport nonaktif, DTF dan Drive OFF. Guest desktop 1363 px **PASS** untuk simpan tanpa jumlah, reopen ID-00106, arahan jumlah dan fokus S, resize/rotasi/drag, warna Biru dua sisi, thumbnail dan Cart S × 1 plus 5XL × 1 Rp187.000. Keranjang uji kosong kembali. Fixture lokal 320/390/430/1280 px **PASS**. Lebar mobile live dan sentuhan Android Owner belum diuji. **96,50% → 96,50%, Δ 0,00 poin. GO staging, NO-GO final mobile acceptance.** [Bukti dan screenshot](../qa/studio-buyer-ux-single-save-20261127.md).
 
 ## Historis — Penyederhanaan mobile `ef8df0d` aktif
 
