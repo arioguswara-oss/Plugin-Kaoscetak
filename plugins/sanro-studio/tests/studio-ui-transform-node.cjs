@@ -1,0 +1,26 @@
+'use strict';
+// Contract smoke for direct handles and the unchanged physical estimator; no DOM/server required.
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const ui=fs.readFileSync(path.join(__dirname,'../assets/studio-ui.js'),'utf8');
+const php=fs.readFileSync(path.join(__dirname,'../includes/buyer.php'),'utf8');
+for(const corner of ['nw','ne','sw','se'])assert.match(ui,new RegExp("'"+corner+"'"));
+assert.match(ui,/sanro-rotate-handle/);
+assert.match(ui,/box\.hidden=el\.hidden/);
+assert.match(ui,/distance\/transform\.distance/);
+assert.match(ui,/Math\.atan2\(dy,dx\)\*180\/Math\.PI/);
+assert.match(php,/id="sanro-image-size"[^>]*hidden/);
+assert.match(php,/id="sanro-image-rotation"[^>]*hidden/);
+assert.match(php,/Unggah Gambar/);
+assert.match(php,/sanro-background-tolerance-wrap" hidden/);
+assert.match(php,/class=\"sanro-image-upload\"/);
+const geometry=require('../assets/estimate.js');
+const before={type:'image',x:5,y:7,width:8,height:5,rotation:0};
+const after={...before,width:12,height:7.5,rotation:35};
+const a=geometry.printSize([before],{width:30,height:40},{A5:[15,20],A4:[20,30],A3:[30,40], 'A3+':[31,41]});
+const b=geometry.printSize([after],{width:30,height:40},{A5:[15,20],A4:[20,30],A3:[30,40], 'A3+':[31,41]});
+assert.equal(a.valid,true);assert.equal(b.valid,true);assert.notEqual(a.width,b.width);
+assert.notDeepEqual(geometry.bounds(before),geometry.bounds(after));
+assert.deepEqual(geometry.estimate({M:1},a.category,null),geometry.estimate({M:1},b.category,null));
+console.log('PASS: direct resize/rotation UI contract, hidden image sliders, print bounds and estimator regressions');

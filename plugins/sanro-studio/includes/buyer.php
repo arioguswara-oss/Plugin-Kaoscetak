@@ -206,9 +206,9 @@ function sanro_studio_render_buyer_editor() {
     }
     echo '</fieldset><p id="sanro-qty-total" role="status">Total: 0 pcs</p>';
     echo '<p id="sanro-price-estimate" role="status">Estimasi harga: pilih desain dan jumlah. Harga final dihitung saat checkout.</p>';
-    echo '<label>Gambar PNG/JPEG maks. 10 MB<input type="file" id="sanro-image" accept="image/png,image/jpeg"></label>';
-    echo '<label>Ukuran gambar<input type="range" id="sanro-image-size" min="10" max="100" value="60"></label>';
-    echo '<label>Rotasi gambar (°)<input type="range" id="sanro-image-rotation" min="-180" max="180" value="0"></label>';
+    echo '<label class="sanro-image-upload">Unggah Gambar<input type="file" id="sanro-image" accept="image/png,image/jpeg" aria-label="Unggah Gambar PNG atau JPEG maks. 10 MB"></label>';
+    echo '<input type="range" id="sanro-image-size" min="10" max="100" value="60" hidden aria-hidden="true" tabindex="-1">';
+    echo '<input type="range" id="sanro-image-rotation" min="-180" max="180" value="0" hidden aria-hidden="true" tabindex="-1">';
     echo '<button type="button" id="sanro-center-image">Posisikan gambar ke tengah</button>';
     echo '<button type="button" id="sanro-remove-image">Hapus gambar</button>';
     echo '<label>Teks<textarea id="sanro-text-input" maxlength="300" rows="3"></textarea></label>';
@@ -222,12 +222,12 @@ function sanro_studio_render_buyer_editor() {
     echo '<button type="button" id="sanro-reset-side">Kosongkan desain sisi ini</button>';
     echo '<p id="sanro-validation" role="status">Belum ada desain.</p>';
     if (!empty($config['draft_api'])) {
-        echo '<button type="button" id="sanro-save-draft">Simpan desain</button>';
+        echo '<button type="button" id="sanro-save-draft">Simpan Desain</button>';
         echo '<button type="button" id="sanro-reopen-draft">Buka ulang draft tersimpan</button>';
         echo '<p id="sanro-reopen-status" role="status" aria-live="polite">Draft milik sesi browser ini dapat dibuka kembali.</p>';
         if (!empty($config['master_upload_enabled'])) {
-            echo '<button type="button" id="sanro-upload-master">Unggah gambar asli</button>';
-            echo '<label>Toleransi latar<input id="sanro-background-tolerance" type="range" min="0" max="96" value="24"></label><button type="button" id="sanro-remove-background" disabled>Hapus latar polos</button><button type="button" id="sanro-restore-background">Pulihkan gambar asli</button><p id="sanro-background-status" role="status">Pemrosesan lokal untuk latar polos yang terhubung ke tepi; PNG transparan tidak diproses ulang. Gambar asli tetap utuh.</p>';
+            echo '<button type="button" id="sanro-upload-master">Unggah master produksi privat</button>';
+            echo '<button type="button" id="sanro-remove-background" disabled>Hapus Background</button><label id="sanro-background-tolerance-wrap" hidden>Toleransi latar<input id="sanro-background-tolerance" type="range" min="0" max="96" value="24"></label><button type="button" id="sanro-apply-background" hidden>Terapkan Remove Background</button><button type="button" id="sanro-restore-background">Pulihkan gambar asli</button><p id="sanro-background-status" role="status">Gambar master asli tetap privat dan utuh.</p>';
             echo '<p id="sanro-master-upload-status" role="status" aria-live="polite">Simpan desain sebelum mengunggah gambar.</p>';
         }
         if (!empty($config['preview_upload_enabled'])) {
@@ -246,7 +246,7 @@ function sanro_studio_render_buyer_editor() {
         echo '<p data-status role="status" aria-live="polite">Koleksi ini privat. Verifikasi email untuk menyimpan desain atau mengaksesnya dari browser lain.</p><div data-list></div><button type="button" data-more hidden>Halaman berikutnya</button></fieldset>';
         echo '<button type="button" id="sanro-server-quote">Cek harga resmi draft tersimpan</button>';
         echo '<p id="sanro-server-quote-status" role="status" aria-live="polite">Simpan desain sebelum meminta harga server.</p>';
-        echo '<p id="sanro-save-status" role="status">Simpan desain untuk melanjutkan pemesanan.</p>';
+        echo '<p id="sanro-save-status" role="status" aria-live="polite">Belum disimpan.</p>';
     }
     if (!empty($config['draft_api'])
         && function_exists('sanro_studio_pricing_wc_enabled')

@@ -8,7 +8,7 @@ const vm = require('node:vm');
 
 const source = fs.readFileSync(path.resolve(__dirname, '../assets/buyer.js'), 'utf8');
 const startMarker = "  const cartButton=q('#sanro-add-to-cart'),cartStatus=q('#sanro-cart-status');";
-const stopMarker = "  saveButton.addEventListener('click',async()=>{";
+const stopMarker = "  const saveDraft=async()=>{";
 const start = source.indexOf(startMarker);
 const stop = source.indexOf(stopMarker, start);
 assert(start !== -1 && stop > start, 'Cart handler source boundaries changed');
@@ -42,6 +42,7 @@ function createHarness(options = {}) {
     ownerToken: options.ownerToken === undefined ? 'local-test-token' : options.ownerToken,
     editRevision: options.editRevision ?? 1,
     savedRevision: options.savedRevision ?? 1,
+    saveDraft:async()=>{context.savedRevision=context.editRevision;return true;},
     fetch(url, request) {
       requests.push({url, request});
       if (options.onFetch) return options.onFetch();
@@ -102,8 +103,8 @@ function createHarness(options = {}) {
 
   const dirty = createHarness({editRevision:2, savedRevision:1});
   await dirty.click();
-  assert.equal(dirty.requests.length, 0, 'Unsaved changes posted to Cart');
-  assert.match(dirty.status.textContent, /Simpan ulang/);
+  assert.equal(dirty.requests.length, 1, 'Dirty design is saved before Cart');
+  assert.match(dirty.status.textContent, /Desain masuk keranjang/);
   pass();
 
   const saving = createHarness({saving:true});

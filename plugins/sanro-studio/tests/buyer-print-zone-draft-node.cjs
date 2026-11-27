@@ -62,8 +62,8 @@ const near=(actual,expected,label)=>{
  assert(Math.abs(actual-expected)<1e-6,label);checks++
 };
 async function checkInitialImageSave(){
- const from=source.indexOf("  saveButton.addEventListener('click',async()=>{");
- const to=source.indexOf("\n }\n image.addEventListener('load'",from);
+ const from=source.indexOf("  const saveDraft=async()=>{");
+ const to=source.indexOf("\n  };\n  saveButton.textContent",from)+5;
  assert.ok(from>=0&&to>from);
  const saveStatus={replaceChildren(message){this.textContent=message;},append(button){this.next=button;}};
  const button={disabled:false,addEventListener(_event,handler){this.click=handler;}};
@@ -73,13 +73,13 @@ async function checkInitialImageSave(){
   const {saveButton,saveStatus,fetch,document}=env;
   const config={product_id:53,master_upload_enabled:true,draft_api:{url:'/drafts',nonce:'test'}};
   const sides={front:{file:{},url:'blob:local'},back:{}},boundMasterRefs={};
-  let saving=false,uploadingMaster=false,savedId=null,ownerToken=null,editRevision=2,savedRevision=0,lastKnownDesignHash=null;
+  let saving=false,uploadingMaster=false,savedId=null,savedPublicId=null,ownerToken=null,editRevision=2,savedRevision=0,lastKnownDesignHash=null;
   const ensureProductionFont=async()=>{};
   const exportTextDraft=(ignoreImages,allowEmpty)=>({ignoreImages,allowEmpty});
   const sessionStorage={setItem(){}},draftStorageKey='test';
   ${source.slice(from,to)}
-  return ()=>({savedRevision,lastKnownDesignHash});`);
- const saved=factory({saveButton:button,saveStatus,document:{
+  return saveDraft;`);
+ const saveDraft=factory({saveButton:{disabled:false},saveStatus,document:{
   createTextNode:message=>message,createElement:()=>({addEventListener(){}})
  },async fetch(url,options){
   calls.push({url,options});
@@ -87,14 +87,14 @@ async function checkInitialImageSave(){
    ?{valid:true,design_id:'synthetic',owner_token:'fixture'}
    :{valid:true,design_hash:hash}};
  }});
- await button.click();
+ const savedResult=await saveDraft();
  equal(calls.length,2,'save sends one draft request and verifies readback');
  equal(JSON.parse(calls[0].options.body).design,{ignoreImages:true,allowEmpty:true},
   'image draft bootstraps with metadata only');
- check(saveStatus.textContent.includes('Draft tersimpan dan terverifikasi'),
-  'image save displays verified success instead of a scope error');
+ check(saveStatus.textContent.includes('Tersimpan ·'),
+  'image save displays short-ID success without exposing internal UUID');
  equal(saveStatus.next.textContent,'Lanjut unggah gambar','image save offers the next action');
- equal(saved(),{savedRevision:2,lastKnownDesignHash:hash},'save retains the verified revision');
+ check(!savedResult,'image save requires binding the private master before cart');
 }
 (async()=>{
  const result=runtime.exportTextDraft();

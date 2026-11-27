@@ -192,6 +192,8 @@
   root.querySelectorAll('[data-side]').forEach(b=>{b.disabled=!config.safe_areas[b.dataset.side];b.setAttribute('aria-pressed',String(b.dataset.side===side))});
   renderGeometry();
   validate();
+  const saveStatusNode=q('#sanro-save-status');
+  if(saveStatusNode&&!saving&&editRevision!==savedRevision)saveStatusNode.textContent='Belum disimpan.';
   root.dispatchEvent(new CustomEvent('sanro:render'));
   if(typeof refreshBackgroundControl==='function')refreshBackgroundControl();
  }
@@ -657,7 +659,9 @@
   if(typeof root.sanroUploadCurrentPreviews==='function')await root.sanroUploadCurrentPreviews();
   return {id:savedId,token:ownerToken};
  };
- for(const [selector,restore] of [['#sanro-remove-background',false],['#sanro-restore-background',true]]){
+ const removeBackground=q('#sanro-remove-background'),toleranceWrap=q('#sanro-background-tolerance-wrap'),applyBackground=q('#sanro-apply-background');
+ if(removeBackground)removeBackground.addEventListener('click',()=>{if(toleranceWrap)toleranceWrap.hidden=false;if(applyBackground)applyBackground.hidden=false;});
+ for(const [selector,restore] of [['#sanro-apply-background',false],['#sanro-restore-background',true]]){
   const button=q(selector);if(!button)continue;button.addEventListener('click',async()=>{
    const status=q('#sanro-background-status');
    if(saving||uploadingMaster||!savedId||savedRevision!==editRevision||!boundMasterRefs[side]){status.textContent='Unggah master dan simpan draft terbaru dahulu.';return;}
@@ -965,11 +969,13 @@
     if(uploadingMaster){
      status.textContent='Tunggu sampai upload master selesai sebelum membuka keranjang.';return;
     }
+    if(editRevision!==savedRevision){
+     status.textContent='Menyimpan perubahan desain terbaru…';
+     const saved=await saveDraft();
+     if(!saved||editRevision!==savedRevision){status.textContent='Desain belum siap ke keranjang. Periksa status simpan dan master gambar.';return;}
+    }
     if(!savedId||!ownerToken){
      status.textContent='Draft belum tersedia pada sesi editor ini. Simpan desain sebelum membuka keranjang.';return;
-    }
-    if(editRevision!==savedRevision){
-     status.textContent='Desain berubah setelah draft terakhir disimpan. Simpan ulang sebelum membuka keranjang.';return;
     }
     cartPending=true;
     target.disabled=true;
@@ -996,8 +1002,8 @@
     finally{cartPending=false;target.disabled=false}
    });
   }
-  saveButton.addEventListener('click',async()=>{
-   if(saving||uploadingMaster){saveStatus.textContent='Tunggu penyimpanan atau upload master selesai.';return;}
+  const saveDraft=async()=>{
+   if(saving||uploadingMaster){saveStatus.textContent='Menyimpan…';return false;}
    let design,hasLocalImage;
    try{
     await ensureProductionFont();
@@ -1005,9 +1011,9 @@
     design=savedId?await exportBoundDraft()
      :hasLocalImage&&config.master_upload_enabled
       ?exportTextDraft(true,true):exportTextDraft();
-   }catch(error){saveStatus.textContent=error.message;return}
+   }catch(error){saveStatus.textContent='Gagal disimpan: '+error.message;return false}
    const revisionAtSave=editRevision;
-   saving=true;saveButton.disabled=true;saveStatus.textContent='Menyimpan metadata teks…';
+   saving=true;saveButton.disabled=true;saveStatus.textContent='Menyimpan…';
    try{
     const headers={'Content-Type':'application/json','X-Sanro-Draft-Nonce':config.draft_api.nonce,...(config.draft_api.rest_nonce?{'X-WP-Nonce':config.draft_api.rest_nonce}:{})};
     if(savedId&&ownerToken)headers['X-Sanro-Owner-Token']=ownerToken;
@@ -1035,17 +1041,21 @@
     if(editRevision===revisionAtSave)savedRevision=editRevision;
     try{sessionStorage.setItem(draftStorageKey,JSON.stringify({id:savedId,token:ownerToken}))}catch(_error){}
     if(editRevision!==revisionAtSave){
-     saveStatus.textContent='Versi sebelumnya tersimpan. Ada perubahan baru yang belum tersimpan; klik Simpan lagi.';
+     saveStatus.textContent='Belum disimpan. Ada perubahan baru; simpan kembali.';
     }else if(hasLocalImage&&config.master_upload_enabled){
-     saveStatus.replaceChildren(document.createTextNode('Draft tersimpan dan terverifikasi. Unggah gambar asli sebagai langkah berikutnya agar master privat dan preview desain terikat. '));
+     saveStatus.replaceChildren(document.createTextNode('Tersimpan · '+(savedPublicId||'Design ID tersedia')+'. Unggah gambar asli untuk menyimpan master produksi privat. '));
      const next=document.createElement('button');next.type='button';next.className='sanro-next-action';next.textContent='Lanjut unggah gambar';
      next.addEventListener('click',()=>{root.dispatchEvent(new CustomEvent('sanro:show-panel',{detail:{name:'image'}}));window.setTimeout(()=>q('#sanro-upload-master')?.focus(),0);});saveStatus.append(next);
     }else{
-     saveStatus.textContent='Draft tersimpan dan terverifikasi. Design ID: '+(savedPublicId||'tersedia')+'. Bisa dibuka ulang pada tab ini selama sesi browser masih tersedia.';
+     saveStatus.textContent='Tersimpan · '+(savedPublicId||'Design ID tersedia')+'.';
     }
-   }catch(error){saveStatus.textContent=error.message||'Penyimpanan gagal.'}
+    if(hasLocalImage&&config.master_upload_enabled)return false;
+    return editRevision===revisionAtSave;
+   }catch(error){saveStatus.textContent='Gagal disimpan: '+(error.message||'Terjadi kesalahan.');return false}
    finally{saving=false;saveButton.disabled=false}
-  });
+  };
+  saveButton.textContent='Simpan Desain';
+  saveButton.addEventListener('click',()=>saveDraft());
  }
  image.addEventListener('load',validate);
  if(document.fonts?.ready)document.fonts.ready.then(()=>{renderGeometry();validate();});
