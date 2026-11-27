@@ -42,7 +42,12 @@ function createHarness(options = {}) {
     ownerToken: options.ownerToken === undefined ? 'local-test-token' : options.ownerToken,
     editRevision: options.editRevision ?? 1,
     savedRevision: options.savedRevision ?? 1,
-    saveDraft:async()=>{context.savedRevision=context.editRevision;return true;},
+    cartPending: false,
+    designReady() {
+      return !!context.savedId && !!context.ownerToken
+        && context.editRevision === context.savedRevision && !options.pendingImage;
+    },
+    saveDraft:async()=>{context.savedRevision=context.editRevision;return !options.pendingImage;},
     fetch(url, request) {
       requests.push({url, request});
       if (options.onFetch) return options.onFetch();
@@ -98,7 +103,7 @@ function createHarness(options = {}) {
   const unsaved = createHarness({savedId:null});
   await unsaved.click();
   assert.equal(unsaved.requests.length, 0, 'Unsaved design posted to Cart');
-  assert.match(unsaved.status.textContent, /Draft belum tersedia/);
+  assert.match(unsaved.status.textContent, /Tambahkan desain/);
   pass();
 
   const dirty = createHarness({editRevision:2, savedRevision:1});
@@ -117,12 +122,18 @@ function createHarness(options = {}) {
   assert.equal(uploading.requests.length, 0, 'Cart submitted while master upload pending');
   pass();
 
+  const unbound = createHarness({pendingImage:true});
+  await unbound.click();
+  assert.equal(unbound.requests.length, 0, 'Unbound image unexpectedly reached Cart');
+  assert.equal(unbound.status.textContent, '', 'Old Cart guidance remained visible');
+  pass();
+
   const rejected = createHarness({onFetch:async()=>({
     ok:false, status:409, json:async()=>({valid:false})
   })});
   await rejected.click();
   assert.equal(rejected.requests.length, 1);
-  assert.match(rejected.status.textContent, /Keranjang belum siap \(409\)/);
+  assert.equal(rejected.status.textContent,'Keranjang belum bisa dibuka. Coba lagi.');
   assert.equal(rejected.visibleButton.disabled, false, 'Button left disabled after failure');
   assert.equal(rejected.redirect(), null, 'Rejected Cart unexpectedly redirected');
   pass();

@@ -223,15 +223,15 @@ function sanro_studio_render_buyer_editor() {
     echo '<p id="sanro-validation" role="status">Belum ada desain.</p>';
     if (!empty($config['draft_api'])) {
         echo '<button type="button" id="sanro-save-draft">Simpan Desain</button>';
-        echo '<button type="button" id="sanro-reopen-draft">Buka ulang draft tersimpan</button>';
-        echo '<p id="sanro-reopen-status" role="status" aria-live="polite">Draft milik sesi browser ini dapat dibuka kembali.</p>';
+        echo '<button type="button" id="sanro-reopen-draft">Buka kembali desain</button>';
+        echo '<p id="sanro-reopen-status" role="status" aria-live="polite"></p>';
         if (!empty($config['master_upload_enabled'])) {
-            echo '<button type="button" id="sanro-upload-master">Unggah master produksi privat</button>';
-            echo '<button type="button" id="sanro-remove-background" disabled>Hapus Background</button><label id="sanro-background-tolerance-wrap" hidden>Toleransi latar<input id="sanro-background-tolerance" type="range" min="0" max="96" value="24"></label><button type="button" id="sanro-apply-background" hidden>Terapkan Remove Background</button><button type="button" id="sanro-restore-background">Pulihkan gambar asli</button><p id="sanro-background-status" role="status">Gambar master asli tetap privat dan utuh.</p>';
-            echo '<p id="sanro-master-upload-status" role="status" aria-live="polite">Simpan desain sebelum mengunggah gambar.</p>';
+            echo '<button type="button" id="sanro-upload-master" class="sanro-next-action" hidden>Simpan gambar</button>';
+            echo '<button type="button" id="sanro-remove-background" disabled>Hapus Background</button><label id="sanro-background-tolerance-wrap" hidden>Toleransi latar<input id="sanro-background-tolerance" type="range" min="0" max="96" value="24"></label><button type="button" id="sanro-apply-background" hidden>Terapkan Remove Background</button><button type="button" id="sanro-restore-background">Pulihkan gambar asli</button><p id="sanro-background-status" role="status"></p>';
+            echo '<p id="sanro-master-upload-status" role="status" aria-live="polite"></p>';
         }
         if (!empty($config['preview_upload_enabled'])) {
-            echo '<button type="button" id="sanro-upload-previews">Perbarui preview desain</button>';
+            echo '<button type="button" id="sanro-upload-previews">Perbarui pratinjau desain</button>';
             echo '<p id="sanro-preview-upload-status" role="status" aria-live="polite"></p>';
         }
         if(function_exists('sanro_studio_repeat_register_routes')){
@@ -244,15 +244,15 @@ function sanro_studio_render_buyer_editor() {
         echo '<details class="sanro-collection-access"><summary>Akses koleksi dengan email</summary><p>Kirim kode sekali pakai ke email yang terverifikasi pada desainmu.</p><label>Email koleksi<input data-email type="email" autocomplete="email" maxlength="254"></label><button type="button" data-request>Kirim kode akses</button><label>Kode akses<input data-code autocomplete="one-time-code" maxlength="32" spellcheck="false"></label><button type="button" data-verify>Verifikasi dan buka koleksi</button></details>';
         echo '<div class="sanro-collection-session-actions"><button type="button" class="sanro-collection-primary" data-open>Buka koleksi sesi ini</button><button type="button" data-logout>Keluar koleksi</button></div>';
         echo '<p data-status role="status" aria-live="polite">Koleksi ini privat. Verifikasi email untuk menyimpan desain atau mengaksesnya dari browser lain.</p><div data-list></div><button type="button" data-more hidden>Halaman berikutnya</button></fieldset>';
-        echo '<button type="button" id="sanro-server-quote">Cek harga resmi draft tersimpan</button>';
-        echo '<p id="sanro-server-quote-status" role="status" aria-live="polite">Simpan desain sebelum meminta harga server.</p>';
-        echo '<p id="sanro-save-status" role="status" aria-live="polite">Belum disimpan.</p>';
+        echo '<button type="button" id="sanro-server-quote">Lihat harga desain tersimpan</button>';
+        echo '<p id="sanro-server-quote-status" role="status" aria-live="polite"></p>';
+        echo '<p id="sanro-save-status" role="status" aria-live="polite">Belum disimpan</p>';
     }
     if (!empty($config['draft_api'])
         && function_exists('sanro_studio_pricing_wc_enabled')
         && sanro_studio_pricing_wc_enabled()) {
         echo '<button type="button" id="sanro-add-to-cart">Tambahkan ke Keranjang</button>';
-        echo '<p id="sanro-cart-status" role="status">Simpan desain sebelum melanjutkan ke keranjang.</p>';
+        echo '<p id="sanro-cart-status" role="status"></p>';
     } elseif (!empty($config['draft_api'])
         && defined('SANRO_STUDIO_ENABLE_STAGING_CART')
         && SANRO_STUDIO_ENABLE_STAGING_CART === true
@@ -261,7 +261,7 @@ function sanro_studio_render_buyer_editor() {
         && defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
         && SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK === true) {
         echo '<button type="button" id="sanro-add-to-cart">Tambahkan ke Keranjang</button>';
-        echo '<p id="sanro-cart-status" role="status">Simpan desain sebelum melanjutkan ke keranjang.</p>';
+        echo '<p id="sanro-cart-status" role="status"></p>';
     } else {
         echo '<button type="button" disabled>Simpan dan checkout — belum aktif</button>';
     }

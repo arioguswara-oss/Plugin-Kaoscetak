@@ -2,7 +2,10 @@
 /** Positive-path harness: the editor intentionally calls exit after rendering. */
 define('ABSPATH', __DIR__ . '/');
 define('SANRO_STUDIO_ENABLE_BUYER_EDITOR', true);
+define('SANRO_STUDIO_ENABLE_MASTER_UPLOAD', true);
+define('SANRO_STUDIO_ENABLE_PRIVATE_MASTERS', true);
 define('SANRO_STUDIO_VERSION', 'test');
+$GLOBALS['cart_test_enabled'] = in_array('--cart', $argv ?? [], true);
 $GLOBALS['enqueued'] = [];
 $GLOBALS['headers'] = 0;
 $GLOBALS['footers'] = 0;
@@ -25,6 +28,7 @@ function is_product() { return true; }
 function get_queried_object_id() { return 17; }
 function sanro_studio_public_editor_config($id) { return $GLOBALS['config']; }
 function sanro_studio_draft_rest_enabled() { return true; }
+function sanro_studio_pricing_wc_enabled() { return $GLOBALS['cart_test_enabled']; }
 function rest_url($path) { return 'https://staging.example.test/wp-json/'.$path; }
 function wp_create_nonce($action) { return 'test-nonce'; }
 function plugin_dir_url($file) {
@@ -53,7 +57,9 @@ register_shutdown_function(function () {
         'front/back navigation'=>strpos($html,'data-side="front"')!==false && strpos($html,'data-side="back"')!==false,
         'explicit reopen control'=>strpos($html,'id="sanro-reopen-draft"')!==false && strpos($html,'id="sanro-reopen-status"')!==false,
         'reopen control calls owner-bound draft resolver'=>is_string($buyer_js) && strpos($buyer_js,"reopenButton.addEventListener('click'")!==false && strpos($buyer_js,'await reopenDraft()')!==false,
-        'checkout disabled'=>strpos($html,'Simpan dan checkout — belum aktif')!==false,
+        'checkout respects cart toggle'=> $GLOBALS['cart_test_enabled']
+            ? strpos($html,'id="sanro-add-to-cart"')!==false
+            : strpos($html,'Simpan dan checkout — belum aktif')!==false,
         'visual workspace loaded'=>isset($by_handle['sanro-studio-ui']),
         'native runtime retained'=>isset($by_handle['sanro-studio-buyer'],$by_handle['sanro-studio-collection'],$by_handle['sanro-studio-transport']),
         'CSS path'=>strpos($by_handle['sanro-studio-buyer'][1],'/sanro-studio/assets/buyer.js')!==false,
@@ -65,7 +71,9 @@ register_shutdown_function(function () {
         'dedicated editor layout scope'=>strpos($html,'sanro-buyer-editor')!==false,
         'collection save and email access separated'=>strpos($html,'sanro-collection-save')!==false&&strpos($html,'sanro-collection-access')!==false,
         'collection empty/locked states explicit'=>strpos($collection_js,'Koleksi privat. Verifikasi email')!==false&&strpos($collection_js,'Belum ada desain tersimpan')!==false,
-        'saved image draft exposes upload next action'=>strpos($buyer_js,'Lanjut unggah gambar')!==false&&strpos($buyer_js,"sanro:show-panel")!==false,
+        'pending image exposes a contextual save action'=>strpos($html,'class="sanro-next-action" hidden>Simpan gambar')!==false&&strpos($buyer_js,'masterButton.hidden=')!==false,
+        'cart starts without outdated save guidance'=>!$GLOBALS['cart_test_enabled']
+            || strpos($html,'id="sanro-cart-status" role="status"></p>')!==false,
         'background control refreshed after local file cleanup'=>strpos($buyer_js,'for(const name of completed)sides[name].file=null;')<strpos($buyer_js,'await refreshBackgroundControl();'),
         'automatic print sizing controls'=>strpos($buyer_js,'Pindahkan atau kecilkan objek.')!==false && strpos($html,'sanro-category')===false && strpos($html,'sanro-image-rotation')!==false,
         'theme chrome suppression is limited to opted-in Studio body'=>strpos($buyer_css,'body.sanro-studio-page :is(#masthead,#colophon')!==false,

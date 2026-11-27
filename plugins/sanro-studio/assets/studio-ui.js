@@ -11,7 +11,7 @@
  const moving=new Set();
  function move(selector,to){const el=q(selector);if(!el)return;const node=el.closest('label')||el;moving.add(node);to.append(node);}
  ['#sanro-shirt-color','.sanro-size-qty','#sanro-qty-total'].forEach(s=>move(s,panels.product));
- ['#sanro-image','#sanro-upload-master','#sanro-background-tolerance-wrap','#sanro-remove-background','#sanro-apply-background','#sanro-restore-background','#sanro-background-status','#sanro-master-upload-status'].forEach(s=>move(s,panels.image));
+ ['#sanro-image','#sanro-background-tolerance-wrap','#sanro-remove-background','#sanro-apply-background','#sanro-restore-background','#sanro-background-status'].forEach(s=>move(s,panels.image));
  ['#sanro-text-input','#sanro-font-size','#sanro-text-rotation','#sanro-text-color','#sanro-center-text','#sanro-remove-text','#sanro-copy-text','#sanro-copy-status'].forEach(s=>move(s,panels.text));
  ['#sanro-reopen-draft','#sanro-reopen-status','#sanro-upload-previews','#sanro-preview-upload-status','#sanro-server-quote','#sanro-server-quote-status','#sanro-reset-side','#sanro-validation'].forEach(s=>move(s,panels.advanced));
  const collection=q('#sanro-collection'),collectionView=document.createElement('section');collectionView.className='sanro-collection-view';collectionView.hidden=true;
@@ -19,8 +19,8 @@
  for(const child of Array.from(controls.children)){if(child.classList.contains('sanro-tool-panel'))continue;if(child.tagName==='H2'){child.remove();continue;}if(child.tagName==='FIELDSET')panels.advanced.append(child);}
  const estimate=q('#sanro-price-estimate'),actions=document.createElement('section');actions.className='sanro-purchase-bar';actions.setAttribute('aria-label','Harga dan pemesanan');
  const price=document.createElement('div');price.className='sanro-price-summary';if(estimate)price.append(estimate);actions.append(price);
- const buttons=document.createElement('div');buttons.className='sanro-primary-actions';for(const [id,label]of [['#sanro-save-draft','Simpan'],['#sanro-add-to-cart','Ke Keranjang']]){const b=q(id);if(b){b.textContent=label;buttons.append(b);}}
- actions.append(buttons);for(const id of ['#sanro-save-status','#sanro-cart-status']){const el=q(id);if(el)actions.append(el);}root.append(actions);
+ const buttons=document.createElement('div');buttons.className='sanro-primary-actions';for(const [id,label]of [['#sanro-save-draft','Simpan Desain'],['#sanro-add-to-cart','Ke Keranjang']]){const b=q(id);if(b){b.textContent=label;buttons.append(b);}}
+ actions.append(buttons);for(const id of ['#sanro-save-status','#sanro-upload-master','#sanro-master-upload-status','#sanro-cart-status']){const el=q(id);if(el)actions.append(el);}root.append(actions);
  const advanced=document.createElement('details');advanced.className='sanro-advanced';const summary=document.createElement('summary');summary.textContent='Opsi lanjutan & verifikasi';advanced.append(summary,panels.advanced);controls.append(advanced);
  function showPanel(name,scroll=true){const mine=name==='collection';root.classList.toggle('sanro-show-collection',mine);layout.hidden=mine;actions.hidden=mine;collectionView.hidden=!mine;for(const [key,panel]of Object.entries(panels)){if(key!=='advanced')panel.hidden=mine||key!==name;}root.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===name)));if(scroll&&!mine&&window.matchMedia('(max-width:750px)').matches)controls.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'nearest'});}
  const nav=document.createElement('nav');nav.className='sanro-bottom-nav';nav.setAttribute('aria-label','Alat desain');

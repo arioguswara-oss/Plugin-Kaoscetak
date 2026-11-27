@@ -65,36 +65,44 @@ async function checkInitialImageSave(){
  const from=source.indexOf("  const saveDraft=async()=>{");
  const to=source.indexOf("\n  };\n  saveButton.textContent",from)+5;
  assert.ok(from>=0&&to>from);
- const saveStatus={replaceChildren(message){this.textContent=message;},append(button){this.next=button;}};
- const button={disabled:false,addEventListener(_event,handler){this.click=handler;}};
+ const saveStatus={textContent:''},masterStatus={textContent:''};
+ const cartStatus={textContent:'Unggah ulang'},masterButton={hidden:true,disabled:false};
+ const stateStart=source.indexOf(' function isPublicDesignId(');
+ const stateEnd=source.indexOf(' const homeLink=',stateStart);
+ assert.ok(stateStart>=0&&stateEnd>stateStart);
  const calls=[];
  const hash='a'.repeat(64);
  const factory=new Function('env',`
-  const {saveButton,saveStatus,fetch,document}=env;
+  const {saveButton,saveStatus,masterButton,masterStatus,cartStatus,fetch}=env;
+  const q=()=>cartStatus;
   const config={product_id:53,master_upload_enabled:true,draft_api:{url:'/drafts',nonce:'test'}};
   const sides={front:{file:{},url:'blob:local'},back:{}},boundMasterRefs={};
   let saving=false,uploadingMaster=false,savedId=null,savedPublicId=null,ownerToken=null,editRevision=2,savedRevision=0,lastKnownDesignHash=null;
   const ensureProductionFont=async()=>{};
   const exportTextDraft=(ignoreImages,allowEmpty)=>({ignoreImages,allowEmpty});
   const sessionStorage={setItem(){}},draftStorageKey='test';
+  ${source.slice(stateStart,stateEnd)}
   ${source.slice(from,to)}
-  return saveDraft;`);
- const saveDraft=factory({saveButton:{disabled:false},saveStatus,document:{
-  createTextNode:message=>message,createElement:()=>({addEventListener(){}})
- },async fetch(url,options){
+  return {saveDraft, finishImageSave(){ sides.front.file=null; syncSaveStatus(); }};`);
+ const session=factory({saveButton:{disabled:false},saveStatus,masterButton,masterStatus,cartStatus,async fetch(url,options){
   calls.push({url,options});
   return {ok:true,json:async()=>calls.length===1
    ?{valid:true,design_id:'synthetic',owner_token:'fixture'}
    :{valid:true,design_hash:hash,public_design_id:'ID-00001'}};
  }});
- const savedResult=await saveDraft();
+ const pending=session.saveDraft();
+ equal(saveStatus.textContent,'Menyimpan desain','save uses the shared busy status');
+ const savedResult=await pending;
  equal(calls.length,2,'save sends one draft request and verifies readback');
  equal(JSON.parse(calls[0].options.body).design,{ignoreImages:true,allowEmpty:true},
   'image draft bootstraps with metadata only');
- check(saveStatus.textContent.includes('Tersimpan · ID-00001'),
-  'image save displays short-ID success without exposing internal UUID');
- equal(saveStatus.next.textContent,'Lanjut unggah gambar','image save offers the next action');
+ equal(saveStatus.textContent,'Belum disimpan','metadata-only save is not a finished design');
+ equal(masterButton.hidden,false,'image save offers the next action');
  check(!savedResult,'image save requires binding the private master before cart');
+ equal(cartStatus.textContent,'','save removes previous Cart instructions');
+ session.finishImageSave();
+ equal(saveStatus.textContent,'Tersimpan · ID-00001','verified image uses the short ID');
+ equal(masterButton.hidden,true,'saved image no longer asks to save it again');
 }
 (async()=>{
  const result=runtime.exportTextDraft();
