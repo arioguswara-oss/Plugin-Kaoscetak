@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "repository": "arioguswara-oss/Plugin-Kaoscetak",
+  "pull_request": 52,
+  "branch": "work/studio-mobile-checkout-integration-20261123",
+  "checkpoint": "217b76d2c54fd8713be2bc72de7240aec2dba1ec",
+  "implementation_source": "bf8ba02c4dbb073bc140085d0e6c703ffbe79beb",
+  "release_version": "1.1.0",
+  "candidate": {
+    "archive": "sanro-studio-staging-candidate.zip",
+    "archive_sha256": "fc9496e168b63ba69e9a7bb46b9f52043cda6cfd8c7e55c3783a7b08ccae6f25",
+    "manifest": "candidate-manifest.json",
+    "manifest_sha256": "8de4376a75a27cbe67ceb220c625fd42f7ee817cda308c2b2fbeb65ecd7d6d2a",
+    "plugin_files": 89,
+    "independent_builds_byte_identical": true,
+    "local_preflight": "PASS_PLAN_ONLY",
+    "writer_and_drive_defaults": "OFF",
+    "deployment_authorized": false
+  },
+  "target": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "staging": {
+    "installed_source_reported_before_this_revision": "7217663",
+    "current_candidate_installed": false,
+    "ssh_agent": "one staging-labeled key is loaded",
+    "host_alias": "not configured",
+    "ssh_attempt": "BLOCKED before connection: /etc/ssh/ssh_config.d/20-systemd-ssh-proxy.conf has unsafe owner/permissions",
+    "mandatory_authenticated_https_preinstall": "NOT RUN",
+    "mandatory_authenticated_https_postinstall": "NOT RUN",
+    "installed_digest": null,
+    "credential_created": false,
+    "staging_mutation": false
+  },
+  "targeted_checks": {
+    "php_lint_catalog_lifecycle": "PASS",
+    "php_lint_studio_ui": "PASS",
+    "php_lint_catalog_test": "PASS",
+    "catalog_lifecycle_simple_variable_legacy": "PASS_25_ASSERTIONS",
+    "editor_config": "PASS_31_ASSERTIONS",
+    "server_quote": "PASS_533_ASSERTIONS",
+    "checkout_bridge": "PASS_4_ASSERTIONS",
+    "mixed_design_product_checkout": "PASS_8_OFFLINE_ASSERTIONS",
+    "checkout_boundary": "PASS_19_OFFLINE_ASSERTIONS",
+    "actual_hook_boundary_contract": "PASS_DEFAULT_DENIAL_AND_NO_WRITES",
+    "atomic_locking": "PASS_10_SYNTHETIC_INTERLEAVING_ASSERTIONS",
+    "admin_permissions_and_order_hooks": "PASS_71_ASSERTIONS",
+    "candidate_security_and_preflight_tests": "PASS_7_TESTS",
+    "final_installed_candidate_mixed_checkout": "NOT_TESTED"
+  },
+  "reused_evidence": {
+    "admin_simple_variable_catalog_lifecycle": "docs/qa/studio-release-closure-20261126.md (source 964e428; prior staging acceptance)",
+    "historical_order_56_and_production_artifacts": "docs/qa/studio-v1-final-acceptance.md",
+    "latest_guest_acceptance": "artifacts/studio-v1/final-save-ux-20261127/runtime-acceptance.json",
+    "payment": "OUT_OF_SCOPE",
+    "new_order": false
+  },
+  "release_readiness": {
+    "development": "SOURCE_CHANGE_AND_TARGETED_TESTS_PASS",
+    "admin_runtime_acceptance_of_this_candidate": "OPEN",
+    "mixed_checkout_after_validation_live": "OPEN",
+    "final_release": "NO_GO"
+  }
+}
