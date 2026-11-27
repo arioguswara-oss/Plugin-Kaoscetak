@@ -2,6 +2,7 @@
 define('ABSPATH', __DIR__ . '/');
 // WordPress bootstrap constants required by the isolated draft fixture.
 define('DAY_IN_SECONDS', 86400);
+define('SANRO_STUDIO_ENABLE_MASTER_UPLOAD', true);
 $GLOBALS['options'] = [];
 function absint($v) { return abs((int) $v); }
 function wp_generate_uuid4() { return '12345678-1234-4234-8234-123456789abc'; }
@@ -55,12 +56,13 @@ $wpdb = new class {
     }
 };
 function sanro_studio_validate_product_design($product_id, $design) {
-    return in_array($design, [['front' => 'valid'], ['front' => 'changed']], true) ? ['valid' => true] : ['valid' => false, 'error' => 'invalid_design'];
+    return in_array($design, [['front' => 'valid'], ['front' => 'changed'], $GLOBALS['image_design']], true) ? ['valid' => true] : ['valid' => false, 'error' => 'invalid_design'];
 }
-// CLI fixture: no image objects or master references are used in these CAS cases.
-function sanro_studio_draft_image_binding_allowed($design, $master_refs, $design_id = null) {
-    return is_array($design) && empty($master_refs) && !isset($design['front']['objects']) && !isset($design['back']['objects']);
+$GLOBALS['image_design'] = ['front' => ['objects' => [['type' => 'image', 'x' => 1, 'y' => 1, 'width' => 2, 'height' => 2]]]];
+function sanro_studio_read_owned_draft_master($id, $token, $side, $ref) {
+    return ['valid' => in_array($ref, $GLOBALS['uploaded_test_refs'] ?? [], true), 'error' => 'master_not_found'];
 }
+require __DIR__ . '/../plugins/sanro-studio/includes/draft-rest.php';
 require __DIR__ . '/../plugins/sanro-studio/includes/draft.php';
 $checks = 0;
 function check_draft($expected, $actual, $label) {
@@ -126,4 +128,23 @@ $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['token_hash']
 $GLOBALS['options']['sanro_studio_draft_' . $created['design_id']]['status'] = 'locked';
 check_draft('draft_locked', sanro_studio_update_draft($created['design_id'], $created['owner_token'], ['front' => 'valid'])['error'], 'locked draft denied');
 check_draft('storage_failed', sanro_studio_create_draft(17, ['front' => 'valid'])['error'], 'collision fails closed');
+$GLOBALS['options'][$key]['status'] = 'draft';
+$id = $created['design_id'];
+$owner = $created['owner_token'];
+$base = sanro_studio_read_draft($id, $owner);
+$ref = $id . '-front-' . str_repeat('a', 64) . '.png';
+$replacement = $id . '-front-' . str_repeat('b', 64) . '.png';
+$GLOBALS['uploaded_test_refs'] = [$ref, $replacement];
+$image_design = $GLOBALS['image_design'];
+$missing = $id . '-front-' . str_repeat('c', 64) . '.png';
+check_draft('master_not_found', sanro_studio_update_draft($id, $owner, $image_design, $base['design_hash'], [], ['front' => $missing])['error'], 'unverified private file rejected');
+check_draft($base['design'], sanro_studio_read_draft($id, $owner)['design'], 'failure preserves previous geometry');
+$commit = sanro_studio_update_draft($id, $owner, $image_design, $base['design_hash'], [], ['front' => $ref]);
+$stored = sanro_studio_read_draft($id, $owner);
+check_draft(true, $commit['valid'], 'verified private file committed with geometry');
+check_draft(['front' => $ref], $stored['master_refs'], 'saved binding matches verified file');
+check_draft($commit['design_hash'], $stored['design_hash'], 'commit returns exact readback revision');
+check_draft('draft_conflict', sanro_studio_update_draft($id, $owner, $image_design, $stored['design_hash'], [], ['front' => $replacement])['error'], 'stale file binding rejected at unchanged geometry');
+check_draft(true, sanro_studio_update_draft($id, $owner, $image_design, $stored['design_hash'], ['front' => $ref], ['front' => $replacement])['valid'], 'replacement commits at unchanged geometry');
+check_draft(['front' => $replacement], sanro_studio_read_draft($id, $owner)['master_refs'], 'replacement binding persisted');
 echo "SANRO draft ID: {$checks} assertions PASS, 0 FAIL\n";

@@ -172,10 +172,6 @@ body.sanro-studio-page > :is(header,footer,hr),body.sanro-studio-page #page > :i
 #sanro-studio-buyer .sanro-color-option input:checked + .sanro-color-chip{outline:2px solid #e6b800;outline-offset:2px}
 #sanro-studio-buyer .sanro-color-option input:checked + .sanro-color-chip::after{content:'';width:13px;height:7px;transform:translateY(-1px) rotate(-45deg);border-left:2px solid #fff;border-bottom:2px solid #fff;filter:drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000)}
 #sanro-studio-buyer .sanro-color-option input:focus-visible + .sanro-color-chip{box-shadow:0 0 0 5px #252525}
-#sanro-studio-buyer .sanro-advanced{border-top:1px solid #eee;padding:12px 0;font-size:12px}
-#sanro-studio-buyer .sanro-advanced summary{cursor:pointer;font-weight:600;min-height:32px}
-#sanro-studio-buyer .sanro-advanced .sanro-tool-panel{padding-top:12px}
-#sanro-studio-buyer .sanro-advanced fieldset{border:1px solid #eee;border-radius:12px;padding:12px;display:grid;gap:8px;margin:0}
 #sanro-studio-buyer .sanro-object-toolbar{display:flex;justify-content:center;gap:8px;margin-top:4px}
 #sanro-studio-buyer .sanro-object-toolbar button{border:0;background:transparent;display:flex;align-items:center;gap:8px;justify-content:center;min-height:32px;font-size:12px;padding:4px 10px}
 #sanro-studio-buyer :is(.sanro-object-toolbar,.sanro-bottom-nav) svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -289,8 +285,28 @@ body.sanro-studio-page > :is(header,footer,hr),body.sanro-studio-page #page > :i
 #sanro-studio-buyer .sanro-resize-handle:hover{background:transparent}
 #sanro-studio-buyer .sanro-rotate-handle::after{content:'';position:absolute;left:50%;top:100%;height:10px;width:1px;background:#171717;pointer-events:none}
 #sanro-studio-buyer .sanro-workflow span[aria-current=step]{background:#f9c900;color:#171717}
-#sanro-studio-buyer :is(#sanro-cart-status,#sanro-master-upload-status):empty{display:none}
+#sanro-studio-buyer #sanro-cart-status:empty{display:none}
 @media(max-width:359px){
  #sanro-studio-buyer .sanro-size-qty{grid-template-columns:repeat(4,minmax(0,1fr))}
  #sanro-studio-buyer .sanro-primary-actions button{font-size:13px;padding-inline:6px}
 }
+
+#sanro-studio-buyer #sanro-color-name{font-size:13px;margin:4px 0 0}
+#sanro-studio-buyer :is(#sanro-validation,#sanro-qty-status):empty{display:none}
+#sanro-studio-buyer #sanro-qty-status{color:#a11616;margin:0;font-size:13px}
+#sanro-studio-buyer .sanro-unavailable-label{display:none}
+#sanro-studio-buyer label[data-unavailable] .sanro-unavailable-label{display:block;color:#5d5d5d;font-size:11px}
+#sanro-studio-buyer .sanro-object-toolbar{position:absolute;z-index:4;bottom:8px;left:8px;margin:0}
+#sanro-studio-buyer .sanro-object-toolbar button,#sanro-studio-buyer .sanro-side-menu summary{background:#fff;border:1px solid #ccc;border-radius:8px;min-height:36px}
+#sanro-studio-buyer .sanro-object-toolbar svg{width:18px;height:18px}
+#sanro-studio-buyer .sanro-side-menu{position:absolute;z-index:5;right:8px;bottom:8px;text-align:right}
+#sanro-studio-buyer .sanro-side-menu summary{display:inline-grid;place-items:center;width:36px;cursor:pointer;font-size:22px}
+#sanro-studio-buyer .sanro-side-menu button{position:absolute;right:0;bottom:44px;white-space:nowrap;background:#fff}
+#sanro-studio-buyer .sanro-delete-handle{position:absolute;top:50%;left:100%;transform:translate(4px,-50%);pointer-events:auto;display:grid;place-items:center;width:28px;height:28px;min-width:0;min-height:0;padding:0;border:1px solid #a11616;border-radius:50%;background:#fff;color:#a11616;font-size:20px;line-height:1}
+#sanro-studio-buyer .sanro-repeat summary{cursor:pointer;padding:8px 0;font-size:13px}
+#sanro-studio-buyer .sanro-shirt[data-mockup="false"]{--garment-position:0% 50%}
+#sanro-studio-buyer .sanro-shirt[data-mockup="false"][data-side="back"]{--garment-position:100% 50%}
+#sanro-studio-buyer .sanro-shirt[data-mockup="false"]::before{inset:0;clip-path:none;filter:none;border:0;mask:url('garment-photo.webp') var(--garment-position)/200% 100% no-repeat}
+#sanro-studio-buyer .sanro-shirt[data-mockup="false"]::after{inset:0;background:url('garment-photo.webp') var(--garment-position)/200% 100% no-repeat;opacity:1}
+#sanro-studio-buyer .sanro-session-design{display:flex;align-items:center;gap:12px;margin:8px 0 16px}
+#sanro-studio-buyer #sanro-session-preview{width:64px;height:auto;border-radius:8px}

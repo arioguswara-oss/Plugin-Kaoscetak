@@ -335,8 +335,13 @@ function sanro_studio_rest_upload_master($request) {
         }
         $stored = sanro_studio_store_owned_draft_master($id, $token, $side, $bytes);
         if (empty($stored['valid'])) return sanro_studio_rest_draft_response($stored);
-        $bound = sanro_studio_bind_owned_draft_master($id, $token, $side, $stored['file_id'], $expected_hash);
-        if (empty($bound['valid'])) return sanro_studio_rest_draft_response($bound);
+        // The single-save flow commits file bindings with geometry in one CAS.
+        if ($request->get_param('defer_binding') === true) {
+            $verified = sanro_studio_read_owned_draft_master($id, $token, $side, $stored['file_id']);
+        } else {
+            $verified = sanro_studio_bind_owned_draft_master($id, $token, $side, $stored['file_id'], $expected_hash);
+        }
+        if (empty($verified['valid'])) return sanro_studio_rest_draft_response($verified);
     } finally {
         $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock_name));
     }
@@ -506,7 +511,10 @@ function sanro_studio_rest_update_draft($request) {
         return new WP_Error('sanro_revision_required', 'Draft revision required.', ['status' => 409]);
     }
     return sanro_studio_rest_draft_response(
-        sanro_studio_update_draft($request->get_param('id'), $token, $design, $expected_hash)
+        sanro_studio_update_draft(
+            $request->get_param('id'), $token, $design, $expected_hash,
+            $request->get_param('expected_master_refs'), $request->get_param('next_master_refs')
+        )
     );
 }
 

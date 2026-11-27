@@ -71,10 +71,10 @@ register_shutdown_function(function () {
         'dedicated editor layout scope'=>strpos($html,'sanro-buyer-editor')!==false,
         'collection save and email access separated'=>strpos($html,'sanro-collection-save')!==false&&strpos($html,'sanro-collection-access')!==false,
         'collection empty/locked states explicit'=>strpos($collection_js,'Koleksi privat. Verifikasi email')!==false&&strpos($collection_js,'Belum ada desain tersimpan')!==false,
-        'pending image exposes a contextual save action'=>strpos($html,'class="sanro-next-action" hidden>Simpan gambar')!==false&&strpos($buyer_js,'masterButton.hidden=')!==false,
+        'single save handles images without a second button'=>strpos($html,'id="sanro-upload-master"')===false&&strpos($buyer_js,'defer_binding:true')!==false,
         'cart starts without outdated save guidance'=>!$GLOBALS['cart_test_enabled']
             || strpos($html,'id="sanro-cart-status" role="status"></p>')!==false,
-        'background control refreshed after local file cleanup'=>strpos($buyer_js,'for(const name of completed)sides[name].file=null;')<strpos($buyer_js,'await refreshBackgroundControl();'),
+        'background control refreshed after local file cleanup'=>preg_match('~sides\[name\]\.file=null;.*refreshBackgroundControl\(\);updateSessionCard\(\);~s',$buyer_js)===1,
         'automatic print sizing controls'=>strpos($buyer_js,'Pindahkan atau kecilkan objek.')!==false && strpos($html,'sanro-category')===false && strpos($html,'sanro-image-rotation')!==false,
         'theme chrome suppression is limited to opted-in Studio body'=>strpos($buyer_css,'body.sanro-studio-page :is(#masthead,#colophon')!==false,
         'no size preview or sleeve selector'=>strpos($html,'sanro-mockup-size')===false&&strpos($html,'sanro-sleeve')===false,

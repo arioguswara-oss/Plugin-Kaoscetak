@@ -205,21 +205,21 @@ function sanro_studio_render_buyer_editor() {
     foreach ($palette as $color=>$label) {
         echo '<label class="sanro-color-option" title="'.esc_attr($label).'"><input type="radio" name="sanro-shirt-swatch" value="'.esc_attr($color).'" aria-label="'.esc_attr($label).'"'.($color===$initial_color?' checked':'').'><span class="sanro-color-chip" style="--swatch:'.esc_attr($color).'" aria-hidden="true"></span></label>';
     }
-    echo '</div></fieldset>';
-    echo '<fieldset class="sanro-size-qty"><legend>Jumlah per ukuran</legend>';
+    echo '</div><p id="sanro-color-name">' . esc_html($palette[$initial_color]) . '</p></fieldset>';
+    echo '<fieldset class="sanro-size-qty" aria-describedby="sanro-qty-status"><legend>Jumlah per ukuran</legend>';
     foreach (($config['pricing']['sizes']??['S','M','L','XL','2XL','3XL','4XL','5XL']) as $size) {
-        echo '<label>' . esc_html($size) . '<input type="number" data-size="' . esc_attr($size) . '" min="0" max="999" step="1" value="0" inputmode="numeric"></label>';
+        echo '<label>' . esc_html($size) . '<input type="number" data-size="' . esc_attr($size) . '" min="0" max="999" step="1" value="0" inputmode="numeric"><span class="sanro-unavailable-label">Habis</span></label>';
     }
-    echo '</fieldset><p id="sanro-qty-total" role="status">Total: 0 pcs</p>';
+    echo '</fieldset><p id="sanro-qty-total" role="status">Total: 0 pcs</p><p id="sanro-qty-status" role="status"></p>';
     echo '<p id="sanro-price-estimate" role="status">Estimasi harga: pilih desain dan jumlah. Harga final dihitung saat checkout.</p>';
-    echo '<label class="sanro-image-upload">Unggah Gambar<input type="file" id="sanro-image" accept="image/png,image/jpeg" aria-label="Unggah Gambar PNG atau JPEG maks. 10 MB"></label>';
+    echo '<label class="sanro-image-upload"><span>Unggah gambar</span><input type="file" id="sanro-image" accept="image/png,image/jpeg" aria-label="Unggah Gambar PNG atau JPEG maks. 10 MB"></label>';
     echo '<input type="range" id="sanro-image-size" min="10" max="100" value="60" hidden aria-hidden="true" tabindex="-1">';
     echo '<input type="range" id="sanro-image-rotation" min="-180" max="180" value="0" hidden aria-hidden="true" tabindex="-1">';
     echo '<button type="button" id="sanro-center-image">Posisikan gambar ke tengah</button>';
     echo '<button type="button" id="sanro-remove-image">Hapus gambar</button>';
     echo '<label>Teks<textarea id="sanro-text-input" maxlength="300" rows="3"></textarea></label>';
-    echo '<label>Ukuran teks<input type="range" id="sanro-font-size" min="10" max="48" value="22"></label>';
-    echo '<label>Rotasi teks (°)<input type="range" id="sanro-text-rotation" min="-180" max="180" value="0"></label>';
+    echo '<input type="range" id="sanro-font-size" min="10" max="48" value="22" hidden aria-hidden="true" tabindex="-1">';
+    echo '<input type="range" id="sanro-text-rotation" min="-180" max="180" value="0" hidden aria-hidden="true" tabindex="-1">';
     echo '<label>Warna teks<input type="color" id="sanro-text-color" value="#171717"></label>';
     echo '<button type="button" id="sanro-center-text">Posisikan teks ke tengah</button>';
     echo '<button type="button" id="sanro-remove-text">Hapus teks sisi ini</button>';
@@ -229,21 +229,21 @@ function sanro_studio_render_buyer_editor() {
     echo '<p id="sanro-validation" role="status">Belum ada desain.</p>';
     if (!empty($config['draft_api'])) {
         echo '<button type="button" id="sanro-save-draft">Simpan Desain</button>';
-        echo '<button type="button" id="sanro-reopen-draft">Buka kembali desain</button>';
+        echo '<div class="sanro-session-design"><img id="sanro-session-preview" alt="Pratinjau desain tersimpan" hidden>';
+        echo '<div><span>' . esc_html($config['label'] ?? 'Desain kaos') . '</span><p id="sanro-session-design-id"></p>';
+        echo '<button type="button" id="sanro-reopen-draft">Lanjutkan desain sesi ini</button></div></div>';
         echo '<p id="sanro-reopen-status" role="status" aria-live="polite"></p>';
         if (!empty($config['master_upload_enabled'])) {
-            echo '<button type="button" id="sanro-upload-master" class="sanro-next-action" hidden>Simpan gambar</button>';
             echo '<button type="button" id="sanro-remove-background" disabled>Hapus Background</button><label id="sanro-background-tolerance-wrap" hidden>Toleransi latar<input id="sanro-background-tolerance" type="range" min="0" max="96" value="24"></label><button type="button" id="sanro-apply-background" hidden>Terapkan Remove Background</button><button type="button" id="sanro-restore-background">Pulihkan gambar asli</button><p id="sanro-background-status" role="status"></p>';
-            echo '<p id="sanro-master-upload-status" role="status" aria-live="polite"></p>';
         }
         if (!empty($config['preview_upload_enabled'])) {
             echo '<button type="button" id="sanro-upload-previews">Perbarui pratinjau desain</button>';
             echo '<p id="sanro-preview-upload-status" role="status" aria-live="polite"></p>';
         }
         if(function_exists('sanro_studio_repeat_register_routes')){
-            echo '<fieldset><legend>Verifikasi email pemilik desain</legend><label>Email<input id="sanro-owner-email" type="email" autocomplete="email" maxlength="254"></label>';
+            echo '<fieldset id="sanro-repeat"><legend>Cek diskon repeat 5%</legend><p>Pesan dengan email yang sama seperti pesanan yang sudah dibayar. Kode ini memverifikasi emailmu.</p><label>Email<input id="sanro-owner-email" type="email" autocomplete="email" maxlength="254"></label>';
             echo '<button type="button" id="sanro-request-owner-email">Kirim kode verifikasi</button><label>Kode dari email<input id="sanro-owner-email-code" type="text" autocomplete="one-time-code" maxlength="64" spellcheck="false"></label>';
-            echo '<button type="button" id="sanro-confirm-owner-email">Verifikasi kode</button><p id="sanro-owner-email-status" role="status">Simpan desain terlebih dahulu. Repeat 5% dihitung server bila email checkout sama dan riwayat pesanan berbayar terverifikasi.</p></fieldset>';
+            echo '<button type="button" id="sanro-confirm-owner-email">Verifikasi kode</button><p id="sanro-owner-email-status" role="status"></p></fieldset>';
         }
         echo '<fieldset id="sanro-collection"><legend>Desain Saya</legend>';
         echo '<div class="sanro-collection-save"><label>Nama desain<input data-title maxlength="120" placeholder="Contoh: Kaos komunitas"></label><button type="button" class="sanro-collection-primary" data-save>Simpan desain ini ke koleksi</button></div>';

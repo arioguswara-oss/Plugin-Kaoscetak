@@ -43,6 +43,7 @@ function sanro_studio_create_draft($product_id, $design) {
     }
     return ['valid' => true, 'design_id' => $id,
         'public_design_id' => $public_id,
+        'design_hash' => hash('sha256', maybe_serialize($design)),
         'owner_token' => $token];
 }
 
@@ -90,7 +91,7 @@ function sanro_studio_read_draft($id, $token) {
  * Revalidates geometry against current product settings before replacing metadata.
  * Never accepts client-supplied status, product ID or price.
  */
-function sanro_studio_update_draft($id, $token, $design, $expected_design_hash = null) {
+function sanro_studio_update_draft($id, $token, $design, $expected_design_hash = null, $expected_master_refs = null, $next_master_refs = null) {
     $existing = sanro_studio_read_draft($id, $token);
     if (empty($existing['valid'])) return $existing;
     if ($existing['status'] !== 'draft') {
@@ -136,40 +137,58 @@ function sanro_studio_update_draft($id, $token, $design, $expected_design_hash =
             || !hash_equals(hash('sha256', maybe_serialize($before['design'])), $expected_design_hash))) {
         return ['valid' => false, 'error' => 'draft_conflict'];
     }
-    // A retry of an unchanged save must not revoke verified master bindings.
-    // The caller may legitimately retry after a network timeout.
-    if (hash_equals(
-        hash('sha256', maybe_serialize($before['design'])),
-        hash('sha256', maybe_serialize($design))
-    )) {
-        return ['valid' => true, 'design_id' => $id, 'unchanged' => true];
+    $current_refs = is_array($before['master_refs'] ?? null) ? $before['master_refs'] : [];
+    if ($expected_master_refs !== null) {
+        if (!is_array($expected_master_refs)) return ['valid' => false, 'error' => 'draft_conflict'];
+        ksort($current_refs);
+        ksort($expected_master_refs);
+        if ($current_refs !== $expected_master_refs) return ['valid' => false, 'error' => 'draft_conflict'];
     }
-    // Image geometry may only reference masters already bound to this
-    // exact owner-authorized draft. This check runs against the CAS snapshot.
+    $requested_refs = $next_master_refs ?? $current_refs;
+    // Check geometry against owner-bound files. Any newly referenced file
+    // must already exist in private storage, with matching content and side.
     if (!function_exists('sanro_studio_draft_image_binding_allowed')
-        || !sanro_studio_draft_image_binding_allowed(
-            $design, is_array($before['master_refs'] ?? null) ? $before['master_refs'] : [], $id
-        )) {
+        || !sanro_studio_draft_image_binding_allowed($design, $requested_refs, $id)) {
         return ['valid' => false, 'error' => 'image_master_unbound'];
+    }
+    $used_refs = [];
+    foreach (['front', 'back'] as $side) {
+        foreach (($design[$side]['objects'] ?? []) as $object) {
+            if (($object['type'] ?? null) !== 'image') continue;
+            $ref = $requested_refs[$side];
+            if ($ref !== ($current_refs[$side] ?? null)) {
+                if (!defined('SANRO_STUDIO_ENABLE_MASTER_UPLOAD')
+                    || SANRO_STUDIO_ENABLE_MASTER_UPLOAD !== true
+                    || !function_exists('sanro_studio_read_owned_draft_master')) {
+                    return ['valid' => false, 'error' => 'image_master_unbound'];
+                }
+                $verified = sanro_studio_read_owned_draft_master($id, $token, $side, $ref);
+                if (empty($verified['valid'])) return $verified;
+            }
+            $used_refs[$side] = $ref;
+            break;
+        }
+    }
+    if ($next_master_refs !== null
+        && ($expected_master_refs === null || $used_refs !== $next_master_refs)) {
+        return ['valid' => false, 'error' => 'image_master_unbound'];
+    }
+    $design_hash = hash('sha256', maybe_serialize($design));
+    if ($used_refs === $current_refs
+        && hash_equals(hash('sha256', maybe_serialize($before['design'])), $design_hash)) {
+        return ['valid' => true, 'design_id' => $id, 'design_hash' => $design_hash, 'unchanged' => true];
     }
     $record = $before;
     $record['design'] = $design;
     // Any geometry/text change invalidates both lightweight previews.
     // Buyer must regenerate them from the saved design before checkout.
     unset($record['preview_refs'], $record['preview_refs_by_size'], $record['preview_variant_required'], $record['preview_design_hash']);
-    // Retain a master only when the new design actually contains an image
-    // on that side. A removed image must not leave an active master binding.
-    $record['master_refs'] = [];
+    $record['master_refs'] = $used_refs;
     foreach (['front', 'back'] as $side) {
-        foreach (($design[$side]['objects'] ?? []) as $object) {
-            if (is_array($object) && ($object['type'] ?? null) === 'image'
-                && isset($before['master_refs'][$side])) {
-                $record['master_refs'][$side] = $before['master_refs'][$side];
-                break;
-            }
+        if (($used_refs[$side] ?? null) !== ($current_refs[$side] ?? null)) {
+            unset($record['original_master_refs'][$side]);
         }
     }
-    if(isset($record['original_master_refs']))$record['original_master_refs']=array_intersect_key($record['original_master_refs'],$record['master_refs']);
     $record['updated_at'] = max(time(), (int) ($before['updated_at'] ?? $before['created_at'] ?? 0) + 1);
     // Compare serialized bytes exactly. wpdb->update() uses the column's
     // collation, which can be case-insensitive and is unsafe for CAS.
@@ -185,7 +204,7 @@ function sanro_studio_update_draft($id, $token, $design, $expected_design_hash =
         return ['valid' => false, 'error' => $changed === false ? 'storage_failed' : 'draft_conflict'];
     }
     wp_cache_delete($key, 'options');
-    return ['valid' => true, 'design_id' => $id];
+    return ['valid' => true, 'design_id' => $id, 'design_hash' => $design_hash];
 }
 
 /**

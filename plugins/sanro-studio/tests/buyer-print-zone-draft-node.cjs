@@ -62,47 +62,65 @@ const near=(actual,expected,label)=>{
  assert(Math.abs(actual-expected)<1e-6,label);checks++
 };
 async function checkInitialImageSave(){
- const from=source.indexOf("  const saveDraft=async()=>{");
+ const from=source.indexOf("  const saveDraft=async(fromCart=false)=>{");
  const to=source.indexOf("\n  };\n  saveButton.textContent",from)+5;
- assert.ok(from>=0&&to>from);
- const saveStatus={textContent:''},masterStatus={textContent:''};
- const cartStatus={textContent:'Unggah ulang'},masterButton={hidden:true,disabled:false};
+ const helpersFrom=source.indexOf('  const uploadedImages={};');
+ const helpersTo=source.indexOf('  const quoteButton=',helpersFrom);
  const stateStart=source.indexOf(' function isPublicDesignId(');
  const stateEnd=source.indexOf(' const homeLink=',stateStart);
- assert.ok(stateStart>=0&&stateEnd>stateStart);
- const calls=[];
- const hash='a'.repeat(64);
+ assert.ok(from>=0&&to>from&&helpersFrom>=0&&helpersTo>helpersFrom&&stateStart>=0&&stateEnd>stateStart);
+ const calls=[],saveStatus={textContent:''},cartStatus={textContent:'Pesan lama'};
+ const firstHash='a'.repeat(64),finalHash='b'.repeat(64),sha256='c'.repeat(64);
+ const fileId='synthetic-front-'+sha256+'.png';
  const factory=new Function('env',`
-  const {saveButton,saveStatus,masterButton,masterStatus,cartStatus,fetch}=env;
-  const q=()=>cartStatus;
+  const {saveStatus,cartStatus,fetch}=env;
+  const q=selector=>selector==='#sanro-cart-status'?cartStatus:null,saveButton={};
   const config={product_id:53,master_upload_enabled:true,draft_api:{url:'/drafts',nonce:'test'}};
-  const sides={front:{file:{},url:'blob:local'},back:{}},boundMasterRefs={};
+  const sides={front:{file:{type:'image/png'},url:'blob:local'},back:{}},boundMasterRefs={};
   let saving=false,uploadingMaster=false,savedId=null,savedPublicId=null,ownerToken=null,editRevision=2,savedRevision=0,lastKnownDesignHash=null;
-  const ensureProductionFont=async()=>{};
-  const exportTextDraft=(ignoreImages,allowEmpty)=>({ignoreImages,allowEmpty});
-  const sessionStorage={setItem(){}},draftStorageKey='test';
+  const exportTextDraft=(ignoreImages,allowEmpty)=>({ignoreImages,allowEmpty,quantities:{M:0}});
+  const exportBoundDraft=async()=>({front:{objects:[{type:'image'}]},quantities:{M:0}});
+  const sessionStorage={setItem(){}},draftStorageKey='test',refreshBackgroundControl=()=>{},updateSessionCard=()=>{};
+  class FileReader { readAsDataURL(){this.result='data:image/png;base64,AAAA';this.onload();} }
   ${source.slice(stateStart,stateEnd)}
+  ${source.slice(helpersFrom,helpersTo)}
   ${source.slice(from,to)}
-  return {saveDraft, finishImageSave(){ sides.front.file=null; syncSaveStatus(); }};`);
- const session=factory({saveButton:{disabled:false},saveStatus,masterButton,masterStatus,cartStatus,async fetch(url,options){
+  return {saveDraft};`);
+ let stored=false,firstRead=true;
+ const session=factory({saveStatus,cartStatus,async fetch(url,options){
   calls.push({url,options});
-  return {ok:true,json:async()=>calls.length===1
-   ?{valid:true,design_id:'synthetic',owner_token:'fixture'}
-   :{valid:true,design_hash:hash,public_design_id:'ID-00001'}};
+  const payload=options.body&&JSON.parse(options.body);
+  if(url==='/drafts')return {ok:true,json:async()=>({valid:true,design_id:'synthetic',owner_token:'fixture',public_design_id:'ID-00001',design_hash:firstHash})};
+  if(url.endsWith('/masters/front')){
+   assert.equal(payload.defer_binding,true);
+   return {ok:true,json:async()=>({valid:true,file_id:fileId,mime:'image/png',sha256})};
+  }
+  if(url.endsWith('/master-read/front')){
+   const ok=!firstRead;firstRead=false;
+   return {ok,json:async()=>({valid:ok,file_id:fileId,mime:'image/png',sha256})};
+  }
+  if(payload){
+   assert.equal(payload.next_master_refs.front,fileId);
+   assert.deepEqual(payload.expected_master_refs,stored?{front:fileId}:{});
+   assert.equal(payload.expected_design_hash,stored?finalHash:firstHash);
+   stored=true;
+   return {ok:true,json:async()=>({valid:true,design_hash:finalHash})};
+  }
+  return {ok:true,json:async()=>({valid:true,status:'draft',design_hash:stored?finalHash:firstHash,
+   master_refs:stored?{front:fileId}:{},public_design_id:'ID-00001'})};
  }});
  const pending=session.saveDraft();
- equal(saveStatus.textContent,'Menyimpan desain','save uses the shared busy status');
- const savedResult=await pending;
- equal(calls.length,2,'save sends one draft request and verifies readback');
- equal(JSON.parse(calls[0].options.body).design,{ignoreImages:true,allowEmpty:true},
-  'image draft bootstraps with metadata only');
- equal(saveStatus.textContent,'Belum disimpan','metadata-only save is not a finished design');
- equal(masterButton.hidden,false,'image save offers the next action');
- check(!savedResult,'image save requires binding the private master before cart');
+ equal(saveStatus.textContent,'Menyimpan desain…','save uses the shared busy status');
+ check(!await pending,'failed image readback does not show a saved status');
+ equal(saveStatus.textContent,'Gagal menyimpan desain. Coba lagi.','verification errors are actionable');
+ equal(JSON.parse(calls[0].options.body).design,{ignoreImages:true,allowEmpty:true,quantities:{M:0}},
+  'the same action bootstraps a private draft without requiring quantities');
  equal(cartStatus.textContent,'','save removes previous Cart instructions');
- session.finishImageSave();
+ check(await session.saveDraft(),'retry finishes private image verification');
+ equal(calls.filter(call=>call.url.endsWith('/masters/front')).length,1,'retry reuses verified upload');
+ equal(calls.filter(call=>call.url==='/drafts').length,1,'retry uses same draft');
  equal(saveStatus.textContent,'Tersimpan · ID-00001','verified image uses the short ID');
- equal(masterButton.hidden,true,'saved image no longer asks to save it again');
+
 }
 (async()=>{
  const result=runtime.exportTextDraft();

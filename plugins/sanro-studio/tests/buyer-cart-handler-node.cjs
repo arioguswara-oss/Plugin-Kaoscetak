@@ -8,7 +8,7 @@ const vm = require('node:vm');
 
 const source = fs.readFileSync(path.resolve(__dirname, '../assets/buyer.js'), 'utf8');
 const startMarker = "  const cartButton=q('#sanro-add-to-cart'),cartStatus=q('#sanro-cart-status');";
-const stopMarker = "  const saveDraft=async()=>{";
+const stopMarker = "  const saveDraft=async(fromCart=false)=>{";
 const start = source.indexOf(startMarker);
 const stop = source.indexOf(stopMarker, start);
 assert(start !== -1 && stop > start, 'Cart handler source boundaries changed');
@@ -19,6 +19,8 @@ function createHarness(options = {}) {
   const visibleButton = {disabled: false};
   const status = {textContent: 'initial placeholder'};
   const requests = [];
+  const field={focus(){field.focused=true;},scrollIntoView(){field.scrolled=true;}};
+  let panel;
   let listener;
   let redirectedTo = null;
   const root = {
@@ -27,6 +29,7 @@ function createHarness(options = {}) {
       assert(!listener, 'Cart handler installed twice');
       listener = handler;
     },
+    dispatchEvent(event) { panel=event.detail.name; },
     contains(node) { return node === visibleButton; }
   };
   const config = {draft_api: {url:'https://staging.invalid/drafts', nonce:'qa-nonce', rest_nonce:options.restNonce}};
@@ -43,6 +46,9 @@ function createHarness(options = {}) {
     editRevision: options.editRevision ?? 1,
     savedRevision: options.savedRevision ?? 1,
     cartPending: false,
+    CustomEvent: class { constructor(name, options) { this.detail=options.detail; } },
+    cartQuantityIssue: () => options.emptyQuantity
+      ? {input:field,message:'Isi jumlah kaos pada minimal satu ukuran untuk lanjut.'} : null,
     designReady() {
       return !!context.savedId && !!context.ownerToken
         && context.editRevision === context.savedRevision && !options.pendingImage;
@@ -65,7 +71,8 @@ function createHarness(options = {}) {
   vm.runInNewContext(block, context, {timeout:1000});
   assert.equal(typeof listener, 'function', 'Cart handler missing');
   return {
-    oldButton, visibleButton, status, requests,
+    oldButton, visibleButton, status, requests, field,
+    panel() { return panel; },
     redirect() { return redirectedTo; },
     click(node = visibleButton) {
       return listener({target: {closest: () => node}});
@@ -112,6 +119,14 @@ function createHarness(options = {}) {
   assert.match(dirty.status.textContent, /Desain masuk keranjang/);
   pass();
 
+  const empty = createHarness({emptyQuantity:true});
+  await empty.click();
+  assert.equal(empty.requests.length,0);
+  assert.match(empty.status.textContent,/Isi jumlah kaos/);
+  assert.equal(empty.panel(),'product');
+  assert.ok(empty.field.focused && empty.field.scrolled);
+  pass();
+
   const saving = createHarness({saving:true});
   await saving.click();
   assert.equal(saving.requests.length, 0, 'Cart submitted while draft save pending');
@@ -125,7 +140,7 @@ function createHarness(options = {}) {
   const unbound = createHarness({pendingImage:true});
   await unbound.click();
   assert.equal(unbound.requests.length, 0, 'Unbound image unexpectedly reached Cart');
-  assert.equal(unbound.status.textContent, '', 'Old Cart guidance remained visible');
+  assert.match(unbound.status.textContent,/Desain belum siap/);
   pass();
 
   const rejected = createHarness({onFetch:async()=>({
