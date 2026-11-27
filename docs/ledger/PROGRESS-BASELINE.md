@@ -1,6 +1,10 @@
 # SANRO Studio — satu baseline resmi development
 
-## LATEST — Koreksi Simpan Desain `c082c7f` aktif
+## LATEST — Penyederhanaan mobile `ef8df0d` aktif
+
+27 November 2026 WIB. HEAD awal PR #52 `a2c435d`; staging predecessor `c082c7f` cocok via fingerprint dan digest HTTPS. Kandidat `ef8df0d` aktif via gate pra/pasca **PASS** dan rollback tersedia. Guest staging desktop PASS untuk swatch, resize/rotasi/drag/Tengah, simpan/buka ID-00103, S × 1 dan 5XL × 1 serta total Rp187.000 sampai review Checkout. Fixture Chromium 320/390/430 px PASS tanpa overflow. Width staging live dan uji sentuh HP fisik tetap terbuka. **96,50% → 96,50% (Δ 0,00 poin). GO staging. NO-GO final mobile acceptance.** [Bukti dan screenshot](../qa/studio-mobile-simplification-20261127.md).
+
+## Historis — Koreksi Simpan Desain `c082c7f` aktif
 
 27 November 2026 WIB. PR #52 bersumber dari HEAD `c79548b`; staging predecessor `0d0ea5f` diverifikasi melalui fingerprint aset dan digest HTTPS. Kandidat `c082c7f` dipasang. Gate pra/pasca HTTPS **PASS**, digest `7214e0ae…9c0e03c`, rollback tersedia dan transport nonaktif. Guest desktop memverifikasi Cart tertahan sebelum gambar siap, lalu status **Tersimpan · ID-00102** tanpa pesan unggah/simpan ulang. Buka ulang, dua thumbnail privat, S/M dan Rp147.000 sampai review Checkout **PASS**. Dua build identik dan tes terarah **PASS**. Android fisik kandidat ini menunggu Owner. **96,50% → 96,50%, Δ 0,00. GO staging.** [Laporan, checksum dan screenshot](../qa/studio-final-save-ux-20261127.md).
 
