@@ -4,7 +4,7 @@
   "archive_name": "sanro-studio-staging-candidate.zip",
   "schema": 1,
   "repository": "arioguswara-oss/Plugin-Kaoscetak",
-  "source_commit": "bcd6bf330599d1cbbc381a2f4999cb0c500bdda1",
+  "source_commit": "0d0ea5f1795c5148e763d88281e8964f6672fbce",
   "files": [
     {
       "path": "INSTALLATION.md",
@@ -48,8 +48,8 @@
     },
     {
       "path": "assets/buyer.js",
-      "sha256": "8f875ca6e51c16734ad2dd56a75e5ae38cb3ffed7eb6d82faa6401376c5d57ba",
-      "bytes": 63852
+      "sha256": "ef209f2413ff386c789dc062b15131b4ac21a62c772c9de63ad35783005a767f",
+      "bytes": 64078
     },
     {
       "path": "assets/cart-redirect.js",
@@ -447,15 +447,15 @@
       "bytes": 12583
     }
   ],
-  "plugin_digest": "51c54994028fa1dc7950673260a7b4df831b6d71ab34d1e5a14a5fa4b6cea713",
+  "plugin_digest": "b886459711041d0e081b4e53b471e015192a5c7848aa6546793eb1e6bb38be36",
   "generator_default": "OFF",
   "drive_default": "OFF",
   "runtime_e2e": "NOT_TESTED",
   "deployment_authorized": false,
   "build_marker": {
     "path": "SANRO-STUDIO-BUILD.json",
-    "sha256": "6aace5687dfafec8ef1214a9af28fe93320eb8d89dcdc1f7ebf78262fffebcd3",
+    "sha256": "060eb69ba81e4dad8b9ecbbf5ad63e084f72dced0d947cde3ea62ba9dd947ffe",
     "bytes": 155
   },
-  "archive_sha256": "9d586f6888bac6101a59502378d07e84dff68ea5e2d01bd261469a5003c91ca2"
+  "archive_sha256": "1690c709da2e2921e036bdefb7bfcd2442fe0eb3b080839437119fba511c3fd4"
 }
