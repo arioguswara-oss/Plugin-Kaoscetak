@@ -85,13 +85,13 @@ async function checkInitialImageSave(){
   calls.push({url,options});
   return {ok:true,json:async()=>calls.length===1
    ?{valid:true,design_id:'synthetic',owner_token:'fixture'}
-   :{valid:true,design_hash:hash}};
+   :{valid:true,design_hash:hash,public_design_id:'ID-00001'}};
  }});
  const savedResult=await saveDraft();
  equal(calls.length,2,'save sends one draft request and verifies readback');
  equal(JSON.parse(calls[0].options.body).design,{ignoreImages:true,allowEmpty:true},
   'image draft bootstraps with metadata only');
- check(saveStatus.textContent.includes('Tersimpan ·'),
+ check(saveStatus.textContent.includes('Tersimpan · ID-00001'),
   'image save displays short-ID success without exposing internal UUID');
  equal(saveStatus.next.textContent,'Lanjut unggah gambar','image save offers the next action');
  check(!savedResult,'image save requires binding the private master before cart');

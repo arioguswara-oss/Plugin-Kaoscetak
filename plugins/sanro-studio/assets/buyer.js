@@ -1037,17 +1037,21 @@
      else delete boundMasterRefs[name];
     }
     lastKnownDesignHash=verified.design_hash;
-    if(typeof verified.public_design_id==='string')savedPublicId=verified.public_design_id;
+    if(typeof verified.public_design_id!=='string'||!/^ID-[0-9]{5,}$/.test(verified.public_design_id))
+     throw new Error('Design ID publik belum dapat diverifikasi.');
+    if(savedPublicId&&savedPublicId!==verified.public_design_id)
+     throw new Error('Design ID berubah; draft dipertahankan dan perlu diperiksa.');
+    savedPublicId=verified.public_design_id;
     if(editRevision===revisionAtSave)savedRevision=editRevision;
     try{sessionStorage.setItem(draftStorageKey,JSON.stringify({id:savedId,token:ownerToken}))}catch(_error){}
     if(editRevision!==revisionAtSave){
      saveStatus.textContent='Belum disimpan. Ada perubahan baru; simpan kembali.';
     }else if(hasLocalImage&&config.master_upload_enabled){
-     saveStatus.replaceChildren(document.createTextNode('Tersimpan · '+(savedPublicId||'Design ID tersedia')+'. Unggah gambar asli untuk menyimpan master produksi privat. '));
+     saveStatus.replaceChildren(document.createTextNode('Tersimpan · '+savedPublicId+'. Unggah gambar asli untuk menyimpan master produksi privat. '));
      const next=document.createElement('button');next.type='button';next.className='sanro-next-action';next.textContent='Lanjut unggah gambar';
      next.addEventListener('click',()=>{root.dispatchEvent(new CustomEvent('sanro:show-panel',{detail:{name:'image'}}));window.setTimeout(()=>q('#sanro-upload-master')?.focus(),0);});saveStatus.append(next);
     }else{
-     saveStatus.textContent='Tersimpan · '+(savedPublicId||'Design ID tersedia')+'.';
+     saveStatus.textContent='Tersimpan · '+savedPublicId+'.';
     }
     if(hasLocalImage&&config.master_upload_enabled)return false;
     return editRevision===revisionAtSave;
