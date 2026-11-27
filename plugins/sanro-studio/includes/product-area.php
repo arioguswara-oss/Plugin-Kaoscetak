@@ -53,15 +53,38 @@ function sanro_studio_product_print_categories($product_id) {
     return $limits === false ? sanro_studio_print_categories() : $limits;
 }
 
-function sanro_studio_validate_product_design($product_id, $design, $frozen_categories = null) {
-    $areas = sanro_studio_product_safe_areas($product_id);
+function sanro_studio_validate_product_design($product_id, $design, $frozen_categories = null, $frozen_config = null) {
+    $areas = $frozen_config === null ? sanro_studio_product_safe_areas($product_id) : [];
+    $palette = $frozen_config === null
+        ? (function_exists('sanro_studio_mockup_palette') ? array_keys(sanro_studio_mockup_palette($product_id)) : ['#ffffff', '#171717', '#b91c1c', '#1d4ed8', '#166534'])
+        : [];
+    if ($frozen_config !== null) {
+        if (!is_array($frozen_config) || ($frozen_config['version'] ?? null) !== 1
+            || !is_array($frozen_config['safe_areas'] ?? null) || !is_array($frozen_config['palette'] ?? null)
+            || !is_array($frozen_config['print_limits'] ?? null)) return ['valid'=>false,'error'=>'frozen_product_config_invalid'];
+        $frozen_areas=[];
+        foreach(['front','back'] as $side){$area=$frozen_config['safe_areas'][$side]??null;
+            if(!is_array($area)||!is_numeric($area['width']??null)||!is_numeric($area['height']??null)
+                ||!is_finite((float)$area['width'])||!is_finite((float)$area['height'])
+                ||(float)$area['width']<=0||(float)$area['width']>100||(float)$area['height']<=0||(float)$area['height']>100)
+                return ['valid'=>false,'error'=>'frozen_product_config_invalid'];
+            $frozen_areas[$side]=['width'=>(float)$area['width'],'height'=>(float)$area['height']];
+        }
+        $frozen_palette=[];foreach($frozen_config['palette'] as $color=>$label){
+            if(!is_string($color)||!preg_match('/^#[a-f0-9]{6}$/D',$color)||!is_string($label)||strlen($label)>80)return ['valid'=>false,'error'=>'frozen_product_config_invalid'];
+            $frozen_palette[]=$color;
+        }
+        $validated_limits=sanro_studio_validate_print_categories($frozen_config['print_limits']);
+        if(!$frozen_palette||$validated_limits===false)return ['valid'=>false,'error'=>'frozen_product_config_invalid'];
+        $areas=$frozen_areas;$palette=$frozen_palette;$frozen_categories=$validated_limits;
+    }
     if (!$areas) return ['valid' => false, 'error' => 'product_area_unconfigured'];
     // Draft text is printable metadata; geometry validation still owns all
     // category and safe-area checks. Master images remain outside WordPress.
     if (!is_array($design)) return ['valid' => false, 'error' => 'invalid_design'];
     // Order preferences are draft metadata only, never trusted for checkout pricing.
     if (isset($design['shirt_color']) && (!is_string($design['shirt_color'])
-        || !in_array($design['shirt_color'], (function_exists('sanro_studio_mockup_palette') ? array_keys(sanro_studio_mockup_palette($product_id)) : ['#ffffff', '#171717', '#b91c1c', '#1d4ed8', '#166534']), true))) {
+        || !in_array($design['shirt_color'], $palette, true))) {
         return ['valid' => false, 'error' => 'invalid_shirt_color'];
     }
     if (isset($design['long_sleeve']) && !is_bool($design['long_sleeve'])) {

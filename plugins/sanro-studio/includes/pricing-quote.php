@@ -59,6 +59,15 @@ function sanro_studio_product_quote($product_id, $design) {
         'shirt_color' => isset($design['shirt_color'])&&is_string($design['shirt_color'])?$design['shirt_color']:'',
         'pricing_profile' => $config['pricing_profile'], 'currency' => 'IDR',
         'pricing_revision'=>$profile['revision']??null,
+        // The quote is persisted and pinned at order lock. Production must use
+        // this server-resolved configuration even if the catalog later changes.
+        'product_snapshot'=>['version'=>1,
+            'safe_areas'=>$config['safe_areas']??sanro_studio_product_safe_areas($product_id),
+            'palette'=>$config['palette']??sanro_studio_mockup_palette($product_id),
+            'print_limits'=>$config['categories'],
+            'print_zones'=>$config['print_zones']??(function_exists('sanro_studio_product_print_zones')?sanro_studio_product_print_zones($product_id):[]),
+            'pricing_profile'=>$config['pricing_profile'],
+            'pricing_revision'=>$profile['revision']??null,'variations'=>$config['variations']??[]],
         'sleeve_label'=>$profile['sleeve_label']??'short',
         'categories' => $categories, 'print_limits' => $config['categories'] ?? sanro_studio_product_print_categories($product_id), 'sides' => $validated['sides'],
         'lines' => $lines, 'pieces' => $pieces, 'total' => $total,

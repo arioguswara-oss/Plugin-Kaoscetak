@@ -8,8 +8,11 @@ function sanro_studio_variation_for_mapping($product_id,$variation_id,$color_lab
         ||$variation->get_status()!=='publish')return false;
     $attrs=$variation->get_attributes();if(!is_array($attrs))return false;$color=null;$mapped_size=null;
     foreach($attrs as $key=>$value){$name=sanitize_title(preg_replace('/^attribute_/','',(string)$key));$name=preg_replace('/^pa-/','',$name);
-        if(preg_match('/colou?r/',$name))$color=$value;
-        if(strpos($name,'size')!==false)$mapped_size=$value;
+        // Explicit supported Woo attribute slugs. The selected variation ID
+        // remains the binding; its parent, status and actual attribute values
+        // are checked below, so aliases do not weaken variation validation.
+        if(in_array($name,['color','colour','warna'],true))$color=$value;
+        if(in_array($name,['size','ukuran'],true))$mapped_size=$value;
     }
     $size_slug=is_string($mapped_size)?sanitize_title($mapped_size):'';$expected=sanitize_title($size);
     $aliases=['s'=>['s','small','small-s'],'m'=>['m','medium','medium-m'],'l'=>['l','large','large-l'],

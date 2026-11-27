@@ -96,7 +96,18 @@ function sanro_studio_repeat_mail_budget($email='') {
         'sanro_repeat_recipient_'.substr(hash_hmac('sha256',$email,wp_salt('auth')),0,32)];$leases=[];
     try{
         foreach($keys as $key){$lease=sanro_studio_lease_acquire($key.'_lock',15);if(!$lease)return false;$leases[]=$lease;}
-        $counts=[];foreach($keys as $key){$count=get_transient($key);if($count!==false&&(!is_int($count)||$count>=8))return false;$counts[$key]=$count===false?1:$count+1;}
+        $counts=[];foreach($keys as $key){
+            $count=get_transient($key);
+            if($count===false){$counts[$key]=1;continue;}
+            // Some supported object-cache backends return stored integers as
+            // decimal strings. Accept only canonical, bounded counters; never
+            // coerce floats, signs, whitespace, or arbitrary numeric values.
+            if(is_int($count))$normalized=$count;
+            elseif(is_string($count)&&preg_match('/^(0|[1-9][0-9]{0,2})$/D',$count))$normalized=(int)$count;
+            else return false;
+            if($normalized<0||$normalized>=8)return false;
+            $counts[$key]=$normalized+1;
+        }
         foreach($counts as $key=>$count)if(!set_transient($key,$count,3600))return false;
         return true;
     }finally{foreach(array_reverse($leases) as $lease)sanro_studio_lease_release($lease);}

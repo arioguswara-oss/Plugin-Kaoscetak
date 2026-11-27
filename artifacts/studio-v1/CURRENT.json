@@ -325,5 +325,21 @@
     "final_release": false,
     "runtime_evidence": "artifacts/studio-v1/final-admin-release-gate-20261127/runtime-acceptance.json"
   },
-  "development_baseline_percent": 96.6
+  "development_baseline_percent": 96.6,
+  "latest_development_correction": {
+    "base_source": "8bfa9b3c3fb5374439821811ce0d5b171fda8d4a",
+    "report": "docs/qa/studio-release-blocker-fix-20261127.md",
+    "state": "TARGETED_LOCAL_REGRESSION_PASS_NOT_BUILT",
+    "findings": {
+      "ST-03": "PASS_LOCAL_FROZEN_CONFIG",
+      "ST-02": "PASS_LOCAL_PA_WARNA_PA_UKURAN",
+      "ST-04": "PASS_LOCAL_BOUNDED_PAGINATION",
+      "ST-01": "PASS_LOCAL_STRICT_COUNTER_NORMALIZATION",
+      "ST-R01": "PASS_LOCAL_CLASSIC_AND_STORE_API_FAIL_CLOSED"
+    },
+    "targeted_tests": "PASS_SYNTHETIC_WP_WC_SIMULATION",
+    "baseline_percent": 96.6,
+    "staging_installation": "NOT_RUN",
+    "final_release": false
+  }
 }

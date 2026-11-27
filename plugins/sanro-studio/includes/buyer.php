@@ -57,7 +57,15 @@ function sanro_studio_product_editor_link() {
  */
 function sanro_studio_render_product_picker($page_url) {
     // Use the shared buyer stylesheet for responsive layout; enqueue before get_header().
-    $ids = wc_get_products(['status' => 'publish', 'limit' => 48, 'return' => 'ids', 'orderby' => 'title', 'order' => 'ASC']);
+    // Paginate the underlying Woo catalog, not the first 48 rows after Studio
+    // eligibility filtering. This keeps each mobile response bounded while
+    // allowing eligible products later in a large catalog to be reached.
+    $page_raw=$_GET['studio_catalog_page']??1;$page=max(1,absint(is_scalar($page_raw)?$page_raw:1));
+    $search_raw=$_GET['studio_search']??'';$search=is_string($search_raw)?sanitize_text_field(wp_unslash($search_raw)):'';
+    $query=wc_get_products(['status'=>'publish','limit'=>48,'page'=>$page,'paginate'=>true,'return'=>'ids',
+        'orderby'=>'title','order'=>'ASC','s'=>$search]);
+    $ids=is_object($query)&&isset($query->products)&&is_array($query->products)?$query->products:(is_array($query)?$query:[]);
+    $max_pages=is_object($query)?max(1,(int)($query->max_num_pages??1)):1;
     echo '<main id="sanro-studio-buyer" class="sanro-buyer sanro-product-picker" aria-label="SANRO Studio">';
     $preferences = get_option('sanro_studio_native_preferences', []);
     $label = is_array($preferences) && isset($preferences['studio_label'])
@@ -66,8 +74,8 @@ function sanro_studio_render_product_picker($page_url) {
     sanro_studio_ui_header($label);
     echo '<div class="sanro-catalog-heading"><h2>Mau cetak apa?</h2><p>Pilih produk, lalu unggah desainmu.</p></div>';
     echo '<nav class="sanro-workflow" aria-label="Tahapan desain"><span class="sanro-workflow-current" aria-current="step">1. Pilih Produk</span><span class="sanro-workflow-pending">2. Atur Desain</span><span class="sanro-workflow-pending">3. Desain Saya</span></nav>';
-    echo '<div class="sanro-catalog-search"><label for="sanro-product-search">Cari produk</label> ';
-    echo '<input id="sanro-product-search" type="search" placeholder="Cari nama produk" autocomplete="off"></div>';
+    echo '<form class="sanro-catalog-search" method="get"><label for="sanro-product-search">Cari produk</label> ';
+    echo '<input id="sanro-product-search" name="studio_search" type="search" value="'.esc_attr($search).'" placeholder="Cari nama produk" autocomplete="off"><button type="submit">Cari</button></form>';
     echo '<div class="sanro-product-grid">';
     $shown = 0;
     foreach ($ids as $id) {
@@ -86,7 +94,9 @@ function sanro_studio_render_product_picker($page_url) {
     }
     echo '</div>';
     if (!$shown) echo '<p>Belum ada produk yang siap didesain. Administrator perlu mengatur area cetak dan profil harga produk.</p>';
-    echo '<p id="sanro-product-empty" hidden>Tidak ada produk yang cocok.</p><div class="sanro-catalog-footer">'.sanro_studio_ui_icon('shirt').'Pilih produk, lalu unggah desainmu</div>';
+    echo '<p id="sanro-product-empty" hidden>Tidak ada produk yang cocok.</p>';
+    if($max_pages>1){echo '<nav class="sanro-catalog-pages" aria-label="Halaman produk">';for($p=1;$p<=$max_pages;$p++)echo $p===$page?'<strong aria-current="page">'.$p.'</strong> ':'<a href="'.esc_url(add_query_arg(['studio_catalog_page'=>$p])).'">'.$p.'</a> ';echo '</nav>';}
+    echo '<div class="sanro-catalog-footer">'.sanro_studio_ui_icon('shirt').'Pilih produk, lalu unggah desainmu</div>';
     echo '</main>';
 
     echo '<script>document.addEventListener("DOMContentLoaded",function(){var input=document.getElementById("sanro-product-search"),cards=[].slice.call(document.querySelectorAll(".sanro-product-card")),empty=document.getElementById("sanro-product-empty");if(!input)return;input.addEventListener("input",function(){var q=input.value.toLocaleLowerCase().trim(),count=0;cards.forEach(function(card){var match=card.dataset.name.includes(q);card.hidden=!match;if(match)count++});if(empty)empty.hidden=count>0||cards.length===0})});</script>';

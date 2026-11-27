@@ -2,10 +2,10 @@
 /** Synthetic variable-product contract: no WC database/cart/order/payment writes. */
 define('ABSPATH', __DIR__ . '/');
 $GLOBALS['vp_variations'] = [
-    301 => ['parent'=>30,'attributes'=>['pa_color'=>'navy','pa_size'=>'s'],'stock'=>true],
-    302 => ['parent'=>30,'attributes'=>['pa_color'=>'navy','pa_size'=>'m'],'stock'=>true],
-    303 => ['parent'=>30,'attributes'=>['pa_color'=>'red','pa_size'=>'s'],'stock'=>false],
-    401 => ['parent'=>40,'attributes'=>['pa_color'=>'navy','pa_size'=>'s'],'stock'=>true],
+    301 => ['parent'=>30,'attributes'=>['pa_warna'=>'navy','pa_ukuran'=>'s'],'stock'=>true],
+    302 => ['parent'=>30,'attributes'=>['pa_warna'=>'navy','pa_ukuran'=>'m'],'stock'=>true],
+    303 => ['parent'=>30,'attributes'=>['pa_warna'=>'red','pa_ukuran'=>'s'],'stock'=>false],
+    401 => ['parent'=>40,'attributes'=>['pa_warna'=>'navy','pa_ukuran'=>'s'],'stock'=>true],
 ];
 $GLOBALS['vp_rows'] = [
     ['color'=>'#112233','label'=>'Navy','size'=>'S','front'=>1,'back'=>2,'variation_id'=>301],
@@ -29,7 +29,7 @@ function sanro_studio_valid_mockup_attachment($id){return is_int($id)&&$id>0?$id
 function sanro_studio_product_pricing_config($id){return ['valid'=>true,'profile'=>'cotton_combed_24s','sizes'=>['S','M']];}
 function sanro_studio_profile_unit_price($profile,$size,$front,$back,$sleeve=false){return ['valid'=>true,'unit_price'=>$size==='S'?50000:60000,'currency'=>'IDR'];}
 function get_woocommerce_currency(){return 'IDR';}
-function sanro_studio_public_editor_config($id,$allow=false){return ['valid'=>true,'pricing_profile'=>'cotton_combed_24s','categories'=>['A4'=>[21,29.7]]];}
+function sanro_studio_public_editor_config($id,$allow=false){return ['valid'=>true,'pricing_profile'=>'cotton_combed_24s','categories'=>['A4'=>[21,29.7]],'safe_areas'=>['front'=>['width'=>30,'height'=>40],'back'=>['width'=>30,'height'=>40]],'palette'=>['#112233'=>'Navy'],'print_zones'=>[]];}
 function sanro_studio_validate_product_design($id,$design){return ['valid'=>true,'sides'=>['front'=>['empty'=>false,'category'=>'A4'],'back'=>['empty'=>true,'category'=>null]]];}
 function sanitize_title($value){return strtolower(trim(preg_replace('/[^a-z0-9]+/i','-',(string)$value),'-'));}
 function sanitize_text_field($value){return trim((string)$value);}
@@ -49,7 +49,7 @@ require dirname(__DIR__).'/includes/quote.php';
 require dirname(__DIR__).'/includes/cart-contract.php';
 require dirname(__DIR__).'/includes/checkout-bridge.php';
 $map=sanro_studio_variation_map(30);
-vp_check(is_array($map)&&($map['#112233']['S']['variation_id']??null)===301&&($map['#112233']['M']['variation_id']??null)===302,'admin map resolves correct parent variations by color and size');
+vp_check(is_array($map)&&($map['#112233']['S']['variation_id']??null)===301&&($map['#112233']['M']['variation_id']??null)===302,'admin map resolves pa_warna/pa_ukuran parent variations by explicit variation ID');
 vp_check(($map['#ee0000']['S']['available']??true)===false,'out-of-stock mapped option remains visible as unavailable');
 vp_check(sanro_studio_variation_for_mapping(30,401,'Navy','S')===false,'variation from another parent rejected');
 $GLOBALS['vp_design']=['shirt_color'=>'#112233','quantities'=>['S'=>2,'M'=>1],'long_sleeve'=>false,'front'=>['category'=>'A4'],'back'=>['category'=>'A5']];

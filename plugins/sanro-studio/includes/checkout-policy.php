@@ -12,7 +12,10 @@ function sanro_studio_checkout_policy() {
 }
 function sanro_studio_cart_has_studio($cart) {
     if(!is_object($cart)||!method_exists($cart,'get_cart'))return false;
-    foreach($cart->get_cart() as $line)if(sanro_studio_pricing_is_line($line))return true;return false;
+    foreach($cart->get_cart() as $line)if(sanro_studio_pricing_is_line($line)
+        ||(is_array($line)&&is_string($line['sanro_studio_design_id']??null)
+            &&preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD',$line['sanro_studio_design_id'])))return true;
+    return false;
 }
 function sanro_studio_cart_policy_issues($cart) {
     if(!sanro_studio_cart_has_studio($cart))return [];$issues=[];
@@ -23,14 +26,29 @@ function sanro_studio_cart_policy_issues($cart) {
     return $issues;
 }
 function sanro_studio_checkout_policy_check() {
+    if(sanro_studio_cart_has_studio(sanro_studio_pricing_wc_cart())
+        &&(!function_exists('sanro_studio_pricing_wc_enabled')||!sanro_studio_pricing_wc_enabled())){
+        wc_add_notice('SANRO Studio: konfigurasi harga desain tidak aktif. Hapus baris desain Studio dan buat ulang keranjang setelah layanan pulih.','error');
+        return;
+    }
     if(sanro_studio_cart_policy_issues(sanro_studio_pricing_wc_cart()))wc_add_notice('SANRO Studio: kupon, pajak atau biaya tambahan pada pesanan ini belum didukung. Hubungi toko sebelum melanjutkan.','error');
+}
+/** Store API/Blocks requires a WP_Error instead of legacy notices. */
+function sanro_studio_store_api_checkout_policy_check($errors,$cart) {
+    if(!is_object($errors)||!method_exists($errors,'add')||!sanro_studio_cart_has_studio($cart))return;
+    if(!function_exists('sanro_studio_pricing_wc_enabled')||!sanro_studio_pricing_wc_enabled()){
+        $errors->add('sanro_studio_pricing_unavailable','SANRO Studio pricing is unavailable. Remove the Studio design line and retry after service is restored.');
+        return;
+    }
+    $issues=sanro_studio_cart_policy_issues($cart);
+    if($issues)$errors->add('sanro_studio_checkout_policy','SANRO Studio checkout has unsupported fees, tax or discounts.');
 }
 function sanro_studio_coupon_valid_for_cart($valid,$coupon=null,$discounts=null) {
     return sanro_studio_cart_has_studio(sanro_studio_pricing_wc_cart())?false:$valid;
 }
 function sanro_studio_register_checkout_policy_hooks() {
-    if(!sanro_studio_pricing_wc_enabled())return;
-    add_filter('woocommerce_coupon_is_valid','sanro_studio_coupon_valid_for_cart',20,3);
+    if(sanro_studio_pricing_wc_enabled())add_filter('woocommerce_coupon_is_valid','sanro_studio_coupon_valid_for_cart',20,3);
     add_action('woocommerce_check_cart_items','sanro_studio_checkout_policy_check',5);
+    add_action('woocommerce_store_api_cart_errors','sanro_studio_store_api_checkout_policy_check',5,2);
     add_action('woocommerce_checkout_process','sanro_studio_checkout_policy_check',1);
 }
