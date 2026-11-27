@@ -10,7 +10,7 @@
  for(const [key,title] of [['product','Warna, ukuran & jumlah'],['image','Gambar'],['text','Teks'],['advanced','Pilihan lanjutan']]){const el=document.createElement('section');el.className='sanro-tool-panel';el.dataset.toolPanel=key;const h=document.createElement('h2');h.textContent=title;el.append(h);controls.append(el);panels[key]=el;}
  const moving=new Set();
  function move(selector,to){const el=q(selector);if(!el)return;const node=el.closest('label')||el;moving.add(node);to.append(node);}
- ['#sanro-shirt-color','.sanro-size-qty','#sanro-qty-total'].forEach(s=>move(s,panels.product));
+ ['.sanro-color-picker','.sanro-size-qty','#sanro-qty-total'].forEach(s=>move(s,panels.product));
  ['#sanro-image','#sanro-background-tolerance-wrap','#sanro-remove-background','#sanro-apply-background','#sanro-restore-background','#sanro-background-status'].forEach(s=>move(s,panels.image));
  ['#sanro-text-input','#sanro-font-size','#sanro-text-rotation','#sanro-text-color','#sanro-center-text','#sanro-remove-text','#sanro-copy-text','#sanro-copy-status'].forEach(s=>move(s,panels.text));
  ['#sanro-reopen-draft','#sanro-reopen-status','#sanro-upload-previews','#sanro-preview-upload-status','#sanro-server-quote','#sanro-server-quote-status','#sanro-reset-side','#sanro-validation'].forEach(s=>move(s,panels.advanced));
@@ -25,18 +25,41 @@
  function showPanel(name,scroll=true){const mine=name==='collection';root.classList.toggle('sanro-show-collection',mine);layout.hidden=mine;actions.hidden=mine;collectionView.hidden=!mine;for(const [key,panel]of Object.entries(panels)){if(key!=='advanced')panel.hidden=mine||key!==name;}root.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===name)));if(scroll&&!mine&&window.matchMedia('(max-width:750px)').matches)controls.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'nearest'});}
  const nav=document.createElement('nav');nav.className='sanro-bottom-nav';nav.setAttribute('aria-label','Alat desain');
  for(const [name,label,ico]of [['image','Gambar','image'],['text','Teks','text'],['product','Produk','shirt'],['collection','Desain Saya','folder']]){const b=button(label,()=>showPanel(name),ico);b.dataset.tool=name;nav.append(b);}root.append(nav);
- // Compact product colour swatches mirror the native colour selector.
- const color=q('#sanro-shirt-color');if(color){const swatches=document.createElement('div');swatches.className='sanro-color-swatches';swatches.setAttribute('role','group');swatches.setAttribute('aria-label','Pilihan warna kaos');for(const option of color.options){const b=button('',()=>{color.value=option.value;color.dispatchEvent(new Event('change',{bubbles:true}));updateColors();});b.style.setProperty('--swatch',option.value);b.setAttribute('aria-label',option.text);b.title=option.text;b.dataset.color=option.value;swatches.append(b);}color.closest('label').append(swatches);function updateColors(){swatches.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.color===color.value)));}color.addEventListener('change',updateColors);updateColors();}
- const toolbar=document.createElement('div');toolbar.className='sanro-object-toolbar';preview.append(toolbar);
- let selected='text';const safe=q('.sanro-safe'),text=safe.querySelector('.sanro-text'),image=safe.querySelector('img');const box=document.createElement('div');box.className='sanro-selection-box';box.hidden=true;safe.append(box);
+ const toolbar=document.createElement('div');toolbar.className='sanro-object-toolbar';toolbar.hidden=true;preview.append(toolbar);
+ const safe=q('.sanro-safe'),text=safe.querySelector('.sanro-text'),image=safe.querySelector('img'),shirt=q('.sanro-shirt');
+ let selected=null,selectedSide=null;
+ const box=document.createElement('div');box.className='sanro-selection-box';box.hidden=true;safe.append(box);
  const handles=['nw','ne','sw','se'].map(pos=>{const h=button('',()=>{});h.className='sanro-resize-handle sanro-resize-'+pos;h.setAttribute('aria-label','Tarik sudut untuk mengubah ukuran proporsional');box.append(h);return h;});
  const rotateHandle=button('',()=>{},'rotate');rotateHandle.className='sanro-rotate-handle';rotateHandle.setAttribute('aria-label','Tarik untuk memutar objek');box.append(rotateHandle);
- const target=()=>selected==='image'?image:text;
- function select(name){selected=name;root.dataset.sanroSelected=name;updateSelection();}
- function updateSelection(){let el=target();if(el.hidden){const alternate=selected==='text'?image:text;if(!alternate.hidden){selected=selected==='text'?'image':'text';el=alternate;}}root.dataset.sanroSelected=selected;box.hidden=el.hidden||!el.textContent&&selected==='text';if(box.hidden)return;const r=el.getBoundingClientRect(),s=safe.getBoundingClientRect();box.style.left=(r.left-s.left)+'px';box.style.top=(r.top-s.top)+'px';box.style.width=r.width+'px';box.style.height=r.height+'px';}
- image.addEventListener('pointerdown',()=>select('image'));text.addEventListener('pointerdown',()=>select('text'));
- toolbar.append(button('Hapus',()=>{q(selected==='image'?'#sanro-remove-image':'#sanro-remove-text').click();updateSelection();},'trash'));
- const pad=document.createElement('div');pad.className='sanro-position-pad';pad.setAttribute('aria-label','Posisi objek');for(const [label,dx,dy]of [['↑',0,-1],['←',-1,0],['◎',0,0],['→',1,0],['↓',0,1]]){pad.append(button(label,()=>{if(dx||dy){if(typeof root.sanroMoveObject==='function')root.sanroMoveObject(selected,dx,dy);}else q(selected==='image'?'#sanro-center-image':'#sanro-center-text').click();updateSelection();}));}preview.append(pad);
+ const objects={image,text};
+ const target=()=>objects[selected];
+ function select(name){selected=name;selectedSide=shirt.dataset.side;updateSelection();}
+ function updateSelection(){
+  const el=target();
+  if(!el||el.hidden||selectedSide!==shirt.dataset.side)selected=null;
+  box.hidden=toolbar.hidden=!selected;
+  if(!selected)return;
+  const r=el.getBoundingClientRect(),s=safe.getBoundingClientRect();
+  box.style.left=(r.left-s.left-safe.clientLeft)+'px';box.style.top=(r.top-s.top-safe.clientTop)+'px';
+  box.style.width=r.width+'px';box.style.height=r.height+'px';
+ }
+ const arrows={ArrowUp:[0,-1],ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowDown:[0,1]};
+ for(const [kind,el] of Object.entries(objects)){
+  el.addEventListener('pointerdown',()=>select(kind));
+  el.addEventListener('focus',()=>select(kind));
+  el.addEventListener('keydown',event=>{
+   if(event.key==='Escape'){select(null);return;}
+   const direction=arrows[event.key];
+   if(direction){event.preventDefault();root.sanroMoveObject(kind,...direction);}
+  });
+ }
+ shirt.addEventListener('pointerdown',event=>{
+  if(!image.contains(event.target)&&!text.contains(event.target)&&!box.contains(event.target))select(null);
+ });
+ toolbar.append(
+  button('Tengah',()=>q(selected==='image'?'#sanro-center-image':'#sanro-center-text').click(),'center'),
+  button('Hapus',()=>q(selected==='image'?'#sanro-remove-image':'#sanro-remove-text').click(),'trash')
+ );
  let transform=null;
  function field(kind,type){return q(kind==='image'?(type==='size'?'#sanro-image-size':'#sanro-image-rotation'):(type==='size'?'#sanro-font-size':'#sanro-text-rotation'));}
  function applyTransform(e){if(!transform||transform.pointer!==e.pointerId)return;const dx=e.clientX-transform.cx,dy=e.clientY-transform.cy;

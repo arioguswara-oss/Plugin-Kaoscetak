@@ -193,13 +193,19 @@ function sanro_studio_render_buyer_editor() {
     echo '<nav class="sanro-mobile-jumps" aria-label="Navigasi editor"><a href="#sanro-design-preview">Lihat kaos</a><a href="#sanro-design-controls">Atur desain</a></nav>';
     echo '<div class="sanro-layout"><section class="sanro-preview" id="sanro-design-preview" aria-label="Pratinjau desain">';
     echo '<nav aria-label="Sisi kaos"><button type="button" data-side="front" aria-pressed="' . ($config['default_side'] === 'front' ? 'true' : 'false') . '">Depan</button> <button type="button" data-side="back" aria-pressed="' . ($config['default_side'] === 'back' ? 'true' : 'false') . '">Belakang</button></nav>';
-    echo '<div class="sanro-shirt"><div class="sanro-safe"><img alt="Gambar desain" hidden><div class="sanro-text" hidden></div></div></div>';
+    echo '<div class="sanro-shirt"><div class="sanro-safe"><img alt="Gambar desain" tabindex="0" hidden><div class="sanro-text" tabindex="0" hidden></div></div></div>';
     echo '<p id="sanro-side-summary" role="status">Depan: kosong · Belakang: kosong</p>';
     echo '<p class="sanro-hint">Geser gambar atau teks. Ukuran cetak dihitung dalam cm.</p></section>';
     echo '<section class="sanro-controls" id="sanro-design-controls"><h2>Atur desain</h2>';
-    echo '<label>Warna kaos<select id="sanro-shirt-color">';
-    foreach ((($config['palette']??[]) ?: ['#ffffff'=>'Putih','#171717'=>'Hitam','#b91c1c'=>'Merah','#1d4ed8'=>'Biru','#166534'=>'Hijau']) as $color=>$label) echo '<option value="'.esc_attr($color).'">'.esc_html($label).'</option>';
-    echo '</select></label>';
+    $palette = ($config['palette'] ?? []) ?: ['#ffffff'=>'Putih','#171717'=>'Hitam','#b91c1c'=>'Merah','#1d4ed8'=>'Biru','#166534'=>'Hijau'];
+    $initial_color = array_key_first($palette);
+    echo '<fieldset class="sanro-color-picker"><legend>Warna kaos</legend>';
+    echo '<input type="hidden" id="sanro-shirt-color" value="'.esc_attr($initial_color).'">';
+    echo '<div class="sanro-color-swatches">';
+    foreach ($palette as $color=>$label) {
+        echo '<label class="sanro-color-option" title="'.esc_attr($label).'"><input type="radio" name="sanro-shirt-swatch" value="'.esc_attr($color).'" aria-label="'.esc_attr($label).'"'.($color===$initial_color?' checked':'').'><span class="sanro-color-chip" style="--swatch:'.esc_attr($color).'" aria-hidden="true"></span></label>';
+    }
+    echo '</div></fieldset>';
     echo '<fieldset class="sanro-size-qty"><legend>Jumlah per ukuran</legend>';
     foreach (($config['pricing']['sizes']??['S','M','L','XL','2XL','3XL','4XL','5XL']) as $size) {
         echo '<label>' . esc_html($size) . '<input type="number" data-size="' . esc_attr($size) . '" min="0" max="999" step="1" value="0" inputmode="numeric"></label>';

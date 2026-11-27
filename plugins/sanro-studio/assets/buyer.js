@@ -16,6 +16,12 @@
   return config.color_mockups?.[shirtColor.value]?.[name] || config.mockups?.[name] || null;
  }
  const shirtColor=q('#sanro-shirt-color');
+ const colorSwatches=Array.from(root.querySelectorAll('[name="sanro-shirt-swatch"]'));
+ for(const swatch of colorSwatches)swatch.addEventListener('change',()=>{
+  if(!swatch.checked||swatch.value===shirtColor.value||!shirtColors.has(swatch.value))return;
+  shirtColor.value=swatch.value;
+  shirtColor.dispatchEvent(new Event('change'));
+ });
  const variationMap=config.variations&&Object.keys(config.variations).length?config.variations:null;
  function syncVariationAvailability(){
   if(!variationMap)return;
@@ -165,6 +171,7 @@
  function render(){
   // Rendering is not itself a user edit; revision changes only in input handlers.
   const d=sides[side];
+  for(const swatch of colorSwatches)swatch.checked=swatch.value===shirtColor.value;
   // Merchant-selected WooCommerce Media Library mockup; presentation only.
   // Design geometry, authoritative area and DTF master bindings are unchanged.
   const mockup=mappedMockup(side);
@@ -352,7 +359,7 @@
   el.addEventListener('pointercancel',finish);
   el.addEventListener('lostpointercapture',()=>{start=null;});
  }
- // Visual D-pad uses the same bounded geometry as native pointer dragging.
+ // Keyboard movement uses the same bounded geometry as pointer dragging.
  root.sanroMoveObject=function(kind,dx,dy){
   if(!['image','text'].includes(kind))return;const el=kind==='image'?image:text;if(el.hidden)return;
   const d=sides[side];editRevision++;
