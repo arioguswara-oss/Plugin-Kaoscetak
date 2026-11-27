@@ -1,6 +1,10 @@
 # SANRO Studio — satu baseline resmi development
 
-## LATEST — Owner UI/UX kandidat `0d0ea5f` aktif di staging
+## LATEST — Koreksi Simpan Desain `c082c7f` aktif
+
+27 November 2026 WIB. PR #52 bersumber dari HEAD `c79548b`; staging predecessor `0d0ea5f` diverifikasi melalui fingerprint aset dan digest HTTPS. Kandidat `c082c7f` dipasang. Gate pra/pasca HTTPS **PASS**, digest `7214e0ae…9c0e03c`, rollback tersedia dan transport nonaktif. Guest desktop memverifikasi Cart tertahan sebelum gambar siap, lalu status **Tersimpan · ID-00102** tanpa pesan unggah/simpan ulang. Buka ulang, dua thumbnail privat, S/M dan Rp147.000 sampai review Checkout **PASS**. Dua build identik dan tes terarah **PASS**. Android fisik kandidat ini menunggu Owner. **96,50% → 96,50%, Δ 0,00. GO staging.** [Laporan, checksum dan screenshot](../qa/studio-final-save-ux-20261127.md).
+
+## Historis — Owner UI/UX kandidat `0d0ea5f`
 
 27 November 2026 WIB. PR #52 HEAD `7718fc6` saat takeover. Gate HTTPS pra dan pascainstalasi **PASS**, digest aktif `53afcc58…64c5cf1`, jurnal committed, rollback tersedia, transport nonaktif. Guest Chrome desktop **PASS** untuk resize dua arah, rotasi 32°, drag, simpan dan reopen ID-00101, master privat, prasyarat Cart, thumbnail privat, multi-size serta Rp167.000 sampai review Checkout. Pesan Cart lama masih meminta unggah meskipun master dan draf sudah terverifikasi. Bukti Android fisik Owner terdahulu untuk drag dan pinch dipakai dan ditandai historis. Handle, pinch dan simpan kandidat ini menunggu verifikasi Android. **96,50% → 96,50%, Δ 0,00. GO staging. NO-GO Final Owner UI/UX Acceptance.** [Runtime dan screenshot](../qa/studio-owner-uiux-correction-20261127.md).
 

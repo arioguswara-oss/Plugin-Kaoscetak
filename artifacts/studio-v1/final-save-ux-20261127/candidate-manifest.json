@@ -1,0 +1,461 @@
+{
+  "version": "1.1.0",
+  "channel": "candidate",
+  "archive_name": "sanro-studio-staging-candidate.zip",
+  "schema": 1,
+  "repository": "arioguswara-oss/Plugin-Kaoscetak",
+  "source_commit": "c082c7f5ba577f3628e6733f840d81bd0a8f3e97",
+  "files": [
+    {
+      "path": "INSTALLATION.md",
+      "sha256": "9007aad2f5935b7c6e7b3cb7468f6ec266b2bee15e9f7b3f42bff98c4601a2ce",
+      "bytes": 2457
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "aaf135472f81c5b4a0dca9367e5bb5e9750032b5bebe5442b36e4c0a47430df3",
+      "bytes": 17337
+    },
+    {
+      "path": "README.md",
+      "sha256": "ca91f721aaa7867e7bf19ac7c847192541aff7af2e356b12cd2c17d3ef018966",
+      "bytes": 1773
+    },
+    {
+      "path": "RELEASE-NOTES.md",
+      "sha256": "e494f3a48d815ebcdf6312afb5f69060adb1f1db2b96095139abe3de682f7e38",
+      "bytes": 1366
+    },
+    {
+      "path": "assets/admin-mockup-mapping.js",
+      "sha256": "b6b0805f466b1ed5ebcd16e0ded231aabb3354c8c77bad6808d6e53f7b73a939",
+      "bytes": 4258
+    },
+    {
+      "path": "assets/admin-mockups.js",
+      "sha256": "b2937acc23a7322535e854af78777b179257567c821e65a6ec9be8572185c653",
+      "bytes": 2106
+    },
+    {
+      "path": "assets/admin-print-zones.js",
+      "sha256": "e21b843672f65627478724367b7213d8cb4ea3760dc48cace6dd9e03ae04229c",
+      "bytes": 5395
+    },
+    {
+      "path": "assets/buyer.css",
+      "sha256": "eb74f05bedc33247a7e50e88989c0314a46ca39192ca821bbf7f684637418cf0",
+      "bytes": 31041
+    },
+    {
+      "path": "assets/buyer.js",
+      "sha256": "e028e88beb0a3e3bc4ab1263d00dab05e905e1ce1cfe2459a635c7ce9b1ffaa7",
+      "bytes": 62657
+    },
+    {
+      "path": "assets/cart-redirect.js",
+      "sha256": "7501f218e59eb916d3d14b0dcce2c2a979d410ccf15444f73cde7d5f34589a9c",
+      "bytes": 964
+    },
+    {
+      "path": "assets/checkout-auth.js",
+      "sha256": "9def1f686a3dfb5f54e4bd4d1e2d1cef55a260ca818568caddd0d120f3d8c480",
+      "bytes": 3195
+    },
+    {
+      "path": "assets/collection.js",
+      "sha256": "eb570f7ed5f5c6db8f5855068cedbec653a7119a5af01768f7aaed256accee84",
+      "bytes": 8085
+    },
+    {
+      "path": "assets/drive-picker.js",
+      "sha256": "d0436a5c68b6440342e0fbdf2721586110422ceacb7cbe30f5166e0831b9ced6",
+      "bytes": 2703
+    },
+    {
+      "path": "assets/estimate.js",
+      "sha256": "24d5820d8a909ab0418a9919826953551437871a87963b364d97d24c2a3970ad",
+      "bytes": 3288
+    },
+    {
+      "path": "assets/fonts/DejaVuSans.ttf",
+      "sha256": "57f73e11f51999432bf7ab22ce55b6f945d5eca1bf824404cfa9ec2e3718c84e",
+      "bytes": 759720
+    },
+    {
+      "path": "assets/fonts/LICENSE.txt",
+      "sha256": "562c8f5e92af7a06339292a1bb0b9a3e9c8d5142af5d7167f2866fc50261b993",
+      "bytes": 2732
+    },
+    {
+      "path": "assets/garment.svg",
+      "sha256": "6cee3350a49b866ff3dc8059d1987f6ef2a304066ff3c623eb6b1280f2efbc85",
+      "bytes": 1332
+    },
+    {
+      "path": "assets/studio-admin.css",
+      "sha256": "aa3a86f5d6e8bc3fa35046ed7f5fdf6f1a921be9008ea607c3167d7f4d1feb70",
+      "bytes": 10166
+    },
+    {
+      "path": "assets/studio-admin.js",
+      "sha256": "3a381ae940f599d5618969f6d4bf2caa82a0b3871a814066c56fcacdf7690f97",
+      "bytes": 5769
+    },
+    {
+      "path": "assets/studio-ui.js",
+      "sha256": "66c183369dd4452510d57f0a966acd12d11e99141aaf5e076829ab757f16d35e",
+      "bytes": 11784
+    },
+    {
+      "path": "assets/transport.js",
+      "sha256": "ec84b56eb089c3588db2efbd00d2ce2b683ed71104242dfee57ffe4e2e030acd",
+      "bytes": 908
+    },
+    {
+      "path": "includes/admin.php",
+      "sha256": "b538c1791d0ae421104f6883ac41d7eea5536b2fa4b4d7f7b884cec9d5799386",
+      "bytes": 12989
+    },
+    {
+      "path": "includes/background-removal.php",
+      "sha256": "3458d9c160e58fe49ebf852029504d9cd6e9f310e926ab02b5d1ccf1288f1a95",
+      "bytes": 6824
+    },
+    {
+      "path": "includes/buyer.php",
+      "sha256": "35f78a72c6685692826f02d087f55b80500619ab4be6745e986439982a7d8ef1",
+      "bytes": 21448
+    },
+    {
+      "path": "includes/cart-adapter.php",
+      "sha256": "2adfaa227f3bc95a5f82ad9d119d9f66b48097fa8b86f99c83f4620023e25eec",
+      "bytes": 22704
+    },
+    {
+      "path": "includes/cart-contract.php",
+      "sha256": "8f2cb5e81dbffacf84b2254dc37a879e1691fc3b3fd1b17a179ff7152797be41",
+      "bytes": 15316
+    },
+    {
+      "path": "includes/catalog-lifecycle.php",
+      "sha256": "1cc362cc615a4ebbf1febfff3eec3d8fae6252b3a80575327e7981d75dbccb1d",
+      "bytes": 482
+    },
+    {
+      "path": "includes/checkout-batch-lock.php",
+      "sha256": "010b33f164bc93d0249acdafb47d829969780aa7ac9efa1e5e074b61b6eb1c20",
+      "bytes": 12071
+    },
+    {
+      "path": "includes/checkout-bridge.php",
+      "sha256": "d4aaa0883b397b0bdbbdcc8b1824c62babf4de1dca213fa500d47dd999791909",
+      "bytes": 31769
+    },
+    {
+      "path": "includes/checkout-charges.php",
+      "sha256": "6e71735052d07a0ad2ee7d5a0443f3ca5b24deb341a0f8b53f07d5d362fa9f18",
+      "bytes": 2373
+    },
+    {
+      "path": "includes/checkout-policy.php",
+      "sha256": "405985169bd62f3ca64d17a5656125a8219a958046a780a6296cd69123453f21",
+      "bytes": 2478
+    },
+    {
+      "path": "includes/checkout-recovery.php",
+      "sha256": "73c0b75a554249dafcc0691bc3727d066d2c6618f2c010caf072477c1794e183",
+      "bytes": 4690
+    },
+    {
+      "path": "includes/core.php",
+      "sha256": "1beee94cac2196abeafc72d27eb1f494109423bdc35d94cd1ecfa6d17f20037c",
+      "bytes": 2974
+    },
+    {
+      "path": "includes/design-collection.php",
+      "sha256": "a6fc7988c029dadaad3037679f4a30ab268c477d2b2bb912080e8f33061ff20c",
+      "bytes": 16112
+    },
+    {
+      "path": "includes/draft-rest.php",
+      "sha256": "794a8fb65993412c3b6100bcd8545a9f3c639b58ca285602527591b67891d1dd",
+      "bytes": 36127
+    },
+    {
+      "path": "includes/draft.php",
+      "sha256": "183220bb4fc5c170c0234708e40eedad462870e6ecb6273c6b9f4565b0adde7f",
+      "bytes": 23845
+    },
+    {
+      "path": "includes/drive-auto-provision.php",
+      "sha256": "3c9450d7ff353b416cb2d53915197074b13d680e9931b425c1cbbd223a37538c",
+      "bytes": 14219
+    },
+    {
+      "path": "includes/drive-jobs.php",
+      "sha256": "43175a0d9135f95d51ac4becd20d514e69357dbf41c0cac093022e93b81c8e21",
+      "bytes": 4801
+    },
+    {
+      "path": "includes/drive-master-export.php",
+      "sha256": "954b8f45dbee443a1585a066f06d84c8db1c577b4a884130548c0c238f38a3ff",
+      "bytes": 11603
+    },
+    {
+      "path": "includes/drive-oauth.php",
+      "sha256": "b091c76794d54c4bec31286633b26087b7c2fcc19cea0adc02e34b1295b25745",
+      "bytes": 27858
+    },
+    {
+      "path": "includes/drive-order-layout.php",
+      "sha256": "7a02508f9c60aa6dbb4f66f0c6d1da2ec78b570de49ead758aa864bbbbf5b8a3",
+      "bytes": 7150
+    },
+    {
+      "path": "includes/drive-production.php",
+      "sha256": "1b0d10d34d3fcb96d7530ae967ecdb097e70b3ec782c51210f5bc79f7365029a",
+      "bytes": 6098
+    },
+    {
+      "path": "includes/drive-recovery-admin.php",
+      "sha256": "b4efa448f995acec76ad3228266c8c1d39f522a7d45e58dee11105d8ec99cd60",
+      "bytes": 2241
+    },
+    {
+      "path": "includes/drive-watchdog.php",
+      "sha256": "532db44fd641e542d865fe35d8e41fe7746722bd4a7af59d86f7f456d7b4a063",
+      "bytes": 3982
+    },
+    {
+      "path": "includes/dtf-admin-generate.php",
+      "sha256": "7ad1f8a87699b4f276e81663ae4e2580959ecba4af5b7f50a59cef7dc27e3666",
+      "bytes": 10655
+    },
+    {
+      "path": "includes/dtf-admin-order-status.php",
+      "sha256": "374988caaf1926ceb4539a4742c68dd9e2a5006681c2c11ce4c14b59de9fbf5a",
+      "bytes": 8103
+    },
+    {
+      "path": "includes/dtf-admin-readiness.php",
+      "sha256": "98099e5e57faf967764386c1fa1162d26b871099804604d2648ed8783cb14939",
+      "bytes": 7908
+    },
+    {
+      "path": "includes/dtf-image-render.php",
+      "sha256": "f59293e6414a836467542087476b25092bed958178b0a44d21159c3888820358",
+      "bytes": 11943
+    },
+    {
+      "path": "includes/dtf-layer-render.php",
+      "sha256": "580e7fd78837bff89d2b4ed7915cad91824cc82bb877c4c828894aacc9f9b94e",
+      "bytes": 16267
+    },
+    {
+      "path": "includes/dtf-order-workflow.php",
+      "sha256": "311f3a2c4eeefcabbac28156780408f507a7bc78ba067da7297a1ff9d52a052c",
+      "bytes": 15770
+    },
+    {
+      "path": "includes/dtf-private-artifacts.php",
+      "sha256": "0f0404176586cb7c24ac733b8e9f9a7837771ab8f3a6ee367819fc0215529c74",
+      "bytes": 23171
+    },
+    {
+      "path": "includes/editor-config.php",
+      "sha256": "391e3eaa86c3a0a026fffa7f160470fa456264cc0a8164cbb941d5256e05ed68",
+      "bytes": 5373
+    },
+    {
+      "path": "includes/master-storage.php",
+      "sha256": "f4616b759f578e93efd27e27ae19255f711c4b82f17a076cae49df0134f7482a",
+      "bytes": 12947
+    },
+    {
+      "path": "includes/mockup-mapping.php",
+      "sha256": "480e5a4c2fcfdfa0d2383841848c003943858444a2b916c51b1a71f545338696",
+      "bytes": 8356
+    },
+    {
+      "path": "includes/order-integrity.php",
+      "sha256": "37b4943905b9c5b550fbfa99bb339f69bf17fa93ad9c6e6fc88c04a16c841dee",
+      "bytes": 8439
+    },
+    {
+      "path": "includes/order-master-source.php",
+      "sha256": "a156a075323789679079a76cd3de089e58852f035ea9660e521b9608e187af12",
+      "bytes": 6103
+    },
+    {
+      "path": "includes/order-preview.php",
+      "sha256": "87c8652cdb2bab544bb78bfa6448fdf24a23719486be3e8ae90aa528641475e9",
+      "bytes": 36847
+    },
+    {
+      "path": "includes/pricing-integration.php",
+      "sha256": "a8b73b068f5e743f6cf47c668133f5fa4286b5e5609101b5d90c1bf4fff3d247",
+      "bytes": 53558
+    },
+    {
+      "path": "includes/pricing-profiles.php",
+      "sha256": "e34fb5dd22dabb1561794abcc0b5bced461447e5032f1c640c8b65d5bda5db82",
+      "bytes": 3744
+    },
+    {
+      "path": "includes/pricing-quote.php",
+      "sha256": "5e383f8da502d8077f75e09186c9b750085b8f8c508cb964a010417d324ae40b",
+      "bytes": 5188
+    },
+    {
+      "path": "includes/pricing-woocommerce.php",
+      "sha256": "89f64ed0b4ed7f30188153d77983ece4b51666458f6a88446f091fc8a9bbbaf2",
+      "bytes": 9489
+    },
+    {
+      "path": "includes/pricing.php",
+      "sha256": "bfef97aa86d1627542bd33c0600ca0c4d8b6e031d3c9296eed0ab15604bad928",
+      "bytes": 2007
+    },
+    {
+      "path": "includes/print-area.php",
+      "sha256": "78a301d88af85de82a12883256b63198b6f34cb801b1cb6e97665f0e31906998",
+      "bytes": 5884
+    },
+    {
+      "path": "includes/private-master-setup.php",
+      "sha256": "88130e4d3942c1950adc06e675cadf48af0712e46f78310df15cfc62ac2ea974",
+      "bytes": 4435
+    },
+    {
+      "path": "includes/product-area.php",
+      "sha256": "d8d68a56649639a6a609bf25139d4ac64bd70170240c344271b60b8de2a67346",
+      "bytes": 13064
+    },
+    {
+      "path": "includes/product-mockups.php",
+      "sha256": "0af40cf064a1549bccdf41b4333c6439b7aa390dd2fc7869f95fe7c62e5cddd3",
+      "bytes": 7371
+    },
+    {
+      "path": "includes/product-pricing.php",
+      "sha256": "e5cf744198607947c8f9e4ebf169da47b2753d9ac80559d9d4f93adfb0cb41ee",
+      "bytes": 5845
+    },
+    {
+      "path": "includes/product-print-zones.php",
+      "sha256": "7bc39e625310a2e7844a1cf1e7b30cc49cfe92227b9c26bb0d5ad15012773048",
+      "bytes": 4858
+    },
+    {
+      "path": "includes/production-memory.php",
+      "sha256": "2db03a9b1615e11effa564bc79b8319069498caafc7aff020a23bec6c2ebdde8",
+      "bytes": 523
+    },
+    {
+      "path": "includes/production-package.php",
+      "sha256": "3ee1e452aab7cfbabbdc4fc4724b0a39e520a91ac8a1d4618d1d294dca669a4d",
+      "bytes": 13855
+    },
+    {
+      "path": "includes/production-pdf.php",
+      "sha256": "2352dc75e144a2c7533103f64125e94761d70c31139af14b138c22cfd5bdf591",
+      "bytes": 8304
+    },
+    {
+      "path": "includes/production-provenance.php",
+      "sha256": "36db29c5bc1b67700b3538033cb5c621cf4ff54b2db809b8f77a6452b93efe57",
+      "bytes": 850
+    },
+    {
+      "path": "includes/production-raster.php",
+      "sha256": "80e3865ad11b8f042014bde5b3d39a1766f8d328f8252da8a5b395e3f4a77b6f",
+      "bytes": 4355
+    },
+    {
+      "path": "includes/production-ready-admin.php",
+      "sha256": "0c038b5e0ce1bc361228bccbd944f717e5761d7f8b88d1fbbbe3a6ca187b2e33",
+      "bytes": 7096
+    },
+    {
+      "path": "includes/production-status.php",
+      "sha256": "fc4b70f848b902e0d00c79aa86a7b813f3cec0710d7d98356b746f3169f5ff08",
+      "bytes": 2885
+    },
+    {
+      "path": "includes/production-typography.php",
+      "sha256": "6ed2b7d8aa118d278f19636304c10c30f1f5f33c77331887a497114f9ad8830b",
+      "bytes": 3613
+    },
+    {
+      "path": "includes/public-design-id.php",
+      "sha256": "f2220754d4595163524f756b7ab099c50e3be21376f8798d6adac2db8ef99cfb",
+      "bytes": 2483
+    },
+    {
+      "path": "includes/quote.php",
+      "sha256": "cc9faccfb827ff830db5c7ed617085760c9b4e2f50a1d867aaf29110285b34a2",
+      "bytes": 7620
+    },
+    {
+      "path": "includes/repeat-discount.php",
+      "sha256": "b8047444667f1705fe685c2aa8a070437fd90123ae873d4f63b7b79978eb12fc",
+      "bytes": 14436
+    },
+    {
+      "path": "includes/runtime-readiness.php",
+      "sha256": "4b407ac63de04c2fc6d3780369084dc15e1a50faaf77512fbec7e446b57f9089",
+      "bytes": 4365
+    },
+    {
+      "path": "includes/runtime.php",
+      "sha256": "09c927f7fb6446a88bfbb6ae6164d68712283aeb03db8d9a682b91a720c8ff3b",
+      "bytes": 6853
+    },
+    {
+      "path": "includes/storage-management.php",
+      "sha256": "3b6b5bbbe929420f03ad926b024913abb37b64cf6307833f503640680371fa95",
+      "bytes": 9936
+    },
+    {
+      "path": "includes/storage-policy.php",
+      "sha256": "0665fe75088bd56deb9a2b5d7c76c333cc6badbf0dd8788a77c44bb8a97f2f3e",
+      "bytes": 13160
+    },
+    {
+      "path": "includes/studio-ui.php",
+      "sha256": "c945966e23ea5b59aaa8272bb6a647a530e27f549da2064e5cc1f5f60850e5ef",
+      "bytes": 25096
+    },
+    {
+      "path": "includes/worker-lease.php",
+      "sha256": "08d516d94de68d3a78b23af8906122c3ed3e8ff785029cc540e57eb3712bbc67",
+      "bytes": 2661
+    },
+    {
+      "path": "runtime/README.md",
+      "sha256": "e417b0759885e3d5ebf9bde851ade810654d1b9b9c09d54279fcbb3bf126d58c",
+      "bytes": 1588
+    },
+    {
+      "path": "runtime/source.json",
+      "sha256": "bb06abc17d8e23dd72aaf949e25b411f4b78e1a733e89052f05d7178bfaf8ed7",
+      "bytes": 745
+    },
+    {
+      "path": "sanro-studio.php",
+      "sha256": "a2c77fbcd60753f4521419ea2e278e9a8a1f197b9c28bd34579c099b7a728d8b",
+      "bytes": 12583
+    }
+  ],
+  "plugin_digest": "27c34671580b12cb427cabd80b55d0e9651d084a3390200426e0399ce07e41f8",
+  "generator_default": "OFF",
+  "drive_default": "OFF",
+  "runtime_e2e": "NOT_TESTED",
+  "deployment_authorized": false,
+  "build_marker": {
+    "path": "SANRO-STUDIO-BUILD.json",
+    "sha256": "0709257154caa0f751cb6894a26e0dc9be8a95b5e00dc4ec8de5ec72bfe8a2db",
+    "bytes": 155
+  },
+  "archive_sha256": "953c6365f8e7be79bdc611e9c1e9cc373840a2c877429d04f55b7ecb02d46a11"
+}
