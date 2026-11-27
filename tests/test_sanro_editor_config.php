@@ -94,4 +94,15 @@ $available_response = sanro_studio_rest_editor_config(new SanroConfigTestRequest
 verify_editor(true, $available_response['valid'], 'REST configured product valid');
 verify_editor(17, $available_response['product_id'], 'REST product ID');
 verify_editor(false, isset($available_response['owner_token']), 'REST response hides owner token');
+$GLOBALS['catalog_status'] = 'unmapped';
+verify_editor(false,sanro_studio_public_editor_config(17)['valid'],'new explicitly unmapped product cannot be purchased despite complete config');
+verify_editor(true,sanro_studio_public_editor_config(17,true)['valid'],'unmapped product config remains editable');
+$GLOBALS['catalog_status'] = '';
+$GLOBALS['profile'] = '';
+verify_editor(false,sanro_studio_catalog_is_mapped(17),'default native fields without pricing are not a legacy mapping');
+verify_editor('unmapped',sanro_studio_catalog_status(17),'incomplete native product is unmapped');
+verify_editor(false,sanro_studio_public_editor_config(17)['valid'],'incomplete native product is buyer-invisible');
+$GLOBALS['profile'] = 'cotton_combed_24s';
+verify_editor(true,sanro_studio_catalog_is_mapped(17),'real validator recognizes complete legacy product');
+verify_editor(true,sanro_studio_public_editor_config(17)['valid'],'complete legacy product remains buyer-visible');
 echo "SANRO editor REST config: {$checks} assertions PASS, 0 FAIL\n";

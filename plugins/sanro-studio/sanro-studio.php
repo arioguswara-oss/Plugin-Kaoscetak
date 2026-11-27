@@ -119,6 +119,8 @@ add_action('admin_post_sanro_studio_save', 'sanro_studio_save_settings');
 // Product configuration is editable only through WooCommerce product admin.
 add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_area_fields');
 add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_readiness_notice', 30);
+add_action('wp_insert_post', 'sanro_studio_catalog_new_product_post', 10, 3);
+add_action('woocommerce_new_product', 'sanro_studio_catalog_new_product', 10, 1);
 add_action('woocommerce_admin_process_product_object', 'sanro_studio_save_product_areas');
 add_action('woocommerce_product_options_general_product_data', 'sanro_studio_product_print_zone_fields');
 add_action('woocommerce_admin_process_product_object', 'sanro_studio_save_product_print_zones');

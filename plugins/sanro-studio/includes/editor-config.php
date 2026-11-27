@@ -17,12 +17,14 @@ function sanro_studio_public_editor_config($product_id, $allow_inactive = false)
         || !method_exists($product, 'is_purchasable') || !$product->is_purchasable()) {
         return ['valid' => false, 'error' => 'product_unavailable'];
     }
-    // Products without an explicit lifecycle value are legacy listings and
-    // stay available. New Studio mappings start disabled until configured.
-    $catalog_status = function_exists('sanro_studio_catalog_status')
-        ? sanro_studio_catalog_status($product_id) : get_post_meta($product_id, '_sanro_studio_catalog_status', true);
-    if (!$allow_inactive && in_array($catalog_status, ['disabled', 'archived'], true)) {
-        return ['valid' => false, 'error' => 'product_unavailable'];
+    // Admin readiness bypasses lifecycle only, so legacy detection can use the
+    // same full validator without recursing through catalog status.
+    if (!$allow_inactive) {
+        $catalog_status = function_exists('sanro_studio_catalog_status')
+            ? sanro_studio_catalog_status($product_id) : get_post_meta($product_id, '_sanro_studio_catalog_status', true);
+        if (!in_array($catalog_status, ['active', '', null], true)) {
+            return ['valid' => false, 'error' => 'product_unavailable'];
+        }
     }
     $pricing=function_exists('sanro_studio_product_pricing_config')?sanro_studio_product_pricing_config($product_id):['valid'=>get_post_meta($product_id,'_sanro_studio_pricing_profile',true)==='cotton_combed_24s','profile'=>'cotton_combed_24s'];
     if (empty($pricing['valid'])) {

@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Bundle a pinned candidate with the exact-staging PHP installer, never deploy."""
 import argparse,hashlib,io,json,pathlib,re,subprocess,zipfile
+INSTALLED_FINAL_ADMIN={
+ 'manifest_sha256':'8de4376a75a27cbe67ceb220c625fd42f7ee817cda308c2b2fbeb65ecd7d6d2a',
+ 'archive_sha256':'fc9496e168b63ba69e9a7bb46b9f52043cda6cfd8c7e55c3783a7b08ccae6f25',
+ 'version':'1.1.0','channel':'candidate','source_commit':'bf8ba02c4dbb073bc140085d0e6c703ffbe79beb',
+}
 APPROVED_V1_MANIFEST_SHA256='556ecd490dcad05a67c55b34e02d04bba6b3e1e25a517f073196f94649b242cd'
 # The only non-Final predecessor accepted here is the previously installed
 # staging candidate, bound to its immutable manifest and archive hashes.
@@ -116,7 +121,9 @@ is_installed_nav=(old_manifest_sha==INSTALLED_CHECKOUT_NAV['manifest_sha256'] an
 is_installed_home=(old_manifest_sha==INSTALLED_HOME_NAVIGATION['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_HOME_NAVIGATION.items() if k not in ('manifest_sha256','archive_sha256')))
 is_installed_drawer_api=(old_manifest_sha==INSTALLED_DRAWER_API['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_DRAWER_API.items() if k not in ('manifest_sha256','archive_sha256')))
 is_installed_responsive_drawer=(old_manifest_sha==INSTALLED_RESPONSIVE_DRAWER['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_RESPONSIVE_DRAWER.items() if k not in ('manifest_sha256','archive_sha256')))
-if not (is_final or is_installed_ui or is_installed_guest_cart_p0 or is_installed_final_cart_visual or is_installed_final_staging or is_installed_home or is_installed_drawer_api or is_installed_responsive_drawer or is_installed_ui_p1 or is_installed_catalog or is_installed_variable or is_installed_correction or is_installed_standard or is_installed_auto or is_installed_nav):raise SystemExit('existing manifest is not an exact approved Final Release or previously installed 1.1.0 staging candidate')
+is_installed_final_admin=(old_manifest_sha==INSTALLED_FINAL_ADMIN['manifest_sha256'] and all(old.get(k)==v for k,v in INSTALLED_FINAL_ADMIN.items() if k not in ('manifest_sha256','archive_sha256')))
+if is_installed_final_admin and old.get('archive_sha256')!=INSTALLED_FINAL_ADMIN['archive_sha256']:raise SystemExit('installed final admin archive mismatch')
+if not (is_installed_final_admin or is_final or is_installed_ui or is_installed_guest_cart_p0 or is_installed_final_cart_visual or is_installed_final_staging or is_installed_home or is_installed_drawer_api or is_installed_responsive_drawer or is_installed_ui_p1 or is_installed_catalog or is_installed_variable or is_installed_correction or is_installed_standard or is_installed_auto or is_installed_nav):raise SystemExit('existing manifest is not an exact approved Final Release or previously installed 1.1.0 staging candidate')
 if hashlib.sha256(old_archive).hexdigest()!=old.get('archive_sha256'):raise SystemExit('existing release archive checksum mismatch')
 if is_installed_ui and old.get('archive_sha256')!=INSTALLED_UI_110['archive_sha256']:raise SystemExit('installed UI archive is not the previously verified staging archive')
 if is_installed_guest_cart_p0 and old.get('archive_sha256')!=INSTALLED_GUEST_CART_P0['archive_sha256']:raise SystemExit('installed guest-cart P0 archive is not the previously verified staging archive')
@@ -151,7 +158,7 @@ placeholder="const SSWR_BEFORE='@VERIFIED_EXISTING_TREE_DIGEST@';"
 if source.count(placeholder)!=1:raise SystemExit('transport before-digest placeholder mismatch')
 source=source.replace(placeholder,"const SSWR_BEFORE='%s';"%derived)
 data={'candidate.zip':archive,'candidate-manifest.json':manifest,'binding.php':binding.encode(),'sanro-studio-staging-release.php':source.encode()}
-for name in ['transaction.php','acceptance.php','config-lease.php','checkout-acceptance.php']:data[name]=(repo/'tools/staging-web-release'/name).read_bytes()
+for name in ['transaction.php','acceptance.php','config-lease.php','checkout-acceptance.php','mixed-checkout-acceptance.php']:data[name]=(repo/'tools/staging-web-release'/name).read_bytes()
 with zipfile.ZipFile(out/'sanro-studio-staging-release.zip','w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
  for name,content in sorted(data.items()):
   info=zipfile.ZipInfo('sanro-studio-staging-release/'+name,(1980,1,1,0,0,0));info.external_attr=0o100644<<16;info.compress_type=zipfile.ZIP_DEFLATED;z.writestr(info,content)

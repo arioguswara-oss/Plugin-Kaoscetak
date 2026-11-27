@@ -14,6 +14,7 @@ require __DIR__.'/binding.php';
 require_once __DIR__.'/acceptance.php';
 require_once __DIR__.'/config-lease.php';
 require_once __DIR__.'/checkout-acceptance.php';
+require_once __DIR__.'/mixed-checkout-acceptance.php';
 function sswr_identity() {
     if (rtrim(home_url('/'),'/')!==SSWR_TARGET || rtrim(site_url('/'),'/')!==SSWR_TARGET || is_multisite()
         || realpath(ABSPATH)!==SSWR_DOCROOT || realpath($_SERVER['DOCUMENT_ROOT']??'')!==SSWR_DOCROOT
@@ -126,7 +127,7 @@ function sswr_apply() {
 }
 function sswr_page() {
     if(!current_user_can('install_plugins')||!current_user_can('manage_options'))wp_die('Forbidden',403);
-    echo '<div class="wrap"><h1>SANRO staging release</h1><p>Exact staging only. Installation preserves activation/data/flags; explicit one-order acceptance actions are below. No payment or GC.</p>';
+    echo '<div class="wrap"><h1>SANRO staging release</h1><p>Exact staging only. Installation preserves activation/data/flags; mixed checkout acceptance is available under Tools. New orders and production actions are disabled.</p>';
     try {
         if($_SERVER['REQUEST_METHOD']==='POST') {
             check_admin_referer('sswr-'.SSWR_SOURCE);
@@ -140,7 +141,7 @@ function sswr_page() {
         if(function_exists('sanro_studio_runtime_readiness'))echo '<h2>Runtime readiness</h2><pre>'.esc_html(wp_json_encode(sanro_studio_runtime_readiness(24),JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)).'</pre>';
         echo '<h2>Read-only configuration declaration inventory</h2><pre>'.esc_html(wp_json_encode(sswr_config_inventory(),JSON_PRETTY_PRINT)).'</pre>';
         sswr_normal_checkout_evidence();
-        sswr_acceptance_page();
+        echo '<p>Historical order #56 evidence is reused. Use Tools → SANRO mixed acceptance for the no-order boundary and isolated lock probe.</p>';
     } catch(Throwable $e) {error_log('SANRO staging release gate: '.get_class($e));echo '<p>NO-GO: '.esc_html($e instanceof RuntimeException?$e->getMessage():'release_validation_failed').'</p>';}
     echo '</div>';
 }
@@ -175,20 +176,5 @@ add_action('admin_init',static function(){
     if(!current_user_can('manage_options')||!current_user_can('install_plugins')||!current_user_can('manage_woocommerce'))wp_die('Forbidden',403);
     check_admin_referer('sswr-'.SSWR_SOURCE);
     if(($_POST['source']??null)!==SSWR_SOURCE)wp_die('Source mismatch',409);
-    try{
-        if($_POST['acceptance']==='create_unpaid')$result=sswr_create_synthetic_order();
-        elseif($_POST['acceptance']==='package_local')$result=sswr_synthetic_local_package();
-        elseif(in_array($_POST['acceptance'],['arm_dtf','dtf','restore_dtf'],true)){
-            $path=sswr_private_root().'/dtf-config.lock';if(is_link($path))throw new RuntimeException('unsafe_config_lock');
-            $lock=fopen($path,'c+');if(!$lock||!flock($lock,LOCK_EX|LOCK_NB))throw new RuntimeException('configuration_busy');chmod($path,0600);
-            try{
-                if($_POST['acceptance']==='arm_dtf')$result=sswr_arm_dtf_config();
-                elseif($_POST['acceptance']==='restore_dtf')$result=sswr_restore_dtf_config();
-                else try{$result=sswr_generate_synthetic_dtf();}finally{sswr_restore_dtf_config();}
-            }finally{flock($lock,LOCK_UN);fclose($lock);}
-        }
-        else throw new RuntimeException('unsupported_acceptance_action');
-        sswr_write(sswr_private_root().'/acceptance-status.json',wp_json_encode(['state'=>'PASS','action'=>$_POST['acceptance']]));
-    }catch(Throwable $e){$code=$e instanceof RuntimeException&&preg_match('/^[A-Za-z0-9_]{1,160}$/D',$e->getMessage())?$e->getMessage():'acceptance_failed_requires_readback';sswr_write(sswr_private_root().'/acceptance-status.json',wp_json_encode(['state'=>'NO_GO','error'=>$code]));}
-    wp_safe_redirect(admin_url('tools.php?page=sanro-staging-release'),303);exit;
+    wp_die('Legacy order and production acceptance actions are disabled for this candidate.', '', ['response'=>403]);
 });

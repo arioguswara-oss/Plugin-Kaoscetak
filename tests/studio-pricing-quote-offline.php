@@ -13,7 +13,8 @@ function get_post_meta($id, $key, $single) {
     if ($key === '_sanro_studio_product_sleeve') return $id === 8 ? 'long' : '';
     if ($key === '_sanro_studio_price_table') return $id === 8 ? ($GLOBALS['long_table'] ?? '') : '';
     if ($key === '_sanro_studio_second_side_prices') return $GLOBALS['custom_sides'] ?? '';
-    return $GLOBALS['areas'];
+    if ($key === '_sanro_studio_safe_areas') return $GLOBALS['areas'];
+    return '';
 }
 function wc_get_product($id) {
     return in_array($id,[7,8],true) ? new class {

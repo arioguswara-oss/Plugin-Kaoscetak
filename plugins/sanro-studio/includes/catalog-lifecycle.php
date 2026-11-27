@@ -1,38 +1,40 @@
 <?php
 defined('ABSPATH') || exit;
 
-/** Independent SANRO listing state stored on the mapped WooCommerce product. */
+/** Studio membership is independent of WooCommerce publication. */
+function sanro_studio_catalog_is_mapped($product_id) {
+    $product_id = absint($product_id);
+    if (!$product_id) return false;
+    $status = get_post_meta($product_id, '_sanro_studio_catalog_status', true);
+    if (in_array($status, ['active', 'disabled', 'archived'], true)) return true;
+    // New products receive an explicit unmapped marker. Unknown markers fail closed.
+    if ($status !== '' && $status !== null) return false;
+    // Native Woo forms also save default zones/categories on non-Studio products.
+    // Only a complete, validated legacy configuration proves previous opt-in.
+    return function_exists('sanro_studio_public_editor_config')
+        && !empty(sanro_studio_public_editor_config($product_id, true)['valid']);
+}
+
 function sanro_studio_catalog_status($product_id) {
     $status = get_post_meta(absint($product_id), '_sanro_studio_catalog_status', true);
-    return in_array($status, ['active', 'disabled', 'archived'], true) ? $status : 'active';
+    if (in_array($status, ['active', 'disabled', 'archived'], true)) return $status;
+    return sanro_studio_catalog_is_mapped($product_id) ? 'active' : 'unmapped';
 }
 
 function sanro_studio_catalog_is_buyer_visible($product_id) {
     return sanro_studio_catalog_status($product_id) === 'active';
 }
 
-/**
- * Explicit lifecycle metadata marks every Studio listing. Older installations
- * predate that field, so recognize their persisted Studio configuration too.
- * This is deliberately based on product configuration metadata, never on
- * designs/orders, and does not change the legacy buyer-visible default.
- */
-function sanro_studio_catalog_is_mapped($product_id) {
+/** Woo fires this only for creation, after assigning the persisted product ID. */
+function sanro_studio_catalog_new_product($product_id) {
     $product_id = absint($product_id);
-    if (!$product_id) return false;
-    if (metadata_exists('post', $product_id, '_sanro_studio_catalog_status')) return true;
-    foreach ([
-        '_sanro_studio_pricing_profile',
-        '_sanro_studio_price_table',
-        '_sanro_studio_safe_areas',
-        '_sanro_studio_print_categories',
-        '_sanro_studio_print_zones',
-        '_sanro_studio_mockups',
-        '_sanro_studio_mockup_matrix',
-    ] as $key) {
-        if (!metadata_exists('post', $product_id, $key)) continue;
-        $value = get_post_meta($product_id, $key, true);
-        if ($value !== '' && $value !== null && $value !== []) return true;
+    // Also clear inherited membership on a newly duplicated/imported product.
+    if ($product_id) update_post_meta($product_id, '_sanro_studio_catalog_status', 'unmapped');
+}
+
+/** Native post-new.php creates an auto-draft before Woo's product object save. */
+function sanro_studio_catalog_new_product_post($post_id, $post, $update) {
+    if (!$update && is_object($post) && ($post->post_type ?? null) === 'product') {
+        sanro_studio_catalog_new_product($post_id);
     }
-    return false;
 }
