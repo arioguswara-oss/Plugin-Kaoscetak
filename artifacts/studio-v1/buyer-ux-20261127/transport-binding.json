@@ -1,0 +1,9 @@
+{
+  "source": "7217663cbf3626298274ececf3c9e73a0996a4bc",
+  "archive_sha256": "ccc7a5c448cae3eb81c75dad89f22b61d256be3be7dd24b99932f15bd56eec9d",
+  "manifest_sha256": "a5f73718ffe6d03ca768d7801431d711cb5f17dabdf420d9939e3154f41a00b8",
+  "plugin_digest": "c6fd9ab2881da86f56ecb460b60a5fc7d1f4b2d335ab89f281d0e97651bba1fe",
+  "expected_tree_digest": "1ed56bf80b26469974272d1ef2c6c08cda885669000081e88c124a9af6658444",
+  "predecessor_tree_digest": "37bfc7cc5bd83ebb64dd2b69767db2e3ce416c705c81e7ba1895b5df746ee660",
+  "transport_sha256": "097b8ea0ecf16aee5ed2060e69fb0b8c84af0ab9b0db78f7c704083abeab878c"
+}
