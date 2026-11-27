@@ -1,0 +1,77 @@
+{
+  "date_wib": "2026-11-27",
+  "pr": 52,
+  "starting_head": "4b20d38d80316ac7ec1834128003dea73ea6ff00",
+  "last_authenticated_staging_install": {
+    "source": "d6defee4f14f87274e24242b8732796460010f82",
+    "version": "1.1.0",
+    "predecessor_digest": "274df9212cf63dc9df128bc9cde507418c93a4a3b3a97c09c48b1cbc602cd0fc",
+    "installed_tree_digest": "20f5ab23e2852957d9f9b894ca3e0e3bb664fd28ebb20e87abcc7182e1a05f7d",
+    "pre_https": "PASS",
+    "transaction": "committed",
+    "post_https_fresh_get": "PASS",
+    "php": "8.3.37",
+    "sapi": "litespeed",
+    "private_roots": "PASS",
+    "rollback_retained": true,
+    "writer_flags_off": true,
+    "transport_deactivated_after_gate": true
+  },
+  "staging_again_at_recovery": {
+    "studio_version": "1.1.0",
+    "studio_active": true,
+    "transport_active": true,
+    "active_source_and_parallel_install": "UNVERIFIED",
+    "admin_reauthentication": "request timeout, login screen remained"
+  },
+  "guest": {
+    "signed_out": true,
+    "initial_empty": true,
+    "design_id": "ID-00098",
+    "color": "Biru",
+    "sizes": {
+      "S": 1,
+      "M": 1
+    },
+    "line_prices_idr": [
+      77000,
+      80000
+    ],
+    "total_idr": 157000,
+    "home": "PASS",
+    "edit_same_id": "PASS",
+    "text_two_sides": "PASS",
+    "cart": "PASS",
+    "studio_mini_cart": "PASS",
+    "checkout_review": "PASS",
+    "cart_cleanup": "PASS",
+    "native_drawer": {
+      "state": "FAIL",
+      "visible_images": 2,
+      "src": "session-bound artwork",
+      "srcset": "catalog",
+      "currentSrc": "catalog"
+    },
+    "preview_after_remove": "navigation failed; specific HTTP status unknown",
+    "screenshots": "Captured and displayed in browser work; temporary files unavailable after session recovery"
+  },
+  "candidate": {
+    "source": "c5ca4c442cf9ac1b1bad8c48290f4165b00ddb35",
+    "expected_installed_tree_digest": "0ee4ec4ffffd0067c3fa53fbc6c2803009b5852bb796a871d6d1ec91b3dcb0f5",
+    "build_and_source_blob_verification": "PASS",
+    "reproducible": "PASS",
+    "lint_php": "PASS",
+    "store_api_and_cross_session": "PASS",
+    "public_id_contract": "PASS",
+    "sql_concurrency": "PASS isolated embedded MariaDB 11.8.9 InnoDB",
+    "authenticated_install": "NOT RUN"
+  },
+  "baseline_percent": {
+    "before": 96.5,
+    "after": 96.5,
+    "delta": 0
+  },
+  "final_release": "NO_GO",
+  "order_or_payment_created": false,
+  "production_or_merge": false
+}

@@ -1,0 +1,4 @@
+PASS 8 simultaneous first misses of one UUID: ID-00001 across all workers, one row.
+PASS 12 simultaneous first misses of distinct UUIDs: 12 distinct IDs and 13 total rows.
+PASS 13 concurrent existing reads: stable IDs and AUTO_INCREMENT 21 → 21.
+11.8.9-MariaDB-0+deb13u1 from Debian-embedded, InnoDB, real candidate PHP allocator and separate DB connections, no TCP or UNIX socket.

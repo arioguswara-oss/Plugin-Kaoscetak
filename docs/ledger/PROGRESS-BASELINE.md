@@ -1,5 +1,9 @@
 # SANRO Studio — satu baseline resmi development
 
+## LATEST — d6defee terpasang, koreksi drawer c5ca4c4 siap
+
+27 November 2026 WIB. Gate HTTPS pra/pascainstalasi `d6defee` **PASS**, digest `20f5ab23…f7d` cocok dengan paket. Guest Home, Edit Desain, Mini Cart Studio, S/M, Cart dan Checkout **PASS** dengan ID-00098 dan total Rp157.000. Drawer WooCommerce native **FAIL** karena `thumbnail_srcset` tetap katalog. Koreksi `c5ca4c4` lulus lint, kontrak preview dan build reproducible. Concurrency Design ID **PASS** pada MariaDB terisolasi. Saat pemulihan, transport dilaporkan aktif dan login ulang timeout, sehingga state terkini perlu readback sebelum instalasi berikutnya. **96,50% → 96,50%, delta 0,00 poin. NO-GO Final Release.** [Bukti dan paket](../qa/studio-final-staging-takeover-20261127.md).
+
 ## LATEST — 0a15c10 aktif, responsive drawer belum lulus visual
 
 27 November 2026 WIB. Kandidat `0a15c10` terpasang melalui gate HTTPS WordPress sebelum dan sesudah (**PASS**). Installed tree `274df921…02cd0fc` cocok dengan ZIP. Guest baru melihat ID-00066, dua baris dan Rp167.000. Store API sudah mengembalikan artwork privat dan `srcset` kosong, tetapi atribut responsif HTML drawer tetap mengarah ke katalog, jadi artwork drawer live **FAIL**. Patch `d6defee` memasang URL privat juga pada `srcset`, menghapus kaitan attachment katalog dan mencegah pembacaan ID mengonsumsi alokasi baru. Tes terarah dan dua build identik PASS. Kandidat patch belum terpasang. **96,50% → 96,50%, Δ 0,00. GO review staging, NO-GO Final Release.** [Bukti runtime dan gap](../qa/studio-takeover-acceptance-20261126.md).

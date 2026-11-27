@@ -10,12 +10,12 @@
   "plugin_digest": "cab430b9a596823c01b675882c46fc0d966d5705c02e97d4c2eadb9daf28525f",
   "deployment_authorized": false,
   "staging_installation_authorized": true,
-  "runtime_e2e": "Guest Cart and Checkout PASS on Home candidate. Installed drawer correction fixes Store API payload; native visible artwork remains FAIL.",
-  "staging_installation_state": "V1.1.0_0A15C10_INSTALLED_AUTHENTICATED_HTTPS_GATE_PASS",
+  "runtime_e2e": "D6DEFEE guest Home, Edit Design, Studio Mini Cart, two sizes, Cart and Checkout review PASS; native drawer thumbnail FAIL. New candidate awaits authenticated runtime verification.",
+  "staging_installation_state": "V1.1.0_D6DEFEE_LAST_AUTHENTICATED_INSTALL_VERIFIED_CURRENT_RUNTIME_RECHECK_REQUIRED",
   "staging_installed_version": "1.1.0",
-  "currently_installed_source": "0a15c107032bbdef1adc7d966269d7af1cc09541",
-  "installed_tree_digest": "274df9212cf63dc9df128bc9cde507418c93a4a3b3a97c09c48b1cbc602cd0fc",
-  "execution_evidence": "artifacts/studio-v1/takeover-695b441-20261126/runtime-acceptance.json",
+  "currently_installed_source": "d6defee4f14f87274e24242b8732796460010f82",
+  "installed_tree_digest": "20f5ab23e2852957d9f9b894ca3e0e3bb664fd28ebb20e87abcc7182e1a05f7d",
+  "execution_evidence": "artifacts/studio-v1/native-thumbnail-srcset-20261127/runtime-acceptance.json",
   "owner_scope_revision": "f415ec55dd5b360da89b76804512624a3611288d",
   "drive_configuration": "NOT CONFIGURED",
   "final_release": true,
@@ -209,7 +209,16 @@
   "responsive_drawer_followup": {
     "candidate_source": "d6defee4f14f87274e24242b8732796460010f82",
     "artifact_directory": "artifacts/studio-v1/responsive-drawer-followup-20261127",
-    "state": "BUILT_TARGETED_REGRESSION_PASS_STAGING_NOT_RUN",
+    "state": "INSTALLED_AND_VERIFIED_HTTPS_NATIVE_DRAWER_FAIL",
+    "final_release": false,
+    "installed_tree_digest": "20f5ab23e2852957d9f9b894ca3e0e3bb664fd28ebb20e87abcc7182e1a05f7d"
+  },
+  "native_thumbnail_srcset_followup": {
+    "candidate_source": "c5ca4c442cf9ac1b1bad8c48290f4165b00ddb35",
+    "artifact_directory": "artifacts/studio-v1/native-thumbnail-srcset-20261127",
+    "state": "BUILT_CONTRACT_AND_ISOLATED_SQL_PASS_STAGING_AUTH_AND_RECHECK_PENDING",
+    "expected_installed_tree_digest": "0ee4ec4ffffd0067c3fa53fbc6c2803009b5852bb796a871d6d1ec91b3dcb0f5",
+    "last_verified_installed_source": "d6defee4f14f87274e24242b8732796460010f82",
     "final_release": false
   }
 }
