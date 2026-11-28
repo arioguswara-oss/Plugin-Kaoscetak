@@ -24,3 +24,13 @@ Izin untuk satu order sintetis dan runner sementara di staging existing diterima
 Transport existing tetap menolak aksi order/produksi. Runner PR32 membuktikan jalur CRUD HPOS tanpa produk, sehingga tidak memenuhi uji checkout Studio. Jalur eksekusi terisolasi yang bisa memverifikasi efek keluar dan tetap menjalankan hook native Studio belum tersedia melalui akses saat ini. Tidak ada runner yang dipasang, checkout POST, order, pembayaran, atau perubahan konfigurasi. **Gate HPOS dan produksi BLOCKED. NO-GO Final Release.**
 
 [Bukti preflight](../../artifacts/studio-v1/final-candidate-20261127/order-runner-preflight-20261128.json)
+
+## Pemeriksaan dashboard setelah login Owner
+
+Login Administrator staging PASS. Tiga metode pembayaran offline WooCommerce berstatus nonaktif, yaitu bank transfer, check, dan COD. Email New order, Order on-hold dan Processing order aktif. Webhook native kosong. Scheduled Actions menunjukkan 15 pending dan 27 failed pada saat pengecekan. Data ini tidak membuktikan isolasi pengiriman eksternal saat order dibuat.
+
+Order sintetis #56 menampilkan enam tautan preview dan tiga PDF Panduan. Preview depan dan belakang item pertama berhasil diunduh dan terbaca sebagai JPEG. Keduanya 6.315 byte dengan SHA-256 yang sama, sehingga bukti ini tidak menunjukkan artwork kedua sisi berbeda. Panel masih menunjukkan paket belum lengkap dan tidak menawarkan tautan artwork/master/DTF/manifest. Unduhan PDF pertama memakai bukti valid sebelumnya.
+
+403 berasal dari dispatcher SANRO Staging Release Transport untuk acceptance POST legacy. Tidak ada POST baru untuk mereproduksi penolakan. Tidak ada tindakan Owner pada konfigurasi yang diperlukan untuk pemeriksaan ini. Gate order baru tetap memerlukan jalur eksekusi resmi dengan isolasi eksternal terverifikasi. **NO-GO Final Release, baseline 96,60%.**
+
+[Bukti dashboard](../../artifacts/studio-v1/final-candidate-20261127/admin-order-preflight-20261128.json)

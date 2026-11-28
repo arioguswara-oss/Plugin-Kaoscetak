@@ -1,0 +1,46 @@
+{
+  "date_wib": "2026-11-28",
+  "candidate": "7aa6eb23d226272bc8a523b28854ccbed64ae497",
+  "admin_login": "PASS",
+  "legacy_403": {
+    "source": "tools/staging-web-release/sanro-studio-staging-release.php",
+    "scope": "legacy acceptance POST",
+    "new_post_sent": false
+  },
+  "woo": {
+    "offline_gateways": {
+      "bank_transfer": "disabled",
+      "check": "disabled",
+      "cash_on_delivery": "disabled"
+    },
+    "email_enabled": [
+      "New order",
+      "Order on-hold",
+      "Processing order"
+    ],
+    "native_webhooks": "empty",
+    "queue": {
+      "all": 374,
+      "complete": 332,
+      "failed": 27,
+      "pending": 15
+    }
+  },
+  "old_fixture_56": {
+    "preview_links": 6,
+    "guides": 3,
+    "artwork_export_links": 0,
+    "package_incomplete": true,
+    "first_item_jpeg": {
+      "front_bytes": 6315,
+      "back_bytes": 6315,
+      "matching_sha256": "c8adc4f089a1bd3a69570791dfba45a27666e5e26db11019fcfc0b9b08f310a0"
+    }
+  },
+  "checkout_posts": 0,
+  "new_orders": 0,
+  "payments": 0,
+  "configuration_changes": 0,
+  "baseline_percent": 96.6,
+  "final_release": false
+}
