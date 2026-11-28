@@ -1,5 +1,9 @@
 # SANRO Studio — satu baseline resmi development
 
+## LATEST — Guest edit keranjang dan checkout 7aa6eb2
+
+28 November 2026 WIB. Dua sisi, Hitam, S × 1 + M × 2 dan Rp327.000 **PASS**. Edit Desain pada keranjang mempertahankan ID-00112, teks belakang terbaca ulang dan M × 3 menggantikan M × 2 tanpa duplikat, Rp437.000 cocok sampai review Classic Checkout. Preview JPEG aktual terverifikasi dan keranjang dikosongkan. Woo variable runtime, HPOS write dan file produksi order baru masih terbuka. **96,60% → 96,60%, Δ 0,00 poin. NO-GO Final Release.** [Laporan](../qa/studio-lumise-benchmark-e2e-20261128.md).
+
 ## LATEST — Positive pagination staging 7aa6eb2
 
 28 November 2026 WIB. Native WooCommerce mengakui 46 fixture Simple. Dari 49 produk terbit, #24 tampil pada halaman kedua, **PASS**. Seluruh fixture kembali Draft, tiga produk awal tetap terbit. HPOS write sudah diotorisasi dan masih terblokir oleh dispatcher yang menonaktifkan operasi order baru. **96,60% → 96,60%, Δ 0,00 poin. NO-GO Final Release.** [Laporan closure](../qa/studio-final-acceptance-closure-20261128.md).

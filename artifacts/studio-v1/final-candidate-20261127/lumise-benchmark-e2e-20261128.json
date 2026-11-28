@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "date_wib": "2026-11-28",
+  "candidate": "7aa6eb23d226272bc8a523b28854ccbed64ae497",
+  "installed_tree_digest": "04489eaa179a2c2cbe09d5f9fda5a91b712c8765d1503d48fb35e4f91c030dab",
+  "guest": {
+    "logged_in": false,
+    "fixture": 53,
+    "wc_type": "simple",
+    "color": "Hitam",
+    "design_id": "ID-00112",
+    "sides_cm": {
+      "front": [
+        22.4,
+        19.7
+      ],
+      "back_before": [
+        18,
+        12.6
+      ],
+      "back_after": [
+        21,
+        16.8
+      ]
+    },
+    "before": {
+      "S": 1,
+      "M": 2,
+      "total_idr": 327000
+    },
+    "after": {
+      "S": 1,
+      "M": 3,
+      "total_idr": 437000
+    },
+    "rows_after": 2,
+    "back_text_reopened": "QA",
+    "classic_review": "PASS",
+    "cart_cleanup": "PASS",
+    "preview": {
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 689,
+      "bytes": 11345,
+      "sha256": "19725cd11223141bdd93a34e72e00d01a0a0075d761628eb2a080c61dbe47409"
+    },
+    "native_variable_checkout": "NOT_RUN_FIXTURE_76_ARCHIVED"
+  },
+  "production": {
+    "hpos_new_order": "BLOCKED_LEGACY_TRANSPORT_403",
+    "artwork_and_pdf_new_order": "BLOCKED_NO_ORDER",
+    "old_pdf_evidence": "artifacts/studio-v1/final-candidate-20261127/admin-runtime-followup-20261128.json"
+  },
+  "guard_bypassed": false,
+  "checkout_post_sent": false,
+  "new_orders": 0,
+  "payments": 0,
+  "baseline_percent": 96.6,
+  "final_release": false
+}

@@ -382,7 +382,11 @@
     "variation_mapping": "PASS_ADMIN_READBACK_6_CHECKOUT_RUNTIME_OPEN",
     "atomic_lock_runtime": "ISOLATED_DATABASE_CAS_PASS_ROLLBACK_VERIFIED",
     "pagination_runtime_evidence": "artifacts/studio-v1/final-candidate-20261127/pagination-runtime-20261128.json",
-    "hpos_order_write": "AUTHORIZED_TRANSPORT_DISPATCH_DISABLED"
+    "hpos_order_write": "AUTHORIZED_TRANSPORT_DISPATCH_DISABLED",
+    "lumise_benchmark_e2e": "artifacts/studio-v1/final-candidate-20261127/lumise-benchmark-e2e-20261128.json",
+    "lumise_benchmark_e2e_report": "docs/qa/studio-lumise-benchmark-e2e-20261128.md",
+    "guest_edit_cart": "PASS_GUEST_TWO_SIDES_MULTI_SIZE_REPLACEMENT",
+    "guest_classic_review": "PASS_GUEST_ID_00112_437000"
   },
   "staging_qa_harness_v1": {
     "reviewed_source_head": "24817098889853a2bf0c1295a0d65e21fb66f2b0",
