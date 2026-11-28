@@ -148,6 +148,8 @@ add_action('woocommerce_admin_order_data_after_order_details','sanro_studio_admi
 add_action('admin_footer','sanro_studio_admin_drive_retry_footer');
 add_action('admin_post_sanro_studio_retry_production','sanro_studio_admin_drive_retry_post');
 add_action('admin_post_sanro_studio_order_preview', 'sanro_studio_admin_deliver_order_preview');
+add_action('admin_post_sanro_studio_ui_guide', 'sanro_studio_admin_deliver_order_guide');
+add_action('admin_post_sanro_studio_order_master', 'sanro_studio_admin_deliver_order_master');
 add_action('woocommerce_after_order_itemmeta', 'sanro_studio_admin_item_preview_status', 10, 3);
 add_action('woocommerce_after_order_itemmeta', 'sanro_studio_admin_item_dtf_status', 20, 3);
 add_action('woocommerce_after_order_itemmeta', 'sanro_studio_admin_item_dtf_readiness', 23, 3);
@@ -198,6 +200,9 @@ if (defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK')
 }
 
 add_action('rest_api_init','sanro_studio_register_readiness_route');
+// Store API uses a separate checkout lifecycle. Refuse Studio carts before
+// payment until signed authorization, item binding and snapshot locking exist.
+add_action('woocommerce_store_api_checkout_order_processed', 'sanro_studio_store_api_reject_unbound_order', 1, 1);
 add_filter('rest_post_dispatch','sanro_studio_rest_source_header',10,3);
 
 add_action('rest_api_init','sanro_studio_repeat_register_routes');

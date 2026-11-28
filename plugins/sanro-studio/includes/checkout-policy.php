@@ -36,12 +36,22 @@ function sanro_studio_checkout_policy_check() {
 /** Store API/Blocks requires a WP_Error instead of legacy notices. */
 function sanro_studio_store_api_checkout_policy_check($errors,$cart) {
     if(!is_object($errors)||!method_exists($errors,'add')||!sanro_studio_cart_has_studio($cart))return;
-    if(!function_exists('sanro_studio_pricing_wc_enabled')||!sanro_studio_pricing_wc_enabled()){
-        $errors->add('sanro_studio_pricing_unavailable','SANRO Studio pricing is unavailable. Remove the Studio design line and retry after service is restored.');
-        return;
+    // Studio's signed quote/lock workflow currently targets Classic Checkout.
+    // Store API uses a separate order lifecycle and must not create an ordinary
+    // WooCommerce line from a Studio cart until its equivalent lock is enabled.
+    $errors->add('sanro_studio_store_api_checkout_unavailable',
+        'SANRO Studio checkout is not available through this Checkout Block. Use the supported Classic Checkout flow.');
+    return;
+}
+/** Final Store API boundary before payment: block a Studio cart if a caller bypassed cart validation. */
+function sanro_studio_store_api_reject_unbound_order($order) {
+    if (!sanro_studio_cart_has_studio(sanro_studio_pricing_wc_cart())) return;
+    if (class_exists('Automattic\\WooCommerce\\StoreApi\\Exceptions\\RouteException')) {
+        throw new \Automattic\WooCommerce\StoreApi\Exceptions\RouteException(
+            'sanro_studio_store_api_checkout_unavailable',
+            'SANRO Studio order locking is not enabled for Store API checkout.', 409);
     }
-    $issues=sanro_studio_cart_policy_issues($cart);
-    if($issues)$errors->add('sanro_studio_checkout_policy','SANRO Studio checkout has unsupported fees, tax or discounts.');
+    throw new RuntimeException('SANRO Studio order locking is not enabled for Store API checkout.');
 }
 function sanro_studio_coupon_valid_for_cart($valid,$coupon=null,$discounts=null) {
     return sanro_studio_cart_has_studio(sanro_studio_pricing_wc_cart())?false:$valid;

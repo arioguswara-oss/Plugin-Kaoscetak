@@ -42,7 +42,9 @@ $GLOBALS['network_calls']=0;$GLOBALS['uploads']=0;$GLOBALS['remote']=[];
 flow_check(sanro_studio_export_production_package($production,71,'private-folder-88-71')['error']==='drive_package_disabled'&&$GLOBALS['network_calls']===0,'default OFF exports nothing');
 flow_check(sanro_studio_prepare_production_package($production,71)['error']==='production_not_ready','unpaid not-ready order refused');
 $production->ready='yes';flow_check(sanro_studio_prepare_production_package($production,71)['valid'],'explicit ready order allowed');$production->ready='';$production->paid=true;$production->status='processing';
-$package=sanro_studio_prepare_production_package($production,71);flow_check(!empty($package['valid'])&&count($package['assets'])===4&&$package['print_ready']===false,'four in-memory assets, never print-ready');
+$GLOBALS['admin']=true;$package=sanro_studio_prepare_production_package($production,71);flow_check(!empty($package['valid'])&&count($package['assets'])===4&&$package['print_ready']===false,'four in-memory assets, never print-ready');
+flow_check(sanro_studio_local_production_order_eligible($production)&&!sanro_studio_drive_package_enabled(),'local production eligibility is independent of disabled Drive export');
+$local_guide=sanro_studio_admin_order_guide_bytes($production,71);flow_check(!empty($local_guide['valid'])&&str_starts_with($local_guide['bytes'],'%PDF-')&&str_ends_with(rtrim($local_guide['bytes']),'%%EOF'),'admin guide bytes are generated locally with Drive and DTF OFF');
 $pdf=$package['assets'][2]['bytes'];flow_check(str_starts_with($pdf,'%PDF-1.4')&&str_ends_with($pdf,"%%EOF\n")&&str_contains($pdf,'/Count 2'),'two-page PDF guide with JPEG preview');
 preg_match('/startxref\n([0-9]+)/',$pdf,$xref);flow_check(substr($pdf,(int)$xref[1],4)==='xref','PDF cross-reference offset valid');
 preg_match_all('/([0-9]{10}) 00000 n /',$pdf,$offsets);foreach($offsets[1] as $index=>$offset)flow_check(str_starts_with(substr($pdf,(int)$offset),($index+1).' 0 obj'),'PDF object offsets valid');
@@ -50,9 +52,12 @@ flow_check($package['manifest']['quantities']===['S'=>3,'L'=>1]&&$package['manif
 $production->items[71]->total=1;flow_check(sanro_studio_prepare_production_package($production,71)['error']==='order_amount_or_allocation_mismatch','production denies modified persisted total');$production->items[71]->total=186000;
 $production->items[71]->name='Kaos é';flow_check(!empty(sanro_studio_prepare_production_package($production,71)['valid']),'Unicode renders with bundled embedded font');$production->items[71]->name='Cotton Combed 24s';
 $GLOBALS['admin']=true;ob_start();sanro_studio_admin_item_preview_status(71,$production->items[71],null);$html=ob_get_clean();flow_check(substr_count($html,'<img ')===2&&str_contains($html,'_wpnonce=')&&str_contains($html,'#ffffff')&&str_contains($html,'A5'),'admin renders both nonce-protected previews and snapshot');
+flow_check(str_contains($html,'sanro_studio_ui_guide')&&str_contains($html,'PDF Panduan'),'eligible order item exposes the local guide route');
 flow_check(!str_contains($html,$private)&&!str_contains($html,$token),'admin HTML never leaks private path or owner secret');
 $GLOBALS['admin']=false;ob_start();sanro_studio_admin_item_preview_status(71,$production->items[71],null);flow_check(ob_get_clean()==='','non-admin sees no preview HTML');
 flow_check(!sanro_studio_admin_order_preview_bytes($production,'front',71)['valid'],'non-admin private admin reader denied');
+flow_check(sanro_studio_admin_order_guide_bytes($production,71)['error']==='forbidden'
+    &&sanro_studio_admin_order_master_bytes($production,71,'front')['error']==='forbidden','non-admin cannot read operator guide or private master');
 $GLOBALS['admin']=true;$readiness=sanro_studio_production_status($production,71);flow_check($readiness['order_ready']&&$readiness['design_ready']&&$readiness['previews_ready']&&!$readiness['generator_enabled']&&!$readiness['drive_enabled']&&!$readiness['print_approved'],'admin separates paid/design/preview readiness from disabled writers and print approval');
 if(extension_loaded('gd')){
     $im=imagecreatetruecolor(20,16);imagefill($im,0,0,imagecolorallocate($im,20,80,120));

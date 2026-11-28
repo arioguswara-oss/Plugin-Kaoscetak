@@ -12,7 +12,7 @@ function sanro_studio_drive_package_enabled() {
 /** Build an immutable, credential-free production description from a locked item. */
 function sanro_studio_production_item_manifest($order, $item_id) {
     if (!is_int($item_id) || $item_id < 1
-        || !sanro_studio_auto_drive_order_eligible($order)) return ['valid'=>false,'error'=>'production_not_ready'];
+        || !sanro_studio_local_production_order_eligible($order)) return ['valid'=>false,'error'=>'production_not_ready'];
     $integrity=sanro_studio_saved_order_context($order,true);
     if(empty($integrity['valid'])||empty($integrity['studio']))return ['valid'=>false,'error'=>$integrity['error']??'production_order_integrity_failed'];
     $items=$order->get_items('line_item'); $item=$items[$item_id]??null;
