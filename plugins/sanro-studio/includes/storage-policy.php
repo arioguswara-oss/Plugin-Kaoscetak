@@ -76,6 +76,11 @@ function sanro_studio_store_private_preview($design_id, $side, $bytes) {
     $filename = strtolower($design_id) . '-' . $side . '-' . $checked['sha256'] . '.' . $extension;
     $path = $directory . DIRECTORY_SEPARATOR . $filename;
     // Exclusive creation: no overwrite or symlink traversal of an existing file.
+    if (function_exists('sanro_studio_storage_transaction') && !sanro_studio_storage_writing($path)) {
+        return sanro_studio_storage_transaction($path, strlen($bytes), static function() use ($design_id, $side, $bytes) {
+            return sanro_studio_store_private_preview($design_id, $side, $bytes);
+        });
+    }
     $handle = @fopen($path, 'x');
     if ($handle === false) {
         // Repeated uploads of identical content are safe and idempotent.
@@ -120,6 +125,7 @@ function sanro_studio_store_private_preview($design_id, $side, $bytes) {
  * alongside preview bytes or returned in a preview reference.
  */
 function sanro_studio_store_owned_draft_preview($design_id, $owner_token, $side, $bytes, $expected_design_hash = null) {
+    if (function_exists('sanro_studio_storage_transaction') && !sanro_studio_storage_inside()) return sanro_studio_storage_transaction(null,0,static function() use($design_id,$owner_token,$side,$bytes,$expected_design_hash){return sanro_studio_store_owned_draft_preview($design_id,$owner_token,$side,$bytes,$expected_design_hash);});
     if (!function_exists('sanro_studio_read_draft')) {
         return ['valid' => false, 'error' => 'draft_store_unavailable'];
     }
@@ -167,6 +173,11 @@ function sanro_studio_store_owned_draft_preview($design_id, $owner_token, $side,
         if (!isset($after['preview_refs']) || !is_array($after['preview_refs'])) {
             $after['preview_refs'] = [];
         }
+        // The first standard upload replaces a legacy draft's size-specific preview set.
+        if (!empty($after['preview_variant_required']) || !empty($after['preview_refs_by_size'])) {
+            $after['preview_refs'] = [];
+            unset($after['preview_refs_by_size'], $after['preview_variant_required']);
+        }
         $after['preview_refs'][$side] = $stored['file_id'];
         $after['preview_design_hash'] = hash('sha256', maybe_serialize($before['design']));
         if ($before === $after) return $stored;
@@ -194,6 +205,11 @@ function sanro_studio_read_owned_draft_preview($design_id, $owner_token, $side, 
     }
     $draft = sanro_studio_read_draft($design_id, $owner_token);
     if (empty($draft['valid'])) return $draft;
+    return sanro_studio_read_verified_preview_file($design_id, $side, $file_id);
+}
+
+/** Internal filesystem reader; callers MUST authorize the design and reference first. */
+function sanro_studio_read_verified_preview_file($design_id, $side, $file_id) {
     if (!in_array($side, ['front', 'back'], true)
         || !is_string($file_id) || !is_string($design_id)
         || !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $design_id)) {

@@ -2,8 +2,7 @@
 /** Sprint 135 fail-closed compositor regression, no WP, WC or network. */
 define('SANRO_STUDIO_ENABLE_DTF_LAYER_RASTER', true);
 $font135 = getenv('SANRO_STUDIO_TEST_FONT');
-define('SANRO_STUDIO_DTF_FONT_PATH',
-    is_string($font135) && $font135 !== '' ? $font135 : '/nonexistent/sanro-qa-font.ttf');
+if(is_string($font135)&&$font135!=='')define('SANRO_STUDIO_DTF_FONT_PATH',$font135);
 require __DIR__ . '/dtf-image-render-smoke.php';
 require dirname(__DIR__) . '/includes/dtf-layer-render.php';
 
@@ -61,11 +60,10 @@ if (!$font_ready) {
         'trusted local font allows mixed-layer plan');
 }
 $GLOBALS['record133']['design']['front']['text'] = "HELLO\nWORLD";
+check135(!empty(sanro_studio_dtf_layer_plan($order,71,'front')['valid']), 'multiline text retained in plan');
+$GLOBALS['record133']['design']['front']['text'] = "مرحبا";
 check135(sanro_studio_dtf_layer_plan($order,71,'front')['error']
-    === 'dtf_text_layout_unsupported', 'multiline not silently omitted');
-$GLOBALS['record133']['design']['front']['text'] = "Halo 😀";
-check135(sanro_studio_dtf_layer_plan($order,71,'front')['error']
-    === 'dtf_text_layout_unsupported', 'unshaped Unicode refused');
+    === 'dtf_text_layout_unsupported', 'unsupported complex shaping refused');
 $GLOBALS['record133']['design']['front']['text'] = 'HELLO';
 $GLOBALS['record133']['design']['front']['text_color'] = '#BAD';
 check135(sanro_studio_dtf_layer_plan($order,71,'front')['error']
@@ -116,6 +114,13 @@ if ($font_ready && function_exists('imagettfbbox') && function_exists('imagecrea
     }
     imagedestroy($decoded);
     check135($painted, 'actual private font glyphs painted over transparent pixels');
+    if (function_exists('imagerotate')) {
+        $GLOBALS['record133']['design']['front']['objects'][0]['rotation']=90;
+        $GLOBALS['record133']['design']['front']['objects'][1]['rotation']=35;
+        $rotated=sanro_studio_dtf_render_layer_side($order,71,'front');
+        check135(!empty($rotated['valid']) && $rotated['height_px']>$render['height_px'],
+            'layered raster respects rotated text and image footprint');
+    }
     echo "DTF_LAYER_REAL: PASS (both image and text pixels rasterized)\n";
 } else {
     $render = sanro_studio_dtf_render_layer_side($order,71,'front');

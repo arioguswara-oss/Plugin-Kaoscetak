@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "source_commit": "4772561ded172bd1d62bb88867b92646f878091e",
+  "source_plugin_tree_files": 194,
+  "source_tree_match": "PASS_194_OF_194_FILES_EXACTLY_MATCH_GITHUB_COMMIT_TREE",
+  "tests": {
+    "php_lint": "PASS_CHANGED_PHP_AND_TEST_FILES",
+    "store_api_checkout_guard": {
+      "result": "PASS",
+      "checks": 4
+    },
+    "production_package_flow": {
+      "result": "PASS",
+      "checks": 40
+    },
+    "checkout_and_order_lock_flow": {
+      "result": "PASS",
+      "checks": 17
+    },
+    "order_preview": "PASS",
+    "private_master_binding": {
+      "result": "PASS",
+      "checks": 8
+    },
+    "checkout_batch_lock": {
+      "result": "PASS",
+      "checks": 32
+    }
+  },
+  "build": {
+    "version": "1.1.0",
+    "archive": "sanro-studio-staging-candidate.zip",
+    "archive_sha256": "f34140e754fce2c8915afcead9fbc61be3466b0f026f96f709e0124c9bd6d46a",
+    "manifest_sha256": "0a837204a8a78a209a84b3f3f705637fb29762087b95724b4124b6778dfd4935",
+    "plugin_digest": "883c11ffc3d900264610eb9a0900083bdfb7d7a32bb29903a6c35c377ca55442",
+    "two_reproducible_builds_identical": true,
+    "zip_integrity": "PASS"
+  },
+  "runtime": {
+    "staging_installation": "NOT_TESTED",
+    "live_store_api": "NOT_TESTED",
+    "new_order_hpos_write": "NOT_TESTED",
+    "admin_master_delivery": "NOT_TESTED",
+    "guide_download": "NOT_TESTED",
+    "visual_acceptance": "OWNER_SEPARATE"
+  },
+  "baseline_percent": 96.6,
+  "final_release": false
+}

@@ -1,0 +1,38 @@
+{
+  "source": "WordPress Connector live plugin-list",
+  "date": "2026-11-24",
+  "target": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "native_plugin": {
+    "version": "1.1.0",
+    "active": true
+  },
+  "temporary_release_transport": {
+    "version": "0.3.3",
+    "active": false,
+    "pinned_source": "ff93166f8d8476c764dc166f8b2f08aff56ac0c5",
+    "applied": false
+  },
+  "source_bound_installation_transport": {
+    "version": "0.3.3",
+    "source_commit": "faa1323f31230fc10ff50d54784ab1cbc051447a",
+    "sha256": "a4a441b60d2b3d376cbe71e336d0359f7ddda26bb37feae9c76954842b5262da",
+    "applied": true,
+    "active_after_install": false
+  },
+  "temporary_qa_active": false,
+  "site_reachable": true,
+  "ui_source": "12b2c043cc6ccbb3e7c828949bf524ff6f2e84b1",
+  "ui_installed": true,
+  "runtime_gate": "PASS; authenticated HTTPS LiteSpeed diagnostic before and after install; all writer flags OFF; private roots PASS; prior journal and rollback verified",
+  "installed_digest": "0c7900e3b5779b19897ad8f1443f4e0bee8fd0b377ffa35f27bb993b68116301; matched candidate archive inventory and build marker",
+  "visual_after_desktop_mobile": "OWNER ACCEPTANCE PENDING",
+  "drag_resize_touch_overflow": "NOT_TESTED",
+  "reason": "UI package installed through the exact-target locked, journaled staging transport after source/manifest-bound digest verification. Visual acceptance remains a separate Owner browser action.",
+  "live_drive": "DEFERRED_BY_OWNER",
+  "payment_or_second_order": "NOT_PERFORMED",
+  "writer_config_modified": false,
+  "transport_deactivated": true,
+  "temporary_application_password_revoked": true,
+  "production_accessed": false,
+  "merged": false
+}

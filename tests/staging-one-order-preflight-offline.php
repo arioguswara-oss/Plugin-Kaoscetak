@@ -16,7 +16,6 @@ $good = [
     'approval' => 'ONE_SYNTHETIC_CHECKOUT_ORDER_APPROVED',
     'mode' => 'create',
     'existing_qa_orders' => 0,
-    'payment_gateways' => 0,
     'currency' => 'IDR',
     'server_quote' => 130000,
     'order_total' => 130000,
@@ -45,6 +44,10 @@ $check = static function (string $label, array $input, bool $expected, ?string $
 };
 
 $check('valid preflight (no order)', $good, true, 'preflight_only_no_write');
+$withGatewayConfig = $good; $withGatewayConfig['payment_gateways'] = 0;
+$check('preflight without gateway configuration', $withGatewayConfig, true, 'preflight_only_no_write');
+$withGatewayConfig['payment_gateways'] = 2;
+$check('gateway count does not gate Studio checkout', $withGatewayConfig, true, 'preflight_only_no_write');
 $check('empty input', [], false, 'wrong_staging_identity');
 foreach ([
     'host' => 'kaoscetak.id',
@@ -59,7 +62,6 @@ foreach ([
     'approval' => 'NO_APPROVAL',
     'mode' => 'plan',
     'existing_qa_orders' => 1,
-    'payment_gateways' => 1,
 ] as $key => $bad) {
     $input = $good; $input[$key] = $bad;
     $check("reject {$key}", $input, false, 'approval_or_idempotence_missing');

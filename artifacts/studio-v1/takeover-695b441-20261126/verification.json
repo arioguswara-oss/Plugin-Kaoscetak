@@ -1,0 +1,31 @@
+{
+  "date_wib": "2026-11-26",
+  "reviewed_pr52_head": "bbb7c73c60053b54b7199f7d93e271a93a99c054",
+  "candidate_source": "695b4410f394dbb862a2ef44c2d7753b852b7711",
+  "candidate_payload_matches_head": true,
+  "runtime_files_compared": 88,
+  "candidate_archive_sha256": "167cc119fe4d86facddb05dfff51a651fd687ee8ae7a671c3251376435747dc9",
+  "candidate_manifest_sha256": "58d291989ff44b90b9eef797cea908219026b2a94bfa41c20363ced0b57aae28",
+  "candidate_expected_installed_tree": "26aeb020ff96684e1166fe1bd7c09d5cac4abd25c25660878652b54b9a31035e",
+  "predecessor_source_matching_live_assets": "644739c88e8bacebd4a42d7272da93eff8fec419",
+  "last_documented_installed_tree": "6b39138c7a8312eb8bf8d720bbafdf1221d44dac2f50bbf01b1fd734f4a18f3e",
+  "current_authenticated_tree_readback": "BLOCKED_ADMIN_SIGN_IN",
+  "new_install": "NOT_RUN",
+  "preinstall_gate": "BLOCKED_ADMIN_SIGN_IN",
+  "postinstall_gate": "NOT_TESTED",
+  "home_navigation_unit": "PASS_6",
+  "guest_desktop_predecessor": {
+    "width_css_px": 1363,
+    "wp_admin_bar": false,
+    "cart_badge_initial": null,
+    "catalog_editor_horizontal_overflow": false,
+    "home_control_present": false,
+    "print_sides": ["front", "back"],
+    "size_inputs": 8,
+    "collection_panel_visible": true
+  },
+  "candidate_guest_and_admin_acceptance": "NOT_TESTED",
+  "isolated_design_id_concurrency": "NOT_TESTED",
+  "baseline": {"before": 96.5, "after": 96.5, "delta_points": 0.0},
+  "final_release_decision": "NO_GO"
+}

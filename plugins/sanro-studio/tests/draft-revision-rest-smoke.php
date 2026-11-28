@@ -20,6 +20,15 @@ class RevisionRequest {
 }
 function wp_json_encode($value) { return json_encode($value); }
 function rest_ensure_response($value) { return $value; }
+define('HOUR_IN_SECONDS', 3600);
+$draft_counter = false;
+function get_transient($key) { return $GLOBALS['draft_counter']; }
+function set_transient($key, $value, $ttl) {
+    if ($ttl !== HOUR_IN_SECONDS) return false;
+    $GLOBALS['draft_counter'] = (string) $value;
+    return true;
+}
+function wp_salt($scheme) { return 'test-salt-' . $scheme; }
 function sanro_studio_update_draft($id, $token, $design, $expected_hash = null) {
     return ['valid' => true, 'design_id' => $id, 'expected' => $expected_hash];
 }
@@ -57,4 +66,12 @@ revision_assert(sanro_studio_image_bootstrap_allowed($bootstrap), 'image-only bo
 revision_assert(!sanro_studio_image_bootstrap_allowed($bootstrap + ['front'=>['objects'=>[]]]), 'bootstrap cannot embed printable objects');
 revision_assert(!sanro_studio_image_bootstrap_allowed(array_merge($bootstrap,['quantities'=>['M'=>-1]])), 'bootstrap rejects negative quantity');
 revision_assert(!sanro_studio_image_bootstrap_allowed(array_merge($bootstrap,['quantities'=>['M'=>1000]])), 'bootstrap rejects excessive quantity');
-echo "PASS: 18 draft REST and image-binding checks\n";
+$_SERVER['REMOTE_ADDR'] = '192.0.2.42';
+revision_assert(sanro_studio_draft_creation_budget() && $draft_counter === '1', 'absent counter starts at one');
+revision_assert(sanro_studio_draft_creation_budget() && $draft_counter === '2', 'option-backed string counter allows next valid draft');
+$draft_counter = '19';
+revision_assert(sanro_studio_draft_creation_budget() && $draft_counter === '20', 'last allowed slot reaches existing cap');
+revision_assert(!sanro_studio_draft_creation_budget() && $draft_counter === '20', 'numeric string cap stays enforced');
+$draft_counter = 'corrupt';
+revision_assert(!sanro_studio_draft_creation_budget() && $draft_counter === 'corrupt', 'malformed cache entry fails closed');
+echo "PASS: 23 draft REST, image-binding and quota checks\n";

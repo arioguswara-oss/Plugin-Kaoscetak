@@ -70,6 +70,14 @@ verify_rest(count(array_filter(array_keys($GLOBALS['routes']), static function (
 })) >= 1, 'draft read/update route registered');
 verify_rest(sanro_studio_rest_draft_nonce(new SanroTestRequest([], ['X-Sanro-Draft-Nonce' => 'bad'])) instanceof WP_Error, 'invalid nonce rejected');
 verify_rest(sanro_studio_rest_draft_nonce(new SanroTestRequest([], ['X-Sanro-Draft-Nonce' => 'good-nonce'])) === true, 'valid nonce accepted');
+verify_rest(sanro_studio_normalize_master_budget_count(false) === 0, 'missing master budget starts at zero');
+verify_rest(sanro_studio_normalize_master_budget_count(1) === 1, 'integer master budget remains an integer');
+verify_rest(sanro_studio_normalize_master_budget_count('1') === 1, 'string transient counter from persistent cache is normalized');
+verify_rest(sanro_studio_normalize_master_budget_count('10') === 10, 'string counter preserves exhausted budget');
+verify_rest(sanro_studio_normalize_master_budget_count('0009') === 9, 'zero-padded numeric transient remains bounded');
+verify_rest(sanro_studio_normalize_master_budget_count('-1') === null, 'negative transient fails closed');
+verify_rest(sanro_studio_normalize_master_budget_count('1e2') === null, 'non-decimal transient fails closed');
+verify_rest(sanro_studio_normalize_master_budget_count(str_repeat('9', 10)) === null, 'oversized transient fails closed');
 verify_rest(!sanro_studio_draft_payload_allowed(['image' => 'data:image/png;base64,AAAA']), 'embedded image rejected');
 verify_rest(!sanro_studio_draft_payload_allowed(['text' => str_repeat('x', 17000)]), 'oversize rejected');
 verify_rest(sanro_studio_draft_payload_allowed(['front' => ['text' => 'OK']]), 'small metadata accepted');

@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "source": "3a3a3ea6606608143658a55e998f2bbbdb9be8ee",
+  "results": {
+    "php_lint_changed_files": "PASS",
+    "javascript_syntax_studio_admin": "PASS",
+    "catalog_lifecycle_assertions": 14,
+    "editor_config_assertions": 31,
+    "buyer_render_assertions": 20,
+    "admin_menu_permissions_order_hooks_assertions": 71,
+    "product_pricing_assertions": 7,
+    "buyer_gate_assertions": 3,
+    "share_clone_assertions": 11,
+    "share_owner_security_assertions": 21,
+    "installer_transaction_recovery_scenarios": 6,
+    "candidate_security_tests": 6,
+    "candidate_two_builds_byte_identical": true,
+    "zip_inventory_entries": 88,
+    "zip_member_checksums": "PASS",
+    "artifact_checksums": "PASS"
+  },
+  "not_run_or_unavailable": {
+    "native_feature_gap_flow": "ATTEMPTED_NOT_RUN: local PHP CLI lacks GD; imagecreatetruecolor unavailable",
+    "browser_admin_interaction": "NOT_AVAILABLE: no browser automation connector in this session",
+    "owner_visual_acceptance": "SEPARATE_OWNER_ACTION",
+    "full_audit": "NOT_REPEATED"
+  },
+  "scope_exclusions": [
+    "checkout",
+    "order mutation",
+    "payment",
+    "DTF generation",
+    "Google Drive OAuth",
+    "production",
+    "merge"
+  ]
+}

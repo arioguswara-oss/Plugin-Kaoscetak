@@ -27,12 +27,10 @@ $checks['hpos_enabled'] = class_exists('Automattic\\WooCommerce\\Utilities\\Orde
 $checks['qa_order_guard'] = function_exists('sanro_studio_qa_block_classic_order');
 $checks['cart_reprice_callback'] = function_exists('sanro_studio_stage_reprice_signed_cart');
 $checks['order_binding_callback'] = function_exists('sanro_studio_stage_checkout_create_order_line_item');
-$checks['payment_gateways_off'] = true;
-if (function_exists('WC') && WC()->payment_gateways()) {
-    foreach (WC()->payment_gateways()->payment_gateways() as $gateway) {
-        if ($gateway->enabled === 'yes') $checks['payment_gateways_off'] = false;
-    }
-}
+$checks['woocommerce_standard_order_status_api'] = class_exists('WC_Order')
+    && method_exists('WC_Order', 'is_paid')
+    && function_exists('wc_get_order_statuses')
+    && isset(wc_get_order_statuses()['wc-pending'], wc_get_order_statuses()['wc-on-hold']);
 $checks['staging_cart_flag'] = defined('SANRO_STUDIO_ENABLE_STAGING_CART') && SANRO_STUDIO_ENABLE_STAGING_CART === true;
 $checks['staging_commit_flag'] = defined('SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT') && SANRO_STUDIO_ENABLE_STAGING_CART_COMMIT === true;
 $checks['staging_checkout_flag'] = defined('SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK') && SANRO_STUDIO_ENABLE_STAGING_CHECKOUT_HOOK === true;

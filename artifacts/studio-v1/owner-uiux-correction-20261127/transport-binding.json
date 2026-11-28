@@ -1,0 +1,12 @@
+{
+  "source": "0d0ea5f1795c5148e763d88281e8964f6672fbce",
+  "archive_sha256": "1690c709da2e2921e036bdefb7bfcd2442fe0eb3b080839437119fba511c3fd4",
+  "manifest_sha256": "f034d76e8bea7830d48f643562418b325798bd792348545d5b59f660d4d4e6a7",
+  "version": "1.1.0",
+  "expected_tree_digest": "53afcc58aba2e51703ad3fa7a9aec004c748cf992d899bc005f57f70264c5cf1",
+  "files": 89,
+  "predecessor_source": "c5ca4c442cf9ac1b1bad8c48290f4165b00ddb35",
+  "predecessor_tree_digest": "0ee4ec4ffffd0067c3fa53fbc6c2803009b5852bb796a871d6d1ec91b3dcb0f5",
+  "base_transport_sha256": "7fe92b344b37708ff721c37b10e22fa776ff27c07b2bde4dc2c8a4320f2b968b",
+  "transport_sha256": "f6cd853b870bc41124ac04589b78d92b2ad85036af3dc3fff27ef792065a44d4"
+}

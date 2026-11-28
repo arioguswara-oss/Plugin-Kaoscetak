@@ -1,5 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
+require_once __DIR__.'/production-raster.php';
 
 /**
  * Experimental, server-only SANRO Studio layered DTF raster candidate.
@@ -18,12 +19,14 @@ function sanro_studio_dtf_private_font() {
     if (!defined('SANRO_STUDIO_DTF_FONT_PATH')
         || !is_string(SANRO_STUDIO_DTF_FONT_PATH)
         || !preg_match('/\.ttf$/iD', SANRO_STUDIO_DTF_FONT_PATH)
-        || is_link(SANRO_STUDIO_DTF_FONT_PATH)) return false;
+        || is_link(SANRO_STUDIO_DTF_FONT_PATH)) return sanro_studio_production_font();
     $path = realpath(SANRO_STUDIO_DTF_FONT_PATH);
     if (!$path || !is_file($path) || !is_readable($path)
         || is_link($path)) return false;
     $size = @filesize($path);
     if (!is_int($size) || $size < 1024 || $size > 16777216) return false;
+    $bundled=sanro_studio_production_font();
+    if(!$bundled||!hash_equals(hash_file('sha256',$bundled),hash_file('sha256',$path)))return false;
     foreach ([
         defined('ABSPATH') ? realpath(ABSPATH) : false,
         isset($_SERVER['DOCUMENT_ROOT']) && is_string($_SERVER['DOCUMENT_ROOT'])
@@ -38,10 +41,9 @@ function sanro_studio_dtf_private_font() {
 }
 
 /**
- * One image + one single-line ASCII text object per side, never more.
+ * One image + one multiline supported-Unicode text object per side.
  * The final canvas is the union of both boxes in physical centimeters.
- * Unknown fonts, multi-line text and complex Unicode require a later parity
- * renderer; rejecting them avoids dropping buyer text from print artwork.
+ * The bundled font covers Latin/Greek/Cyrillic; complex shaping is refused.
  */
 function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
     if (!sanro_studio_dtf_layer_enabled()) {
@@ -85,7 +87,7 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
     $design = $record['design'];
     $areas = sanro_studio_product_safe_areas($product_id);
     if (!is_array($areas) || !isset($areas[$side])
-        || empty(sanro_studio_validate_product_design($product_id, $design)['valid'])) {
+        || empty(sanro_studio_validate_product_design($product_id,$design,$record['checkout_quote']['print_limits'] ?? sanro_studio_print_categories())['valid'])) {
         return ['valid' => false, 'error' => 'invalid_print_geometry'];
     }
     if (!array_key_exists($side, $design)) {
@@ -112,19 +114,9 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
             if ($text !== null) return ['valid' => false, 'error' => 'invalid_layers'];
             $text = $obj;
         }
-        foreach (['x','y','width','height'] as $field) {
-            if (!isset($obj[$field]) || !is_numeric($obj[$field])
-                || !is_finite((float) $obj[$field])) {
-                return ['valid' => false, 'error' => 'invalid_print_geometry'];
-            }
-        }
-        $x = (float) $obj['x']; $y = (float) $obj['y'];
-        $w = (float) $obj['width']; $h = (float) $obj['height'];
-        if ($x < 0 || $y < 0 || $w <= 0 || $h <= 0) {
-            return ['valid' => false, 'error' => 'invalid_print_geometry'];
-        }
-        $min_x = min($min_x, $x); $min_y = min($min_y, $y);
-        $max_x = max($max_x, $x + $w); $max_y = max($max_y, $y + $h);
+        [$left,$top,$right,$bottom] = sanro_studio_print_object_bounds($obj);
+        $min_x = min($min_x,$left); $min_y = min($min_y,$top);
+        $max_x = max($max_x,$right); $max_y = max($max_y,$bottom);
     }
     if (($text === null && array_key_exists('text', $entry))
         || ($text !== null && !isset($entry['text']))) {
@@ -136,8 +128,8 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
     };
     $width_px = $to_px($max_x - $min_x);
     $height_px = $to_px($max_y - $min_y);
-    if ($width_px < 1 || $height_px < 1 || $width_px > 4096
-        || $height_px > 4096 || $width_px * $height_px > 6000000) {
+    if ($width_px < 1 || $height_px < 1 || $width_px > 6000
+        || $height_px > 6000 || $width_px * $height_px > 24000000) {
         return ['valid' => false, 'error' => 'dtf_canvas_limit'];
     }
     $plan = [
@@ -150,6 +142,7 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
         'offset_x_cm' => $min_x, 'offset_y_cm' => $min_y,
         'design_id' => $design_id, 'order_id' => $order->get_id(),
         'item_id' => $item_id, 'side' => $side,
+        'source_fingerprint'=>sanro_studio_artifact_source_fingerprint($record,$order->get_id(),$item_id,$design_id,$side),
         'image' => null, 'text_layer' => null,
     ];
 
@@ -164,24 +157,16 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
             return ['valid' => false, 'error' => 'dtf_master_unavailable'];
         }
         $bytes = $source['bytes'];
-        if (($source['mime'] ?? null) !== 'image/png'
-            || strlen($bytes) < 64
-            || substr($bytes, 0, 8) !== "\x89PNG\r\n\x1a\n"
-            || substr($bytes, 12, 4) !== 'IHDR'
-            || unpack('N', substr($bytes, 8, 4))[1] !== 13
-            || ord($bytes[24]) !== 8 || ord($bytes[25]) !== 6
-            || ord($bytes[28]) !== 0) {
-            return ['valid' => false, 'error' => 'dtf_rgba_png_required'];
-        }
+        if (!in_array($source['mime']??null,['image/png','image/jpeg'],true)) return ['valid'=>false,'error'=>'dtf_image_format_unsupported'];
         $info = function_exists('getimagesizefromstring')
             ? @getimagesizefromstring($bytes) : false;
         $target_w = $to_px((float) $image['width']);
         $target_h = $to_px((float) $image['height']);
-        if (!is_array($info) || ($info['mime'] ?? null) !== 'image/png'
+        if (!is_array($info) || ($info['mime'] ?? null) !== $source['mime']
             || $target_w < 1 || $target_h < 1
             || $info[0] < $target_w || $info[1] < $target_h
             || $info[0] > 10000 || $info[1] > 10000
-            || $info[0] * $info[1] > 12000000) {
+            || $info[0] * $info[1] > 24000000) {
             return ['valid' => false, 'error' => 'dtf_source_resolution'];
         }
         if (abs(($info[0] / $info[1]) /
@@ -194,21 +179,20 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
         $plan['image'] = [
             'x' => $to_px((float) $image['x'] - $min_x),
             'y' => $to_px((float) $image['y'] - $min_y),
-            'width' => $target_w, 'height' => $target_h,
+            'width' => $target_w, 'height' => $target_h, 'rotation' => $image['rotation'] ?? 0,
             'source_w' => $info[0], 'source_h' => $info[1],
             'sha256' => $source['sha256'], 'bytes' => $bytes,
         ];
-        if ($plan['image']['x'] < 0 || $plan['image']['y'] < 0
-            || $plan['image']['x'] + $target_w > $width_px
-            || $plan['image']['y'] + $target_h > $height_px) {
+        if ($plan['image']['rotation'] == 0 && ($plan['image']['x'] < 0 || $plan['image']['y'] < 0
+            || $plan['image']['x'] + $target_w > $width_px + 1
+            || $plan['image']['y'] + $target_h > $height_px + 1)) {
             return ['valid' => false, 'error' => 'dtf_layer_pixel_overflow'];
         }
     }
     if ($text !== null) {
         $value = $entry['text'];
-        // v1 intentionally excludes multiline, Unicode shaping and wrap:
-        // these require browser/server font parity approval before printing.
-        if (!is_string($value) || !preg_match('/^[\x20-\x7e]{1,160}$/D', $value)
+        // Missing glyphs and complex shaping fail closed; line breaks are retained.
+        if (!is_string($value) || strlen($value)>1200 || !sanro_studio_text_glyphs_supported($value)
             || trim($value) === ''
             || !isset($entry['font_size']) || !is_int($entry['font_size'])
             || $entry['font_size'] < 10 || $entry['font_size'] > 48
@@ -224,15 +208,21 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
             'y' => $to_px((float) $text['y'] - $min_y),
             'width' => $to_px((float) $text['width']),
             'height' => $to_px((float) $text['height']),
-            'text' => $value, 'color' => $entry['text_color'],
+            'text' => $value, 'color' => $entry['text_color'], 'rotation' => $text['rotation'] ?? 0,
         ];
-        if ($plan['text_layer']['x'] < 0 || $plan['text_layer']['y'] < 0
-            || $plan['text_layer']['width'] < 2 || $plan['text_layer']['height'] < 2
-            || $plan['text_layer']['x'] + $plan['text_layer']['width'] > $width_px
-            || $plan['text_layer']['y'] + $plan['text_layer']['height'] > $height_px) {
+        $layer = $plan['text_layer'];
+        if ($layer['width'] < 2 || $layer['height'] < 2
+            || ($layer['rotation'] == 0 && ($layer['x'] < 0 || $layer['y'] < 0
+                || $layer['x'] + $layer['width'] > $width_px + 1
+                || $layer['y'] + $layer['height'] > $height_px + 1))) {
             return ['valid' => false, 'error' => 'dtf_layer_pixel_overflow'];
         }
     }
+    $source_pixels=$plan['image']?$plan['image']['source_w']*$plan['image']['source_h']:0;
+    $rotated = ($plan['image']['rotation'] ?? 0) != 0 || ($plan['text_layer']['rotation'] ?? 0) != 0;
+    if(!sanro_studio_dtf_memory_available($width_px,$height_px,$source_pixels,$rotated))return ['valid'=>false,'error'=>'dtf_memory_limit'];
+    $now=get_option('sanro_studio_draft_'.$design_id,false);
+    if(!is_string($plan['source_fingerprint'])||$plan['source_fingerprint']!==sanro_studio_artifact_source_fingerprint($now,$order->get_id(),$item_id,$design_id,$side))return ['valid'=>false,'error'=>'dtf_source_snapshot_changed'];
     return $plan;
 }
 
@@ -257,9 +247,10 @@ function sanro_studio_dtf_render_layer_side($order, $item_id, $side) {
             $source = @imagecreatefromstring($i['bytes']);
             if ($source === false) return ['valid' => false, 'error' => 'dtf_image_decode_failed'];
             try {
-                if (!imagecopyresampled($canvas, $source,
-                    $i['x'], $i['y'], 0, 0, $i['width'], $i['height'],
-                    $i['source_w'], $i['source_h'])) {
+                $paint = static function ($target,$x,$y) use ($source,$i) {
+                    return imagecopyresampled($target,$source,$x,$y,0,0,$i['width'],$i['height'],$i['source_w'],$i['source_h']);
+                };
+                if (!sanro_studio_dtf_composite_layer($canvas,$i,$paint)) {
                     return ['valid' => false, 'error' => 'dtf_image_composite_failed'];
                 }
             } finally {
@@ -272,34 +263,26 @@ function sanro_studio_dtf_render_layer_side($order, $item_id, $side) {
             if (!$font || $t['width'] < 2 || $t['height'] < 2) {
                 return ['valid' => false, 'error' => 'dtf_private_font_required'];
             }
-            $font_size = 0; $bbox = null;
-            // Fit the trusted server font to the buyer's measured physical
-            // bounding rectangle. This is not a claim of exact browser parity.
-            for ($size = min(256, $t['height'] * 2); $size >= 1; $size--) {
-                $box = @imagettfbbox($size, 0, $font, $t['text']);
-                if (!is_array($box) || count($box) < 8) continue;
-                $xs = [$box[0],$box[2],$box[4],$box[6]];
-                $ys = [$box[1],$box[3],$box[5],$box[7]];
-                if (max($xs) - min($xs) <= $t['width'] - 1
-                    && max($ys) - min($ys) <= $t['height'] - 1) {
-                    $font_size = $size;
-                    $bbox = ['min_x' => min($xs), 'min_y' => min($ys)];
-                    break;
-                }
-            }
-            if ($font_size < 1 || $bbox === null) {
-                return ['valid' => false, 'error' => 'dtf_text_does_not_fit'];
-            }
+            $layout=sanro_studio_dtf_text_layout($t['text'],$font,$t['width'],$t['height']);
+            if(!$layout)return ['valid'=>false,'error'=>'dtf_text_does_not_fit'];
             $rgb = sscanf(substr($t['color'], 1), '%02x%02x%02x');
             if (!is_array($rgb) || count($rgb) !== 3) {
                 return ['valid' => false, 'error' => 'dtf_text_color_invalid'];
             }
-            $color = imagecolorallocatealpha($canvas, $rgb[0], $rgb[1], $rgb[2], 0);
-            $draw = @imagettftext($canvas, $font_size, 0,
-                $t['x'] - $bbox['min_x'], $t['y'] - $bbox['min_y'],
-                $color, $font, $t['text']);
-            if (!is_array($draw)) {
-                return ['valid' => false, 'error' => 'dtf_text_draw_failed'];
+            $paint = static function ($target,$x,$y) use ($layout,$font,$rgb) {
+                $color = imagecolorallocatealpha($target,$rgb[0],$rgb[1],$rgb[2],0);
+                foreach ($layout['lines'] as $index => $line) {
+                    if ($line === '') continue;
+                    $box = imagettfbbox($layout['size'],0,$font,$line);
+                    $draw = @imagettftext($target,$layout['size'],0,
+                        $x-min($box[0],$box[2],$box[4],$box[6]),
+                        $y+$index*$layout['lineheight']-min($box[1],$box[3],$box[5],$box[7]),$color,$font,$line);
+                    if (!is_array($draw)) return false;
+                }
+                return true;
+            };
+            if (!sanro_studio_dtf_composite_layer($canvas,$t,$paint)) {
+                return ['valid'=>false,'error'=>'dtf_text_draw_failed'];
             }
         }
         if (!imageresolution($canvas, 300, 300)) {
@@ -322,6 +305,9 @@ function sanro_studio_dtf_render_layer_side($order, $item_id, $side) {
             || !sanro_studio_dtf_png_has_300dpi($bytes)) {
             return ['valid' => false, 'error' => 'dtf_output_integrity_failed'];
         }
+        $validation=sanro_studio_dtf_validate_raster($bytes,$plan);
+        if(empty($validation['valid']))return $validation;
+        $plan['output_validation']=$validation;
         unset($plan['image'], $plan['text_layer']);
         return $plan + ['bytes' => $bytes, 'sha256' => hash('sha256', $bytes),
             'mime' => 'image/png'];

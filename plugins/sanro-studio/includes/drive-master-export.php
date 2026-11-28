@@ -1,5 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
+require_once __DIR__.'/worker-lease.php';
+require_once __DIR__.'/production-memory.php';
 
 /**
  * Export original, content-addressed master images to a VERIFIED private
@@ -63,6 +65,25 @@ function sanro_studio_drive_upload_locked_item_master($order, $item_id, $folder_
     $source = sanro_studio_locked_item_master_source($order, $item_id, $side);
     if (empty($source['valid'])) return $source;
     if (!empty($source['skipped'])) return ['valid' => true, 'skipped' => true];
+    return sanro_studio_drive_upload_item_source($order,$item_id,$folder_id,$side,$source);
+}
+
+/** Internal uploader shared by verified originals and production packages. */
+function sanro_studio_drive_upload_item_source($order,$item_id,$folder_id,$side,$source,$kind='original') {
+    if (!sanro_studio_auto_drive_order_eligible($order)
+        || ($kind==='original' ? !sanro_studio_drive_master_export_enabled() : (!function_exists('sanro_studio_drive_package_enabled') || !sanro_studio_drive_package_enabled()))
+        || !in_array($kind,['original','preview','guide','manifest','dtf-candidate'],true)
+        || !in_array($side,['front','back','guide'],true)
+        || !is_int($item_id) || $item_id<1 || !is_string($folder_id) || !preg_match('/^[A-Za-z0-9_-]{10,128}$/D',$folder_id)
+        || !is_array($source) || empty($source['valid']) || !is_string($source['bytes']??null)
+        || strlen($source['bytes'])<1 || strlen($source['bytes'])>33554432
+        || !is_string($source['sha256']??null) || !hash_equals($source['sha256'],hash('sha256',$source['bytes']))
+        || !is_string($source['design_id']??null)) return ['valid'=>false,'error'=>'production_source_invalid'];
+    $formats=['original'=>['image/png'=>'png','image/jpeg'=>'jpg'],'preview'=>['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'],
+        'guide'=>['application/pdf'=>'pdf'],'manifest'=>['application/json'=>'json'],'dtf-candidate'=>['image/png'=>'png']];
+    if (($formats[$kind][$source['mime']??'']??null)!==($source['ext']??null)) return ['valid'=>false,'error'=>'production_type_invalid'];
+    $all_items=$order->get_items('line_item');
+    if (!isset($all_items[$item_id]) || $all_items[$item_id]->get_meta('_sanro_studio_design_id',true)!==$source['design_id']) return ['valid'=>false,'error'=>'production_source_mismatch'];
     $folder = sanro_studio_verify_drive_item_folder($order, $item_id, $folder_id);
     if (empty($folder['valid'])) return ['valid' => false, 'error' => 'folder_unverified'];
     $token = apply_filters('sanro_studio_drive_access_token', '');
@@ -83,12 +104,13 @@ function sanro_studio_drive_upload_locked_item_master($order, $item_id, $folder_
         'sanroSide' => $side,
         'sanroSha256' => $source['sha256'],
     ];
-    $lock = 'sanro_drive_master_lock_' . md5(home_url('/') . ':' . $order->get_id() . ':' . $item_id . ':' . $side);
-    if (!add_option($lock, (string) time(), '', false)) {
+    if ($kind!=='original') $properties['sanroAssetKind']=$kind;
+    $lock = 'sanro_drive_master_lock_' . md5(home_url('/') . ':' . $order->get_id() . ':' . $item_id . ':' . $side . ($kind==='original'?'':':'.$kind));
+    if (!($lease=sanro_studio_lease_acquire($lock))) {
         return ['valid' => false, 'error' => 'drive_master_locked'];
     }
     try {
-        $meta_key = '_sanro_studio_drive_master_' . $side . '_id';
+        $meta_key = $kind==='original' ? '_sanro_studio_drive_master_' . $side . '_id' : '_sanro_studio_drive_package_'.str_replace('-','_',$kind).'_'.$side.'_id_'.$source['sha256'];
         $existing = $item->get_meta($meta_key, true);
         if ($existing !== '') {
             return sanro_studio_drive_master_remote_valid($folder_id, $existing, $properties, $source, $token)
@@ -121,10 +143,11 @@ function sanro_studio_drive_upload_locked_item_master($order, $item_id, $folder_
         } else {
             // Keep raw image bytes solely in this server-side HTTPS POST; no
             // buyer URL, WP Media Library attachment or public Drive sharing.
+            if(!sanro_studio_memory_bytes_available(strlen($source['bytes'])*3+16777216))return ['valid'=>false,'error'=>'drive_upload_memory_limit'];
             $boundary = 'sanro-' . bin2hex(random_bytes(16));
             $metadata = [
                 'name' => 'SANRO-' . (int) $order->get_id() . '-ITEM-' . $item_id
-                    . '-' . $side . '-original.' . $source['ext'],
+                    . '-' . $side . '-' . $kind . '.' . $source['ext'],
                 'parents' => [$folder_id], 'mimeType' => $source['mime'],
                 'appProperties' => $properties,
             ];
@@ -132,6 +155,7 @@ function sanro_studio_drive_upload_locked_item_master($order, $item_id, $folder_
                 . wp_json_encode($metadata) . "\r\n--" . $boundary
                 . "\r\nContent-Type: " . $source['mime'] . "\r\n\r\n"
                 . $source['bytes'] . "\r\n--" . $boundary . "--\r\n";
+            if(!sanro_studio_lease_refresh($lease))return ['valid'=>false,'error'=>'drive_lease_lost'];
             $response = wp_remote_post(
                 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
                 ['timeout' => 60, 'redirection' => 0, 'limit_response_size' => 8192,
@@ -151,13 +175,14 @@ function sanro_studio_drive_upload_locked_item_master($order, $item_id, $folder_
         }
         // Re-read the in-memory item after the remote call; DB lock serializes
         // this worker's writes. Never silently overwrite an existing binding.
-        if ($item->get_meta($meta_key, true) !== '') {
+        if (!sanro_studio_auto_drive_order_eligible($order) || $item->get_meta($meta_key, true) !== '') {
             return ['valid' => false, 'error' => 'drive_master_conflict'];
         }
+        if(!sanro_studio_lease_refresh($lease))return ['valid'=>false,'error'=>'drive_lease_lost'];
         $item->update_meta_data($meta_key, $file_id);
         if ($item->save() === false) return ['valid' => false, 'error' => 'drive_master_save_failed'];
         return ['valid' => true, 'created' => $created, 'file_id' => $file_id];
     } finally {
-        delete_option($lock);
+        sanro_studio_lease_release($lease);
     }
 }

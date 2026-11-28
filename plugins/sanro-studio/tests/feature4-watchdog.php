@@ -1,0 +1,20 @@
+<?php
+require __DIR__.'/completion-consistency.php';
+$checks=0;$production->status='processing';$production->paid=true;$key=sanro_studio_drive_job_key(88);$lease=sanro_studio_lease_acquire($key);
+$run=hash('sha256',$lease['value']['owner']);$production->meta['_sanro_studio_drive_job']=['state'=>'running','run_id'=>$run,'attempt'=>0];
+$oldcount=count($GLOBALS['scheduled_jobs']);$active=sanro_studio_drive_job_watchdog(88,$run,0,1);$job=end($GLOBALS['scheduled_jobs']);
+flow_check($active['state']==='active'&&$job['hook']==='sanro_studio_drive_watchdog'&&$job['args'][3]===$lease['value']['expires']+30,'active watchdog reschedules with deadline-specific unique args');
+flow_check(sanro_studio_request_production_retry($production)['error']==='drive_job_running','admin retry cannot steal active production lease');
+$run2=str_repeat('a',64);$production->meta['_sanro_studio_drive_job']['run_id']=$run2;
+flow_check(sanro_studio_drive_job_watchdog(88,$run2,0)['state']==='new_run_present','replacement active worker is never preempted by old watchdog');
+$production->meta['_sanro_studio_drive_job']['run_id']=$run;$GLOBALS['options'][$key]['expires']=time()-1;
+$recover=sanro_studio_drive_job_watchdog(88,$run,0);$queued=end($GLOBALS['scheduled_jobs']);
+flow_check($recover['state']==='recovery_queued'&&$queued['args']===[88,1],'interrupted expired worker queues next bounded attempt');
+$last=sanro_studio_drive_job_watchdog(88,$run,5);flow_check($last['state']==='blocked'&&$production->meta['_sanro_studio_drive_job']['code']==='drive_interrupted_retry_limit','silent crash also respects final retry limit');
+$count=count($GLOBALS['scheduled_jobs']);flow_check(sanro_studio_drive_job_watchdog(88,$run,0)['state']==='superseded'&&count($GLOBALS['scheduled_jobs'])===$count,'stale watchdog does not revive blocked/completed state');
+$GLOBALS['admin']=false;flow_check(sanro_studio_request_production_retry($production)['error']==='retry_not_allowed','retry requires admin');$GLOBALS['admin']=true;
+$retry=sanro_studio_request_production_retry($production);flow_check($retry['valid']&&end($GLOBALS['scheduled_jobs'])['args']===[88,0],'admin explicit retry reuses same gated idempotent worker');
+$production->paid=false;$production->status='failed';flow_check(sanro_studio_request_production_retry($production)['error']==='production_not_ready','manual retry cannot override failed payment');
+flow_check(sanro_studio_drive_job_watchdog(88,'bad',0)['error']==='watchdog_invalid','malformed identity denied');
+$production->paid=true;$production->status='processing';$GLOBALS['fail_scheduler']=true;$calls=$GLOBALS['network_calls'];$failed=sanro_studio_run_drive_production(88);flow_check(($failed['error']??null)==='drive_scheduler_unavailable'&&$production->meta['_sanro_studio_drive_job']['state']==='blocked'&&$GLOBALS['network_calls']===$calls,'scheduler failure blocks before external writes and remains recoverable');
+echo "PASS: $checks watchdog/recovery checks\n";

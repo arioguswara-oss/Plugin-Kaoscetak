@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "candidate_source": "ec57148f1dbbd09462c92904616c5a721487fd6e",
+  "version": "1.1.0",
+  "two_candidate_zip_builds_identical": true,
+  "two_manifest_builds_identical": true,
+  "two_transport_builds_identical": true,
+  "zip_crc_and_all_member_hashes": "PASS",
+  "plugin_source_files": 89,
+  "archive_members": 90,
+  "qa_tools_tests_fixtures_excluded": "PASS",
+  "private_key_and_common_token_signature_scan": "PASS",
+  "credential_scan_limit": "signature scan, not proof against every possible secret format",
+  "expected_candidate_installed_tree_digest": "3c73a6874497d367d167d740f3fdbd034146df583044cc653b99aaaa4aa11a06",
+  "actual_installed_candidate_digest": null,
+  "new_runtime_tests": "NOT_RUN_OWNER_HANDOFF",
+  "existing_installed_source": "bf8ba02c4dbb073bc140085d0e6c703ffbe79beb",
+  "existing_installed_tree_digest": "ec1ea86b6b21fd01b8014169164f74dceb45b48178c90fc8857d4addfc740d1d"
+}

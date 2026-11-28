@@ -1,0 +1,122 @@
+{
+  "order_id": 56,
+  "archive_sha256": "146b6a40d942e696cfd9ec641ad216566c28725b1ec3dfe3023c3cc771eeb105",
+  "archive_bytes": 2602509,
+  "png": [
+    {
+      "file": "dtf-acceptance/order-56-item-3-4233e0e2-7c89-408f-b36b-fb76ce5adbc2-front-v2.png",
+      "sha256": "8e63515c3f601e93529b28d9f49ecf80e46f2d376615f552b10f6ec4fc2023b6",
+      "width_px": 1643,
+      "height_px": 632,
+      "dpi": [
+        299.9994,
+        299.9994
+      ],
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "dtf-acceptance/order-56-item-3-4233e0e2-7c89-408f-b36b-fb76ce5adbc2-back-v2.png",
+      "sha256": "8e63515c3f601e93529b28d9f49ecf80e46f2d376615f552b10f6ec4fc2023b6",
+      "width_px": 1643,
+      "height_px": 632,
+      "dpi": [
+        299.9994,
+        299.9994
+      ],
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "dtf-acceptance/order-56-item-2-4233e0e2-7c89-408f-b36b-fb76ce5adbc2-front-v2.png",
+      "sha256": "8e63515c3f601e93529b28d9f49ecf80e46f2d376615f552b10f6ec4fc2023b6",
+      "width_px": 1643,
+      "height_px": 632,
+      "dpi": [
+        299.9994,
+        299.9994
+      ],
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "dtf-acceptance/order-56-item-4-4233e0e2-7c89-408f-b36b-fb76ce5adbc2-front-v2.png",
+      "sha256": "8e63515c3f601e93529b28d9f49ecf80e46f2d376615f552b10f6ec4fc2023b6",
+      "width_px": 1643,
+      "height_px": 632,
+      "dpi": [
+        299.9994,
+        299.9994
+      ],
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "dtf-acceptance/order-56-item-4-4233e0e2-7c89-408f-b36b-fb76ce5adbc2-back-v2.png",
+      "sha256": "8e63515c3f601e93529b28d9f49ecf80e46f2d376615f552b10f6ec4fc2023b6",
+      "width_px": 1643,
+      "height_px": 632,
+      "dpi": [
+        299.9994,
+        299.9994
+      ],
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "dtf-acceptance/order-56-item-2-4233e0e2-7c89-408f-b36b-fb76ce5adbc2-back-v2.png",
+      "sha256": "8e63515c3f601e93529b28d9f49ecf80e46f2d376615f552b10f6ec4fc2023b6",
+      "width_px": 1643,
+      "height_px": 632,
+      "dpi": [
+        299.9994,
+        299.9994
+      ],
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ]
+    }
+  ],
+  "pdf": [
+    {
+      "file": "production-package/item-4-guide-guide.pdf",
+      "sha256": "be0893ca88e702adf7ab8301a54c3567a4e830f8049a8a036673f0fdc1059786",
+      "pages": 2,
+      "embedded_fonts": 1,
+      "design_id_present": true
+    },
+    {
+      "file": "production-package/item-3-guide-guide.pdf",
+      "sha256": "8af7598f1cfac158239db5dbffb820027695afc6935f0907af0f5538d8675eb6",
+      "pages": 2,
+      "embedded_fonts": 1,
+      "design_id_present": true
+    },
+    {
+      "file": "production-package/item-2-guide-guide.pdf",
+      "sha256": "c44113d7c60a13aa9638d239c83de811ab2b1c7d42f6ab4f6a3ef4419a4c528d",
+      "pages": 2,
+      "embedded_fonts": 1,
+      "design_id_present": true
+    }
+  ],
+  "assets_hash_checked": 12,
+  "result": "PASS_ZIP_CRC_PNG_RGBA_300DPI_SIX_HASHES_THREE_PDFS_AND_MANIFEST_ASSETS"
+}

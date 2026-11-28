@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "date_wib": "2026-11-28",
+  "head_before": "a9ff4215253584524cc0f221bf2c34b65a3fbd37",
+  "candidate_source": "7aa6eb23d226272bc8a523b28854ccbed64ae497",
+  "installed_tree_digest": "04489eaa179a2c2cbe09d5f9fda5a91b712c8765d1503d48fb35e4f91c030dab",
+  "reused_evidence": "artifacts/studio-v1/final-candidate-20261127/runtime-acceptance.json",
+  "visual": {
+    "owner_android": {
+      "status": "ACCEPTED_BUYER_UI_CONCEPT",
+      "source": "Owner message",
+      "viewport_css": null,
+      "gesture_matrix_verified": false
+    },
+    "desktop": {
+      "status": "PASS_CATALOG_AND_EDITOR_LAYOUT",
+      "viewport_css": 1363,
+      "document_width": 1348,
+      "authenticated": false,
+      "horizontal_overflow": false
+    },
+    "exact_live_css_320_390_430": "OPEN"
+  },
+  "pagination": {
+    "search": "PASS_PRODUCT_53",
+    "second_page_empty": "PASS_NO_PAGE_ONE_FALLBACK",
+    "published_wc_products": 3,
+    "next_page_positive_case": "BLOCKED_INSUFFICIENT_FIXTURES"
+  },
+  "official_paths": {
+    "woocommerce_hpos_admin": "REACHED_OFFICIAL_LOGIN",
+    "wordpress_remote_checkout_abilities_count": 0,
+    "existing_transport_coverage": "CLASSIC_ONLY",
+    "store_api_submission": "REQUIRES_SAFE_ISOLATION"
+  },
+  "order_writes": 0,
+  "payment_attempts": 0,
+  "application_changes": 0,
+  "baseline_percent": 96.6,
+  "final_release": false
+}

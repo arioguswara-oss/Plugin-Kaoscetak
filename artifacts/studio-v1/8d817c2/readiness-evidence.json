@@ -1,0 +1,132 @@
+{
+  "date_wib": "2026-11-24",
+  "target_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "site_id": 258754643,
+  "candidate_source": "8d817c2ba92b89d03eaa4d680173925361ce0a36",
+  "code_feature_commit": "e9fb9c46c11ba03b5382949f73ddbe1cf5f363b9",
+  "four_source_gaps": {
+    "H04": "CLOSED_CODE_LOCAL_EVIDENCE",
+    "H05": "CLOSED_CODE_LOCAL_EVIDENCE",
+    "M06": "CLOSED_CODE_LOCAL_EVIDENCE",
+    "M07": "CLOSED_CODE_LOCAL_EVIDENCE"
+  },
+  "wordpress_mcp": {
+    "access": "PASS",
+    "platform": "jetpack",
+    "plugins_live": {
+      "sanro-studio": "0.1.0-dev ACTIVE",
+      "woocommerce": "11.3.0 ACTIVE",
+      "legacy-staging-qa": "0.1.0 INACTIVE"
+    },
+    "classic_cart": {
+      "id": 16,
+      "status": "publish",
+      "content": "[woocommerce_cart]"
+    },
+    "classic_checkout": {
+      "id": 17,
+      "status": "publish",
+      "content": "[woocommerce_checkout]"
+    },
+    "runtime_or_filesystem_abilities": "core/woocommerce abilities not offered; published reviewed abilities only Jetpack Forms"
+  },
+  "browser": {
+    "surface": "Cloud Browser",
+    "mode": "read-only server state; unsaved local input only",
+    "entry": "https://saddlebrown-peafowl-616656.hostingersite.com/custom-2/",
+    "editor": "https://saddlebrown-peafowl-616656.hostingersite.com/custom-2/?sanro_studio_editor=1&product_id=24",
+    "https_load": "PASS",
+    "side_colour_input": "PASS",
+    "case": {
+      "front": "SANRO text / A5",
+      "back": "blank",
+      "quantity": {
+        "S": 1,
+        "M": 1,
+        "L": 1
+      },
+      "client_estimate_idr": 195000,
+      "server_quote": "NOT_TESTED"
+    },
+    "runtime_buyer_asset": "ccf75da12b01",
+    "candidate_buyer_asset": "9573ce5cdcb9",
+    "candidate_controls_on_live": {
+      "collection": false,
+      "remove_background": false,
+      "mockup_size": false
+    },
+    "candidate_runtime_match": "FAIL",
+    "http422": "NOT_REPRODUCED_READ_ONLY; no draft/cart POST attempted",
+    "console_note": "422 filter returned no entries; extension telemetry errors are not REST server evidence",
+    "admin": "AUTHENTICATED_READ_ONLY; secure browserAuth submitted then WordPress dashboard confirmed",
+    "old_admin_status": "legacy integration status labels all four modules not_integrated; contradicted as an availability label by working buyer editor; not candidate diagnostics"
+  },
+  "providers": {
+    "tinyfish": "NEGATIVE_WALLET; no run started or top-up",
+    "hostinger_hosting": "not exposed; provider discovery returned only Hostinger Mail",
+    "jack_hermes_codex": "NOT_RUN; not a dependency"
+  },
+  "artifact_validation": {
+    "archive_members": 78,
+    "all_member_sha256": "PASS",
+    "manifest_matches_candidate_source": "PASS",
+    "SHA256SUMS": "PASS",
+    "installer_pinned_source": "8d817c2ba92b89d03eaa4d680173925361ce0a36",
+    "previous_targeted_lint_tests": "REUSED_UNCHANGED_NO_FULL_AUDIT"
+  },
+  "runtime_unverified": [
+    "FreeType_ctype_fileinfo_functions",
+    "private_roots_and_permissions_and_capacity",
+    "all_runtime_writer_flags",
+    "full_existing_plugin_tree_digest",
+    "object_cache_lease_semantics",
+    "actual_CORS",
+    "current_live_source_SHA"
+  ],
+  "deployment_authorized": false,
+  "web_runtime": {
+    "source": "Authenticated WordPress Site Health Info",
+    "url": "https://saddlebrown-peafowl-616656.hostingersite.com/wp-admin/site-health.php?tab=debug",
+    "wordpress": "7.1.5",
+    "php_version": "8.3.37",
+    "supports_64bit": true,
+    "web_server": "LiteSpeed",
+    "php_sapi": "litespeed",
+    "memory_limit": "1536M",
+    "php_time_limit_seconds": 360,
+    "max_input_variables": 5000,
+    "upload_max_filesize": "1536M",
+    "post_max_size": "1536M",
+    "gd_version": "2.3.3",
+    "gd_formats": [
+      "GIF",
+      "JPEG",
+      "PNG",
+      "WebP",
+      "BMP",
+      "AVIF",
+      "XPM"
+    ],
+    "imagick": "3.8.1",
+    "opcache": "enabled; not full",
+    "fpm_claim": "not made; observed SAPI is litespeed",
+    "scope": "read-only server diagnostics; no settings or order changes"
+  },
+  "prior_observations_reused": true,
+  "menu_correction": {
+    "source": "IMPLEMENTED",
+    "offline_contract": "48 PASS",
+    "changed_php_lint": "6 PASS",
+    "affected_settings": "37 PASS +4x5 prerequisite assertions",
+    "bootstrap": "PASS",
+    "runtime": "NOT_DEPLOYED_NOT_TESTED",
+    "root": "sanro-studio",
+    "children": {
+      "Pengaturan": "sanro-studio",
+      "Status Integrasi": "sanro-studio-status",
+      "Storage Privat": "sanro-studio-storage"
+    },
+    "Woo_order_hooks_retained": 8,
+    "no_settings_migration": true
+  }
+}

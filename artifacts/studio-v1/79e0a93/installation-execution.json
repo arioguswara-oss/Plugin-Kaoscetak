@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "recorded_at_utc": "2026-11-24T09:30:56.854758+00:00",
+  "result": "PASS_INSTALLED_AND_FRESH_RUNTIME_GATE",
+  "target_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "source_commit": "79e0a93f77bd03be0760ca179383375426284b8f",
+  "archive_sha256": "b7d08cc98a453a53feb0a50ea6458964fdb769f21525e8309c903aa1d83a8b60",
+  "manifest_sha256": "53c3737c0b2dc92def1955e2d856ca7a658e345f20075edb114577bd0a29c052",
+  "installed_tree_digest": "33f481d937aca3d9533bb02995524929326809ad92ec5c60b94efeaddcf53936",
+  "installed_tree_digest_matches_independently_computed_zip": true,
+  "before_digest": "60c8b0f3a272b024537e152fe46763c31b1beafcb36933fa2e57bb115c132273",
+  "transport": "WordPress Connector upload/activation plus capability+nonce-protected exact-target installer in authenticated Cloud Browser",
+  "fresh_gate": {
+    "exact_home_site_docroot_isolation": "PASS",
+    "prior_committed_journal_and_retained_backup": "PASS",
+    "installed_journal": "committed; verified again after session restart",
+    "web_php": "8.3.37",
+    "web_sapi": "litespeed",
+    "memory_limit": "1536M",
+    "gd_ctype_json_fileinfo_freetype_int64": "PASS",
+    "masters_and_previews_private_outside_document_root": "PASS",
+    "checkout_legacy_dtf_drive_gc_flags": "ALL_OFF"
+  },
+  "reinstalled_after_owner_continue": false,
+  "activation_changed": false,
+  "production_touched": false,
+  "orders_created": 0,
+  "payment_attempted": false,
+  "final_release": false,
+  "acceptance": {
+    "signed_in_draft_save_after_fix": "PASS; design 4233e0e2-7c89-408f-b36b-fb76ce5adbc2",
+    "preview_quote_cart_order_dtf_drive": "PENDING"
+  }
+}

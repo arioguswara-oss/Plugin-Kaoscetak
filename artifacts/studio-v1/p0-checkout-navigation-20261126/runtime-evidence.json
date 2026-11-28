@@ -1,0 +1,107 @@
+{
+  "date_wib": "2026-11-26",
+  "target": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "pull_request": 52,
+  "source_commit": "782271659669581abfe5588294428c564af7c049",
+  "version": "1.1.0",
+  "release_channel": "candidate",
+  "before": {
+    "source_commit": "c5d1184ee968ae2f2fcafb8646c22670f231fd0e",
+    "studio_icon_rendered_path": "/cart/",
+    "reported_redirect_to_home": "OWNER_OBSERVED",
+    "independent_pre_fix_home_redirect_reproduction": "NOT_TESTED",
+    "woo_settings_advanced": {
+      "cart_page_id": 16,
+      "checkout_page_id": 17
+    },
+    "woo_settings_changed": false
+  },
+  "installation": {
+    "pre_and_post_gate": "PASS",
+    "state": "committed",
+    "rollback_retained": true,
+    "php": "8.3.37",
+    "sapi": "litespeed",
+    "private_roots": "PASS",
+    "writer_flags_and_storage_gc_off": true,
+    "archive_sha256": "754e32773f596c25de5156ac8524bd69e4641dc9132334fe6bbb42ae701b0f2f",
+    "manifest_sha256": "1831073a0750f8f28b279e566806ab08fdc74cfce08de063551e11ee0db6bdfd",
+    "installed_tree_digest": "18e8e1da2a2893bd0c3b069337c773f7687d5a2630599df1c5b1b1519efeead9",
+    "zip_tree_matches_installed_tree": true,
+    "candidate_reproducible": true,
+    "sanro_studio_active_after_cleanup": true,
+    "woocommerce_active_after_cleanup": true,
+    "temporary_transport_removed": true
+  },
+  "browser": {
+    "environment": "Cloud Browser Chromium, logged-in staging QA session",
+    "narrow_viewport_method": "Browser zoom yielding 454 CSS px. Device emulation was disabled by browser policy.",
+    "physical_mobile_touch": "NOT_TESTED",
+    "case_rows": [
+      {
+        "from": "editor",
+        "viewport_css_px": 1363,
+        "badge": 1,
+        "href_path": "/checkout/",
+        "landing_path": "/checkout/",
+        "woocommerce_classic_form": true,
+        "same_design_id": true,
+        "horizontal_overflow": false,
+        "result": "PASS"
+      },
+      {
+        "from": "catalog",
+        "viewport_css_px": 454,
+        "badge": 1,
+        "href_path": "/checkout/",
+        "landing_path": "/checkout/",
+        "woocommerce_classic_form": true,
+        "same_design_id": true,
+        "horizontal_overflow": false,
+        "result": "PASS"
+      },
+      {
+        "from": "saved_designs_panel",
+        "viewport_css_px": 454,
+        "badge": 1,
+        "href_path": "/checkout/",
+        "landing_path": "/checkout/",
+        "woocommerce_classic_form": true,
+        "same_design_id": true,
+        "horizontal_overflow": false,
+        "result": "PASS"
+      }
+    ],
+    "unchanged_cart_line": {
+      "product_id": 53,
+      "product": "SANRO Studio Staging QA — Cotton Combed 24s",
+      "color": "Biru",
+      "size": "M",
+      "quantity": 1,
+      "unit_idr": 65000,
+      "subtotal_idr": 65000
+    },
+    "checkout_binding_inputs_populated": true,
+    "visible_checkout_error": false,
+    "synthetic_cart_item_removed": true,
+    "badge_after_cleanup": null,
+    "checkout_submitted": false,
+    "order_created": false,
+    "payment_attempted": false
+  },
+  "targeted_checks": {
+    "php_lint_and_git_diff_check": "PASS",
+    "rest_cart_bootstrap_smoke_pass": 52,
+    "buyer_render_pass": 22,
+    "feature_checkout_flow_pass": 17,
+    "server_quote_pass": 533,
+    "mixed_checkout_contract_pass": 8
+  },
+  "baseline_percent": {
+    "before": 96.5,
+    "after": 96.5,
+    "delta_points": 0
+  },
+  "decision": "GO_STAGING_REVIEW_P0_NAVIGATION_PASS_DESKTOP_AND_NARROW_VIEWPORT",
+  "final_release": false
+}

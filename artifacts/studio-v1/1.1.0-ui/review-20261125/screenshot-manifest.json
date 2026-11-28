@@ -1,0 +1,386 @@
+{
+  "date": "2026-11-25",
+  "checkpoint": "0c34acaa51cf00f738ce31cea8e39777fa8f1d43",
+  "installed_source": "12b2c043cc6ccbb3e7c828949bf524ff6f2e84b1",
+  "screenshots": [
+    {
+      "file": "screenshots/admin-area-desktop.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        1348,
+        926
+      ],
+      "published_pixels": [
+        1348,
+        894
+      ],
+      "crop_top_pixels": 32,
+      "viewport_css": {
+        "width": 1363,
+        "height": 936
+      },
+      "scope": "desktop",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/admin-drive-desktop.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        1348,
+        926
+      ],
+      "published_pixels": [
+        1348,
+        894
+      ],
+      "crop_top_pixels": 32,
+      "viewport_css": {
+        "width": 1363,
+        "height": 936
+      },
+      "scope": "desktop",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/admin-drive-narrow-454.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        449,
+        308
+      ],
+      "published_pixels": [
+        449,
+        262
+      ],
+      "crop_top_pixels": 46,
+      "viewport_css": {
+        "width": 454,
+        "height": 312
+      },
+      "scope": "narrow desktop browser zoom300%, NOT a phone/touch test",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/admin-mockup-desktop.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        1348,
+        926
+      ],
+      "published_pixels": [
+        1348,
+        894
+      ],
+      "crop_top_pixels": 32,
+      "viewport_css": {
+        "width": 1363,
+        "height": 936
+      },
+      "scope": "desktop",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/admin-orders-desktop.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        1348,
+        926
+      ],
+      "published_pixels": [
+        1348,
+        894
+      ],
+      "crop_top_pixels": 32,
+      "viewport_css": {
+        "width": 1363,
+        "height": 936
+      },
+      "scope": "desktop",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/admin-prices-desktop.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        1348,
+        926
+      ],
+      "published_pixels": [
+        1348,
+        894
+      ],
+      "crop_top_pixels": 32,
+      "viewport_css": {
+        "width": 1363,
+        "height": 936
+      },
+      "scope": "desktop",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/admin-settings-desktop.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        1348,
+        926
+      ],
+      "published_pixels": [
+        1348,
+        894
+      ],
+      "crop_top_pixels": 32,
+      "viewport_css": {
+        "width": 1363,
+        "height": 936
+      },
+      "scope": "desktop",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/admin-settings-narrow-454.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        449,
+        308
+      ],
+      "published_pixels": [
+        449,
+        262
+      ],
+      "crop_top_pixels": 46,
+      "viewport_css": {
+        "width": 454,
+        "height": 312
+      },
+      "scope": "narrow desktop browser zoom300%, NOT a phone/touch test",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/admin-storage-desktop.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        1348,
+        926
+      ],
+      "published_pixels": [
+        1348,
+        894
+      ],
+      "crop_top_pixels": 32,
+      "viewport_css": {
+        "width": 1363,
+        "height": 936
+      },
+      "scope": "desktop",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/admin-summary-desktop.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        1348,
+        926
+      ],
+      "published_pixels": [
+        1348,
+        894
+      ],
+      "crop_top_pixels": 32,
+      "viewport_css": {
+        "width": 1363,
+        "height": 936
+      },
+      "scope": "desktop",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/admin-summary-narrow-454.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        449,
+        308
+      ],
+      "published_pixels": [
+        449,
+        262
+      ],
+      "crop_top_pixels": 46,
+      "viewport_css": {
+        "width": 454,
+        "height": 312
+      },
+      "scope": "narrow desktop browser zoom300%, NOT a phone/touch test",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/admin-variants-desktop.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        1348,
+        926
+      ],
+      "published_pixels": [
+        1348,
+        894
+      ],
+      "crop_top_pixels": 32,
+      "viewport_css": {
+        "width": 1363,
+        "height": 936
+      },
+      "scope": "desktop",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/buyer-collection-desktop.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        1348,
+        926
+      ],
+      "published_pixels": [
+        1348,
+        894
+      ],
+      "crop_top_pixels": 32,
+      "viewport_css": {
+        "width": 1363,
+        "height": 936
+      },
+      "scope": "desktop",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/buyer-collection-narrow-454.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        449,
+        308
+      ],
+      "published_pixels": [
+        449,
+        308
+      ],
+      "crop_top_pixels": 0,
+      "viewport_css": {
+        "width": 454,
+        "height": 312
+      },
+      "scope": "narrow desktop browser zoom300%, NOT a phone/touch test",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/buyer-editor-desktop.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        1348,
+        926
+      ],
+      "published_pixels": [
+        1348,
+        894
+      ],
+      "crop_top_pixels": 32,
+      "viewport_css": {
+        "width": 1363,
+        "height": 936
+      },
+      "scope": "desktop",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/buyer-editor-narrow-454.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        449,
+        308
+      ],
+      "published_pixels": [
+        449,
+        308
+      ],
+      "crop_top_pixels": 0,
+      "viewport_css": {
+        "width": 454,
+        "height": 312
+      },
+      "scope": "narrow desktop browser zoom300%, NOT a phone/touch test",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/buyer-editor-tested-desktop.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        1348,
+        926
+      ],
+      "published_pixels": [
+        1348,
+        894
+      ],
+      "crop_top_pixels": 32,
+      "viewport_css": {
+        "width": 1363,
+        "height": 936
+      },
+      "scope": "desktop",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/buyer-picker-desktop.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        1348,
+        926
+      ],
+      "published_pixels": [
+        1348,
+        894
+      ],
+      "crop_top_pixels": 32,
+      "viewport_css": {
+        "width": 1363,
+        "height": 936
+      },
+      "scope": "desktop",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/buyer-picker-narrow-454.jpg",
+      "source": "live Cloud Browser screenshot",
+      "original_pixels": [
+        449,
+        308
+      ],
+      "published_pixels": [
+        449,
+        262
+      ],
+      "crop_top_pixels": 46,
+      "viewport_css": {
+        "width": 454,
+        "height": 312
+      },
+      "scope": "narrow desktop browser zoom300%, NOT a phone/touch test",
+      "sanitization": "WordPress account toolbar cropped; no application elements restyled; JPEG re-encoded without metadata"
+    },
+    {
+      "file": "screenshots/admin-order-panel-desktop.jpg",
+      "source": "live Cloud Browser screenshot",
+      "crop": [
+        275,
+        88,
+        938,
+        800
+      ],
+      "scope": "Studio panel of existing synthetic order56",
+      "sanitization": "Only Studio item panel; billing, user toolbar and raw metadata excluded"
+    }
+  ],
+  "excluded": [
+    "contact-sheet scratch only",
+    "corrupt71px narrow-area capture discarded",
+    "initial clipped order capture discarded"
+  ],
+  "privacy": "Only sanitized screenshots and supplied concept references published; no DOM snapshots, cookies, tokens, credential fields with values, private contacts or PDF downloads."
+}

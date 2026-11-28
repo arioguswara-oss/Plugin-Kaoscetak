@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "date_wib": "2026-11-26",
+  "pull_request": 52,
+  "staging_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "source_commit": "c5d1184ee968ae2f2fcafb8646c22670f231fd0e",
+  "version": "1.1.0",
+  "archive_sha256": "6c80d5f5cadb55998a7d6bb768aee2c0077f5f65329103e2411ac5caa3ca75aa",
+  "manifest_sha256": "42a2a7aa6e0614dc1fbd688ad1d42ea30af8e2952c1b325c2fcddb9d35fad196",
+  "preflight": {
+    "result": "PASS",
+    "web_sapi": "litespeed",
+    "php": "8.3.37",
+    "private_storage": "PASS",
+    "guarded_writers": "OFF",
+    "storage_gc": "OFF",
+    "installed_tree_digest": "3658b899ec3854b1b4436ab1f275ff5fa6c7c1da519fa858874ab673adafa4fa",
+    "predecessor_source": "094a511b7b315358dd6641bbca7ee9c4664619a9"
+  },
+  "installation": {
+    "transaction": "committed",
+    "rollback_retained": true
+  },
+  "post_install": {
+    "result": "PASS",
+    "web_sapi": "litespeed",
+    "php": "8.3.37",
+    "private_storage": "PASS",
+    "guarded_writers": "OFF",
+    "storage_gc": "OFF",
+    "installed_tree_digest": "6fc942196e86c298480d0ba0ab236c6e0c66dbfae5431743c657d394b6f579ec",
+    "digest_matches_zip": true,
+    "studio_active": true,
+    "woocommerce_active": true
+  },
+  "live_smoke": {
+    "product_fixture": 53,
+    "quantity": {
+      "S": 1
+    },
+    "preview_size_selector_removed": true,
+    "print_tier_selector_removed": true,
+    "estimates_idr": [
+      62000,
+      82000,
+      87000,
+      102000
+    ],
+    "isolated_measurements_cm": {
+      "front_small": [
+        12.4,
+        5.8
+      ],
+      "front_resized": [
+        27.6,
+        12.7
+      ],
+      "front_rotated_36_deg": [
+        29.8,
+        26.5
+      ],
+      "back": [
+        5.4,
+        4.5
+      ]
+    },
+    "server_quote_idr": 102000,
+    "cart_line_price_idr": 102000,
+    "cart_labels": [
+      "Design ID",
+      "Warna",
+      "Ukuran"
+    ],
+    "cart_contains_print_tier": false,
+    "outside_print_area_blocks_estimate": true,
+    "saved_design_reopened": true,
+    "private_front_and_back_previews_verified": true,
+    "admin_limits_and_second_side_prices_visible": true,
+    "admin_live_settings_save": "NOT_TESTED"
+  },
+  "cleanup": {
+    "cart_empty": true,
+    "temporary_transport_deleted": true,
+    "old_transport_inactive": true
+  },
+  "not_tested": [
+    "mobile physical touch",
+    "live order submission and lock",
+    "live production raster or Drive export"
+  ],
+  "boundaries": {
+    "production_changed": false,
+    "merged": false,
+    "settings_changed": false,
+    "order_created": false,
+    "payment_attempted": false
+  }
+}

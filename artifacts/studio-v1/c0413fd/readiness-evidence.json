@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "source_commit": "c0413fdc477c1370435a20a3160fa4460f95fcf7",
+  "archive_sha256": "b0ce3263452ccc3ee7c3e6ef20bb22e25ced9c4a9463cb218977c27d339d2738",
+  "manifest_sha256": "a033a48595c8e17762f4b291b9d4a720e10dfcefbaa70ad0052c56da0d38bb4c",
+  "plugin_digest": "cc2be076c1fd6ca8a8768c1a785728616dcb079ad4605f605041f02acae95ea1",
+  "build_reproducibility": "PASS; two archives and manifests byte-identical",
+  "candidate_preflight": "PASS; PLAN_ONLY; PHP CLI 8.5.4 and packaged PHP lint",
+  "targeted_admin_contract": "PASS; 54 assertions",
+  "source_php_lint": "PASS",
+  "diff_check": "PASS",
+  "ssh_identity": "FAIL; Permission denied (publickey,password), normal and escalation attempts",
+  "web_php_sapi": "NOT_TESTED",
+  "existing_tree_digest": "NOT_TESTED_THIS_RUN",
+  "installer_journal_lock_recovery": "NOT_TESTED_THIS_RUN",
+  "installed_digest_and_runtime": "NOT_TESTED",
+  "live_admin_and_buyer_acceptance": "NOT_TESTED",
+  "checkout_and_DTF_order_e2e": "NOT_TESTED; no staging writes",
+  "Drive_OAuth_private_folder": "NOT_CONFIGURED_IN_AVAILABLE_EVIDENCE",
+  "production_access": "NONE",
+  "storage_GC": "OFF",
+  "final_release": false
+}

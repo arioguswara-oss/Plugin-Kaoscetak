@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "kind": "OWNER_APPROVAL_EXECUTION_RECORD",
+  "status": "APPROVED_AND_APPLIED",
+  "approved": true,
+  "deployment_authorized": false,
+  "staging_installation_authorized": true,
+  "action": "replace_existing_staging_plugin_after_explicit_owner_approval_and_fresh_apply_gates",
+  "target_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "staging_identity": {
+    "ssh_alias": "kaoscetak-staging",
+    "remote_hostname": "id-dci-web1631.main-hosting.eu",
+    "account_user": "u606139982",
+    "document_root": "/home/u606139982/domains/saddlebrown-peafowl-616656.hostingersite.com/public_html",
+    "production_accessed": false
+  },
+  "source_commit": "fad47c6f508258d594f92daca79c337d6911b404",
+  "plugin_digest": "6d65fde1ceda80b1551da51817ccef14f0d618f1d5dffdcfcb412a8c129cc2bb",
+  "archive_sha256": "b83c1b03d18e0633d502aff09d9b1d40f01eb216a22850a7c990fc40c78a5723",
+  "manifest_sha256": "8664f584c4b746120c98ed50b337fc9616508f3b390eca3fa2a8429a370f8309",
+  "existing_installed_tree_digest": "8d560cdb95611da98dc4a739737dff30ab9ac35f4ec6866defb8093808fd37db",
+  "currently_installed_source": "fad47c6f508258d594f92daca79c337d6911b404",
+  "currently_installed_tree_digest": "60c8b0f3a272b024537e152fe46763c31b1beafcb36933fa2e57bb115c132273",
+  "runtime_finding": "Hostinger transient returned decimal string 1; previous source rejected non-int and falsely returned HTTP 429. Candidate normalizes bounded decimal counters and keeps ten-per-hour quota fail-closed.",
+  "rate_counter_expiry_utc": "2026-11-24T07:31:16Z",
+  "retry_after_header": "not emitted by current source; expiry read from transient timeout",
+  "candidate_preflight": {
+    "mode": "PLAN_ONLY",
+    "result": "PASS",
+    "php_cli_lint": "PASS",
+    "remote_web_sapi": "PASS; PHP 8.3.37 LiteSpeed/LSAPI from authenticated same-day Site Health; SSH PHP 8.2.36 is CLI only",
+    "runtime_e2e": "PASS; synthetic buyer front/back masters, private previews, multi-size server quote and desktop/mobile read-only verification"
+  },
+  "scope": [
+    "staging SANRO Studio plugin replacement only",
+    "preserve active plugin and existing private paths",
+    "no feature flag changes",
+    "no order, checkout, payment, production, merge, or database-pesanan mutation"
+  ],
+  "writers": {
+    "dtf_generator": "OFF",
+    "google_drive": "OFF",
+    "storage_gc": "OFF",
+    "checkout_writer": "OFF"
+  },
+  "functional_qa_open": [
+    "authenticated admin screenshot unavailable without an Owner browser session",
+    "checkout/order/payment explicitly excluded"
+  ],
+  "approval_text_to_review": "Setujui instalasi pengganti SANRO Studio HANYA di staging https://saddlebrown-peafowl-616656.hostingersite.com untuk source fad47c6f508258d594f92daca79c337d6911b404, ZIP SHA256 b83c1b03d18e0633d502aff09d9b1d40f01eb216a22850a7c990fc40c78a5723, manifest SHA256 8664f584c4b746120c98ed50b337fc9616508f3b390eca3fa2a8429a370f8309, existing tree digest 8d560cdb95611da98dc4a739737dff30ab9ac35f4ec6866defb8093808fd37db. Approval tidak berlaku untuk source/hash/target berbeda. Eksekusi hanya setelah mandatory gate staging diperiksa ulang. Pertahankan aktivasi dan private paths; jangan ubah feature flags, production atau database pesanan; jangan aktifkan DTF, Drive, storage GC atau checkout writer.",
+  "functional_qa_passed": [
+    "desktop and mobile buyer editor; served asset fingerprints match manifest",
+    "synthetic front/back master uploads and private readbacks HTTP 200",
+    "front/back private previews and readbacks HTTP 200",
+    "multi-size M=2/L=1 and authoritative IDR 393000 quote for quantity 3",
+    "current buyer flow did not reproduce HTTP 422"
+  ],
+  "owner_approval_evidence": "Explicit Owner approval in conversation, 2026-11-24; bound to the exact source, ZIP SHA256, manifest SHA256, existing tree digest and staging host recorded above.",
+  "runtime_e2e": "PASS_BUYER_SYNTHETIC_FRONT_BACK_PREVIEW_MULTI_SIZE_QUOTE",
+  "staging_installation_state": "INSTALLED_AND_VERIFIED",
+  "installed_tree_digest": "60c8b0f3a272b024537e152fe46763c31b1beafcb36933fa2e57bb115c132273",
+  "installation_execution_evidence": "installation-execution.json",
+  "writer_flags": {
+    "dtf_generator": "OFF",
+    "google_drive": "OFF",
+    "storage_gc": "OFF",
+    "checkout_writer": "OFF"
+  },
+  "post_install_gate": {
+    "installed_tree_digest": "60c8b0f3a272b024537e152fe46763c31b1beafcb36933fa2e57bb115c132273",
+    "plugin_active": "PASS SANRO Studio 0.1.0-dev",
+    "woocommerce": "PASS 11.3.0 active",
+    "asset_fingerprints": "PASS buyer.js and buyer.css match manifest",
+    "admin_menu": "PASS one independent SANRO Studio root; zero SANRO WooCommerce submenu",
+    "installer_journal": "PASS committed",
+    "installer_lock": "PASS free after apply",
+    "rollback_digest": "8d560cdb95611da98dc4a739737dff30ab2dc9939394130c9fcd142ce8fd7bab9"
+  },
+  "screenshots_private": [
+    "/home/sanro/sanro-browser-qa/owner-private/buyer-desktop-front-staging-final.png",
+    "/home/sanro/sanro-browser-qa/owner-private/buyer-desktop-back-staging-final.png",
+    "/home/sanro/sanro-browser-qa/owner-private/buyer-mobile-front-staging-final.png",
+    "/home/sanro/sanro-browser-qa/owner-private/buyer-mobile-back-staging-final.png"
+  ],
+  "previously_installed_tree_digest": "8d560cdb95611da98dc4a739737dff30ab9ac35f4ec6866defb8093808fd37db"
+}

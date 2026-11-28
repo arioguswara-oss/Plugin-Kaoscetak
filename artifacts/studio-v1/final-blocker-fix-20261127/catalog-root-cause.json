@@ -1,0 +1,16 @@
+{
+    "method": "actual native print-zone writer with posted default form values; old committed allocator and corrected allocator against identical in-memory product metadata",
+    "old_source": "bf8ba02c4dbb073bc140085d0e6c703ffbe79beb",
+    "persisted_metadata_keys": [
+        "_sanro_studio_print_zones"
+    ],
+    "before": {
+        "mapped": true,
+        "status": "active"
+    },
+    "after": {
+        "mapped": false,
+        "status": "unmapped"
+    },
+    "product_107_exact_live_metadata": "NOT_READ; live evidence recorded UI classification only"
+}

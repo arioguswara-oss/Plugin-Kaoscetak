@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "result": "PASS_FILES_REPLACED",
+  "owner_approval": "explicit Owner approval in conversation; used for these exact hashes only",
+  "target": {
+    "url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+    "host": "id-dci-web1631.main-hosting.eu",
+    "account": "u606139982",
+    "document_root": "/home/u606139982/domains/saddlebrown-peafowl-616656.hostingersite.com/public_html",
+    "production_accessed": false
+  },
+  "candidate": {
+    "source_commit": "081a63f78b88a3139327af6a545be1993b48506f",
+    "plugin_digest": "f21bcd20f5bdb8013d1a939d09761d4af3a0b2b96b4ef4790fd09616600d63d2",
+    "zip_sha256": "f66cdc28e3b2b1914df94ca4b4f6e40c7a84fb2da60fc01884a231ffbd903800",
+    "manifest_sha256": "7452cbc476266cd3d36454445ebacbd0bb06dd1add80a6fe91277755501b9177"
+  },
+  "pre_install_gate": {
+    "source_zip_manifest_and_existing_tree_hashes": "PASS",
+    "staging_identity_and_production_separation": "PASS",
+    "web_php": "8.3.37 LiteSpeed/LSAPI; authenticated Site Health evidence and current HTTP PHP/8.3.37 header",
+    "php_cli": "8.2.36 / cli",
+    "active_plugins_sparse_json_normalization": "PASS; exact live probe accepted",
+    "private_master_and_preview_roots": "PASS; outside document root, mode 0700",
+    "writer_flags": "PASS; installer-probed DTF, Drive, checkout hook and storage GC flags OFF",
+    "installer_lock_journal_and_crash_recovery": "PASS; no prior lock/journal/interrupted transaction; official installer acquired transaction lock"
+  },
+  "installer": {
+    "mode": "--apply",
+    "state": "files_replaced",
+    "rollback_retained": true,
+    "activation_changed": false,
+    "flags_changed": false,
+    "order_writes": false
+  },
+  "post_install": {
+    "installed_tree_digest": "8d560cdb95611da98dc4a739737dff30ab9ac35f4ec6866defb8093808fd37db",
+    "expected_candidate_tree_digest_match": true,
+    "build_marker_source_commit": "081a63f78b88a3139327af6a545be1993b48506f",
+    "plugin": "SANRO Studio 0.1.0-dev ACTIVE",
+    "woocommerce": "11.3.0 ACTIVE",
+    "web_php": "8.3.37; SAPI LiteSpeed/LSAPI verified by same-day authenticated Site Health",
+    "php_cli": "8.2.36 / cli",
+    "writer_flags_after_install": "all installer-controlled flags false",
+    "journal_phase": "committed",
+    "rollback_backup_digest": "e58d3cd03d3dba87ce17d8121e19720ab2dc9939394130c9fcd142ce8fd7bab9",
+    "installer_lock": "released; nonblocking acquisition check PASS"
+  },
+  "admin_menu": {
+    "sanro_top_level_count": 1,
+    "independent_root": "SANRO Studio / sanro-studio",
+    "sanro_submenus_under_woocommerce": 0,
+    "studio_submenus": [
+      "Pengaturan",
+      "Status Integrasi",
+      "Storage Privat"
+    ],
+    "woocommerce_product_editor_hook": "PASS",
+    "woocommerce_order_detail_panel_hook": "PASS"
+  },
+  "nonmutating_smoke": {
+    "editor_product_id": 53,
+    "editor_config_get": "HTTP 200; valid true; X-Sanro-Source matches candidate",
+    "editor_page_get": "HTTP 200; SANRO editor markup/config present",
+    "buyer_js": "HTTP 200; SHA256 matches manifest",
+    "buyer_css": "HTTP 200; SHA256 matches manifest",
+    "screenshot": "NOT TESTED; no browser automation/browser binary available",
+    "javascript_browser_execution": "NOT TESTED",
+    "orders_or_checkout_or_payment": "NOT TESTED; not exercised"
+  },
+  "safety": {
+    "dtf_generator": "OFF",
+    "google_drive": "OFF",
+    "storage_gc": "OFF",
+    "writer_activation": "none",
+    "order_database_mutation": "none",
+    "production_changes": "none",
+    "merge": "none"
+  },
+  "progress": {
+    "baseline_before": "90.50%",
+    "baseline_after": "90.50%",
+    "delta": "0.00",
+    "seven_stages_changed": false,
+    "reason": "Staging installation/runtime evidence does not change the feature-scope weighting; no feature-completion credit inferred."
+  },
+  "diagnostic_note": "One post-install WP-CLI diagnostic with --skip-plugins could not call a plugin function; rerunning with normal plugin loading passed. This was CLI-only and did not mutate staging.",
+  "recorded_at_utc": "2026-11-24T05:57:10Z"
+}

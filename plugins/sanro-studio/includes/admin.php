@@ -1,10 +1,18 @@
 <?php
 defined('ABSPATH') || exit;
 
+/** One independent root; retain both settings-admin and Woo manager access. */
 function sanro_studio_admin_menu() {
-    add_menu_page('SANRO Studio', 'SANRO Studio', 'manage_options',
-        'sanro-studio', 'sanro_studio_render_settings', 'dashicons-art', 56);
+    $capability = current_user_can('manage_options') ? 'manage_options' : 'manage_woocommerce';
+    add_menu_page('SANRO Studio', 'SANRO Studio', $capability,
+        'sanro-studio', 'sanro_studio_admin_landing', 'dashicons-art', 56);
+    // WordPress dispatches both callbacks for the shared root/submenu hook on
+    // some versions. Keep the root callback empty and render once from submenu.
+    foreach ([['Ringkasan','manage_woocommerce','sanro-studio','sanro_studio_ui_summary'],['Pengaturan','manage_options','sanro-studio-settings','sanro_studio_ui_settings'],['Produk & Mockup','edit_products','sanro-studio-products','sanro_studio_ui_products'],['Harga','edit_products','sanro-studio-prices','sanro_studio_ui_prices'],['Pesanan','manage_woocommerce','sanro-studio-orders','sanro_studio_ui_orders']] as $entry) {
+        add_submenu_page('sanro-studio',$entry[0],$entry[0],$entry[1],$entry[2],$entry[3]);
+    }
 }
+function sanro_studio_admin_landing(){if(!current_user_can('manage_woocommerce')&&!current_user_can('manage_options'))wp_die('Akses ditolak.','',['response'=>403]);/* The matching submenu callback owns the single render. */}
 
 function sanro_studio_save_settings() {
     if (!current_user_can('manage_options')) {
@@ -45,7 +53,7 @@ function sanro_studio_save_settings() {
     } else {
         wp_die('Jenis pengaturan tidak valid.', '', ['response' => 400]);
     }
-    wp_safe_redirect(admin_url('admin.php?page=sanro-studio&saved=1'));
+    wp_safe_redirect(admin_url('admin.php?page=sanro-studio-settings&saved=1'));
     exit;
 }
 
@@ -63,15 +71,21 @@ function sanro_studio_render_settings() {
     $runtime = $legacy_compat ? sanro_studio_runtime_status() : ['state' => 'native_default', 'mode' => 'native'];
     $options = $legacy_compat ? sanro_studio_options() : ['admin_preview' => false];
     $native = sanro_studio_native_capabilities();
-    echo '<div class="wrap"><h1>SANRO Studio</h1>';
-    echo '<p>Fondasi editor SANRO Studio. Integrasi harga Kaoscetak dan Drive belum diaktifkan.</p>';
-    echo '<table class="widefat striped"><tbody>';
+    echo '<div class="wrap"><h1>Pengaturan SANRO Studio</h1>';
+    echo '<nav class="nav-tab-wrapper"><a class="nav-tab nav-tab-active" aria-current="page" href="'.esc_url(admin_url('admin.php?page=sanro-studio-settings')).'">Pengaturan Umum</a><a class="nav-tab" href="'.esc_url(admin_url('admin.php?page=sanro-studio-drive')).'">Google Drive</a></nav>';
+    echo '<p>Editor SANRO Studio native dan integrasi WooCommerce. Fitur penulisan checkout, produksi, dan Drive tetap mengikuti konfigurasi server.</p>';
+    echo '<details class="sanro-system-details"><summary>Status sistem dan kapabilitas</summary><table class="widefat striped"><tbody>';
     $rows = [
         'WooCommerce' => $state['woocommerce'] ? 'Terdeteksi' : 'Belum aktif',
         'Mode core' => $legacy_compat ? 'Kompatibilitas lama (opt-in)' : 'SANRO Studio native',
         'Editor buyer' => sanro_studio_frontend_enabled() ? 'Aktif melalui konfigurasi server' : 'Nonaktif (default)',
         'Draft API' => sanro_studio_draft_rest_enabled() ? 'Aktif melalui konfigurasi server' : 'Nonaktif (default)',
-        'Checkout' => 'Belum tersedia',
+        'Checkout WooCommerce' => function_exists('sanro_studio_pricing_wc_enabled')
+            && sanro_studio_pricing_wc_enabled()
+            ? 'Aktif melalui konfigurasi server'
+            : (function_exists('sanro_studio_pricing_lock_order')
+                ? 'Kode tersedia; writer menunggu aktivasi server'
+                : 'Komponen checkout belum dimuat'),
     ];
     // Expose only operational state, never the private absolute filesystem path.
     $private_path = defined('SANRO_STUDIO_PRIVATE_MASTER_DIR')
@@ -129,7 +143,7 @@ function sanro_studio_render_settings() {
             . '</td></tr>';
     }
     echo '</tbody></table>';
-    echo '<h2>Pengaturan Umum</h2>';
+    echo '</details><h2>Pengaturan Umum</h2>';
     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
     echo '<input type="hidden" name="action" value="sanro_studio_save">';
     echo '<input type="hidden" name="settings_type" value="editor_page">';
@@ -145,7 +159,7 @@ function sanro_studio_render_settings() {
         ? $preferences['studio_label'] : 'SANRO Studio';
     $default_side = ($preferences['default_side'] ?? 'front') === 'back' ? 'back' : 'front';
     echo '<h2>Preferensi Studio Native</h2>';
-    echo '<p class="description">Preferensi tersimpan untuk integrasi editor berikutnya. Tidak mengaktifkan checkout atau mengubah produk.</p>';
+    echo '<p class="description">Preferensi sesi editor buyer. Menyimpan preferensi tidak mengaktifkan writer checkout atau mengubah produk.</p>';
     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
     echo '<input type="hidden" name="action" value="sanro_studio_save">';
     echo '<input type="hidden" name="settings_type" value="native_preferences">';

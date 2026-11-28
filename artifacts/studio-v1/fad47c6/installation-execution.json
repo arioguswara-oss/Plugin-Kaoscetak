@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "result": "PASS_FILES_REPLACED_AND_BUYER_QA",
+  "recorded_at_utc": "2026-11-24T07:49:58Z",
+  "owner_approval": "explicit Owner approval in conversation; exact source, ZIP, manifest, staging identity and prior-tree digest only",
+  "target": {
+    "url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+    "ssh_alias": "kaoscetak-staging",
+    "host": "id-dci-web1631.main-hosting.eu",
+    "account": "u606139982",
+    "document_root": "/home/u606139982/domains/saddlebrown-peafowl-616656.hostingersite.com/public_html",
+    "production_accessed": false
+  },
+  "candidate": {
+    "package_commit": "7df16c433501d880d10af7c484d08c06cba3c0ed",
+    "source_commit": "fad47c6f508258d594f92daca79c337d6911b404",
+    "plugin_digest": "6d65fde1ceda80b1551da51817ccef14f0d618f1d5dffdcfcb412a8c129cc2bb",
+    "zip_sha256": "b83c1b03d18e0633d502aff09d9b1d40f01eb216a22850a7c990fc40c78a5723",
+    "manifest_sha256": "8664f584c4b746120c98ed50b337fc9616508f3b390eca3fa2a8429a370f8309"
+  },
+  "pre_install_gate": {
+    "approval_hashes_and_target": "PASS",
+    "existing_tree_digest": "8d560cdb95611da98dc4a739737dff30ab9ac35f4ec6866defb8093808fd37db; PASS exact match",
+    "staging_identity_and_production_isolation": "PASS",
+    "web_php": "8.3.37 LiteSpeed/LSAPI; authenticated same-day Site Health, distinct from CLI",
+    "php_cli": "8.2.36 cli; candidate PHP lint PASS",
+    "active_plugins": "PASS; SANRO Studio 0.1.0-dev and WooCommerce 11.3.0 active",
+    "private_storage": "PASS; master and preview roots outside document root, mode 0700",
+    "writer_flags": "PASS; DTF generator/raster/artifacts, Drive, storage GC and checkout hook OFF",
+    "journal_and_crash_recovery": "PASS; no pending journal before install; official locked transaction committed",
+    "official_installer_plan_only": "PASS; recovery_required=false, exact source/archive and tree digest, lint PASS"
+  },
+  "installer": {
+    "mode": "--apply",
+    "state": "files_replaced",
+    "installed_tree_digest": "60c8b0f3a272b024537e152fe46763c31b1beafcb36933fa2e57bb115c132273",
+    "expected_candidate_tree_digest_match": true,
+    "rollback_retained": true,
+    "rollback_backup_digest": "8d560cdb95611da98dc4a739737dff30ab2dc9939394130c9fcd142ce8fd7bab9",
+    "journal_phase": "committed",
+    "installer_lock_after_apply": "free; nonblocking acquisition PASS",
+    "activation_changed": false,
+    "flags_changed": false,
+    "order_writes": false
+  },
+  "post_install": {
+    "source_marker": "PASS; matches candidate",
+    "plugin": "SANRO Studio 0.1.0-dev ACTIVE",
+    "woocommerce": "11.3.0 ACTIVE",
+    "web_php": "8.3.37 LiteSpeed/LSAPI; same-day Site Health evidence; live HTTP header confirms PHP 8.3.37",
+    "php_cli": "8.2.36 cli",
+    "buyer_js_sha256": "9573ce5cdcb9e095f4cc862a59ae10ca5f9e1ce47a8c766bdaed965abb834f91; HTTP bytes match manifest",
+    "buyer_css_sha256": "0476a6c30aaefd436ed942667a08b2fa65761c6fd3989380d5efaec6283debf6; HTTP bytes match manifest",
+    "menu": {
+      "sanro_top_level_count": 1,
+      "independent_root": "SANRO Studio",
+      "sanro_submenus_under_woocommerce": 0,
+      "woocommerce_integration": "retained",
+      "product_editor_hook": "PASS",
+      "order_detail_panel_hook": "PASS"
+    },
+    "feature_flags": {
+      "DTF generator and raster/artifact writers": "OFF",
+      "Google Drive": "OFF",
+      "storage GC": "OFF",
+      "checkout writer": "OFF"
+    }
+  },
+  "buyer_qa": {
+    "editor_get": "HTTP 200",
+    "existing_owner_draft": "HTTP 200; synthetic staging draft, no new draft created",
+    "front_back_master_upload_and_readback": "PASS; private PNG, HTTP 200 for both sides",
+    "front_back_preview_readback": "PASS; private JPEG, HTTP 200 for both sides",
+    "synthetic_design": "PASS; front/back image geometry plus front text",
+    "multi_size": "PASS; M=2, L=1, total quantity=3",
+    "authoritative_quote": "PASS; HTTP 200, IDR 393000, quantity 3",
+    "http_422": "PASS current flow; not reproduced in draft update/master/preview flow; preview readbacks HTTP 200. Historical response body was not retained, so historical root cause is not asserted.",
+    "javascript_console_errors": 0,
+    "failed_browser_requests": 0,
+    "cart_order_checkout_payment_posts": "none; all POSTs except existing draft/master/preview endpoints were blocked; checkout/payment never opened",
+    "screenshots": "PASS; four private files under /home/sanro/sanro-browser-qa/owner-private, permissions 0600",
+    "admin_screenshot": "NOT TESTED; no authenticated browser session available; menu registration verified by live WP-CLI"
+  },
+  "safety": {
+    "dtf_generator": "OFF",
+    "google_drive": "OFF",
+    "storage_gc": "OFF",
+    "checkout_writer": "OFF",
+    "orders_or_payments": "none",
+    "production_changes": "none",
+    "merge": "none"
+  },
+  "progress": {
+    "baseline_before": "90.50%",
+    "baseline_after": "90.50%",
+    "delta": "0.00",
+    "seven_stage_numeric_credit_changed": false,
+    "reason": "The official ledger has no subfeature QA weighting; this buyer QA evidence closes staging checks but does not authorize inventing a new percentage calibration. Release/order/payment and authenticated admin screenshot remain untested."
+  }
+}

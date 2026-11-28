@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "candidate_source": "8846097f359bc56dec1c5638a5b04c9a31ab884c",
+  "candidate_zip_sha256": "e18ea8ec0a5529d9dbc93c24c2f99e6f6cb91cb6ea9ad1a8caef21f7bfdcc435",
+  "candidate_manifest_sha256": "b8bbb973266f357d723071b0d63bd6fa50171c4062eb0ffb9fe20e2c04531832",
+  "transport_sha256": "d464892050139ce4b0b3c6887b1cc14b95cafe4e4afeb00cfeb15c3dc6fe4f8b",
+  "staging_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "apply_automatic": false,
+  "writers_changed": false
+}

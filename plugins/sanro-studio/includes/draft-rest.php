@@ -65,6 +65,13 @@ function sanro_studio_preview_upload_enabled() {
 
 function sanro_studio_register_preview_upload_route() {
     if (!sanro_studio_preview_upload_enabled()) return;
+    // Keep private filenames out of the URL, as with the existing master-read
+    // route. The server resolves only the owner's current bound preview.
+    register_rest_route('sanro-studio/v1', '/drafts/(?P<id>[a-fA-F0-9-]{36})/preview-read/(?P<side>front|back)', [
+        'methods' => 'GET',
+        'callback' => 'sanro_studio_rest_read_current_preview',
+        'permission_callback' => 'sanro_studio_rest_draft_nonce',
+    ]);
     register_rest_route('sanro-studio/v1', '/drafts/(?P<id>[a-fA-F0-9-]{36})/previews/(?P<side>front|back)/(?P<file_id>[a-f0-9-]{36}-(?:front|back)-[a-f0-9]{64}\\.(?:png|jpg|webp))', [
         'methods' => 'GET',
         'callback' => 'sanro_studio_rest_read_preview',
@@ -99,9 +106,47 @@ function sanro_studio_rest_read_preview($request) {
     if (function_exists('nocache_headers')) nocache_headers();
     $response = rest_ensure_response([
         'valid' => true,
+        'file_id' => $request->get_param('file_id'),
         'mime' => $result['mime'],
         'image_base64' => base64_encode($result['bytes']),
     ]);
+    $response->header('Cache-Control', 'private, no-store, max-age=0');
+    $response->header('X-Content-Type-Options', 'nosniff');
+    return $response;
+}
+
+/** Read only the preview bound to this owner's current saved revision. */
+function sanro_studio_rest_read_current_preview($request) {
+    if (!sanro_studio_preview_upload_enabled()) {
+        return new WP_Error('sanro_preview_disabled', 'Preview unavailable.', ['status' => 403]);
+    }
+    $id = $request->get_param('id');
+    $token = $request->get_header('X-Sanro-Owner-Token');
+    $side = $request->get_param('side');
+    $draft = sanro_studio_read_draft($id, $token);
+    if (empty($draft['valid'])) {
+        return new WP_Error('sanro_preview_unavailable', 'Preview unavailable.',
+            ['status' => ($draft['error'] ?? '') === 'draft_expired' ? 410 : 404]);
+    }
+    if (!in_array($side, ['front', 'back'], true)) {
+        return new WP_Error('sanro_preview_unavailable', 'Preview unavailable.', ['status' => 404]);
+    }
+    $record = get_option('sanro_studio_draft_' . $id, false);
+    $ref = is_array($record) ? ($record['preview_refs'][$side] ?? null) : null;
+    $revision = is_array($record) ? ($record['preview_design_hash'] ?? null) : null;
+    if (!is_string($ref) || !is_string($revision) || !is_string($draft['design_hash'] ?? null)
+        || !hash_equals($draft['design_hash'], $revision)) {
+        return new WP_Error('sanro_preview_not_current', 'Refresh the saved design preview.', ['status' => 409]);
+    }
+    // Reuses the filesystem boundary: exact design/side, safe directory, MIME,
+    // bounded bytes and content digest. No client path or file ID is accepted.
+    $result = sanro_studio_read_owned_draft_preview($id, $token, $side, $ref);
+    if (empty($result['valid'])) {
+        return new WP_Error('sanro_preview_unavailable', 'Preview unavailable.', ['status' => 404]);
+    }
+    if (function_exists('nocache_headers')) nocache_headers();
+    $response = rest_ensure_response(['valid' => true, 'file_id' => $ref,
+        'mime' => $result['mime'], 'image_base64' => base64_encode($result['bytes'])]);
     $response->header('Cache-Control', 'private, no-store, max-age=0');
     $response->header('X-Content-Type-Options', 'nosniff');
     return $response;
@@ -133,6 +178,8 @@ function sanro_studio_rest_upload_preview($request) {
         $status = $error === 'draft_expired' ? 410
             : (in_array($error, ['invalid_credentials', 'not_found'], true) ? 404
             : (in_array($error, ['draft_conflict', 'draft_locked', 'preview_conflict'], true) ? 409 : 400));
+        if ($error === 'storage_capacity') $status = 507;
+        if ($error === 'storage_busy') $status = 503;
         return new WP_Error('sanro_' . $error, 'Preview upload rejected.', ['status' => $status]);
     }
     if (function_exists('nocache_headers')) nocache_headers();
@@ -275,18 +322,26 @@ function sanro_studio_rest_upload_master($request) {
             return new WP_Error('sanro_draft_conflict', 'Draft changed. Reload before upload.', ['status' => 409]);
         }
         $budget_key = 'sanro_master_budget_' . hash('sha256', strtolower($id));
-        $count = get_transient($budget_key);
-        if ($count !== false && (!is_int($count) || $count >= 10)) {
+        $count = sanro_studio_normalize_master_budget_count(get_transient($budget_key));
+        // Some persistent object-cache backends return serialized integer
+        // transients as decimal strings. Normalize that representation while
+        // keeping malformed, negative, or exhausted values fail-closed.
+        if ($count === null || $count >= 10) {
             return new WP_Error('sanro_master_rate_limited', 'Upload limit reached.', ['status' => 429]);
         }
         // Reserve before writing, fail closed if quota storage fails.
-        if (!set_transient($budget_key, $count === false ? 1 : $count + 1, HOUR_IN_SECONDS)) {
+        if (!set_transient($budget_key, $count + 1, HOUR_IN_SECONDS)) {
             return new WP_Error('sanro_master_unavailable', 'Upload unavailable.', ['status' => 503]);
         }
         $stored = sanro_studio_store_owned_draft_master($id, $token, $side, $bytes);
         if (empty($stored['valid'])) return sanro_studio_rest_draft_response($stored);
-        $bound = sanro_studio_bind_owned_draft_master($id, $token, $side, $stored['file_id'], $expected_hash);
-        if (empty($bound['valid'])) return sanro_studio_rest_draft_response($bound);
+        // The single-save flow commits file bindings with geometry in one CAS.
+        if ($request->get_param('defer_binding') === true) {
+            $verified = sanro_studio_read_owned_draft_master($id, $token, $side, $stored['file_id']);
+        } else {
+            $verified = sanro_studio_bind_owned_draft_master($id, $token, $side, $stored['file_id'], $expected_hash);
+        }
+        if (empty($verified['valid'])) return sanro_studio_rest_draft_response($verified);
     } finally {
         $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock_name));
     }
@@ -300,6 +355,18 @@ function sanro_studio_rest_upload_master($request) {
     return $response;
 }
 
+/** Normalize the bounded per-draft master-upload counter across WP cache backends. */
+function sanro_studio_normalize_master_budget_count($value) {
+    if ($value === false) return 0;
+    if (is_int($value)) return $value >= 0 ? $value : null;
+    if (is_string($value) && strlen($value) <= 9
+        && preg_match('/^[0-9]+$/D', $value)) {
+        $count = (int) $value;
+        return $count >= 0 ? $count : null;
+    }
+    return null;
+}
+
 function sanro_studio_rest_draft_nonce($request) {
     $nonce = $request->get_header('X-Sanro-Draft-Nonce');
     return is_string($nonce) && wp_verify_nonce($nonce, 'sanro_studio_draft')
@@ -311,9 +378,14 @@ function sanro_studio_rest_draft_response($result) {
         return rest_ensure_response($result);
     }
     $error = isset($result['error']) && is_string($result['error']) ? $result['error'] : 'invalid_draft';
+    if ($error === 'select_long_sleeve_product') {
+        return new WP_Error('sanro_' . $error, 'Buat desain baru pada produk lengan panjang untuk memesan desain ini.', ['status'=>409]);
+    }
     $status = in_array($error, ['invalid_product', 'invalid_design'], true) ? 400 : 409;
     if (in_array($error, ['invalid_credentials', 'not_found'], true)) $status = 404;
     if ($error === 'draft_expired') $status = 410;
+    if ($error === 'storage_capacity') $status = 507;
+    if ($error === 'storage_busy') $status = 503;
     return new WP_Error('sanro_' . $error, 'Draft operation rejected.', ['status' => $status]);
 }
 
@@ -328,9 +400,11 @@ function sanro_studio_draft_creation_budget() {
         ? $_SERVER['REMOTE_ADDR'] : '';
     if (!filter_var($ip, FILTER_VALIDATE_IP)) return false;
     $key = 'sanro_draft_limit_' . substr(hash_hmac('sha256', $ip, wp_salt('auth')), 0, 32);
-    $count = get_transient($key);
-    if ($count !== false && (!is_int($count) || $count >= 20)) return false;
-    return set_transient($key, $count === false ? 1 : $count + 1, HOUR_IN_SECONDS);
+    // WordPress may return an option-backed transient as a numeric string.
+    // Keep the same limit and reject malformed values rather than resetting it.
+    $count = sanro_studio_normalize_master_budget_count(get_transient($key));
+    if ($count === null || $count >= 20) return false;
+    return set_transient($key, $count + 1, HOUR_IN_SECONDS);
 }
 
 /** Only compact geometry/text metadata; reject embedded images or oversized JSON. */
@@ -378,7 +452,7 @@ function sanro_studio_draft_payload_allowed($design, $allow_image_geometry = fal
 }
 
 /** An image-only draft starts without printable objects, never as a quote. */
-function sanro_studio_image_bootstrap_allowed($design) {
+function sanro_studio_image_bootstrap_allowed($design, $product_id = 0) {
     if (!defined('SANRO_STUDIO_ENABLE_MASTER_UPLOAD')
         || SANRO_STUDIO_ENABLE_MASTER_UPLOAD !== true
         || !defined('SANRO_STUDIO_ENABLE_PRIVATE_MASTERS')
@@ -387,9 +461,11 @@ function sanro_studio_image_bootstrap_allowed($design) {
         || array_diff(array_keys($design), ['shirt_color', 'quantities', 'long_sleeve'])) {
         return false;
     }
+    $palette = $product_id && function_exists('sanro_studio_mockup_palette')
+        ? array_keys(sanro_studio_mockup_palette($product_id)) : ['#ffffff','#171717','#b91c1c','#1d4ed8','#166534'];
     return isset($design['shirt_color'], $design['quantities'], $design['long_sleeve'])
         && is_string($design['shirt_color'])
-        && in_array($design['shirt_color'], ['#ffffff','#171717','#b91c1c','#1d4ed8','#166534'], true)
+        && in_array($design['shirt_color'], $palette, true)
         && is_bool($design['long_sleeve'])
         && is_array($design['quantities'])
         && !array_diff(array_keys($design['quantities']), ['S','M','L','XL','2XL','3XL','4XL','5XL'])
@@ -408,7 +484,7 @@ function sanro_studio_rest_create_draft($request) {
     }
     // Validate before consuming the guest creation budget. Invalid geometry
     // must not create records or consume a legitimate customer's allowance.
-    if (!sanro_studio_image_bootstrap_allowed($design)) {
+    if (!sanro_studio_image_bootstrap_allowed($design, $product_id)) {
         $validation = sanro_studio_validate_product_design($product_id, $design);
         if (empty($validation['valid'])) {
             return sanro_studio_rest_draft_response($validation);
@@ -435,7 +511,10 @@ function sanro_studio_rest_update_draft($request) {
         return new WP_Error('sanro_revision_required', 'Draft revision required.', ['status' => 409]);
     }
     return sanro_studio_rest_draft_response(
-        sanro_studio_update_draft($request->get_param('id'), $token, $design, $expected_hash)
+        sanro_studio_update_draft(
+            $request->get_param('id'), $token, $design, $expected_hash,
+            $request->get_param('expected_master_refs'), $request->get_param('next_master_refs')
+        )
     );
 }
 
@@ -479,11 +558,12 @@ function sanro_studio_rest_quote_draft($request) {
     $quote = sanro_studio_quote_size_quantities(
         $draft['product_id'], $design, $quantities, $long_sleeve
     );
+    if(function_exists('sanro_studio_repeat_adjust_quote'))$quote=sanro_studio_repeat_adjust_quote($quote,$draft['design_id']);
     if (empty($quote['valid'])) return sanro_studio_rest_draft_response($quote);
     return rest_ensure_response([
         'valid' => true,
         'design_id' => $draft['design_id'],
-        'quote' => $quote,
+        'quote' => function_exists('sanro_studio_repeat_public_quote')?sanro_studio_repeat_public_quote($quote):$quote,
         'checkout_enabled' => false,
     ]);
 }
@@ -548,27 +628,28 @@ function sanro_studio_stage_rest_session_ready() {
  * Unconfigured, nonpublic and mixed-block pages fail closed.
  */
 function sanro_studio_stage_classic_checkout_ready() {
+    return sanro_studio_classic_wc_page_id('cart') > 0
+        && sanro_studio_classic_wc_page_id('checkout') > 0;
+}
+
+/** Resolve a published classic WooCommerce page compatible with the Studio hooks. */
+function sanro_studio_classic_wc_page_id($type) {
     if (!function_exists('wc_get_page_id') || !function_exists('get_post')
         || !function_exists('has_block') || !function_exists('has_shortcode')) {
-        return false;
+        return 0;
     }
     try {
-        foreach ([
-            'cart' => ['woocommerce/cart', 'woocommerce_cart'],
-            'checkout' => ['woocommerce/checkout', 'woocommerce_checkout'],
-        ] as $type => $format) {
-            $page_id = wc_get_page_id($type);
-            if (!is_int($page_id) || $page_id < 1) return false;
-            $page = get_post($page_id);
-            if (!is_object($page) || ($page->post_type ?? null) !== 'page'
-                || ($page->post_status ?? null) !== 'publish'
-                || !is_string($page->post_content ?? null)) return false;
-            if (has_block($format[0], $page)
-                || !has_shortcode($page->post_content, $format[1])) return false;
-        }
-        return true;
+        $page_id = wc_get_page_id($type);
+        if (!is_int($page_id) || $page_id < 1) return 0;
+        $page = get_post($page_id);
+        if (!is_object($page) || ($page->post_type ?? null) !== 'page'
+            || ($page->post_status ?? null) !== 'publish'
+            || !is_string($page->post_content ?? null)
+            || has_block('woocommerce/' . $type, $page)
+            || !has_shortcode($page->post_content, 'woocommerce_' . $type)) return 0;
+        return $page_id;
     } catch (Throwable $error) {
-        return false;
+        return 0;
     }
 }
 

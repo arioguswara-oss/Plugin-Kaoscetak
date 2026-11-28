@@ -8,13 +8,26 @@ $GLOBALS['screen'] = 'product';
 $GLOBALS['media_calls'] = 0;
 $GLOBALS['scripts'] = [];
 $GLOBALS['input_fields'] = [];
+$GLOBALS['mockup_posts'] = [
+    41=>(object)['ID'=>41,'post_type'=>'attachment','post_status'=>'inherit','post_parent'=>0,'post_password'=>''],
+    42=>(object)['ID'=>42,'post_type'=>'attachment','post_status'=>'inherit','post_parent'=>0,'post_password'=>''],
+    44=>(object)['ID'=>44,'post_type'=>'attachment','post_status'=>'inherit','post_parent'=>144,'post_password'=>''],
+    46=>(object)['ID'=>46,'post_type'=>'attachment','post_status'=>'private','post_parent'=>0,'post_password'=>''],
+    47=>(object)['ID'=>47,'post_type'=>'attachment','post_status'=>'inherit','post_parent'=>147,'post_password'=>''],
+    48=>(object)['ID'=>48,'post_type'=>'attachment','post_status'=>'inherit','post_parent'=>148,'post_password'=>''],
+    144=>(object)['ID'=>144,'post_type'=>'product','post_status'=>'private','post_parent'=>0,'post_password'=>''],
+    147=>(object)['ID'=>147,'post_type'=>'product','post_status'=>'publish','post_parent'=>0,'post_password'=>'secret'],
+    148=>(object)['ID'=>148,'post_type'=>'product','post_status'=>'publish','post_parent'=>0,'post_password'=>''],
+];
 function absint($id) { return abs((int) $id); }
 function get_post_meta($id,$key,$single=true) {
     if ($key === '_sanro_studio_mockups') return $GLOBALS['mockup_meta'];
     return null;
 }
-function wp_attachment_is_image($id) { return in_array($id, [41,42,44], true); }
-function get_post_status($id) { return $id === 44 ? 'private' : 'inherit'; }
+function get_post($id) { return $GLOBALS['mockup_posts'][$id]??null; }
+function wp_attachment_is_image($id) { return in_array($id, [41,42,44,46,47,48], true); }
+function get_post_status($id) { return $id === 44 ? 'private' : (in_array($id,[41,42,46,47,48],true)?'publish':'draft'); }
+function is_post_publicly_viewable($post) { return ($post->post_status??'')==='publish'&&empty($post->post_password); }
 function wp_get_attachment_image_url($id,$size) {
     return in_array($size, ['large', 'thumbnail'], true)
         ? 'https://cdn.example.test/mockup-' . $id . '.jpg' : false;
@@ -52,6 +65,9 @@ verify_mockup(0,sanro_studio_valid_mockup_attachment('-41'),'negative rejected')
 verify_mockup(0,sanro_studio_valid_mockup_attachment('41abc'),'invalid ID rejected');
 verify_mockup(0,sanro_studio_valid_mockup_attachment(43),'nonimage attachment rejected');
 verify_mockup(0,sanro_studio_valid_mockup_attachment(44),'nonpublic attachment rejected');
+verify_mockup(0,sanro_studio_valid_mockup_attachment(46),'private raw attachment status rejected');
+verify_mockup(0,sanro_studio_valid_mockup_attachment(47),'password-protected parent rejected');
+verify_mockup(48,sanro_studio_valid_mockup_attachment(48),'unattached/public parent image accepted using raw inherit status');
 verify_mockup(['front'=>41,'back'=>42],sanro_studio_product_mockup_attachments(17),'only two valid sides returned');
 $urls = sanro_studio_product_mockup_urls(17);
 verify_mockup('https://cdn.example.test/mockup-41.jpg',$urls['front'] ?? null,'front verified CDN URL');
@@ -60,22 +76,22 @@ verify_mockup(2,count($urls),'never expose arbitrary private metadata');
 verify_mockup([],sanro_studio_product_mockup_attachments(0),'invalid product ID rejected');
 $product = new SanroMockProduct();
 $_POST = [];
-sanro_studio_save_product_mockups($product);
+verify_mockup(false,sanro_studio_save_product_mockups($product),'missing fields report incomplete save');
 verify_mockup(null,$product->updated,'missing fields cannot overwrite config');
 $_POST = ['_sanro_studio_mockup_front'=>'41','_sanro_studio_mockup_back'=>'42'];
-sanro_studio_save_product_mockups($product);
+verify_mockup(true,sanro_studio_save_product_mockups($product),'public Media Library pair accepted');
 verify_mockup(['_sanro_studio_mockups',['front'=>41,'back'=>42]],$product->updated,'valid pair saved');
 $product->updated=null;
 $_POST['_sanro_studio_mockup_back']='44';
-sanro_studio_save_product_mockups($product);
+verify_mockup(false,sanro_studio_save_product_mockups($product),'private parent failure surfaced');
 verify_mockup(null,$product->updated,'private attachment cannot overwrite config');
 $_POST['_sanro_studio_mockup_back']='42';
 $GLOBALS['can_edit']=false;
-sanro_studio_save_product_mockups($product);
+verify_mockup(false,sanro_studio_save_product_mockups($product),'unauthorized editor denied');
 verify_mockup(null,$product->updated,'unauthorized editor cannot write');
 $GLOBALS['can_edit']=true;
 $_POST['_sanro_studio_mockup_front']='';
-sanro_studio_save_product_mockups($product);
+verify_mockup(true,sanro_studio_save_product_mockups($product),'clearing one mockup remains supported');
 verify_mockup(['_sanro_studio_mockups',['back'=>42]],$product->updated,'empty front intentionally clears one side');
 ob_start();
 sanro_studio_product_mockup_fields();
@@ -93,9 +109,10 @@ sanro_studio_enqueue_product_mockup_admin('index.php');
 verify_mockup(0,$GLOBALS['media_calls'],'media not loaded on unrelated admin screen');
 sanro_studio_enqueue_product_mockup_admin('post.php');
 verify_mockup(1,$GLOBALS['media_calls'],'media loaded on product screen');
-verify_mockup(2,count($GLOBALS['scripts']),'mockup picker and zone preview loaded only on product screen');
-verify_mockup('sanro-studio-print-zone-admin',$GLOBALS['scripts'][1]['name'],'zone preview registered');
-verify_mockup(['sanro-studio-mockup-admin'],$GLOBALS['scripts'][1]['deps'],'zone preview loads after chooser');
+verify_mockup(3,count($GLOBALS['scripts']),'mockup picker, mapping and zone preview loaded only on product screen');
+verify_mockup('sanro-studio-mockup-mapping',$GLOBALS['scripts'][1]['name'],'variant mapping registered');
+verify_mockup('sanro-studio-print-zone-admin',$GLOBALS['scripts'][2]['name'],'zone preview registered');
+verify_mockup(['sanro-studio-mockup-admin'],$GLOBALS['scripts'][2]['deps'],'zone preview loads after chooser');
 $GLOBALS['screen']='post';
 sanro_studio_enqueue_product_mockup_admin('post.php');
 verify_mockup(1,$GLOBALS['media_calls'],'admin post editor cannot load media picker');

@@ -1,0 +1,12 @@
+{
+  "source": "ef8df0da9eb1e88641659dc79da8431e9e1157cd",
+  "version": "1.1.0",
+  "archive_sha256": "39829b13cf86644c8a7e922e74f25ea35879d463f792477d737c6d26eaecd55e",
+  "manifest_sha256": "571a9b3dbb949bfcddd3341a064675830711065362407c77ed49e64fa72806a6",
+  "plugin_digest": "6a5faf5673760a9b4e6ca71436746370dc839978a6976cc1c301c7b2f8aeb7a1",
+  "expected_tree_digest": "37bfc7cc5bd83ebb64dd2b69767db2e3ce416c705c81e7ba1895b5df746ee660",
+  "files": 89,
+  "predecessor_source": "c082c7f5ba577f3628e6733f840d81bd0a8f3e97",
+  "predecessor_tree_digest": "7214e0aeb492590015ae0e5f8466bc71c92f3ee09ee31be505af2c6339c0e03c",
+  "transport_sha256": "c346e9b5c187e82a3125b3cf5eedf7ca891d5526867cff7143afc1958b43b8d8"
+}

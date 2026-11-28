@@ -93,7 +93,7 @@ class SanroTransactionCart {
     function add_to_cart($product, $qty, $variation, $attrs, $meta) {
         if ($this->failAfter > 0 && count($this->lines) >= $this->failAfter) return false;
         $key = 'line-'.count($this->lines);
-        $this->lines[$key] = array_merge(['product_id'=>$product, 'quantity'=>$qty,
+        $this->lines[$key] = array_merge(['product_id'=>$product,'variation_id'=>$variation,'variation'=>$attrs,'quantity'=>$qty,
             'data'=>new SanroPriceProduct()], $meta);
         if ($this->throwAfterInsert) throw new RuntimeException('synthetic hook threw after insert');
         return $key;

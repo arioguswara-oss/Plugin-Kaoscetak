@@ -46,4 +46,17 @@ expect_sanro(sanro_studio_editor_area_config(77)['unit'] === 'cm', 'editor confi
 expect_sanro(sanro_studio_editor_area_config(77)['safe_areas']['front']['width'] === 20.0, 'editor config admin source');
 expect_sanro(sanro_studio_editor_area_config(77)['categories']['A3+'] === [32.0, 48.0], 'editor config official limits');
 expect_sanro(sanro_studio_editor_area_config(78)['error'] === 'product_area_unconfigured', 'unconfigured editor denied');
+$_POST['_sanro_studio_front_height'] = '30';
+foreach (sanro_studio_print_categories() as $name => [$w,$h]) {
+    $key = '_sanro_print_'.str_replace('+','_plus',$name);
+    $_POST[$key.'_w'] = (string)($name === 'A5' ? 9 : $w);
+    $_POST[$key.'_h'] = (string)$h;
+}
+sanro_studio_save_product_areas($product);
+expect_sanro(sanro_studio_editor_area_config(77)['categories']['A5'] === [9.0,21.0], 'merchant size boundaries published');
+expect_sanro(sanro_studio_validate_product_design(77,['front'=>['objects'=>[$img]]])['sides']['front']['category'] === 'A4','merchant limits apply to authoritative sizing');
+$before = count($GLOBALS['writes']);
+$_POST['_sanro_print_A5_w'] = '25';
+sanro_studio_save_product_areas($product);
+expect_sanro(count($GLOBALS['writes']) === $before,'decreasing tier limits rejected atomically');
 echo "SANRO product areas: {$checks} assertions PASS, 0 FAIL\n";

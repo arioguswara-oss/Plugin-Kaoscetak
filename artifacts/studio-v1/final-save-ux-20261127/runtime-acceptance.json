@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "date_wib": "2026-11-27",
+  "repository": "arioguswara-oss/Plugin-Kaoscetak",
+  "branch": "work/studio-mobile-checkout-integration-20261123",
+  "pull_request": 52,
+  "head_before": "c79548b453795323cb1b7e48a2a5414a95d2ff5f",
+  "source": "c082c7f5ba577f3628e6733f840d81bd0a8f3e97",
+  "version": "1.1.0",
+  "archive_sha256": "953c6365f8e7be79bdc611e9c1e9cc373840a2c877429d04f55b7ecb02d46a11",
+  "manifest_sha256": "905fdb9b2ff34ffcf23bda204e55eb556e8741ec2f14413823171c92eb45ae9a",
+  "plugin_digest": "27c34671580b12cb427cabd80b55d0e9651d084a3390200426e0399ce07e41f8",
+  "expected_tree_digest": "7214e0aeb492590015ae0e5f8466bc71c92f3ee09ee31be505af2c6339c0e03c",
+  "files": 89,
+  "predecessor_source": "0d0ea5f1795c5148e763d88281e8964f6672fbce",
+  "predecessor_tree_digest": "53afcc58aba2e51703ad3fa7a9aec004c748cf992d899bc005f57f70264c5cf1",
+  "base_transport_sha256": "f6cd853b870bc41124ac04589b78d92b2ad85036af3dc3fff27ef792065a44d4",
+  "transport_sha256": "51827945a397ef0a67d98c79a4444ee88869d8e9f9f8262ec23dac82d04e32bd",
+  "staging_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "install": {
+    "previous_version": "1.1.0 active",
+    "previous_live_asset_fingerprints": {
+      "buyer": "ef209f2413ff",
+      "studio_ui": "4113289762de"
+    },
+    "pre_https": "PASS",
+    "previous_exact_tree_verified": true,
+    "journal": "committed",
+    "post_https_fresh_get": "PASS",
+    "installed_tree_digest": "7214e0aeb492590015ae0e5f8466bc71c92f3ee09ee31be505af2c6339c0e03c",
+    "web_php": "8.3.37",
+    "web_sapi": "litespeed",
+    "rollback_retained": true,
+    "private_roots": "PASS",
+    "writer_flags": "OFF",
+    "studio_active": true,
+    "transport_active": false
+  },
+  "build": {
+    "two_reproducible_packages_and_manifests": "PASS",
+    "official_local_preflight": "PASS PLAN_ONLY",
+    "local_php_cli": "8.4.28",
+    "tree_matches_zip": true
+  },
+  "targeted": {
+    "cart_handler": 10,
+    "draft_geometry_and_save": 31,
+    "private_image_preview": 10,
+    "php_buyer_render": {
+      "cart_off": 24,
+      "cart_on": 24
+    },
+    "transform": "PASS",
+    "public_design_id": "PASS",
+    "session_private_mini_cart": "PASS",
+    "syntax_and_diff_check": "PASS"
+  },
+  "guest": {
+    "mode": "Chrome desktop, signed out, initial Cart empty",
+    "product": 53,
+    "design_id": "ID-00102",
+    "color": "Biru",
+    "sizes": {
+      "S": 1,
+      "M": 1
+    },
+    "line_idr": {
+      "S": 72000,
+      "M": 75000
+    },
+    "total_idr": 147000,
+    "flow": [
+      "Belum disimpan",
+      "Menyimpan desain",
+      "Belum disimpan with contextual Simpan gambar while image pending",
+      "Menyimpan desain",
+      "Tersimpan · ID-00102"
+    ],
+    "cart_before_image": "blocked without obsolete guidance",
+    "cart_after_image": "PASS without another save",
+    "after_save": {
+      "cart_status": "",
+      "image_note": "",
+      "image_action_hidden": true,
+      "technical_labels_visible": false
+    },
+    "reopen": {
+      "image_restored": true,
+      "status": "Tersimpan · ID-00102",
+      "cart_status": ""
+    },
+    "native_drawer_private_rendered_thumbnails": 2,
+    "checkout_review": "PASS",
+    "cart_cleaned": true,
+    "screenshots": [
+      "verified.jpg",
+      "mini-cart.jpg"
+    ]
+  },
+  "reuse": {
+    "android_previous": "historical Owner evidence",
+    "transforms": "prior live desktop evidence and current targeted regression",
+    "order_56": "prior order/production evidence",
+    "mariadb_concurrency": "prior isolated evidence"
+  },
+  "release": {
+    "source_save_ux": "VERIFIED",
+    "staging": "GO",
+    "physical_android_current_source": "PENDING_OWNER",
+    "no_new_order": true,
+    "no_payment": true,
+    "no_production": true,
+    "no_merge": true
+  },
+  "baseline": {
+    "before": 96.5,
+    "after": 96.5,
+    "delta_points": 0
+  }
+}

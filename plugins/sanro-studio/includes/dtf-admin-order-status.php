@@ -93,7 +93,7 @@ function sanro_studio_dtf_admin_item_status($order, $item_id) {
             || !is_int($value['width_px'] ?? null)
             || !is_int($value['height_px'] ?? null)
             || $value['width_px'] < 1 || $value['height_px'] < 1
-            || $value['width_px'] > 4096 || $value['height_px'] > 4096
+            || $value['width_px'] > 6000 || $value['height_px'] > 6000
             || !is_numeric($value['width_cm'] ?? null)
             || !is_numeric($value['height_cm'] ?? null)
             || !is_finite((float) $value['width_cm'])

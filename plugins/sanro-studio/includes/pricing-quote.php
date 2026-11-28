@@ -14,41 +14,62 @@ function sanro_studio_product_quote($product_id, $design) {
         return ['valid' => false, 'error' => 'unsupported_currency'];
     }
     $config = sanro_studio_public_editor_config($product_id);
-    if (empty($config['valid']) || $config['pricing_profile'] !== 'cotton_combed_24s') {
+    if (empty($config['valid']) || !in_array($config['pricing_profile'],['cotton_combed_24s','tunik_oversize_34'],true)) {
         return ['valid' => false, 'error' => 'product_unavailable'];
     }
     if (!is_array($design) || (array_key_exists('long_sleeve', $design) && !is_bool($design['long_sleeve']))) {
         return ['valid' => false, 'error' => 'invalid_variant'];
     }
+    if (!empty($design['long_sleeve']) && ($config['pricing']['sleeve_label'] ?? null) !== 'long') {
+        return ['valid'=>false,'error'=>'select_long_sleeve_product'];
+    }
+    $profile = function_exists('sanro_studio_product_pricing_config') ? sanro_studio_product_pricing_config($product_id) : null;
     $validated = sanro_studio_validate_product_design($product_id, $design);
     if (empty($validated['valid'])) return $validated;
     $quantities = $design['quantities'] ?? null;
     if (!is_array($quantities) || !$quantities) {
         return ['valid' => false, 'error' => 'invalid_quantities'];
     }
+    $wc_product=function_exists('wc_get_product')?wc_get_product($product_id):null;
+    $is_variable=$wc_product&&method_exists($wc_product,'is_type')&&$wc_product->is_type('variable');
+    $variation_map=$is_variable?sanro_studio_variation_map($product_id):[];
+    if($is_variable&&(!is_array($variation_map)||!isset($design['shirt_color'],$variation_map[$design['shirt_color']])))return ['valid'=>false,'error'=>'variation_unavailable'];
     $categories = ['front' => null, 'back' => null];
     foreach ($validated['sides'] as $side => $result) {
-        // An empty side is not charged, regardless of its selected category.
-        if (!$result['empty']) $categories[$side] = $design[$side]['category'];
+        $categories[$side] = $result['category'];
     }
     $lines = [];
     $pieces = $total = 0;
     foreach ($quantities as $size => $quantity) {
         if ($quantity === 0) continue;
-        $unit = sanro_studio_24s_unit_price(
-            $size, $categories['front'], $categories['back'], $design['long_sleeve'] ?? false
-        );
+        $unit=$profile!==null?sanro_studio_profile_unit_price($profile,$size,$categories['front'],$categories['back'])
+            :sanro_studio_24s_unit_price($size,$categories['front'],$categories['back']);
         if (!$unit['valid']) return $unit;
         $subtotal = $unit['unit_price'] * $quantity;
-        $lines[$size] = ['quantity' => $quantity, 'unit_price' => $unit['unit_price'], 'subtotal' => $subtotal];
+        $mapped=$is_variable?($variation_map[$design['shirt_color']][$size]??null):null;
+        if($is_variable&&(!is_array($mapped)||empty($mapped['available'])||!isset($mapped['variation_id'],$mapped['attributes'])||!sanro_studio_variation_for_mapping($product_id,$mapped['variation_id'],sanro_studio_mockup_palette($product_id)[$design['shirt_color']]??'',$size)))return ['valid'=>false,'error'=>'variation_unavailable'];
+        $lines[$size] = ['quantity' => $quantity, 'unit_price' => $unit['unit_price'], 'subtotal' => $subtotal,
+            'variation_id'=>$is_variable?$mapped['variation_id']:0,'variation_attributes'=>$is_variable?$mapped['attributes']:[]];
         $pieces += $quantity;
         $total += $subtotal;
     }
     if (!$pieces) return ['valid' => false, 'error' => 'invalid_quantities'];
     return [
         'valid' => true, 'contract_version' => 1, 'product_id' => $product_id,
+        'shirt_color' => isset($design['shirt_color'])&&is_string($design['shirt_color'])?$design['shirt_color']:'',
         'pricing_profile' => $config['pricing_profile'], 'currency' => 'IDR',
-        'categories' => $categories, 'sides' => $validated['sides'],
+        'pricing_revision'=>$profile['revision']??null,
+        // The quote is persisted and pinned at order lock. Production must use
+        // this server-resolved configuration even if the catalog later changes.
+        'product_snapshot'=>['version'=>1,
+            'safe_areas'=>$config['safe_areas']??sanro_studio_product_safe_areas($product_id),
+            'palette'=>$config['palette']??sanro_studio_mockup_palette($product_id),
+            'print_limits'=>$config['categories'],
+            'print_zones'=>$config['print_zones']??(function_exists('sanro_studio_product_print_zones')?sanro_studio_product_print_zones($product_id):[]),
+            'pricing_profile'=>$config['pricing_profile'],
+            'pricing_revision'=>$profile['revision']??null,'variations'=>$config['variations']??[]],
+        'sleeve_label'=>$profile['sleeve_label']??'short',
+        'categories' => $categories, 'print_limits' => $config['categories'] ?? sanro_studio_product_print_categories($product_id), 'sides' => $validated['sides'],
         'lines' => $lines, 'pieces' => $pieces, 'total' => $total,
     ];
 }

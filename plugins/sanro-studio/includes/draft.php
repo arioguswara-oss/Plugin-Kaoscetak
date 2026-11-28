@@ -17,7 +17,7 @@ function sanro_studio_create_draft($product_id, $design) {
     // image-only design. It cannot be quoted or checked out until an image
     // master is bound and valid geometry is saved.
     $empty_bootstrap = function_exists('sanro_studio_image_bootstrap_allowed')
-        && sanro_studio_image_bootstrap_allowed($design);
+        && sanro_studio_image_bootstrap_allowed($design, $product_id);
     if (!$empty_bootstrap) {
         $result = sanro_studio_validate_product_design($product_id, $design);
         if (empty($result['valid'])) return $result;
@@ -36,7 +36,15 @@ function sanro_studio_create_draft($product_id, $design) {
     if (!add_option('sanro_studio_draft_' . $id, $record, '', false)) {
         return ['valid' => false, 'error' => 'storage_failed'];
     }
-    return ['valid' => true, 'design_id' => $id, 'owner_token' => $token];
+    $public_id = function_exists('sanro_studio_public_design_id') ? sanro_studio_public_design_id($id) : null;
+    if (function_exists('sanro_studio_public_design_id') && !is_string($public_id)) {
+        delete_option('sanro_studio_draft_' . $id);
+        return ['valid' => false, 'error' => 'public_id_unavailable'];
+    }
+    return ['valid' => true, 'design_id' => $id,
+        'public_design_id' => $public_id,
+        'design_hash' => hash('sha256', maybe_serialize($design)),
+        'owner_token' => $token];
 }
 
 /** Read draft only with the independent secret owner token. */
@@ -59,14 +67,20 @@ function sanro_studio_read_draft($id, $token) {
         || $record['expires_at'] <= time()) {
         return ['valid' => false, 'error' => 'draft_expired'];
     }
+    $public_id = function_exists('sanro_studio_public_design_id') ? sanro_studio_public_design_id($id) : null;
+    if (function_exists('sanro_studio_public_design_id') && !is_string($public_id)) {
+        return ['valid' => false, 'error' => 'public_id_unavailable'];
+    }
     return [
         'valid' => true,
         'design_id' => $id,
+        'public_design_id' => $public_id,
         'product_id' => $record['product_id'],
         'design' => $record['design'],
         'design_hash' => hash('sha256', maybe_serialize($record['design'])),
         'status' => $record['status'],
         'expires_at' => $record['expires_at'],
+        'owner_email_verified'=>function_exists('sanro_studio_repeat_verified_email')&&sanro_studio_repeat_verified_email($record)!=='',
         'master_refs' => is_array($record['master_refs'] ?? null)
             ? array_intersect_key($record['master_refs'], array_flip(['front', 'back'])) : [],
     ];
@@ -77,7 +91,7 @@ function sanro_studio_read_draft($id, $token) {
  * Revalidates geometry against current product settings before replacing metadata.
  * Never accepts client-supplied status, product ID or price.
  */
-function sanro_studio_update_draft($id, $token, $design, $expected_design_hash = null) {
+function sanro_studio_update_draft($id, $token, $design, $expected_design_hash = null, $expected_master_refs = null, $next_master_refs = null) {
     $existing = sanro_studio_read_draft($id, $token);
     if (empty($existing['valid'])) return $existing;
     if ($existing['status'] !== 'draft') {
@@ -123,37 +137,56 @@ function sanro_studio_update_draft($id, $token, $design, $expected_design_hash =
             || !hash_equals(hash('sha256', maybe_serialize($before['design'])), $expected_design_hash))) {
         return ['valid' => false, 'error' => 'draft_conflict'];
     }
-    // A retry of an unchanged save must not revoke verified master bindings.
-    // The caller may legitimately retry after a network timeout.
-    if (hash_equals(
-        hash('sha256', maybe_serialize($before['design'])),
-        hash('sha256', maybe_serialize($design))
-    )) {
-        return ['valid' => true, 'design_id' => $id, 'unchanged' => true];
+    $current_refs = is_array($before['master_refs'] ?? null) ? $before['master_refs'] : [];
+    if ($expected_master_refs !== null) {
+        if (!is_array($expected_master_refs)) return ['valid' => false, 'error' => 'draft_conflict'];
+        ksort($current_refs);
+        ksort($expected_master_refs);
+        if ($current_refs !== $expected_master_refs) return ['valid' => false, 'error' => 'draft_conflict'];
     }
-    // Image geometry may only reference masters already bound to this
-    // exact owner-authorized draft. This check runs against the CAS snapshot.
+    $requested_refs = $next_master_refs ?? $current_refs;
+    // Check geometry against owner-bound files. Any newly referenced file
+    // must already exist in private storage, with matching content and side.
     if (!function_exists('sanro_studio_draft_image_binding_allowed')
-        || !sanro_studio_draft_image_binding_allowed(
-            $design, is_array($before['master_refs'] ?? null) ? $before['master_refs'] : [], $id
-        )) {
+        || !sanro_studio_draft_image_binding_allowed($design, $requested_refs, $id)) {
         return ['valid' => false, 'error' => 'image_master_unbound'];
+    }
+    $used_refs = [];
+    foreach (['front', 'back'] as $side) {
+        foreach (($design[$side]['objects'] ?? []) as $object) {
+            if (($object['type'] ?? null) !== 'image') continue;
+            $ref = $requested_refs[$side];
+            if ($ref !== ($current_refs[$side] ?? null)) {
+                if (!defined('SANRO_STUDIO_ENABLE_MASTER_UPLOAD')
+                    || SANRO_STUDIO_ENABLE_MASTER_UPLOAD !== true
+                    || !function_exists('sanro_studio_read_owned_draft_master')) {
+                    return ['valid' => false, 'error' => 'image_master_unbound'];
+                }
+                $verified = sanro_studio_read_owned_draft_master($id, $token, $side, $ref);
+                if (empty($verified['valid'])) return $verified;
+            }
+            $used_refs[$side] = $ref;
+            break;
+        }
+    }
+    if ($next_master_refs !== null
+        && ($expected_master_refs === null || $used_refs !== $next_master_refs)) {
+        return ['valid' => false, 'error' => 'image_master_unbound'];
+    }
+    $design_hash = hash('sha256', maybe_serialize($design));
+    if ($used_refs === $current_refs
+        && hash_equals(hash('sha256', maybe_serialize($before['design'])), $design_hash)) {
+        return ['valid' => true, 'design_id' => $id, 'design_hash' => $design_hash, 'unchanged' => true];
     }
     $record = $before;
     $record['design'] = $design;
     // Any geometry/text change invalidates both lightweight previews.
     // Buyer must regenerate them from the saved design before checkout.
-    unset($record['preview_refs'], $record['preview_design_hash']);
-    // Retain a master only when the new design actually contains an image
-    // on that side. A removed image must not leave an active master binding.
-    $record['master_refs'] = [];
+    unset($record['preview_refs'], $record['preview_refs_by_size'], $record['preview_variant_required'], $record['preview_design_hash']);
+    $record['master_refs'] = $used_refs;
     foreach (['front', 'back'] as $side) {
-        foreach (($design[$side]['objects'] ?? []) as $object) {
-            if (is_array($object) && ($object['type'] ?? null) === 'image'
-                && isset($before['master_refs'][$side])) {
-                $record['master_refs'][$side] = $before['master_refs'][$side];
-                break;
-            }
+        if (($used_refs[$side] ?? null) !== ($current_refs[$side] ?? null)) {
+            unset($record['original_master_refs'][$side]);
         }
     }
     $record['updated_at'] = max(time(), (int) ($before['updated_at'] ?? $before['created_at'] ?? 0) + 1);
@@ -171,7 +204,7 @@ function sanro_studio_update_draft($id, $token, $design, $expected_design_hash =
         return ['valid' => false, 'error' => $changed === false ? 'storage_failed' : 'draft_conflict'];
     }
     wp_cache_delete($key, 'options');
-    return ['valid' => true, 'design_id' => $id];
+    return ['valid' => true, 'design_id' => $id, 'design_hash' => $design_hash];
 }
 
 /**
@@ -210,6 +243,8 @@ function sanro_studio_cleanup_expired_drafts($limit = 50, $after_id = 0) {
         if (!is_string($key) || !preg_match('/^sanro_studio_draft_[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iD', $key)) continue;
         $record = maybe_unserialize($row['option_value']);
         if (!is_array($record) || ($record['status'] ?? null) !== 'draft') continue;
+        // Never discard a possibly order-bound source because its status was corrupted or imported.
+        if(array_key_exists('order_id',$record)||array_key_exists('order_item_ids',$record)||array_key_exists('checkout_quote',$record))continue;
         $expires = $record['expires_at'] ?? null;
         if (!is_int($expires) || $expires > time()) continue;
         $affected = $wpdb->query($wpdb->prepare(

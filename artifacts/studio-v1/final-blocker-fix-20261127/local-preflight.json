@@ -1,0 +1,19 @@
+{
+  "source_commit": "ec57148f1dbbd09462c92904616c5a721487fd6e",
+  "archive_sha256": "e5cd30b1de03d7929ce653882da2b541bca0f6673a5bd14cb69cb90a37d4d3fa",
+  "target": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "mode": "PLAN_ONLY",
+  "php_cli": "8.5.4",
+  "lint": "PASS",
+  "remote_web_php_sapi": "NOT_TESTED",
+  "remote_flags": "NOT_TESTED",
+  "runtime_e2e": "NOT_TESTED",
+  "deployment_authorized": false,
+  "required_apply_contract": [
+    "Owner approval bound to source/archive SHA and staging URL",
+    "verify the actual web PHP SAPI (LiteSpeed LSAPI on this staging site), feature flags and same build identity",
+    "preserve existing activation, private paths and product metadata",
+    "refuse generator/Drive enabled; do not overwrite flags",
+    "atomic existing plugin replacement, rollback on failure; no reinstall/seed/order writes"
+  ]
+}

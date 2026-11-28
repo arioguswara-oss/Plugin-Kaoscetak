@@ -8,14 +8,14 @@ const vm=require('node:vm');
 const source=fs.readFileSync(path.join(__dirname,'../assets/buyer.js'),'utf8');
 const zoneStart=source.indexOf(' function visualPrintZone(name){');
 const zoneEnd=source.indexOf(' function render(){',zoneStart);
-const start=source.indexOf(' async function exportBoundDraft(){');
-const end=source.indexOf(' if(saveButton&&config.draft_api){',start);
+const start=source.indexOf(' async function ensureProductionFont(){');
+const end=source.indexOf(' let backgroundScan=0;',start);
 assert(zoneStart>=0&&zoneEnd>zoneStart&&start>=0&&end>start,
  'SANRO buyer image and print-zone helper functions missing');
-let drawCalls=0,textCalls=0,previewWidth=0,canvasWrites=0;
+let drawCalls=0,textCalls=0,previewWidth=0,canvasWrites=0,rotated=false;
 const d={
   url:'blob:owner-bound',file:null,pending:null,text:'',textColor:'#171717',
-  fontSize:22,textX:10,textY:10,imageX:10,imageY:20,imageSize:40
+  fontSize:22,textX:10,textY:10,imageX:10,imageY:20,imageSize:40,imageAspect:1,imageRotation:30,textRotation:0
 };
 const refs={front:'verified-server-bound-id'};
 class ImageProbe {
@@ -30,15 +30,16 @@ const env={
   sides:{front:d,back:{url:null,text:''}},
   config:{safe_areas:{front:{width:30,height:40}}},
   boundMasterRefs:refs,
+  text:{style:{transform:''},getBoundingClientRect:()=>({width:60,height:20})},
   safe:{style:{left:'27%',top:'22%',width:'46%',height:'54%'},
    getBoundingClientRect:()=>({width:200,height:200})},
-  shirtColor:{value:'#ffffff'},
+  shirtColor:{value:'#ffffff'},mockupSize:{value:'M'},mappedMockup:()=>null,
   exportTextDraft:()=>({quantities:{M:1},shirt_color:'#ffffff',long_sleeve:false}),
   Image:ImageProbe,FileReader:FakeReader,
   document:{createElement:()=>{
     const canvas={width:0,height:0};
     canvas.getContext=()=>({
-      fillRect(){},drawImage(){drawCalls++;},fillText(){textCalls++;}
+      save(){},restore(){},translate(){},transform(a,b){if(b!==0)rotated=true;},fillRect(){},clearRect(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){},drawImage(){drawCalls++;},fillText(){textCalls++;}
     });
     canvas.toBlob=cb=>{
       canvasWrites++;previewWidth=canvas.width;
@@ -49,7 +50,7 @@ const env={
   }}
 };
 const built=vm.runInNewContext(source.slice(zoneStart,zoneEnd)+source.slice(start,end)+
-  '\n({exportBoundDraft,makeDesignPreview})',env,{
+  '\n({ensureProductionFont,exportBoundDraft,makeDesignPreview})',env,{
     timeout:2000,filename:'sanro-buyer-image-preview.js'
   });
 let checks=0;
@@ -57,7 +58,7 @@ function check(ok,message){assert(ok,message);checks++;}
 
 (async()=>{
   check(await built.makeDesignPreview('front')==='cHJldmlldw=='
-    &&drawCalls>0&&previewWidth===480&&canvasWrites>4,
+    &&drawCalls>0&&previewWidth===480&&canvasWrites>4&&rotated,
     'bound image creates a derived JPEG with 50 KiB fallback');
   d.file={name:'new-unbound.png'};
   await assert.rejects(()=>built.exportBoundDraft(),/Unggah gambar baru/);
@@ -73,8 +74,14 @@ function check(ok,message){assert(ok,message);checks++;}
   check(await built.makeDesignPreview('front')==='cHJldmlldw=='&&textCalls>0,
     'text preview stays supported without a master');
   d.text='';
-  check(await built.makeDesignPreview('front')===null,
-    'empty side does not create a preview');
+  const previousTextCalls=textCalls;
+  check(typeof await built.makeDesignPreview('front')==='string' && textCalls===previousTextCalls,
+    'blank side creates a private garment preview without inventing printed text');
+  check(typeof await built.makeDesignPreview('back')==='string','non-printable blank back still has garment preview for a front-only product');
+  env.document.fonts={load:async()=>[]};
+  await assert.rejects(()=>built.ensureProductionFont(),/Font produksi belum tersedia/);checks++;
+  let loaded=false;env.document.fonts.load=async()=>{loaded=true;return [{}]};
+  await built.ensureProductionFont();check(loaded,'production font is loaded before measuring or previewing');
   console.log('PASS: '+checks+' private DTF image-preview and master-binding checks');
 })().catch(error=>{
   console.error('FAIL private DTF preview regression: '+String(error.message).slice(0,240));

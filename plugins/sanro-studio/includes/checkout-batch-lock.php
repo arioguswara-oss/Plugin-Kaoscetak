@@ -1,5 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
+require_once __DIR__.'/checkout-charges.php';
 
 /**
  * Optional classic-checkout-only draft lock, disabled by default.
@@ -32,18 +33,20 @@ function sanro_studio_checkout_batch_lock_preflight($order, $contract) {
         || !function_exists('sanro_studio_validate_order_grand_total')) {
         return ['valid' => false, 'error' => 'invalid_order'];
     }
-    $expected = sanro_studio_prepare_size_cart_lines($contract);
-    if (empty($expected['valid']) || !isset($expected['lines'])
-        || !is_array($expected['lines'])) {
-        return ['valid' => false, 'error' => 'invalid_order_contract'];
-    }
+    $contracts = $contract['designs'] ?? [$contract];
     $expected_by_size = [];
-    foreach ($expected['lines'] as $line) {
-        $size = $line['sanro_studio_size'] ?? null;
-        if (!is_string($size) || isset($expected_by_size[$size])) {
-            return ['valid' => false, 'error' => 'duplicate_quote_size'];
+    $subtotal = 0;
+    foreach ($contracts as $design) {
+        $expected = sanro_studio_prepare_size_cart_lines($design);
+        if (empty($expected['valid']) || !is_array($expected['lines'])) {
+            return ['valid' => false, 'error' => 'invalid_order_contract'];
         }
-        $expected_by_size[$size] = $line;
+        $subtotal += $design['quote']['total_price'];
+        foreach ($expected['lines'] as $line) {
+            $key = $line['sanro_studio_design_id'] . ':' . $line['sanro_studio_size'];
+            if (isset($expected_by_size[$key])) return ['valid' => false, 'error' => 'duplicate_quote_size'];
+            $expected_by_size[$key] = $line;
+        }
     }
     $items = $order->get_items('line_item');
     if (!is_array($items) || !$items || count($items) !== count($expected_by_size)) {
@@ -58,23 +61,25 @@ function sanro_studio_checkout_batch_lock_preflight($order, $contract) {
             || !method_exists($item, 'get_meta')
             || !method_exists($item, 'get_product_id')
             || $item->get_id() !== $item_id
-            || !is_int($item->get_product_id())
-            || $item->get_product_id() !== ($contract['product_id'] ?? null)) {
+            || !is_int($item->get_product_id())) {
             return ['valid' => false, 'error' => 'invalid_order_item'];
         }
         $size = $item->get_meta('_sanro_studio_size', true);
         $design_id = $item->get_meta('_sanro_studio_design_id', true);
-        if (!is_string($size) || !isset($expected_by_size[$size])
-            || !is_string($design_id)
-            || $design_id !== ($contract['design_id'] ?? null)) {
+        if (!is_string($size) || !is_string($design_id)) return ['valid' => false, 'error' => 'order_design_mismatch'];
+        $key = $design_id . ':' . $size;
+        $quote = $expected_by_size[$key] ?? null;
+        if (!is_array($quote)) {
             return ['valid' => false, 'error' => 'order_design_mismatch'];
         }
-        // Persisted metadata must agree with the server-authorized DTF quote.
-        // Checking WC totals alone cannot detect a modified quote label.
-        $quote = $expected_by_size[$size];
+        if ($item->get_product_id() !== $quote['product_id']) return ['valid'=>false,'error'=>'invalid_order_item'];
+        // Persisted metadata and Woo line amounts must both match the authorized quote.
+        $saved_variation=$item->get_meta('_sanro_studio_variation_id',true);$saved_color=$item->get_meta('_sanro_studio_color',true);
         if ($item->get_meta('_sanro_studio_quote_currency', true) !== 'IDR'
             || (string) $item->get_meta('_sanro_studio_unit_price', true)
-                !== (string) $quote['sanro_studio_unit_price']) {
+                !== (string) $quote['sanro_studio_unit_price']
+            || (($quote['variation_id']??0)>0&&((string)$saved_variation!== (string)($quote['variation_id']??0)))
+            || ($saved_color!==''&&(string)$saved_color!==(string)$quote['sanro_studio_color'])) {
             return ['valid' => false, 'error' => 'order_quote_metadata_mismatch'];
         }
         $checked = sanro_studio_validate_size_order_item($quote, $item);
@@ -82,10 +87,16 @@ function sanro_studio_checkout_batch_lock_preflight($order, $contract) {
             return ['valid' => false, 'error' => 'order_quote_mismatch'];
         }
         $ids[] = $item_id;
-        unset($expected_by_size[$size]);
+        unset($expected_by_size[$key]);
+    }
+    $shipping=$contract['shipping_total']??0;
+    if(!sanro_studio_order_shipping_matches($order,$shipping))return ['valid'=>false,'error'=>'order_shipping_mismatch'];
+    $total_contract = ['valid'=>true,'quote'=>['valid'=>true,'currency'=>'IDR','total_price'=>$subtotal+$shipping]];
+    if (isset($contract['designs']) && sanro_studio_idr_charge($order->get_total()) !== $subtotal + $shipping) {
+        return ['valid'=>false,'error'=>'order_total_mismatch'];
     }
     if ($expected_by_size || empty(sanro_studio_validate_order_grand_total(
-        $contract, $order->get_total()
+        $total_contract, $order->get_total()
     )['valid'])) {
         return ['valid' => false, 'error' => 'order_total_mismatch'];
     }

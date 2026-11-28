@@ -1,0 +1,128 @@
+{
+  "schema": 1,
+  "kind": "OWNER_APPROVAL_REQUEST_NOT_AN_APPROVAL",
+  "status": "PREPARED_CONDITIONAL_NOT_APPROVED",
+  "approved": false,
+  "target_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "source_commit": "8d817c2ba92b89d03eaa4d680173925361ce0a36",
+  "plugin_digest": "f21bcd20f5bdb8013d1a939d09761d4af3a0b2b96b4ef4790fd09616600d63d2",
+  "archive_sha256": "ca55c23ef3b13408e45d4b011a7d47be3676aec7da6e2d3e906508873ae66afd",
+  "manifest_sha256": "d77c4d63807cc0fc72d359b311dd883805c607735cc82d3ab8caa649d620f7dc",
+  "installer_source_commit": "8d817c2ba92b89d03eaa4d680173925361ce0a36",
+  "pinned_tools_sha256": {
+    "tools/studio-staging-install.py": "ec07c3cc62bad1eb464805a7d4e53a610ad0b1fef3247fbcbc52e52990b51e72",
+    "tools/studio-install-transaction.py": "ec1e90a2be49112dc355bd4d84774bf23f4390573b964e1f53b3ed434dd8ae61",
+    "tools/studio-candidate-preflight.py": "162e5218b4e4d095a7070f3569fb7a788afe501707041d663a0ed8434240d501"
+  },
+  "requested_action": "replace_existing_staging_plugin_only_after_verified_preconditions",
+  "preserve": [
+    "existing activation",
+    "product settings",
+    "private paths",
+    "order database"
+  ],
+  "writers": {
+    "DTF": "OFF",
+    "Drive": "OFF",
+    "storage_GC": "OFF"
+  },
+  "existing_plugin_digest": null,
+  "php_fpm_verified": false,
+  "runtime_flags_verified": false,
+  "preconditions": [
+    "Complete remaining FreeType/ctype/fileinfo/private-path/all-flags/cache proof; observed PHP8.3.37/LiteSpeed/int64/GD2.3.3 versions are already recorded",
+    "Exact existing plugin tree digest and no unresolved installer journal",
+    "Owner explicit approval bound to candidate source/archive/plugin/manifest/target",
+    "Recheck runtime proof and current tree immediately before apply"
+  ],
+  "excluded_actions": [
+    "merge",
+    "production changes",
+    "automatic activation/reinstall/seed",
+    "order database mutation",
+    "synthetic order or payment",
+    "actual email send",
+    "DTF/Drive/GC activation"
+  ],
+  "e2e_write_scope": "NOT_AUTHORIZED; separate explicit scope before draft/upload/cart/order/payment writes",
+  "approval_text_to_review": "Setujui penggantian plugin SANRO Studio yang sudah aktif hanya di https://saddlebrown-peafowl-616656.hostingersite.com, source 8d817c2ba92b89d03eaa4d680173925361ce0a36, ZIP SHA256 ca55c23ef3b13408e45d4b011a7d47be3676aec7da6e2d3e906508873ae66afd, manifest SHA256 d77c4d63807cc0fc72d359b311dd883805c607735cc82d3ab8caa649d620f7dc. Kandidat memusatkan menu Studio di root independen. Eksekusi hanya setelah seluruh kapabilitas web runtime, flags OFF, private storage dan exact existing-plugin digest terbukti aman. Tanpa merge, production, activation/seed, perubahan database pesanan atau aktivasi DTF/Drive/GC. E2E tulis/pesanan sintetis belum termasuk.",
+  "machine_apply_approval_file": "NOT_CREATED; this request is deliberately rejected by installer.approve",
+  "latest_cli_runtime_preflight": {
+    "date": "2026-11-24",
+    "checkpoint_pr_head": "006b1aecbf6b50ebfb9a3f73430e0aa62e238566",
+    "ssh_alias": "sanro-hosting",
+    "ssh_result": "BLOCKED_BY_REMOTE_POLICY: SANRO_AGENT_BLOCKED command not permitted",
+    "escalated_read_only_attempt": "same remote policy block; no command executed",
+    "credentials_printed": false,
+    "staging_runtime_identity": "NOT_REVERIFIED",
+    "installation_or_mutation": false,
+    "installer_hashes_match_request": true
+  },
+  "staging_identity_binding": {
+    "target_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+    "wordpress_site_id": 258754643,
+    "wordpress_site_id_source": "prior authenticated read-only WordPress MCP evidence dated 2026-11-24; not reverified by this CLI runtime preflight",
+    "hostinger_account_host_and_root": "previously pinned by read-only plan as u606139982 / id-dci-web1631.main-hosting.eu / /home/u606139982/domains/saddlebrown-peafowl-616656.hostingersite.com/public_html; current SSH identity NOT_TESTED",
+    "production_separation": "NOT_VERIFIED_IN_CURRENT_PREFLIGHT; staging URL is pinned, but current SSH host/root and separation from production were not confirmed",
+    "approval_binding_complete": false
+  },
+  "prior_runtime_evidence_not_refreshed": {
+    "wordpress": "7.1.5",
+    "php": "8.3.37; LiteSpeed SAPI (not PHP-FPM)",
+    "woocommerce": "11.3.0 ACTIVE",
+    "sanro_studio": "0.1.0-dev ACTIVE",
+    "legacy_staging_qa": "INACTIVE",
+    "source": "readiness-evidence.json authenticated read-only WordPress MCP / Site Health observations",
+    "freshness": "historical evidence for this checkpoint only; not confirmed by SSH"
+  },
+  "runtime_menu_diagnosis": {
+    "plugin_install_count": "prior MCP inventory reported one active SANRO Studio plugin; current count NOT_REVERIFIED",
+    "duplicate_menu_cause": "known old plugin source registers settings as an independent root while status and private storage were also registered under WooCommerce; this is one installed plugin exposing duplicate menu entries, not evidence of duplicate plugin installations",
+    "old_runtime_asset": "ccf75da12b01",
+    "candidate_asset": "9573ce5cdcb9",
+    "current_installed_source_match": "NOT_VERIFIED; previous browser evidence showed mismatch",
+    "live_menu_rendering": "NOT_TESTED_IN_THIS_PREFLIGHT"
+  },
+  "pinned_installer_review": {
+    "source_commit": "8d817c2ba92b89d03eaa4d680173925361ce0a36",
+    "staging_installer_sha256": "ec07c3cc62bad1eb464805a7d4e53a610ad0b1fef3247fbcbc52e52990b51e72",
+    "transaction_helper_sha256": "ec1e90a2be49112dc355bd4d84774bf23f4390573b964e1f53b3ed434dd8ae61",
+    "candidate_preflight_sha256": "162e5218b4e4d095a7070f3569fb7a788afe501707041d663a0ed8434240d501",
+    "controls": ["default PLAN_ONLY", "exact staging URL and active plugin guards", "private rollback root outside document root", "nonblocking install lock", "durable intent journal", "retained rollback", "bound crash recovery"],
+    "runtime_gate_conflict": "approval requires php_fpm_verified=true, while prior observed SAPI is LiteSpeed; do not assert FPM or approve until the runtime requirement is reconciled with the actual supported SAPI",
+    "procedure_ready": "CONDITIONAL_ONLY; no remote apply"
+  },
+  "web_runtime_observed": {
+    "source": "Authenticated WordPress Site Health Info",
+    "url": "https://saddlebrown-peafowl-616656.hostingersite.com/wp-admin/site-health.php?tab=debug",
+    "wordpress": "7.1.5",
+    "php_version": "8.3.37",
+    "supports_64bit": true,
+    "web_server": "LiteSpeed",
+    "php_sapi": "litespeed",
+    "memory_limit": "1536M",
+    "php_time_limit_seconds": 360,
+    "max_input_variables": 5000,
+    "upload_max_filesize": "1536M",
+    "post_max_size": "1536M",
+    "gd_version": "2.3.3",
+    "gd_formats": [
+      "GIF",
+      "JPEG",
+      "PNG",
+      "WebP",
+      "BMP",
+      "AVIF",
+      "XPM"
+    ],
+    "imagick": "3.8.1",
+    "opcache": "enabled; not full",
+    "fpm_claim": "not made; observed SAPI is litespeed",
+    "scope": "read-only server diagnostics; no settings or order changes"
+  },
+  "runtime_proof_complete": false,
+  "runtime_proof_note": "Actual web PHP/GD/version/int64/limits are observed. Full capability/private-storage/flags/tree proof remains incomplete; SAPI is LiteSpeed, not FPM. No apply-ready approval file.",
+  "supersedes_candidate": "f45b43ba191ce49ffad67070e0643918765fe719",
+  "menu_correction": "One independent SANRO Studio root with settings/status/storage; existing capabilities and Woo order panels retained",
+  "menu_runtime_verified": false
+}

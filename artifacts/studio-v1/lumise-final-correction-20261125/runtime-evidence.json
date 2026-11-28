@@ -1,0 +1,84 @@
+{
+  "schema": 1,
+  "date": "2026-11-25",
+  "repository": "arioguswara-oss/Plugin-Kaoscetak",
+  "pull_request": 52,
+  "scope": "staging-only",
+  "source_commit": "964e428442e21cbae05bd336b81f8aef82cac424",
+  "candidate": {
+    "version": "1.1.0",
+    "archive_sha256": "60c9bd4096765c854f70aa46dbe1bbfa606052f01aec0d13d01b1d184b967aed",
+    "manifest_sha256": "fd9708b0d603bc338a1eeb63d673fb493a2e7be6d751f6548935f55167b33d77",
+    "plugin_digest": "112450bc25f689fd746a160cb87e2a26109005551d448279ca995b213eceeac9",
+    "installed_tree_digest": "f8243694f32da6cbb54ce7186b32f91e0c78cef828d8616b32d27e9fabbfbf73"
+  },
+  "predecessor": {
+    "source_commit": "690fb0be568713328a0c6e2fd5f81b3fb457a655",
+    "manifest_sha256": "63b0eb377810fa68b120ba151ffd997efe356717e0bae50a0da231374db2fa48",
+    "archive_sha256": "a8503ff5520164ea4d617b484031ca8e778cc1e8a42b6e6d9d1d879b8bda82c0",
+    "verified_staging_tree_digest": "6240c2816723cec83803416484fb2149611b61a96c96db109e2914b45a8d96f7"
+  },
+  "transport": {
+    "sha256": "95d4fa23648dae18fbca4df2607c8b55640b568669530f0bbf5ea66abf84da25",
+    "source_bound": true,
+    "predecessor_manifest_archive_and_tree_verified": true,
+    "lock_and_member_checksum_validation_preserved": true,
+    "transaction_journal_and_rollback_retained": true,
+    "automatic_apply": false
+  },
+  "pre_install_gate": {
+    "result": "PASS",
+    "mechanism": "authenticated HTTPS request to official staging transport runtime",
+    "web_sapi": "litespeed",
+    "existing_tree_digest": "6240c2816723cec83803416484fb2149611b61a96c96db109e2914b45a8d96f7",
+    "private_roots": "PASS",
+    "writer_flags": "ALL OFF",
+    "woocommerce_loaded": true
+  },
+  "installation": {
+    "result": "committed",
+    "rollback_retained": true,
+    "activation_changed": false,
+    "writer_flags_changed": false,
+    "orders_or_payments_changed": false
+  },
+  "post_install_gate": {
+    "result": "PASS",
+    "web_sapi": "litespeed",
+    "source_commit": "964e428442e21cbae05bd336b81f8aef82cac424",
+    "active_version": "1.1.0",
+    "installed_tree_digest": "f8243694f32da6cbb54ce7186b32f91e0c78cef828d8616b32d27e9fabbfbf73",
+    "independent_ssh_tree_digest_matches": true
+  },
+  "targeted_acceptance": {
+    "product_mockups_smoke": "PASS_39_ASSERTIONS",
+    "catalog_nonce_binding_vm": "PASS_SELECTED_NONCE_SUBMITTED_EMPTY_SELECTION_BLOCKED",
+    "wordpress_png_fixtures": {
+      "front_attachment_id": 74,
+      "back_attachment_id": 75,
+      "raw_status": "inherit",
+      "effective_status": "publish",
+      "both_valid": true
+    },
+    "synthetic_product_53_save_readback": "PASS_PAIR_PERSISTED_THEN_EXACT_PRIOR_METADATA_RESTORED",
+    "buyer_admin_responsive_layout_and_pointer_drag_resize": "PASS_EXISTING_CHROMIUM_HARNESS",
+    "php_js_and_python_syntax": "PASS",
+    "full_audit": "NOT_REPEATED",
+    "live_payment_order_or_checkout": "NOT_RUN"
+  },
+  "cleanup": {
+    "staging_release_transport_version": "0.3.3",
+    "staging_release_transport_active": false,
+    "restored_transport_digest": "4411c6ca2752e0a91c7c739945e22cb40378714fe6389c439be7a4dafd075106",
+    "temporary_app_password_revoked": true,
+    "temporary_transport_files_removed": true,
+    "product_53_prior_mockup_metadata_restored": true
+  },
+  "boundaries": {
+    "production_accessed": false,
+    "merged": false,
+    "google_drive_live_oauth": "DEFERRED_BY_OWNER",
+    "sanro_pricing_and_repeat_discount_changed": false,
+    "visual_acceptance": "PENDING_CHATGPT_WORK_HANDOFF"
+  }
+}

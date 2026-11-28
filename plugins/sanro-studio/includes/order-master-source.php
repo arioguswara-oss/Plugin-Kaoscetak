@@ -30,8 +30,8 @@ function sanro_studio_locked_record_has_item($record, $item_id) {
 }
 
 function sanro_studio_locked_item_master_source($order, $item_id, $side) {
-    if (!function_exists('sanro_studio_auto_drive_order_eligible')
-        || !sanro_studio_auto_drive_order_eligible($order)
+    if (!function_exists('sanro_studio_local_production_order_eligible')
+        || !sanro_studio_local_production_order_eligible($order)
         || !is_int($item_id) || $item_id < 1
         || !in_array($side, ['front', 'back'], true)
         || !function_exists('get_option')
@@ -42,13 +42,20 @@ function sanro_studio_locked_item_master_source($order, $item_id, $side) {
         || !is_string(SANRO_STUDIO_PRIVATE_MASTER_DIR)) {
         return ['valid' => false, 'error' => 'private_master_unavailable'];
     }
+    if (function_exists('sanro_studio_saved_order_context')) {
+        $integrity = sanro_studio_saved_order_context($order, true);
+        if (empty($integrity['valid']) || empty($integrity['studio'])
+            || !in_array($item_id, $integrity['item_ids'] ?? [], true)) {
+            return ['valid' => false, 'error' => 'order_integrity_failed'];
+        }
+    }
     $items = $order->get_items('line_item');
     if (!is_array($items) || !isset($items[$item_id])
         || !is_object($items[$item_id]) || !method_exists($items[$item_id], 'get_meta')) {
         return ['valid' => false, 'error' => 'invalid_order_item'];
     }
     $manifest = sanro_studio_order_item_production_manifest($order, $item_id);
-    if (empty($manifest['valid']) || empty($manifest['ready_for_drive_integration'])) {
+    if (empty($manifest['valid']) || empty($manifest['ready_for_local_production'])) {
         return ['valid' => false, 'error' => 'production_not_ready'];
     }
     $design_id = $items[$item_id]->get_meta('_sanro_studio_design_id', true);

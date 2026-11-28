@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "date_wib": "2026-11-28",
+  "staging": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "repo_head_before_evidence": "7dc0e7a9eb2418a153182f04cc42aff61546dbac",
+  "source": "7aa6eb23d226272bc8a523b28854ccbed64ae497",
+  "version": "1.1.0",
+  "archive_sha256": "8ed2ffc94f524231123e242dbc7c9d0add7d8ae723715f6ef6dae374bc7e22bb",
+  "manifest_sha256": "8cafd62d8f9b345c6d00b5556d9ca51c06f13f38ff8f028d76e22b993a85bda3",
+  "plugin_manifest_digest": "8cc60d8c9d69e34a94dd3764df928d5557955d359739782a5791dfeee3972644",
+  "installed_tree_digest": "04489eaa179a2c2cbe09d5f9fda5a91b712c8765d1503d48fb35e4f91c030dab",
+  "predecessor": {
+    "source": "ec57148f1dbbd09462c92904616c5a721487fd6e",
+    "installed_tree_digest": "3c73a6874497d367d167d740f3fdbd034146df583044cc653b99aaaa4aa11a06"
+  },
+  "https": {
+    "pre": "PASS",
+    "post_fresh_get": "PASS",
+    "php": "8.3.37",
+    "sapi": "litespeed",
+    "private_roots": "PASS",
+    "rollback_retained": true
+  },
+  "activation": {
+    "studio": "active",
+    "woocommerce": "active",
+    "transport": "inactive",
+    "legacy_qa": "inactive",
+    "dtf": "OFF",
+    "drive": "OFF",
+    "gc": "OFF"
+  },
+  "local": {
+    "zip_entries_verified": 90,
+    "pricing_size_bytes": 53646,
+    "pricing_sha256": "eceb457a97381d86ecbe801656ee051a2f82ccfaad68659e172a1545b893b993",
+    "php_lint": "PASS",
+    "assertions": {
+      "pricing_integration": 8,
+      "woo_pricing": 31,
+      "mixed_contract": 8,
+      "frozen_config": 3
+    },
+    "candidate_zip_common_secret_signatures": "PASS"
+  },
+  "runtime": {
+    "admin_catalog": "PASS_READ_ONLY_TOP_LEVEL_MENU_AND_CATALOG; PAGINATION_AND_MAPPING_WRITES_NOT_TESTED",
+    "orders_hpos_screen": {
+      "ids": [
+        52,
+        56
+      ],
+      "fixture_56": {
+        "status": "pending payment",
+        "total_idr": 240000,
+        "design_id": "ID-00111",
+        "preview_and_guide_controls": "visible",
+        "production_package_status": "incomplete per UI",
+        "artifact_downloads": "NOT_TESTED"
+      }
+    },
+    "guest_desktop": {
+      "session": "after WordPress logout",
+      "design": "ID-00112",
+      "product_fixture": 53,
+      "swatch": "Hitam",
+      "sizes": {
+        "S": 1,
+        "M": 2
+      },
+      "total_idr": 192000,
+      "save": "PASS",
+      "zero_quantity_message": "PASS",
+      "out_of_print_area_rejection": "PASS",
+      "classic_review": "PASS",
+      "checkout_submitted": false,
+      "cart_cleanup": "PASS",
+      "synthetic_saved_design_retained": true
+    },
+    "open": [
+      "ST-01 live paid counter and repeat discount",
+      "ST-02 native color/size variation mapping",
+      "ST-03 frozen configuration live",
+      "ST-04 catalog beyond one page",
+      "ST-R01 Classic and Store API fail-closed live submission",
+      "ST-05 mixed live, duplicate submission, and HPOS write path",
+      "exact 320/390/430 CSS px, drag, pinch, upload and screenshot for current candidate",
+      "physical Android Owner"
+    ]
+  },
+  "new_orders_created": 0,
+  "new_payments_attempted": 0,
+  "baseline": {
+    "from": 96.6,
+    "to": 96.6,
+    "delta_points": 0
+  },
+  "staging_review": "GO",
+  "final_release": "NO_GO"
+}

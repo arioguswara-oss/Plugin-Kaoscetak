@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "bundle": "SANRO Studio Staging QA Harness V1",
+  "repository": "arioguswara-oss/Plugin-Kaoscetak",
+  "source_commit": "24817098889853a2bf0c1295a0d65e21fb66f2b0",
+  "version": "1.1.0",
+  "purpose": "offline source contract validation; no staging operations",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3694,
+      "sha256": "7277b80fc73cf99c76140b83c966415e59956d632f741b58e8fb59ffc2e6e626"
+    },
+    {
+      "path": "tests/staging-qa-harness-contract.php",
+      "bytes": 5189,
+      "sha256": "252770ccb050650ed98755a0b6bf1a4a08b0d8963476ed1c4efd015b9c7948a8"
+    }
+  ],
+  "staging_execution": "NOT_RUN",
+  "plugin_installer_payload": false,
+  "baseline_percent": 96.6
+}

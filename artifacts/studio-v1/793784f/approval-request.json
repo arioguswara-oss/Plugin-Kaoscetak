@@ -1,0 +1,109 @@
+{
+  "schema": 1,
+  "kind": "OWNER_APPROVAL_REQUEST_NOT_AN_APPROVAL",
+  "status": "READY_FOR_EXPLICIT_OWNER_APPROVAL",
+  "approved": false,
+  "deployment_authorized": false,
+  "action": "replace_existing_staging_plugin",
+  "requested_action": "replace_existing_active_plugin_only_after_all_preconditions_and_explicit_owner_approval",
+  "target_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "source_commit": "793784f5c33c885dfd9f1b7a52a5e0786f072194",
+  "plugin_digest": "f21bcd20f5bdb8013d1a939d09761d4af3a0b2b96b4ef4790fd09616600d63d2",
+  "archive_sha256": "d76514ed96c122a6242baad9ea36f4b15f11d93c36de733e9292664bba826381",
+  "manifest_sha256": "00fcd0483b41825c2983d78e936b0e86333a7e43c68042d7310c4fff595de62e",
+  "existing_plugin_digest": "e58d3cd03d3dba87ce17d8121e19720ab2dc9939394130c9fcd142ce8fd7bab9",
+  "web_runtime_verified": true,
+  "web_php_sapi": "litespeed",
+  "generator": "OFF",
+  "drive": "OFF",
+  "order_database_changes": false,
+  "installer_source_commit": "793784f5c33c885dfd9f1b7a52a5e0786f072194",
+  "pinned_tools_sha256": {
+    "tools/studio-staging-install.py": "ebe9f221d33369c6e002f360b4681b91718751a9c6491fc3b4d6a246fcd0f272",
+    "tools/studio-install-transaction.py": "ec1e90a2be49112dc355bd4d84774bf23f4390573b964e1f53b3ed434dd8ae61",
+    "tools/studio-candidate-preflight.py": "d5cab4592dad976e0b4b077ada6fc1bacafc69d07730fccc513d8fb40ed3c48e"
+  },
+  "staging_identity": {
+    "ssh_alias": "kaoscetak-staging",
+    "ssh_remote_hostname": "id-dci-web1631.main-hosting.eu",
+    "account_user": "u606139982",
+    "canonical_document_root": "/home/u606139982/domains/saddlebrown-peafowl-616656.hostingersite.com/public_html",
+    "wordpress_site_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+    "wordpress_database_blog_id": 1,
+    "production_separation": "staging public_html is a distinct domain directory from kaoscetak.id/public_html; production was not accessed",
+    "identity_verified": true
+  },
+  "runtime_proof": {
+    "wordpress": "7.1.5",
+    "woocommerce": "11.3.0 ACTIVE",
+    "sanro_studio": "0.1.0-dev ACTIVE",
+    "sanro_studio_install_count": 1,
+    "legacy_studio_qa": "INACTIVE",
+    "web_php_version": "8.3.37; confirmed by HTTP response header in this run and prior authenticated Site Health",
+    "web_php_sapi": "litespeed; authenticated Site Health evidence dated 2026-11-24",
+    "web_sapi_evidence": "PASS from authenticated Site Health; current HTTP response confirms PHP/8.3.37. PHP CLI 8.2.36 remains separately identified as cli",
+    "web_runtime_verified": true,
+    "ssh_cli_php": "8.2.36 / cli; not treated as web runtime evidence",
+    "php_extensions_freetype_ctype_fileinfo_int64": "PASS on WP-CLI runtime; web capability values from prior authenticated Site Health only",
+    "private_storage": {
+      "masters": "configured, exists, outside docroot, private permissions, readable and writable",
+      "previews": "configured, exists, outside docroot, private permissions, readable and writable",
+      "dtf_artifact_directory": "not configured; DTF writers remain OFF"
+    },
+    "writer_flags": {
+      "storage_gc": "OFF",
+      "dtf_image_raster": "OFF",
+      "dtf_layer_raster": "OFF",
+      "dtf_private_artifacts": "OFF",
+      "dtf_admin_generate": "OFF",
+      "dtf_order_batch": "OFF",
+      "drive_master_export": "OFF",
+      "drive_auto_provision": "OFF",
+      "verified_drive_attachment": "OFF",
+      "drive_package_export": "OFF",
+      "drive_dtf_candidates": "OFF"
+    },
+    "non_writer_feature_flags": "buyer editor, draft API, private preview/master storage/upload and Woo pricing ON; staging checkout hook OFF",
+    "current_installed_source_commit": "not declared; build marker absent",
+    "current_installed_tree_digest": "e58d3cd03d3dba87ce17d8121e19720ab2dc9939394130c9fcd142ce8fd7bab9",
+    "candidate_matches_installed_tree": false,
+    "transaction_journal": "PASS; recursive account-home scan found no journal, lock file, incoming tree, previous backup or interrupted quarantine; exact plugin-parent lock file is absent; no interrupted install artifacts found in /tmp or /var/tmp",
+    "active_installer_lock": "PASS; official installer lock sentinel absent at exact staging wp-content/plugins parent. /proc/locks is not readable to this account; installer lock implementation retains the sentinel and does not unlink it",
+    "cache_and_lease_semantics": "NOT TESTED",
+    "runtime_e2e": "NOT TESTED"
+  },
+  "menu_diagnosis": {
+    "cause": "the installed single plugin registers SANRO Studio settings as a top-level menu and registers integration status as a WooCommerce submenu; apparent duplicate entries do not mean duplicate plugin installations",
+    "candidate_correction": "one independent SANRO Studio root with Pengaturan, Status Integrasi and Storage Privat children",
+    "live_corrected_menu": "NOT TESTED; candidate is not installed"
+  },
+  "writers": {
+    "DTF": "OFF",
+    "Google_Drive": "OFF",
+    "storage_GC": "OFF"
+  },
+  "preserve": [
+    "existing activation",
+    "product settings",
+    "private paths",
+    "order database"
+  ],
+  "excluded_actions": [
+    "production access or changes",
+    "installation or deployment before explicit Owner approval",
+    "merge",
+    "activation or reinstall or seed",
+    "order database mutation",
+    "synthetic order or payment",
+    "actual email send",
+    "DTF, Google Drive or storage GC activation"
+  ],
+  "machine_apply_approval_file": "NOT_CREATED",
+  "runtime_proof_complete": true,
+  "remaining_separate_gates": [
+    "explicit Owner approval for this exact staging replacement package",
+    "post-install read-only source/member/menu verification",
+    "any buyer, checkout, upload, order or payment E2E writes require separate scope"
+  ],
+  "approval_text_to_review": "Saya menyetujui penggantian plugin SANRO Studio yang sudah aktif hanya di https://saddlebrown-peafowl-616656.hostingersite.com dari tree digest e58d3cd03d3dba87ce17d8121e19720ab2dc9939394130c9fcd142ce8fd7bab9 ke source 793784f5c33c885dfd9f1b7a52a5e0786f072194, ZIP SHA256 d76514ed96c122a6242baad9ea36f4b15f11d93c36de733e9292664bba826381 dan manifest SHA256 00fcd0483b41825c2983d78e936b0e86333a7e43c68042d7310c4fff595de62e. Runtime web SAPI litespeed terverifikasi; tanpa PHP-FPM, activation/seed, production, perubahan database pesanan, DTF, Google Drive atau storage GC. Tidak termasuk E2E buyer/checkout/upload/order/payment."
+}

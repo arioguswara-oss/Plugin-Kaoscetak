@@ -1,0 +1,241 @@
+{
+  "schema": 1,
+  "recorded_at_utc": "2026-11-24T09:49:10.342528+00:00",
+  "source_commit": "79e0a93f77bd03be0760ca179383375426284b8f",
+  "target_url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "design_id": "4233e0e2-7c89-408f-b36b-fb76ce5adbc2",
+  "buyer": {
+    "signed_in_save": "PASS_AFTER_NONCE_SELF_FIX",
+    "front_back_preview_upload_and_private_readback": "PASS",
+    "server_quote": 240000,
+    "cart": "PASS_3_SIZE_LINES",
+    "checkout_form": "PASS_TOTAL_240000_IDR",
+    "buyer_place_order_payment": "NOT_TESTED_NO_PAYMENT_METHOD; gateway unchanged",
+    "first_cart_409": "Existing ordinary test cart65k; removed through recoverable cart UI, then retry PASS",
+    "historic_http_422": "NOT_REPRODUCED_NO_CLAIM_OF_ROOT_CAUSE_FIX"
+  },
+  "order": {
+    "id": 56,
+    "status": "pending",
+    "paid": false,
+    "customer_id": 0,
+    "total": "240000",
+    "currency": "IDR",
+    "canonical_order_integrity": "PASS",
+    "creation_path": "normal Studio authorize + WooCommerce create_order/order-created hooks via capability/nonce protected one-order acceptance utility; NOT a paid buyer Place-order flow",
+    "payment_invoked": false,
+    "owner_customer_profile_updated": false,
+    "production_ready": "explicit native admin action PASS",
+    "items": [
+      {
+        "item_id": 2,
+        "size": "S",
+        "quantity": 1,
+        "unit_price": "77000",
+        "total": "77000",
+        "design_id": "4233e0e2-7c89-408f-b36b-fb76ce5adbc2",
+        "front_preview_bound": true,
+        "back_preview_bound": true
+      },
+      {
+        "item_id": 3,
+        "size": "M",
+        "quantity": 1,
+        "unit_price": "80000",
+        "total": "80000",
+        "design_id": "4233e0e2-7c89-408f-b36b-fb76ce5adbc2",
+        "front_preview_bound": true,
+        "back_preview_bound": true
+      },
+      {
+        "item_id": 4,
+        "size": "L",
+        "quantity": 1,
+        "unit_price": "83000",
+        "total": "83000",
+        "design_id": "4233e0e2-7c89-408f-b36b-fb76ce5adbc2",
+        "front_preview_bound": true,
+        "back_preview_bound": true
+      }
+    ]
+  },
+  "orders_created_this_takeover": 1,
+  "remaining_authorized_new_orders": 0,
+  "visual_admin_menu_and_item_previews": "PASS",
+  "dtf": "PASS_NATIVE_ORDER56_SIX_PRIVATE_RGBA_300DPI_CANDIDATES; independent downloaded ZIP/PNG/hash validation PASS",
+  "drive": "PRIVATE_FOLDER_CREATED_OWNER_ONLY; server OAuth provider not configured; writers OFF",
+  "gc": "OFF",
+  "production_touched": false,
+  "final_release": false,
+  "updated_at_utc": "2026-11-24T10:16:58.598173+00:00",
+  "pdf": "PASS_THREE_TWO_PAGE_GUIDES_EMBEDDED_FONT_AND_CANONICAL_MANIFESTS",
+  "configuration_recovery": "PASS_ORIGINAL_MU_CONFIG_RESTORED; fresh default/GET gate all flags OFF",
+  "production_quality_approved": false,
+  "dtf_results": [
+    {
+      "generation": {
+        "valid": true,
+        "order_id": 56,
+        "item_id": 2,
+        "candidate_count": 2,
+        "production_ready": false,
+        "quality_approved": false
+      },
+      "readback": {
+        "valid": true,
+        "complete": true,
+        "candidate_count": 2,
+        "sides": {
+          "front": {
+            "state": "candidate",
+            "private": true,
+            "order_id": 56,
+            "item_id": 2,
+            "design_id": "4233e0e2-7c89-408f-b36b-fb76ce5adbc2",
+            "side": "front",
+            "sha256": "8e63515c3f601e93529b28d9f49ecf80e46f2d376615f552b10f6ec4fc2023b6",
+            "width_px": 1643,
+            "height_px": 632,
+            "width_cm": 13.910983363818485,
+            "height_cm": 5.353909748536001,
+            "offset_x_cm": 3.2,
+            "offset_y_cm": 31.2,
+            "dpi": 300,
+            "quality_approved": false,
+            "font_parity_approved": false
+          },
+          "back": {
+            "state": "candidate",
+            "private": true,
+            "order_id": 56,
+            "item_id": 2,
+            "design_id": "4233e0e2-7c89-408f-b36b-fb76ce5adbc2",
+            "side": "back",
+            "sha256": "8e63515c3f601e93529b28d9f49ecf80e46f2d376615f552b10f6ec4fc2023b6",
+            "width_px": 1643,
+            "height_px": 632,
+            "width_cm": 13.910983363818485,
+            "height_cm": 5.353909748536001,
+            "offset_x_cm": 3.2,
+            "offset_y_cm": 31.2,
+            "dpi": 300,
+            "quality_approved": false,
+            "font_parity_approved": false
+          }
+        },
+        "quality_approved": false,
+        "production_ready": false
+      }
+    },
+    {
+      "generation": {
+        "valid": true,
+        "order_id": 56,
+        "item_id": 3,
+        "candidate_count": 2,
+        "production_ready": false,
+        "quality_approved": false
+      },
+      "readback": {
+        "valid": true,
+        "complete": true,
+        "candidate_count": 2,
+        "sides": {
+          "front": {
+            "state": "candidate",
+            "private": true,
+            "order_id": 56,
+            "item_id": 3,
+            "design_id": "4233e0e2-7c89-408f-b36b-fb76ce5adbc2",
+            "side": "front",
+            "sha256": "8e63515c3f601e93529b28d9f49ecf80e46f2d376615f552b10f6ec4fc2023b6",
+            "width_px": 1643,
+            "height_px": 632,
+            "width_cm": 13.910983363818485,
+            "height_cm": 5.353909748536001,
+            "offset_x_cm": 3.2,
+            "offset_y_cm": 31.2,
+            "dpi": 300,
+            "quality_approved": false,
+            "font_parity_approved": false
+          },
+          "back": {
+            "state": "candidate",
+            "private": true,
+            "order_id": 56,
+            "item_id": 3,
+            "design_id": "4233e0e2-7c89-408f-b36b-fb76ce5adbc2",
+            "side": "back",
+            "sha256": "8e63515c3f601e93529b28d9f49ecf80e46f2d376615f552b10f6ec4fc2023b6",
+            "width_px": 1643,
+            "height_px": 632,
+            "width_cm": 13.910983363818485,
+            "height_cm": 5.353909748536001,
+            "offset_x_cm": 3.2,
+            "offset_y_cm": 31.2,
+            "dpi": 300,
+            "quality_approved": false,
+            "font_parity_approved": false
+          }
+        },
+        "quality_approved": false,
+        "production_ready": false
+      }
+    },
+    {
+      "generation": {
+        "valid": true,
+        "order_id": 56,
+        "item_id": 4,
+        "candidate_count": 2,
+        "production_ready": false,
+        "quality_approved": false
+      },
+      "readback": {
+        "valid": true,
+        "complete": true,
+        "candidate_count": 2,
+        "sides": {
+          "front": {
+            "state": "candidate",
+            "private": true,
+            "order_id": 56,
+            "item_id": 4,
+            "design_id": "4233e0e2-7c89-408f-b36b-fb76ce5adbc2",
+            "side": "front",
+            "sha256": "8e63515c3f601e93529b28d9f49ecf80e46f2d376615f552b10f6ec4fc2023b6",
+            "width_px": 1643,
+            "height_px": 632,
+            "width_cm": 13.910983363818485,
+            "height_cm": 5.353909748536001,
+            "offset_x_cm": 3.2,
+            "offset_y_cm": 31.2,
+            "dpi": 300,
+            "quality_approved": false,
+            "font_parity_approved": false
+          },
+          "back": {
+            "state": "candidate",
+            "private": true,
+            "order_id": 56,
+            "item_id": 4,
+            "design_id": "4233e0e2-7c89-408f-b36b-fb76ce5adbc2",
+            "side": "back",
+            "sha256": "8e63515c3f601e93529b28d9f49ecf80e46f2d376615f552b10f6ec4fc2023b6",
+            "width_px": 1643,
+            "height_px": 632,
+            "width_cm": 13.910983363818485,
+            "height_cm": 5.353909748536001,
+            "offset_x_cm": 3.2,
+            "offset_y_cm": 31.2,
+            "dpi": 300,
+            "quality_approved": false,
+            "font_parity_approved": false
+          }
+        },
+        "quality_approved": false,
+        "production_ready": false
+      }
+    }
+  ]
+}

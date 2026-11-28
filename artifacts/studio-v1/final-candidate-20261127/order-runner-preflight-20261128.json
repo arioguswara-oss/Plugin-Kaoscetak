@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "date_wib": "2026-11-28",
+  "candidate": "7aa6eb23d226272bc8a523b28854ccbed64ae497",
+  "previous_checkpoint": "c855847a5a1300ac58265357b0275fe28de3bcf9",
+  "owner_approval": "RECEIVED_ONE_SYNTHETIC_UNPAID_ORDER_AND_TEMPORARY_QA_RUNNER_EXISTING_STAGING",
+  "preflight": {
+    "woo_payments_plugin": "INACTIVE",
+    "woo_native_webhook_ui": "EMPTY_PREVIOUS_EVIDENCE",
+    "active_integrations": [
+      "Hostinger Reach",
+      "Jetpack"
+    ],
+    "connector_checkout_or_egress_control": "NOT_AVAILABLE",
+    "native_end_to_end_runner": "NO_VERIFIED_EXECUTION_PATH",
+    "legacy_acceptance_dispatch": "HTTP_403_SOURCE_CONFIRMED_PRESERVED",
+    "pr32": "PRODUCTLESS_DIRECT_HPOS_CRUD_NOT_STUDIO_CHECKOUT",
+    "outbound_mail_webhook_and_fulfillment_isolation": "UNVERIFIED"
+  },
+  "runner_installed": false,
+  "checkout_post_sent": false,
+  "new_orders": 0,
+  "payments": 0,
+  "baseline_percent": 96.6,
+  "final_release": false
+}

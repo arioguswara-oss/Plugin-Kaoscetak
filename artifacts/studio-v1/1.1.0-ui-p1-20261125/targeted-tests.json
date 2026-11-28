@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-25",
+  "full_audit": "NOT RUN",
+  "results": [
+    {"command": "php tests/studio-admin-menu-contract.php", "result": "PASS", "assertions": 71},
+    {"command": "php tests/test_sanro_buyer_render.php", "result": "PASS", "assertions": 20},
+    {"command": "php tests/test_sanro_print_area.php", "result": "PASS", "assertions": 28},
+    {"command": "PHP lint on changed includes/admin.php, includes/buyer.php and includes/studio-ui.php", "result": "PASS"},
+    {"command": "node --check for buyer.js, collection.js and studio-ui.js", "result": "PASS"},
+    {"command": "node plugins/sanro-studio/tests/buyer-startup-mobile-node.cjs", "result": "PASS", "assertions": 15},
+    {"command": "node plugins/sanro-studio/tests/buyer-image-preview-node.cjs", "result": "PASS", "assertions": 10},
+    {"command": "Chromium plugins/sanro-studio/tests/ui-layout-browser.cjs", "result": "PASS", "coverage": "390px/320px portrait, shell overflow, prominent canvas, scoped theme chrome, admin navigation visibility, 44px touch target sizing, pointer drag and resize"},
+    {"command": "git diff --check", "result": "PASS"}
+  ],
+  "native_buyer_browser_fixture": "NOT RUN: local PHP CLI lacks GD; independent local Chromium layout/interaction harness passed without PHP fixtures",
+  "live_owner_browser_visual_acceptance": "PENDING"
+}

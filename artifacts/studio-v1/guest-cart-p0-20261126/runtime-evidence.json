@@ -1,0 +1,111 @@
+{
+  "date_wib": "2026-11-26",
+  "target": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "pr": 52,
+  "source_commit": "e36af5addcd16eacab9c8463c6a50bab73b94d89",
+  "version": "1.1.0",
+  "channel": "candidate",
+  "diagnostics": {
+    "prior_source": "782271659669581abfe5588294428c564af7c049",
+    "prior_header_path": "/checkout/",
+    "prior_setting": "Coming soon, only store pages",
+    "cart_page_id": 16,
+    "checkout_page_id": 17,
+    "guest_checkout_already_enabled": true,
+    "before_signed_out_http": {
+      "/custom-2/": "200 Studio",
+      "/cart/": "200 WooCommerce Coming Soon template",
+      "/checkout/": "302 to /cart/ on empty session, then 200 WooCommerce Coming Soon template"
+    },
+    "owner_reported_homepage_redirect": "Exact redirect to homepage not reproduced",
+    "after_signed_out_http_empty_session": {
+      "/custom-2/": "200 Studio",
+      "/cart/": "200 native empty Cart",
+      "/checkout/": "302 to /cart/ on empty session, then 200 native empty Cart"
+    },
+    "cart_cache_control_before": "max-age=60",
+    "cart_cache_control_after": "no-cache, must-revalidate, max-age=0, private",
+    "studio_cache_control_after": "no-cache, must-revalidate, max-age=0, no-store, private",
+    "litespeed_cache_header": "Not exposed in sampled responses; cache not confirmed as root cause",
+    "settings_changed": {
+      "site_visibility": "Live (staging only)"
+    },
+    "payment_settings_changed": false,
+    "temporary_cache_configuration": false
+  },
+  "installation": {
+    "runtime_gate_before_and_after": "PASS",
+    "web_php": "8.3.37",
+    "web_sapi": "litespeed",
+    "installed_tree_digest": "0941179129bba0c8fbb709a7e6863984c54d4cc4b5545c1dcc81666555eb2048",
+    "matches_reproducible_zip_tree": true,
+    "archive_sha256": "e4b6abb2529f620ba4d71ff69fc210f672c2b27af3bb50bd4d6d405fb3c0409d",
+    "manifest_sha256": "cf562494a0e0a5def4d2393bc3adffb18e9dc62e77440aefaa7c2fd812bbf6b7",
+    "state": "committed",
+    "rollback_retained": true,
+    "private_roots": "PASS",
+    "writer_flags_and_storage_gc_off": true,
+    "sanro_studio_and_woocommerce_active": true,
+    "temporary_transport_removed": true
+  },
+  "guest_browser": {
+    "browser": "Cloud Chromium",
+    "mode": "Fresh tab after deleting data for the exact staging origin; no WordPress login or existing cart",
+    "reproduced_before_fix": "Signed-out HTTP diagnostic; complete fresh browser acceptance performed on corrected candidate",
+    "catalog_path": "/custom-2/",
+    "editor_path": "/custom-2/?sanro_studio_editor=1&product_id=53",
+    "initial_badge_empty": true,
+    "cart_adding_and_guest_draft": "PASS",
+    "editor_and_catalog_badges_after_add": 1,
+    "header_icon_target_and_landing": "/cart/",
+    "native_cart_checkout_landing": "/checkout/",
+    "billing_form_available_without_login": true,
+    "checkout_binding_populated": true,
+    "design_id_matches_draft_cart_checkout": true,
+    "line": {
+      "product_id": 53,
+      "color": "Biru",
+      "size": "M",
+      "quantity": 1,
+      "unit_idr": 65000,
+      "subtotal_idr": 65000
+    },
+    "thumbnail": {
+      "asset": "sanro-qa-mockup-front-20261125-300x300.png",
+      "media_id": 74,
+      "verified_loaded_in": [
+        "catalog",
+        "cart",
+        "checkout"
+      ],
+      "type": "Synthetic WooCommerce product thumbnail",
+      "fixture_featured_media_before": 0,
+      "fixture_featured_media_after": 74
+    },
+    "screenshots": [
+      "sanro-guest-icon.jpg",
+      "sanro-guest-cart.jpg",
+      "sanro-guest-checkout.jpg"
+    ],
+    "synthetic_cart_rows_removed": true,
+    "physical_mobile": "NOT TESTED",
+    "checkout_submitted": false,
+    "order_created": false,
+    "payment_attempted": false
+  },
+  "regression": {
+    "rest_cart_and_url": "52 PASS",
+    "checkout_thumbnail_labels": "PASS",
+    "pricing": "533 PASS",
+    "mixed_checkout_contract": "8 PASS",
+    "php_lint": "PASS",
+    "archive_and_manifest_reproducibility": "PASS"
+  },
+  "guest_buyer_first_p0": "PASS",
+  "baseline": {
+    "before": 96.5,
+    "after": 96.5,
+    "delta_points": 0
+  },
+  "final_release": false
+}

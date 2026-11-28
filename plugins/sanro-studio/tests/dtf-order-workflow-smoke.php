@@ -46,6 +46,7 @@ function sanro_studio_dtf_layer_plan($order, $item_id, $side) {
     $g = sanro_studio_dtf_artifact_locked_geometry($binding);
     if (!$g) return ['valid' => false, 'error' => 'synthetic_geometry_invalid'];
     $result = $binding + [
+        'source_fingerprint'=>sanro_studio_artifact_source_fingerprint($GLOBALS['record133'],$order->get_id(),$item_id,$binding['design_id'],$side),
         'kind' => 'layered_dtf_raster_candidate',
         'quality_approved' => false, 'font_parity_approved' => false,
         'dpi' => 300, 'width_px' => 12, 'height_px' => 12,
@@ -79,6 +80,7 @@ function sanro_studio_dtf_render_layer_side($order, $item_id, $side) {
         . chunk133('pHYs', pack('NNC', $density, 11811, 1))
         . substr($png, 33);
     return $binding + $g + [
+        'source_fingerprint'=>sanro_studio_artifact_source_fingerprint($GLOBALS['record133'],$order->get_id(),$item_id,$binding['design_id'],$side),
         'kind' => 'layered_dtf_raster_candidate',
         'quality_approved' => false, 'font_parity_approved' => false,
         'dpi' => 300, 'mime' => 'image/png',
@@ -244,14 +246,16 @@ check137(!empty($repeat['valid'])
     && $repeat['sides']['front']['idempotent'] === true
     && $repeat['sides']['back']['idempotent'] === true,
     'rerunning same render is idempotent on both sides');
+$beforeRefs=$GLOBALS['record133']['master_refs']??null;$GLOBALS['record133']['master_refs']['front']='different-master-same-geometry';
+check137(empty(sanro_studio_dtf_verify_private_artifact($order,71,'front')['valid']),'same geometry cannot reuse a different master provenance');
+if($beforeRefs===null)unset($GLOBALS['record133']['master_refs']);else $GLOBALS['record133']['master_refs']=$beforeRefs;
+$callsBefore=$GLOBALS['renderCalls137'];
 $GLOBALS['renderVariant137'] = true;
 $conflict = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
-check137(empty($conflict['valid']) && ($conflict['complete'] ?? false) !== true
-    && ($conflict['error'] ?? '') === 'artifact_conflict'
-    && ($conflict['failed_side'] ?? '') === 'front'
-    && $conflict['partial'] === false,
-    'conflicting new render cannot replace front candidate');
+check137(!empty($conflict['valid'])&&$conflict['sides']['front']['idempotent']===true,'verified existing source is reused without generating variant output');
+check137($GLOBALS['renderCalls137']===$callsBefore,'verified two-sided retry performs zero renders');
 $GLOBALS['renderVariant137'] = false;
+@unlink($b.'.png');@unlink($b.'.json');
 $GLOBALS['renderFail137'] = 'back';
 $partial = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
 check137(empty($partial['valid']) && $partial['partial'] === true
@@ -260,8 +264,9 @@ check137(empty($partial['valid']) && $partial['partial'] === true
     && $partial['sides']['front']['state'] === 'candidate',
     'back-side error produces explicit partial result, no false complete');
 check137(!empty(sanro_studio_dtf_verify_private_artifact($order, 71, 'front')['valid'])
-    && !empty(sanro_studio_dtf_verify_private_artifact($order, 71, 'back')['valid']),
-    'failed rerun preserves existing valid artwork');
+    && empty(sanro_studio_dtf_verify_private_artifact($order, 71, 'back')['valid']),
+    'missing back is not fabricated; existing front remains valid');
+@unlink($f.'.png');@unlink($f.'.json');
 $GLOBALS['renderFail137'] = 'front';
 $failed = sanro_studio_dtf_prepare_order_item_candidates($order, 71);
 check137(empty($failed['valid']) && $failed['partial'] === false
@@ -323,6 +328,7 @@ $GLOBALS['record133']['design']['back'] = [
         ['type'=>'image','x'=>3.0,'y'=>4.0,'width'=>0.1,'height'=>0.1],
     ],
 ];
+sanro_studio_dtf_persist_order_item_side($order,71,'back');
 file_put_contents($b . '.png', 'CORRUPTED');
 clearstatcache(true);
 $corrupt = sanro_studio_dtf_order_item_private_status($order, 71);

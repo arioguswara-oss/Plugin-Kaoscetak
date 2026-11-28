@@ -1,5 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
+require_once __DIR__.'/production-raster.php';
 
 /**
  * SANRO Studio DTF raster candidate v1 — ONE transparent PNG image layer.
@@ -60,7 +61,7 @@ function sanro_studio_dtf_image_plan($order, $item_id, $side) {
     $design = $record['design'];
     $areas = sanro_studio_product_safe_areas($product_id);
     if (!is_array($areas) || !isset($areas[$side])
-        || empty(sanro_studio_validate_product_design($product_id, $design)['valid'])) {
+        || empty(sanro_studio_validate_product_design($product_id,$design,$record['checkout_quote']['print_limits'] ?? sanro_studio_print_categories())['valid'])) {
         return ['valid' => false, 'error' => 'invalid_print_geometry'];
     }
     if (!array_key_exists($side, $design)) {
@@ -83,18 +84,27 @@ function sanro_studio_dtf_image_plan($order, $item_id, $side) {
     $width = (float) $rect['width'];
     $height = (float) $rect['height'];
     $x = (float) $rect['x']; $y = (float) $rect['y'];
-    if ($width <= 0 || $height <= 0 || $x < 0 || $y < 0
+    if ($width <= 0 || $height <= 0
         || $width > 100 || $height > 100
         || !is_finite($width) || !is_finite($height)
         || !is_finite($x) || !is_finite($y)) {
         return ['valid' => false, 'error' => 'invalid_print_geometry'];
     }
     $dpi = 300;
-    $out_w = (int) round($width * $dpi / 2.54);
-    $out_h = (int) round($height * $dpi / 2.54);
+    [$left,$top,$right,$bottom] = sanro_studio_print_object_bounds($rect);
+    $rotation = $rect['rotation'] ?? 0;
+    $span_x = $rotation == 0 ? $width : $right - $left;
+    $span_y = $rotation == 0 ? $height : $bottom - $top;
+    $out_w = (int) round($span_x * $dpi / 2.54);
+    $out_h = (int) round($span_y * $dpi / 2.54);
+    $layer = [
+        'x'=>(int) round(($x-$left)*$dpi/2.54), 'y'=>(int) round(($y-$top)*$dpi/2.54),
+        'width'=>(int) round($width*$dpi/2.54), 'height'=>(int) round($height*$dpi/2.54),
+        'rotation'=>$rotation,
+    ];
     // v1 resource limit avoids multi-hundred-MB PHP-GD allocations.
-    if ($out_w < 1 || $out_h < 1 || $out_w > 4096 || $out_h > 4096
-        || $out_w * $out_h > 6000000) {
+    if ($out_w < 1 || $out_h < 1 || $out_w > 6000 || $out_h > 6000
+        || $out_w * $out_h > 24000000) {
         return ['valid' => false, 'error' => 'dtf_canvas_limit'];
     }
     $source = sanro_studio_locked_item_master_source($order, $item_id, $side);
@@ -103,25 +113,17 @@ function sanro_studio_dtf_image_plan($order, $item_id, $side) {
         || !is_string($source['sha256'] ?? null)) {
         return ['valid' => false, 'error' => 'dtf_master_unavailable'];
     }
-    // Require an RGBA8 non-interlaced PNG. JPEG/RGB files cannot guarantee
-    // that backgrounds will remain transparent on the transfer film.
+    // Accept PNG/JPEG originals. Alpha is preserved for PNG; JPEG artwork
+    // remains opaque. No automatic background-removal claim is made.
     $bytes = $source['bytes'];
-    if (($source['mime'] ?? null) !== 'image/png'
-        || strlen($bytes) < 64
-        || substr($bytes, 0, 8) !== "\x89PNG\r\n\x1a\n"
-        || substr($bytes, 12, 4) !== 'IHDR'
-        || unpack('N', substr($bytes, 8, 4))[1] !== 13
-        || ord($bytes[24]) !== 8 || ord($bytes[25]) !== 6
-        || ord($bytes[28]) !== 0) {
-        return ['valid' => false, 'error' => 'dtf_rgba_png_required'];
-    }
+    if (!in_array($source['mime']??null,['image/png','image/jpeg'],true)) return ['valid'=>false,'error'=>'dtf_image_format_unsupported'];
     $info = function_exists('getimagesizefromstring')
         ? @getimagesizefromstring($bytes) : false;
-    if (!is_array($info) || ($info['mime'] ?? null) !== 'image/png'
+    if (!is_array($info) || ($info['mime'] ?? null) !== $source['mime']
         || !isset($info[0], $info[1])
-        || $info[0] < $out_w || $info[1] < $out_h
+        || $info[0] < $layer['width'] || $info[1] < $layer['height']
         || $info[0] > 10000 || $info[1] > 10000
-        || $info[0] * $info[1] > 12000000) {
+        || $info[0] * $info[1] > 24000000) {
         return ['valid' => false, 'error' => 'dtf_source_resolution'];
     }
     $source_ratio = $info[0] / $info[1];
@@ -132,11 +134,12 @@ function sanro_studio_dtf_image_plan($order, $item_id, $side) {
     if (!hash_equals(hash('sha256', $bytes), $source['sha256'])) {
         return ['valid' => false, 'error' => 'dtf_source_integrity_failed'];
     }
+    if(!sanro_studio_dtf_memory_available($out_w,$out_h,$info[0]*$info[1],$rotation != 0))return ['valid'=>false,'error'=>'dtf_memory_limit'];
     return [
         'valid' => true, 'skipped' => false,
         'side' => $side, 'design_id' => $design_id, 'order_id' => $order->get_id(),
-        'item_id' => $item_id, 'width_cm' => $width, 'height_cm' => $height,
-        'offset_x_cm' => $x, 'offset_y_cm' => $y,
+        'item_id' => $item_id, 'width_cm' => $span_x, 'height_cm' => $span_y,
+        'offset_x_cm' => $left, 'offset_y_cm' => $top, 'image_layer' => $layer,
         'dpi' => $dpi, 'width_px' => $out_w, 'height_px' => $out_h,
         'source_sha256' => $source['sha256'], 'source_bytes' => $bytes,
         'source_width_px' => $info[0], 'source_height_px' => $info[1],
@@ -156,7 +159,7 @@ function sanro_studio_dtf_png_has_300dpi($png) {
         if ($length > 8192 || $offset + 12 + $length > $total) return false;
         $type = substr($png, $offset + 4, 4);
         if ($type === 'pHYs') {
-            if ($length !== 9) return false;
+            if ($length !== 9 || substr($png,$offset+8+$length,4)!==pack('N',crc32($type.substr($png,$offset+8,$length)))) return false;
             $x = unpack('N', substr($png, $offset + 8, 4))[1];
             $y = unpack('N', substr($png, $offset + 12, 4))[1];
             $unit = ord($png[$offset + 16]);
@@ -198,9 +201,12 @@ function sanro_studio_dtf_render_image_side($order, $item_id, $side) {
         imagesavealpha($canvas, true);
         $transparent = imagecolorallocatealpha($canvas, 0, 0, 0, 127);
         imagefill($canvas, 0, 0, $transparent);
-        if (!imagecopyresampled($canvas, $original, 0, 0, 0, 0,
-            $plan['width_px'], $plan['height_px'],
-            $plan['source_width_px'], $plan['source_height_px'])
+        $layer = $plan['image_layer'];
+        $paint = static function ($target,$x,$y) use ($original,$plan,$layer) {
+            return imagecopyresampled($target,$original,$x,$y,0,0,
+                $layer['width'],$layer['height'],$plan['source_width_px'],$plan['source_height_px']);
+        };
+        if (!sanro_studio_dtf_composite_layer($canvas,$layer,$paint)
             || !imageresolution($canvas, $plan['dpi'], $plan['dpi'])) {
             return ['valid' => false, 'error' => 'dtf_rasterization_failed'];
         }
@@ -219,8 +225,11 @@ function sanro_studio_dtf_render_image_side($order, $item_id, $side) {
             || !sanro_studio_dtf_png_has_300dpi($png)) {
             return ['valid' => false, 'error' => 'dtf_output_integrity_failed'];
         }
+        $validation=sanro_studio_dtf_validate_raster($png,$plan);
+        if(empty($validation['valid']))return $validation;
         $metadata = $plan;
-        unset($metadata['source_bytes']);
+        $metadata['output_validation']=$validation;
+        unset($metadata['source_bytes'],$metadata['image_layer']);
         return $metadata + [
             'bytes' => $png,
             'sha256' => hash('sha256', $png),

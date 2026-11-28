@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "kind": "OWNER_APPROVAL_REQUEST",
+  "status": "OWNER_APPROVED_BUT_GATE_BLOCKED",
+  "approved": true,
+  "activation_authorized": true,
+  "deployment_authorized": false,
+  "owner_approval_evidence": "Explicit Owner approval in conversation on 2026-11-24, bound to this exact staging target and installed candidate. Authorization is conditional on all preconditions; no writer may be enabled while any gate is blocked.",
+  "target": {
+    "url": "https://saddlebrown-peafowl-616656.hostingersite.com",
+    "ssh_alias": "kaoscetak-staging",
+    "environment": "staging",
+    "production_access": false
+  },
+  "installed_candidate": {
+    "source_commit": "fad47c6f508258d594f92daca79c337d6911b404",
+    "plugin_digest": "6d65fde1ceda80b1551da51817ccef14f0d618f1d5dffdcfcb412a8c129cc2bb",
+    "zip_sha256": "b83c1b03d18e0633d502aff09d9b1d40f01eb216a22850a7c990fc40c78a5723",
+    "manifest_sha256": "8664f584c4b746120c98ed50b337fc9616508f3b390eca3fa2a8429a370f8309",
+    "installed_tree_digest": "60c8b0f3a272b024537e152fe46763c31b1beafcb36933fa2e57bb115c132273"
+  },
+  "scope": {
+    "synthetic_order_limit": 1,
+    "checkout_writer": "ENABLE_FOR_THIS_APPROVED_SESSION_ONLY",
+    "dtf_generator": "ENABLE_FOR_THIS_APPROVED_SESSION_ONLY",
+    "google_drive": "REMAIN_OFF_UNTIL_OWNER_CONFIGURES_AND_AUTHORIZES_PRIVATE_TARGET",
+    "storage_gc": "REMAIN_OFF",
+    "payment": "NO_PAYMENT_ATTEMPT_OR_GATEWAY_CONFIGURATION",
+    "production_print": "NO_PHYSICAL_PRINT_OR_PRESS",
+    "cleanup": "NO_ORDER_OR_ARTIFACT_DELETION_WITHOUT_SEPARATE_OWNER_SCOPE",
+    "merge_or_new_install": false
+  },
+  "preconditions": [
+    "Fresh read-only gates confirm exact staging host, installed tree digest, active SANRO Studio/WooCommerce, private storage, and no access to production.",
+    "Fresh read-only check confirms installer journal is committed, lock is free, and current feature flags are OFF before the session.",
+    "Exactly one identified synthetic design, cart line, and WooCommerce order; no customer or existing order is eligible.",
+    "No payment gateway is required for SANRO cart/order integration; do not invoke payment or payment_complete and do not change WooCommerce payment configuration.",
+    "Drive OAuth identity and private target must be configured by Owner before any Drive test; until then every Drive flag remains OFF.",
+    "A tested rollback/disable procedure is ready; after the session all three writers return to OFF and readback proves OFF."
+  ],
+  "integrated_sequence": [
+    "Capture authenticated admin screenshot and verify exactly one independent top-level SANRO Studio menu outside WooCommerce.",
+    "Re-read candidate/runtime identity, private storage and all writer flags.",
+    "Submit the already verified synthetic front/back design and server quote to classic WooCommerce checkout.",
+    "Create at most one pending synthetic order; verify locked DesignID, size quantities, server price, shipping/tax/discount guards, and admin WooCommerce detail panel.",
+    "Leave the Woo order unpaid/pending; verify SANRO uses standard WooCommerce order status and is_paid() behavior without a gateway-specific dependency.",
+    "Mark only that synthetic pending order ready for production through the authorized WooCommerce admin readiness action, then generate local private DTF candidate assets; verify provenance, dimensions, hashes and human-approval gate; do not release to physical production.",
+    "Skip Drive entirely while OAuth/parent-folder configuration is unavailable; do not create a folder or upload files.",
+    "Capture sanitized evidence, verify order/artifact binding and all writer flags OFF after the session."
+  ],
+  "stop_conditions": [
+    "Any hash, host, installed digest, source marker, menu count, private-storage boundary or feature flag differs from the exact approved values.",
+    "Any payment request/settlement, production host/path, customer order, unbounded order creation, or Drive access before Owner configuration is detected.",
+    "Any non-synthetic item, unapproved tax/fee/coupon behavior, stale quote, missing provenance, unsafe artifact permission, or writer recovery failure occurs."
+  ],
+  "owner_approval_text": "Saya menyetujui satu sesi fungsi SANRO Studio khusus staging saddlebrown-peafowl-616656.hostingersite.com pada kandidat fad47c6 dengan maksimum satu order sintetis tanpa memanggil payment gateway atau mengubah konfigurasi pembayaran WooCommerce. Checkout dan DTF lokal boleh diuji setelah isolasi staging diverifikasi; order tetap unpaid dan dapat ditandai Siap Produksi melalui aksi WooCommerce yang sah. Drive dan storage GC tetap OFF sampai konfigurasi serta otorisasi Owner tersedia. Tidak ada pembayaran, produksi fisik, production, merge, instalasi baru atau penghapusan order existing."
+}

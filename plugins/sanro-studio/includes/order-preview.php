@@ -28,6 +28,11 @@ function sanro_studio_admin_order_preview_status($order) {
     $inventory = sanro_studio_order_preview_inventory($order);
     if (empty($inventory['valid'])) return;
     echo '<div class="sanro-studio-order-preview"><h3>' . esc_html('SANRO Studio — Preview desain') . '</h3>';
+    if($inventory['front']===null&&$inventory['back']===null&&method_exists($order,'get_items')){
+        $items=$order->get_items('line_item');$count=0;
+        foreach(is_array($items)?$items:[] as $item_id=>$item){$native=sanro_studio_order_item_preview_inventory($order,$item_id);if(!empty($native['valid'])&&!empty($native['front'])&&!empty($native['back']))$count++;}
+        if($count){echo '<p>'.esc_html('Referensi preview privat depan/belakang tercatat pada '.$count.' item. Gunakan tautan preview pada setiap item pesanan di bawah.').'</p></div>';return;}
+    }
     foreach (['front' => 'Depan', 'back' => 'Belakang'] as $side => $label) {
         $state = $inventory[$side] === null
             ? 'Belum tersedia'
@@ -115,6 +120,11 @@ function sanro_studio_admin_order_preview_bytes($order, $side, $item_id = null) 
     if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) {
         return ['valid' => false, 'error' => 'forbidden'];
     }
+    return sanro_studio_bound_order_preview_bytes($order, $side, $item_id);
+}
+
+/** Internal reader shared by authorized admin delivery and paid/ready workers. */
+function sanro_studio_bound_order_preview_bytes($order, $side, $item_id = null) {
     if (!in_array($side, ['front', 'back'], true)) {
         return ['valid' => false, 'error' => 'invalid_side'];
     }
@@ -228,6 +238,7 @@ function sanro_studio_attach_item_preview_refs($order, $item_id, $design_id, $ow
     if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) {
         return ['valid' => false, 'error' => 'forbidden'];
     }
+    if(function_exists('sanro_studio_saved_order_context')&&empty(sanro_studio_saved_order_context($order,true)['valid']))return ['valid'=>false,'error'=>'order_integrity_failed'];
     $inventory = sanro_studio_order_item_preview_inventory($order, $item_id);
     if (empty($inventory['valid']) || !is_array($refs) || !$refs || count($refs) > 2
         || !function_exists('sanro_studio_read_draft')
@@ -297,6 +308,9 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
     if (!$order_id || !$item_id) return;
     // Use the same strict binding validation as the private delivery endpoint.
     $order = function_exists('wc_get_order') ? wc_get_order($order_id) : false;
+    if(function_exists('sanro_studio_saved_order_context')&&empty(sanro_studio_saved_order_context($order,true)['valid'])){
+        echo '<p>'.esc_html('SANRO Studio: integritas pesanan perlu dipulihkan sebelum preview/metadata digunakan untuk produksi.').'</p>';return;
+    }
     $inventory = sanro_studio_order_item_preview_inventory($order, $item_id);
     if (empty($inventory['valid'])) return;
     $design_id = method_exists($item, 'get_meta') ? $item->get_meta('_sanro_studio_design_id', true) : '';
@@ -308,6 +322,17 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
     }
     echo '<div class="sanro-studio-item-preview"><strong>' .
         esc_html('SANRO Studio — Preview item') . '</strong>';
+    $snapshot = $item->get_meta('_sanro_studio_design_snapshot', true);
+    if (is_array($snapshot) && ($snapshot['version'] ?? null) === 1
+        && ($snapshot['design_id'] ?? null) === $design_id) {
+        $labels = ['Kaos: ' . (is_string($snapshot['shirt_color'] ?? null) ? $snapshot['shirt_color'] : ''),
+            'Lengan: ' . (($snapshot['sleeve_label']??null)==='3/4'?'3/4':(($snapshot['sleeve_label']??(!empty($snapshot['long_sleeve'])?'long':'short'))==='long'?'panjang':'pendek'))];
+        foreach (['front'=>'Depan','back'=>'Belakang'] as $side=>$label) {
+            $category = $snapshot['sides'][$side]['category'] ?? null;
+            $labels[] = $label . ': ' . (is_string($category) ? $category : 'tanpa cetak');
+        }
+        echo '<p class="sanro-studio-design-summary">' . esc_html(implode(' | ',$labels)) . '</p>';
+    }
     // Admin-only order summary, based on saved WooCommerce item data.
     // Missing or mismatched quote metadata must not appear as a valid DTF price.
     if ($design_id !== '' && method_exists($item, 'get_meta')
@@ -329,19 +354,27 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
             && is_numeric($subtotal) && is_numeric($total)
             && (float) $subtotal === (float) ((int) $price * (int) $qty)
             && (float) $total === (float) ((int) $price * (int) $qty);
-        echo '<p>' . esc_html('Design ID: ' . $design_id) . '</p>';
+        $public_id=function_exists('sanro_studio_public_design_id')?sanro_studio_public_design_id($design_id):null;
+        echo '<p>' . esc_html('Design ID: ' . (is_string($public_id)?$public_id:$design_id)) . '</p>';
         if ($price_valid) {
             echo '<p>' . esc_html('Ukuran: ' . $size . ' | Jumlah: ' . (int) $qty
                 . ' | Harga DTF: Rp ' . number_format((int) $price, 0, ',', '.')
                 . ' / pcs | Subtotal: Rp ' .
                 number_format((int) $price * (int) $qty, 0, ',', '.')) . '</p>';
+            $repeat=$item->get_meta('_sanro_studio_repeat_discount',true);
+            if(is_array($repeat)&&is_array($repeat['proof']??null)&&($repeat['proof']['rate']??null)===5&&is_int($repeat['base_unit_price']??null)&&$repeat['base_unit_price']>0&&$repeat['base_unit_price']<=2000000&&is_int($repeat['unit_discount']??null)
+                &&$repeat['unit_discount']===intdiv($repeat['base_unit_price']*5+50,100)&&$repeat['base_unit_price']-$repeat['unit_discount']===(int)$price){
+                echo '<p>'.esc_html('Repeat 5% tersimpan | Harga dasar Rp '.number_format($repeat['base_unit_price'],0,',','.').' | Diskon Rp '.number_format($repeat['unit_discount'],0,',','.').' / pcs').'</p>';
+            }
         } else {
             echo '<p>' . esc_html('Harga DTF / ukuran: belum terverifikasi pada item pesanan') . '</p>';
         }
     }
+    echo '<div class="sanro-order-preview-grid">';
     foreach (['front' => 'Depan', 'back' => 'Belakang'] as $side => $label) {
+        echo '<figure><figcaption>'.esc_html($label).'</figcaption>';
         if (empty($inventory[$side])) {
-            echo '<p>' . esc_html($label . ': Belum tersedia') . '</p>';
+            echo '<p>' . esc_html($label . ': Belum tersedia') . '</p></figure>';
             continue;
         }
         $url = add_query_arg([
@@ -353,7 +386,28 @@ function sanro_studio_admin_item_preview_status($item_id, $item, $product) {
         $url = wp_nonce_url($url, 'sanro_order_preview_' . $order_id . '_' . $side . '_item_' . $item_id);
         echo '<p><a target="_blank" rel="noopener noreferrer" href="' . esc_url($url) . '">' .
             esc_html('Lihat preview ' . $label) . '</a></p>';
+        echo '<img loading="lazy" width="160" height="160" style="max-width:100%;object-fit:contain"'
+            . ' referrerpolicy="no-referrer" src="' . esc_url($url) . '" alt="'
+            . esc_attr('Preview desain ' . $label) . '"></figure>';
     }
+    echo '</div>';
+    if(sanro_studio_local_production_order_eligible($order)){
+        $guide_url=wp_nonce_url(add_query_arg(['action'=>'sanro_studio_ui_guide','order_id'=>$order_id,'item_id'=>$item_id],admin_url('admin-post.php')),'sanro_guide_'.$order_id.'_'.$item_id);
+        echo '<a class="sanro-guide-link" href="'.esc_url($guide_url).'">PDF Panduan</a><p>Panduan posisi desain, bukan file siap cetak.</p>';
+    }
+    if ($design_id !== '' && function_exists('sanro_studio_locked_item_master_source')) {
+        foreach (['front' => 'Depan', 'back' => 'Belakang'] as $side => $label) {
+            $master = sanro_studio_locked_item_master_source($order, $item_id, $side);
+            if (empty($master['valid']) || !empty($master['skipped'])) continue;
+            $master_url = wp_nonce_url(add_query_arg([
+                'action' => 'sanro_studio_order_master', 'order_id' => $order_id,
+                'item_id' => $item_id, 'side' => $side,
+            ], admin_url('admin-post.php')), 'sanro_order_master_' . $order_id . '_' . $item_id . '_' . $side);
+            echo '<p><a class="sanro-master-link" href="' . esc_url($master_url) . '">' .
+                esc_html('Unduh artwork asli ' . $label) . '</a></p>';
+        }
+    }
+    if(function_exists('sanro_studio_admin_item_production_readiness'))sanro_studio_admin_item_production_readiness($order,$item_id);
     echo '</div>';
 }
 
@@ -378,6 +432,104 @@ function sanro_studio_order_production_file_status($order) {
         'drive_link_available' => false,
         'drive_url' => null,
     ];
+}
+
+/** Local production permission is independent from Drive export and DTF generation. */
+function sanro_studio_local_production_order_eligible($order) {
+    $status = sanro_studio_order_production_file_status($order);
+    return !empty($status['valid']) && !empty($status['eligible']);
+}
+
+/** Build a locally generated PDF guide for an authorized order item. */
+function sanro_studio_admin_order_guide_bytes($order, $item_id) {
+    if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) {
+        return ['valid' => false, 'error' => 'forbidden'];
+    }
+    if (!is_int($item_id) || $item_id < 1 || !sanro_studio_local_production_order_eligible($order)
+        || !function_exists('sanro_studio_prepare_production_package')) {
+        return ['valid' => false, 'error' => 'production_not_ready'];
+    }
+    $package = sanro_studio_prepare_production_package($order, $item_id);
+    if (empty($package['valid']) || !is_array($package['assets'] ?? null)) {
+        return ['valid' => false, 'error' => $package['error'] ?? 'production_package_invalid'];
+    }
+    foreach ($package['assets'] as $asset) {
+        if (($asset['kind'] ?? null) === 'guide' && ($asset['side'] ?? null) === 'guide'
+            && ($asset['mime'] ?? null) === 'application/pdf' && is_string($asset['bytes'] ?? null)
+            && strncmp($asset['bytes'], '%PDF-', 5) === 0 && substr(rtrim($asset['bytes']), -5) === '%%EOF') {
+            return ['valid' => true, 'bytes' => $asset['bytes'], 'design_id' => $package['manifest']['design_id']];
+        }
+    }
+    return ['valid' => false, 'error' => 'production_guide_unavailable'];
+}
+
+/** Build a verified private original for one operator-authorized order line. */
+function sanro_studio_admin_order_master_bytes($order, $item_id, $side) {
+    if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) {
+        return ['valid' => false, 'error' => 'forbidden'];
+    }
+    if (!is_int($item_id) || $item_id < 1 || !in_array($side, ['front', 'back'], true)
+        || !function_exists('sanro_studio_locked_item_master_source')) {
+        return ['valid' => false, 'error' => 'invalid_master_target'];
+    }
+    $source = sanro_studio_locked_item_master_source($order, $item_id, $side);
+    if (empty($source['valid']) || !empty($source['skipped']) || !is_string($source['bytes'] ?? null)) {
+        return ['valid' => false, 'error' => $source['error'] ?? 'private_master_unavailable'];
+    }
+    return ['valid' => true, 'bytes' => $source['bytes'], 'mime' => $source['mime'],
+        'sha256' => $source['sha256'], 'design_id' => $source['design_id'], 'side' => $side];
+}
+
+/** Admin-only, nonce-bound local PDF delivery. Does not call Drive or DTF. */
+function sanro_studio_admin_deliver_order_guide() {
+    if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) wp_die('Forbidden', '', ['response' => 403]);
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') wp_die('Method not allowed', '', ['response' => 405]);
+    $raw_order_id = $_GET['order_id'] ?? null; $raw_item_id = $_GET['item_id'] ?? null;
+    $nonce = isset($_GET['_wpnonce']) && is_string($_GET['_wpnonce']) ? $_GET['_wpnonce'] : '';
+    if (!is_string($raw_order_id) || !preg_match('/^[1-9][0-9]{0,17}$/D', $raw_order_id)
+        || !is_string($raw_item_id) || !preg_match('/^[1-9][0-9]{0,17}$/D', $raw_item_id)) wp_die('Invalid request', '', ['response' => 400]);
+    $order_id = (int) $raw_order_id; $item_id = (int) $raw_item_id;
+    if ($order_id < 1 || $item_id < 1 || !wp_verify_nonce($nonce, 'sanro_guide_' . $order_id . '_' . $item_id)) wp_die('Invalid request', '', ['response' => 403]);
+    $order = function_exists('wc_get_order') ? wc_get_order($order_id) : false;
+    if (!is_object($order) || !method_exists($order, 'get_id') || (int) $order->get_id() !== $order_id) wp_die('Guide unavailable', '', ['response' => 404]);
+    $result = sanro_studio_admin_order_guide_bytes($order, $item_id);
+    if (empty($result['valid'])) wp_die('Guide unavailable', '', ['response' => 404]);
+    if (function_exists('nocache_headers')) nocache_headers();
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: attachment; filename="sanro-guide-' . $order_id . '-' . $item_id . '.pdf"');
+    header('Content-Length: ' . strlen($result['bytes']));
+    header('X-Content-Type-Options: nosniff');
+    header('Cache-Control: private, no-store, max-age=0');
+    echo $result['bytes'];
+    exit;
+}
+
+/** Admin-only, nonce-bound delivery of the locked private master image. */
+function sanro_studio_admin_deliver_order_master() {
+    if (!function_exists('current_user_can') || !current_user_can('manage_woocommerce')) wp_die('Forbidden', '', ['response' => 403]);
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') wp_die('Method not allowed', '', ['response' => 405]);
+    $raw_order_id = $_GET['order_id'] ?? null; $raw_item_id = $_GET['item_id'] ?? null;
+    $side = isset($_GET['side']) && is_string($_GET['side']) ? $_GET['side'] : '';
+    $nonce = isset($_GET['_wpnonce']) && is_string($_GET['_wpnonce']) ? $_GET['_wpnonce'] : '';
+    if (!is_string($raw_order_id) || !preg_match('/^[1-9][0-9]{0,17}$/D', $raw_order_id)
+        || !is_string($raw_item_id) || !preg_match('/^[1-9][0-9]{0,17}$/D', $raw_item_id)) wp_die('Invalid request', '', ['response' => 400]);
+    $order_id = (int) $raw_order_id; $item_id = (int) $raw_item_id;
+    $action = 'sanro_order_master_' . $order_id . '_' . $item_id . '_' . $side;
+    if (!$order_id || !$item_id || !in_array($side, ['front', 'back'], true)
+        || !wp_verify_nonce($nonce, $action)) wp_die('Invalid request', '', ['response' => 403]);
+    $order = function_exists('wc_get_order') ? wc_get_order($order_id) : false;
+    if (!is_object($order) || !method_exists($order, 'get_id') || (int) $order->get_id() !== $order_id) wp_die('Artwork unavailable', '', ['response' => 404]);
+    $result = sanro_studio_admin_order_master_bytes($order, $item_id, $side);
+    if (empty($result['valid'])) wp_die('Artwork unavailable', '', ['response' => 404]);
+    if (function_exists('nocache_headers')) nocache_headers();
+    $ext = $result['mime'] === 'image/png' ? 'png' : 'jpg';
+    header('Content-Type: ' . $result['mime']);
+    header('Content-Disposition: attachment; filename="sanro-artwork-' . $order_id . '-' . $item_id . '-' . $side . '.' . $ext . '"');
+    header('Content-Length: ' . strlen($result['bytes']));
+    header('X-Content-Type-Options: nosniff');
+    header('Cache-Control: private, no-store, max-age=0');
+    echo $result['bytes'];
+    exit;
 }
 
 /**
@@ -405,8 +557,11 @@ function sanro_studio_order_item_production_manifest($order, $item_id) {
         'reason' => $eligibility['reason'],
         'item_id' => $item_id,
         'design_id' => $design_id,
+        'public_design_id' => function_exists('sanro_studio_public_design_id')?sanro_studio_public_design_id($design_id):null,
         'preview_front_available' => $inventory['front'] !== null,
         'preview_back_available' => $inventory['back'] !== null,
+        'ready_for_local_production' => $eligibility['eligible'] && $has_preview,
+        // Backward-compatible alias used by Drive export workers.
         'ready_for_drive_integration' => $eligibility['eligible'] && $has_preview,
         'drive_link_available' => false,
         'drive_url' => null,
@@ -603,7 +758,10 @@ function sanro_studio_checkout_bind_existing_item_previews($order, $design_id, $
             || $candidate->get_meta('_sanro_studio_design_id', true) !== $design_id) {
             return ['valid' => false, 'error' => 'order_design_mismatch'];
         }
+        $refs = function_exists('sanro_studio_record_preview_refs') ? sanro_studio_record_preview_refs($record, $candidate->get_meta('_sanro_studio_size', true)) : $refs;
+        if (count($refs) !== 2) return ['valid'=>false, 'error'=>'incomplete_preview_refs'];
         foreach ($refs as $side => $ref) {
+            if (empty(sanro_studio_read_owned_draft_preview($design_id, $owner_token, $side, $ref)['valid'])) return ['valid'=>false, 'error'=>'incomplete_preview_refs'];
             $existing = $candidate->get_meta('_sanro_studio_preview_' . $side . '_ref', true);
             if ($existing !== '' && $existing !== $ref) {
                 return ['valid' => false, 'error' => 'preview_reference_conflict'];
@@ -613,6 +771,7 @@ function sanro_studio_checkout_bind_existing_item_previews($order, $design_id, $
     $bound = 0;
     foreach ($item_ids as $item_id) {
         $item = $items[$item_id];
+        $refs = function_exists('sanro_studio_record_preview_refs') ? sanro_studio_record_preview_refs($record, $item->get_meta('_sanro_studio_size', true)) : $refs;
         $changed = false;
         foreach ($refs as $side => $ref) {
             $key = '_sanro_studio_preview_' . $side . '_ref';

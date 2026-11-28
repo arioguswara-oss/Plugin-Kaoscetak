@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "reviewed_source_head": "24817098889853a2bf0c1295a0d65e21fb66f2b0",
+  "installed_studio_source": "7aa6eb23d226272bc8a523b28854ccbed64ae497",
+  "version": "1.1.0",
+  "tests": {
+    "php_lint": "PASS",
+    "source_contract_assertions": "15/15 PASS",
+    "builder_syntax": "PASS",
+    "two_reproducible_builds": "PASS_IDENTICAL_SHA256",
+    "zip_integrity": "PASS_THREE_EXPECTED_MEMBERS"
+  },
+  "staging_install_or_execution": "NOT_RUN_BY_INSTRUCTION",
+  "order_writes": 0,
+  "payment_attempts": 0,
+  "email_or_webhook_dispatches": 0,
+  "production_or_application_changes": 0,
+  "runtime_blocker": "CURRENT_EXACT_STAGING_TRANSPORT_RETURNS_403_FOR_ACCEPTANCE_POSTS",
+  "baseline_percent": 96.6,
+  "final_release": false
+}

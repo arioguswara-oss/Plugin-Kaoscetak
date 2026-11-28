@@ -25,6 +25,16 @@ done
 "$PHP_BIN" plugins/sanro-studio/tests/cart-adapter-smoke.php
 "$PHP_BIN" plugins/sanro-studio/tests/rest-cart-bootstrap-smoke.php
 "$PHP_BIN" plugins/sanro-studio/tests/size-checkout-bridge-smoke.php
+"$PHP_BIN" plugins/sanro-studio/tests/production-package-flow.php
+"$PHP_BIN" plugins/sanro-studio/tests/checkout-recovery-flow.php
+"$PHP_BIN" plugins/sanro-studio/tests/completion-consistency.php
+"$PHP_BIN" plugins/sanro-studio/tests/checkout-shipping-flow.php
+if "$PHP_BIN" -r 'exit(extension_loaded("gd") ? 0 : 1);'; then
+  "$PHP_BIN" -d memory_limit=768M plugins/sanro-studio/tests/production-raster-real.php
+  "$PHP_BIN" plugins/sanro-studio/tests/guide-unicode-real.php
+else
+  echo "NOT TESTED: GD/FreeType production output"
+fi
 "$PHP_BIN" plugins/sanro-studio/tests/checkout-gate-smoke.php
 "$PHP_BIN" plugins/sanro-studio/tests/order-amount-contract.php
 "$PHP_BIN" plugins/sanro-studio/tests/order-lock-boundary.php

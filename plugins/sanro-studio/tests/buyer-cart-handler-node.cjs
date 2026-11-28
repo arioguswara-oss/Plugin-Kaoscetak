@@ -8,7 +8,7 @@ const vm = require('node:vm');
 
 const source = fs.readFileSync(path.resolve(__dirname, '../assets/buyer.js'), 'utf8');
 const startMarker = "  const cartButton=q('#sanro-add-to-cart'),cartStatus=q('#sanro-cart-status');";
-const stopMarker = "  saveButton.addEventListener('click',async()=>{";
+const stopMarker = "  const saveDraft=async(fromCart=false)=>{";
 const start = source.indexOf(startMarker);
 const stop = source.indexOf(stopMarker, start);
 assert(start !== -1 && stop > start, 'Cart handler source boundaries changed');
@@ -19,6 +19,8 @@ function createHarness(options = {}) {
   const visibleButton = {disabled: false};
   const status = {textContent: 'initial placeholder'};
   const requests = [];
+  const field={focus(){field.focused=true;},scrollIntoView(){field.scrolled=true;}};
+  let panel;
   let listener;
   let redirectedTo = null;
   const root = {
@@ -27,9 +29,10 @@ function createHarness(options = {}) {
       assert(!listener, 'Cart handler installed twice');
       listener = handler;
     },
+    dispatchEvent(event) { panel=event.detail.name; },
     contains(node) { return node === visibleButton; }
   };
-  const config = {draft_api: {url:'https://staging.invalid/drafts', nonce:'qa-nonce'}};
+  const config = {draft_api: {url:'https://staging.invalid/drafts', nonce:'qa-nonce', rest_nonce:options.restNonce}};
   const context = {
     root, config,
     q(selector) {
@@ -42,6 +45,15 @@ function createHarness(options = {}) {
     ownerToken: options.ownerToken === undefined ? 'local-test-token' : options.ownerToken,
     editRevision: options.editRevision ?? 1,
     savedRevision: options.savedRevision ?? 1,
+    cartPending: false,
+    CustomEvent: class { constructor(name, options) { this.detail=options.detail; } },
+    cartQuantityIssue: () => options.emptyQuantity
+      ? {input:field,message:'Isi jumlah kaos pada minimal satu ukuran untuk lanjut.'} : null,
+    designReady() {
+      return !!context.savedId && !!context.ownerToken
+        && context.editRevision === context.savedRevision && !options.pendingImage;
+    },
+    saveDraft:async()=>{context.savedRevision=context.editRevision;return !options.pendingImage;},
     fetch(url, request) {
       requests.push({url, request});
       if (options.onFetch) return options.onFetch();
@@ -59,7 +71,8 @@ function createHarness(options = {}) {
   vm.runInNewContext(block, context, {timeout:1000});
   assert.equal(typeof listener, 'function', 'Cart handler missing');
   return {
-    oldButton, visibleButton, status, requests,
+    oldButton, visibleButton, status, requests, field,
+    panel() { return panel; },
     redirect() { return redirectedTo; },
     click(node = visibleButton) {
       return listener({target: {closest: () => node}});
@@ -81,6 +94,14 @@ function createHarness(options = {}) {
   assert.equal(replaced.oldButton.disabled, false);
   pass();
 
+  assert.equal(replaced.requests[0].request.headers['X-WP-Nonce'],undefined,'Legacy guest configuration remains supported');
+  const signedIn=createHarness({restNonce:'signed-in-rest-nonce'});
+  await signedIn.click();
+  assert.equal(signedIn.requests[0].request.headers['X-WP-Nonce'],'signed-in-rest-nonce');
+  assert.equal(signedIn.requests[0].request.headers['X-Sanro-Draft-Nonce'],'qa-nonce');
+  assert.equal(signedIn.requests[0].request.headers['X-Sanro-Owner-Token'],'local-test-token');
+  pass();
+
   const unrelated = createHarness();
   await unrelated.click(null);
   assert.equal(unrelated.requests.length, 0, 'Unrelated click posted to Cart');
@@ -89,13 +110,21 @@ function createHarness(options = {}) {
   const unsaved = createHarness({savedId:null});
   await unsaved.click();
   assert.equal(unsaved.requests.length, 0, 'Unsaved design posted to Cart');
-  assert.match(unsaved.status.textContent, /Draft belum tersedia/);
+  assert.match(unsaved.status.textContent, /Tambahkan desain/);
   pass();
 
   const dirty = createHarness({editRevision:2, savedRevision:1});
   await dirty.click();
-  assert.equal(dirty.requests.length, 0, 'Unsaved changes posted to Cart');
-  assert.match(dirty.status.textContent, /Simpan ulang/);
+  assert.equal(dirty.requests.length, 1, 'Dirty design is saved before Cart');
+  assert.match(dirty.status.textContent, /Desain masuk keranjang/);
+  pass();
+
+  const empty = createHarness({emptyQuantity:true});
+  await empty.click();
+  assert.equal(empty.requests.length,0);
+  assert.match(empty.status.textContent,/Isi jumlah kaos/);
+  assert.equal(empty.panel(),'product');
+  assert.ok(empty.field.focused && empty.field.scrolled);
   pass();
 
   const saving = createHarness({saving:true});
@@ -108,12 +137,18 @@ function createHarness(options = {}) {
   assert.equal(uploading.requests.length, 0, 'Cart submitted while master upload pending');
   pass();
 
+  const unbound = createHarness({pendingImage:true});
+  await unbound.click();
+  assert.equal(unbound.requests.length, 0, 'Unbound image unexpectedly reached Cart');
+  assert.match(unbound.status.textContent,/Desain belum siap/);
+  pass();
+
   const rejected = createHarness({onFetch:async()=>({
     ok:false, status:409, json:async()=>({valid:false})
   })});
   await rejected.click();
   assert.equal(rejected.requests.length, 1);
-  assert.match(rejected.status.textContent, /Keranjang belum siap \(409\)/);
+  assert.equal(rejected.status.textContent,'Keranjang belum bisa dibuka. Coba lagi.');
   assert.equal(rejected.visibleButton.disabled, false, 'Button left disabled after failure');
   assert.equal(rejected.redirect(), null, 'Rejected Cart unexpectedly redirected');
   pass();

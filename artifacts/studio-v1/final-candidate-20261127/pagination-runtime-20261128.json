@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "date_wib": "2026-11-28",
+  "source": "7aa6eb23d226272bc8a523b28854ccbed64ae497",
+  "installed_tree_digest": "04489eaa179a2c2cbe09d5f9fda5a91b712c8765d1503d48fb35e4f91c030dab",
+  "previous_checkpoint": "f3b5ec503221b91cebaf16612400b01254c689c0",
+  "staging_only": true,
+  "pagination": {
+    "status": "PASS",
+    "published_before": [
+      76,
+      53,
+      24
+    ],
+    "fixtures": [
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      128,
+      129,
+      130,
+      131,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      153,
+      154,
+      155
+    ],
+    "native_type": "simple",
+    "native_import_updates": 46,
+    "published_during": 49,
+    "page1": {
+      "visible_studio_product_ids": [
+        53
+      ],
+      "next": [
+        "2"
+      ]
+    },
+    "page2": {
+      "visible_studio_product_ids": [
+        24
+      ],
+      "previous": [
+        "1"
+      ],
+      "current": "2"
+    },
+    "fixtures_final_status": "draft",
+    "published_after": [
+      76,
+      53,
+      24
+    ]
+  },
+  "hpos": {
+    "new_synthetic_order_authorized": 1,
+    "created": 0,
+    "write": "BLOCKED_TRANSPORT_DISPATCH_DISABLED",
+    "reason": "Installed transport disables old order and production actions; legacy evidence is pinned to fixture #56. Classic guard cannot prove a new HPOS write."
+  },
+  "baseline_percent": 96.6,
+  "final_release": false
+}

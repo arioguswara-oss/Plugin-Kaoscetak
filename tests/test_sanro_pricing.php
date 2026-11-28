@@ -13,7 +13,7 @@ foreach ($table as $size => $prices) {
     foreach ($cats as $i => $cat) {
         ss_price_expect($prices[$i], sanro_studio_24s_unit_price($size, $cat, null)['unit_price'], 'front ' . $size . ' ' . $cat);
         ss_price_expect($prices[$i], sanro_studio_24s_unit_price($size, null, $cat)['unit_price'], 'back ' . $size . ' ' . $cat);
-        ss_price_expect($prices[$i] + 10000, sanro_studio_24s_unit_price($size, $cat, null, true)['unit_price'], 'long sleeve ' . $size . ' ' . $cat);
+        ss_price_expect($prices[$i], sanro_studio_24s_unit_price($size, $cat, null, true)['unit_price'], 'long sleeve ' . $size . ' ' . $cat);
     }
 }
 $extras = [15000, 25000, 35000, 40000];

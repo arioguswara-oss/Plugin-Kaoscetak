@@ -10,7 +10,7 @@ for(let i=0;i<sizes.length;i++){
  for(let j=0;j<cats.length;j++){
   assert.equal(price.unit(sizes[i],cats[j],null),table[i][j]);checks++;
   assert.equal(price.unit(sizes[i],null,cats[j]),table[i][j]);checks++;
-  assert.equal(price.unit(sizes[i],cats[j],null,true),table[i][j]+10000);checks++;
+  assert.equal(price.unit(sizes[i],cats[j],null,true),table[i][j]);checks++;
   for(let k=0;k<cats.length;k++){
    const expected=table[i][Math.max(j,k)]+extras[Math.min(j,k)];
    assert.equal(price.unit(sizes[i],cats[j],cats[k]),expected);checks++;
@@ -28,4 +28,13 @@ for(const result of [
  price.estimate({S:999,M:999,L:999,XL:999,'2XL':999,'3XL':6},'A5',null),
 ]){assert.equal(result,null);checks++;}
 assert.equal(price.estimate({S:999,M:999,L:999,XL:999,'2XL':999,'3XL':5},'A5',null).pieces,5000);checks++;
+const area={width:32,height:48};
+const limits={A5:[14.8,21],A4:[21,29.7],A3:[29.7,42],'A3+':[32,48]};
+const object={x:2,y:12,width:18,height:6};
+assert.equal(price.printSize([object],area,limits).category,'A4');checks++;
+assert.equal(price.printSize([{...object,rotation:45}],area,limits).category,'A4');checks++;
+assert.equal(price.printSize([{...object,rotation:90}],area,limits).category,'A5');checks++;
+assert.equal(price.printSize([{...object,rotation:90,y:0}],area,limits).error,'outside_safe_area');checks++;
+assert.equal(price.printSize([],area,limits).category,null);checks++;
+assert.equal(price.unit('S','A4','A5',false,{sizes:['S'],table:{S:table[0]},second_side:[12500,25000,35000,40000]}),84500);checks++;
 console.log('SANRO estimator: '+checks+' assertions PASS, 0 FAIL');

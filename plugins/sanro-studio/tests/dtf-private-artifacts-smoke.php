@@ -35,6 +35,7 @@ function candidate136($side) {
         . substr($png, 33);
     return [
         'valid' => true, 'skipped' => false,
+        'source_fingerprint'=>sanro_studio_artifact_source_fingerprint($GLOBALS['record133'],100,71,'123e4567-e89b-42d3-a456-123456789012',$side),
         'kind' => 'layered_dtf_raster_candidate',
         'quality_approved' => false, 'font_parity_approved' => false,
         'order_id' => 100, 'item_id' => 71,
@@ -68,6 +69,9 @@ check136(($verified['private'] ?? false) === true
     && ($verified['quality_approved'] ?? null) === false
     && ($verified['font_parity_approved'] ?? null) === false,
     'stored candidate never claims production approval');
+$handoff=sanro_studio_dtf_private_candidate_source($order,71,'front');
+check136(!empty($handoff['valid']) && $handoff['bytes']===$front['bytes'] && $handoff['sha256']===$front['sha256'], 'internal handoff preserves verified 300-DPI PNG bytes');
+check136(!isset($handoff['path']) && !isset($handoff['url']), 'internal handoff never returns a private path');
 $repeated = sanro_studio_dtf_commit_private_candidate($order, 71, 'front', $front);
 check136(!empty($repeated['valid']) && ($repeated['idempotent'] ?? null) === true,
     'repeated matching writes are idempotent');
@@ -162,4 +166,5 @@ check136(sanro_studio_dtf_commit_private_candidate($order, 71, 'front', $front)[
     === 'artifact_integrity_failed', 'tampered existing artwork never silently overwritten');
 check136(!isset(sanro_studio_dtf_verify_private_artifact($order,71,'front')['path']),
     'verification never exposes filesystem paths');
+check136(empty(sanro_studio_dtf_private_candidate_source($order,71,'front')['valid']), 'corrupt candidate cannot reach Drive handoff');
 echo "PASS: {$checks136} SANRO order-bound private DTF artifact checks\n";

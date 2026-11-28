@@ -2,6 +2,7 @@
 // Offline bootstrap contract: no WordPress installation or database needed.
 define('ABSPATH', __DIR__ . '/');
 $GLOBALS['hooks'] = array();
+function add_filter($hook,$callback,$priority=10,$args=1){$GLOBALS['hooks'][$hook][]=$callback;}
 function add_action($hook, $callback) { $GLOBALS['hooks'][$hook][] = $callback; }
 $GLOBALS['allow_admin'] = true;
 function current_user_can($cap) { return $cap === 'manage_woocommerce' && $GLOBALS['allow_admin']; }
@@ -20,17 +21,17 @@ check(in_array('sanro_studio_bootstrap_admin_menu', $GLOBALS['hooks']['admin_men
 check(in_array('sanro_studio_admin_menu', $GLOBALS['hooks']['admin_menu'] ?? array(), true), 'native settings admin hook');
 sanro_studio_bootstrap_admin_menu();
 check($GLOBALS['menu']['cap'] === 'manage_woocommerce', 'admin capability');
-check($GLOBALS['menu']['parent'] === 'woocommerce', 'WooCommerce menu');
+check($GLOBALS['menu']['parent'] === 'sanro-studio', 'status belongs to the independent Studio root');
 $status = sanro_studio_bootstrap_status();
-check(count($status) === 5, 'five status fields');
+check(count($status) === 7, 'inventory plus gate/source fields');
 foreach (array('editor', 'cart', 'checkout', 'production') as $key) {
-    check($status[$key] === 'not_integrated', 'no premature feature activation: ' . $key);
+    check($status[$key] === 'module_loaded; E2E_not_verified', 'loaded module is not E2E proof: ' . $key);
 }
 ob_start();
 sanro_studio_bootstrap_admin_page();
 $html = ob_get_clean();
-check(strpos($html, 'does not enable buyer editing') !== false, 'explicit inactive state');
-check(strpos($html, 'not_integrated') !== false, 'read-only status rendered');
+check(strpos($html, 'Feature flags and runtime verification are separate') !== false, 'explicit inactive state');
+check(strpos($html, 'E2E_not_verified') !== false, 'read-only status rendered');
 $GLOBALS['allow_admin'] = false;
 $denied = false;
 try {
@@ -39,4 +40,6 @@ try {
     $denied = strpos($e->getMessage(), 'Insufficient permissions') !== false;
 }
 check($denied, 'non-admin cannot access status page');
-echo "PASS: SANRO Studio isolated admin bootstrap contract\n";
+check(!defined('SANRO_STUDIO_ENABLE_STORAGE_GC') && sanro_studio_storage_gc()['error']==='storage_gc_disabled', 'new GC writer defaults OFF');
+
+echo "PASS: SANRO Studio isolated admin bootstrap contract, including GC default OFF\n";

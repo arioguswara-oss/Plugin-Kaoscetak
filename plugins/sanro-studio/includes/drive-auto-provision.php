@@ -1,12 +1,16 @@
 <?php
 defined('ABSPATH') || exit;
+require_once __DIR__.'/worker-lease.php';
+require_once __DIR__.'/drive-jobs.php';
+require_once __DIR__.'/drive-order-layout.php';
 
 /**
  * Server-side, opt-in Drive provisioning. Never runs from a buyer endpoint.
  * Requires an existing trusted OAuth filter; does not implement OAuth itself.
  */
 function sanro_studio_auto_drive_enabled() {
-    return defined('SANRO_STUDIO_ENABLE_DRIVE_AUTO_PROVISION')
+    return (!function_exists('sanro_studio_drive_oauth_auto_allowed')||sanro_studio_drive_oauth_auto_allowed())
+        && defined('SANRO_STUDIO_ENABLE_DRIVE_AUTO_PROVISION')
         && SANRO_STUDIO_ENABLE_DRIVE_AUTO_PROVISION === true
         && defined('SANRO_STUDIO_ENABLE_VERIFIED_DRIVE_ATTACHMENT')
         && SANRO_STUDIO_ENABLE_VERIFIED_DRIVE_ATTACHMENT === true
@@ -44,7 +48,7 @@ function sanro_studio_schedule_drive_production($order_id) {
 }
 
 /** Only server cron / WooCommerce Action Scheduler calls this registered action. */
-function sanro_studio_run_drive_production($order_id) {
+function sanro_studio_perform_drive_production($order_id,&$job_lease=null) {
     if (!sanro_studio_auto_drive_enabled() || !is_numeric($order_id)
         || (int) $order_id < 1 || !function_exists('wc_get_order')) {
         return ['valid' => false, 'error' => 'drive_auto_disabled'];
@@ -73,15 +77,34 @@ function sanro_studio_run_drive_production($order_id) {
         $targets[] = $item_id;
     }
     if (!$targets) return ['valid' => false, 'error' => 'no_studio_designs'];
+    // Validate every guide/preview/locked allocation before the first remote
+    // folder is created. This new package path is independently default OFF.
+    if (function_exists('sanro_studio_drive_package_enabled') && sanro_studio_drive_package_enabled()) {
+        foreach ($targets as $item_id) {
+            if($job_lease!==null&&!sanro_studio_lease_refresh($job_lease))return ['valid'=>false,'error'=>'drive_lease_lost'];
+            $package=sanro_studio_prepare_production_package($order,$item_id);
+            if (empty($package['valid'])) return ['valid'=>false,'error'=>$package['error']??'production_package_invalid'];
+            $ready=sanro_studio_package_export_preflight($package);if(empty($ready['valid']))return $ready;
+            if(defined('SANRO_STUDIO_ENABLE_DRIVE_DTF_CANDIDATES')&&SANRO_STUDIO_ENABLE_DRIVE_DTF_CANDIDATES===true){
+                $dtf=sanro_studio_dtf_preflight_order_item_candidates($order,$item_id);
+                if(empty($dtf['valid']))return ['valid'=>false,'error'=>'dtf_package_preflight_failed'];
+            }
+        }
+    }
     $created = 0; $reused = 0;
     $masters_exported = 0; $masters_reused = 0; $masters_skipped = 0;
     foreach ($targets as $item_id) {
+        if($job_lease!==null&&!sanro_studio_lease_refresh($job_lease))return ['valid'=>false,'error'=>'drive_lease_lost'];
         $result = sanro_studio_auto_drive_provision_item($order, $item_id);
         if (empty($result['valid'])) return ['valid' => false,
             'error' => $result['error'] ?? 'drive_provision_failed',
             'created' => $created, 'reused' => $reused];
         if (!empty($result['created'])) $created++;
         else $reused++;
+        if (function_exists('sanro_studio_drive_package_enabled') && sanro_studio_drive_package_enabled()) {
+            $package=sanro_studio_export_production_package($order,$item_id,$result['folder_id'],$job_lease);
+            if (empty($package['valid'])) return ['valid'=>false,'error'=>$package['error']??'production_package_failed','created'=>$created,'reused'=>$reused];
+        }
         // A folder being ready does NOT mean that a final DTF composition is
         // ready. Export only explicitly bound, locked ORIGINAL image assets.
         if (function_exists('sanro_studio_drive_master_export_enabled')
@@ -133,7 +156,7 @@ function sanro_studio_auto_drive_provision_item($order, $item_id) {
     $lock = 'sanro_drive_lock_' . md5(home_url('/') . ':' . (int) $order->get_id() . ':' . $item_id);
     // An abandoned lock must be inspected manually; never risk double-create
     // by automatically stealing a possibly active lock.
-    if (!add_option($lock, (string) time(), '', false)) {
+    if (!($lease=sanro_studio_lease_acquire($lock))) {
         return ['valid' => false, 'error' => 'drive_provision_locked'];
     }
     try {
@@ -150,7 +173,9 @@ function sanro_studio_auto_drive_provision_item($order, $item_id) {
             || !preg_match('/^[A-Za-z0-9._~+\/-]+$/D', $token)) {
             return ['valid' => false, 'error' => 'drive_not_connected'];
         }
-        $parent = SANRO_STUDIO_DRIVE_PARENT_FOLDER_ID;
+        $layout=sanro_studio_drive_ensure_order_layout($order);
+        if(empty($layout['valid']))return $layout;
+        $parent=$layout['production_folder_id'];
         $site = hash('sha256', rtrim(home_url('/'), '/'));
         $props = ['sanroSite' => $site, 'sanroOrderId' => (string) $order->get_id(),
             'sanroItemId' => (string) $item_id];
@@ -178,6 +203,7 @@ function sanro_studio_auto_drive_provision_item($order, $item_id) {
             $payload = ['name' => 'SANRO-' . (int) $order->get_id() . '-ITEM-' . $item_id,
                 'mimeType' => 'application/vnd.google-apps.folder',
                 'parents' => [$parent], 'appProperties' => $props];
+            if(!sanro_studio_lease_refresh($lease))return ['valid'=>false,'error'=>'drive_lease_lost'];
             $response = wp_remote_post('https://www.googleapis.com/drive/v3/files?fields=id', [
                 'timeout' => 15, 'redirection' => 0, 'limit_response_size' => 8192,
                 'headers' => $headers + ['Content-Type' => 'application/json'],
@@ -203,10 +229,11 @@ function sanro_studio_auto_drive_provision_item($order, $item_id) {
         if ($item->get_meta('_sanro_studio_drive_folder_id', true) !== '') {
             return ['valid' => false, 'error' => 'folder_conflict'];
         }
+        if(!sanro_studio_lease_refresh($lease))return ['valid'=>false,'error'=>'drive_lease_lost'];
         $item->update_meta_data('_sanro_studio_drive_folder_id', $folder_id);
         if ($item->save() === false) return ['valid' => false, 'error' => 'folder_save_failed'];
         return ['valid' => true, 'created' => $created, 'folder_id' => $folder_id];
     } finally {
-        delete_option($lock);
+        sanro_studio_lease_release($lease);
     }
 }

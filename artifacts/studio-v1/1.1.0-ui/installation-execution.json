@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "date": "2026-11-24",
+  "repository": "arioguswara-oss/Plugin-Kaoscetak",
+  "pr": 52,
+  "checkpoint": "2614b259608a3e9f9308aaa667d4f3ec705e4b21",
+  "target": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "environment": "staging",
+  "candidate": {
+    "version": "1.1.0",
+    "source_commit": "12b2c043cc6ccbb3e7c828949bf524ff6f2e84b1",
+    "archive_sha256": "991f53c93ad6ae7c8c73bad1af4bd1b5406beac93ca7c64d6b0365a289e7896b",
+    "manifest_sha256": "a822f0312b8183b98ac37e35c2189e12149e6d55a4e7a5b9bf7950fd15a91d0f",
+    "manifest_plugin_digest": "c0c39e024c0d2165ed600d2296901d5f9c9d83ab5f9864b9b84334c9162aa89f",
+    "installed_tree_digest": "0c7900e3b5779b19897ad8f1443f4e0bee8fd0b377ffa35f27bb993b68116301"
+  },
+  "existing_release_verification": {
+    "version": "1.0.0",
+    "source_commit": "4f5d31ee2a1244674a8a7111cd43f3e695bbf218",
+    "approved_manifest_sha256": "556ecd490dcad05a67c55b34e02d04bba6b3e1e25a517f073196f94649b242cd",
+    "archive_sha256": "c1a9d56a8e11a000cde9eb215595ec257a5f3cb70098dbb2cce6fd43775fbcce",
+    "manifest_derived_tree_digest": "c3524d76a6992179716946b9c353e98d9baad11e13feb8bfa24d387fe383db61",
+    "fresh_staging_tree_digest": "c3524d76a6992179716946b9c353e98d9baad11e13feb8bfa24d387fe383db61",
+    "match": true
+  },
+  "transport": {
+    "installer_source_commit": "faa1323f31230fc10ff50d54784ab1cbc051447a",
+    "archive_sha256": "a4a441b60d2b3d376cbe71e336d0359f7ddda26bb37feae9c76954842b5262da",
+    "reproducible_builds": 2,
+    "legacy_exact_target_lock_preserved": true,
+    "durable_journal_and_rollback_preserved": true,
+    "member_hash_and_php_parse_validation_preserved": true,
+    "read_diagnostic_non_mutating": true,
+    "https_rest_post_capability_nonce_and_source_pinned": true
+  },
+  "pre_install_gate": {
+    "result": "PASS",
+    "ssh_identity": "PASS",
+    "site_and_docroot": "PASS",
+    "web_php": "8.3.37",
+    "web_sapi": "litespeed",
+    "existing_tree_digest": "c3524d76a6992179716946b9c353e98d9baad11e13feb8bfa24d387fe383db61",
+    "prior_journal_and_retained_backup": "PASS",
+    "private_storage": "PASS",
+    "writer_flags": "ALL OFF",
+    "woocommerce_active": true,
+    "studio_active": true
+  },
+  "installation": {
+    "state": "committed",
+    "installed_tree_digest": "0c7900e3b5779b19897ad8f1443f4e0bee8fd0b377ffa35f27bb993b68116301",
+    "matches_candidate_manifest": true,
+    "rollback_retained": true,
+    "activation_changed": false,
+    "flags_changed": false,
+    "order_writes": false
+  },
+  "post_install": {
+    "web_php": "8.3.37",
+    "web_sapi": "litespeed",
+    "gate": "PASS",
+    "installed": true,
+    "plugin_version": "1.1.0",
+    "plugin_status": "active",
+    "runtime_readiness_https": "HTTP 200; source matches candidate; product 24 editor configuration valid",
+    "buyer_css": "HTTP 200; SHA256 matches manifest",
+    "buyer_js": "HTTP 200; SHA256 matches manifest",
+    "writer_flags": "ALL OFF",
+    "private_storage": "PASS"
+  },
+  "temporary_cleanup": {
+    "release_transport": "deactivated; original 0.3.3 utility restored inactive",
+    "temporary_application_password": "revoked",
+    "temporary_auth_files": "removed"
+  },
+  "visual_acceptance": "OWNER ACTION PENDING",
+  "production_accessed": false,
+  "merged": false,
+  "checkout_or_order_mutation": false,
+  "dtf_or_drive_operation": false,
+  "final_release": false
+}

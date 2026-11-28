@@ -1,0 +1,58 @@
+{
+  "source": "7217663cbf3626298274ececf3c9e73a0996a4bc",
+  "version": "1.1.0",
+  "branch_head_at_install": "f1cf0cf2847e38b8b947000a636b1b8553aa38a4",
+  "staging": "https://saddlebrown-peafowl-616656.hostingersite.com",
+  "prior_source": "ef8df0da9eb1e88641659dc79da8431e9e1157cd",
+  "pre_install_https": "PASS",
+  "post_install_https": "PASS",
+  "prior_tree_digest": "37bfc7cc5bd83ebb64dd2b69767db2e3ce416c705c81e7ba1895b5df746ee660",
+  "installed_tree_digest": "1ed56bf80b26469974272d1ef2c6c08cda885669000081e88c124a9af6658444",
+  "archive_sha256": "ccc7a5c448cae3eb81c75dad89f22b61d256be3be7dd24b99932f15bd56eec9d",
+  "manifest_sha256": "a5f73718ffe6d03ca768d7801431d711cb5f17dabdf420d9939e3154f41a00b8",
+  "transport_sha256": "097b8ea0ecf16aee5ed2060e69fb0b8c84af0ab9b0db78f7c704083abeab878c",
+  "php": "8.3.37",
+  "sapi": "litespeed",
+  "private_roots": "PASS",
+  "journal": "committed",
+  "rollback_retained": true,
+  "dtf_enabled": false,
+  "drive_enabled": false,
+  "storage_gc_enabled": false,
+  "staging_checkout_hook_enabled": false,
+  "installer_active_after_verification": false,
+  "desktop_guest": {
+    "css_width": 1363,
+    "product_id": 53,
+    "design_id": "ID-00106",
+    "one_click_save_at_zero_quantity": "PASS",
+    "reopen_with_preview": "PASS",
+    "zero_quantity_focus": "S",
+    "resize_width_percent": [
+      60,
+      76
+    ],
+    "rotation_and_drag": "PASS",
+    "color": "Biru",
+    "front_back_color_sync_and_geometry_preserved": "PASS",
+    "cart_sizes": {
+      "S": 1,
+      "5XL": 1
+    },
+    "cart_thumbnail": "PASS",
+    "total_idr": 187000,
+    "cart_cleanup": "PASS"
+  },
+  "local_emulated_widths": [
+    320,
+    390,
+    430,
+    1280
+  ],
+  "live_exact_mobile": "NOT TESTED",
+  "owner_physical_android": "PENDING",
+  "orders_created": 0,
+  "payments_created": 0,
+  "baseline_before": 96.5,
+  "baseline_after": 96.5
+}

@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "date_wib": "2026-11-28",
+  "reviewed_head": "0af2e43e80140b1f55ebb16c30f917a2a4175d77",
+  "studio_version": "1.1.0",
+  "studio_source_checkpoint": "7aa6eb23d226272bc8a523b28854ccbed64ae497",
+  "archive_sha256": "1f4f84e34ce8d57221c023380e7a255a18682e6bf12668420117148647648969",
+  "archive_crc_and_manifest_payloads": "PASS",
+  "archive_entries": 3,
+  "offline_contract": "REUSED_15_OF_15_PASS",
+  "source_review": "STATIC_STRING_CONTRACT_ONLY",
+  "live": {
+    "buyer_switch_back_and_collection_navigation": "PASS_AUTHENTICATED_BROWSER",
+    "hpos_authoritative": true,
+    "hpos_compat_sync": false,
+    "woocommerce_webhooks": "EMPTY_UI",
+    "egress_controls_verified": false,
+    "studio_and_woo_active": true,
+    "qa_transports_inactive": true,
+    "existing_release_post_policy": "403_PRESERVED_NOT_INVOKED",
+    "exact_live_mobile": "OPEN"
+  },
+  "local_layout": {
+    "source": "exact candidate ZIP SHA256 8ed2ffc94f524231123e242dbc7c9d0add7d8ae723715f6ef6dae374bc7e22bb",
+    "fixture": "PHP-rendered buyer editor, external network requests blocked",
+    "widths_css_px": [
+      320,
+      390,
+      430,
+      1280
+    ],
+    "horizontal_overflow": false,
+    "within_width": [
+      "preview",
+      "save",
+      "cart",
+      "bottom_navigation"
+    ]
+  },
+  "disposable": {
+    "wordpress_connector_stage_list": "INVALID_ARGUMENT_FOR_CURRENT_HOST",
+    "official_hostinger_path": "hPanel > Websites > Manage > WordPress > Staging",
+    "official_reference": "https://www.hostinger.com/id/support/5720286-cara-membuat-wordpress-staging-environment-di-hostinger/",
+    "ready_target_verified": false,
+    "approval_needed": "isolated disposable environment, synthetic data, verified outbound containment and fixture retention/cleanup"
+  },
+  "writes": {
+    "checkout_posts": 0,
+    "orders": 0,
+    "payment_attempts": 0,
+    "config": 0,
+    "plugin": 0
+  },
+  "baseline_percent": 96.6,
+  "final_release": false
+}

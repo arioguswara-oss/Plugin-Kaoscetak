@@ -4,10 +4,12 @@ $GLOBALS['status'] = 'publish';
 $GLOBALS['profile'] = 'cotton_combed_24s';
 $GLOBALS['purchasable'] = true;
 $GLOBALS['areas'] = ['front'=>['width'=>32.0,'height'=>48.0],'back'=>['width'=>32.0,'height'=>48.0]];
+$GLOBALS['catalog_status'] = '';
 function absint($v) { return abs((int)$v); }
 function get_post_meta($id,$key,$single) {
     if ($key === '_sanro_studio_pricing_profile') return $GLOBALS['profile'];
     if ($key === '_sanro_studio_safe_areas') return $GLOBALS['areas'];
+    if ($key === '_sanro_studio_catalog_status') return $GLOBALS['catalog_status'];
     return null;
 }
 class SanroEditorProduct {
@@ -17,6 +19,7 @@ class SanroEditorProduct {
 function wc_get_product($id) { return $id===17 ? new SanroEditorProduct() : false; }
 require __DIR__.'/../plugins/sanro-studio/includes/print-area.php';
 require __DIR__.'/../plugins/sanro-studio/includes/product-area.php';
+require __DIR__.'/../plugins/sanro-studio/includes/catalog-lifecycle.php';
 require __DIR__.'/../plugins/sanro-studio/includes/editor-config.php';
 $checks=0;
 function verify_editor($expected,$actual,$label) {
@@ -25,6 +28,14 @@ function verify_editor($expected,$actual,$label) {
     $checks++;
 }
 verify_editor(true,sanro_studio_public_editor_config(17)['valid'],'published product');
+verify_editor(true,sanro_studio_catalog_is_buyer_visible(17),'legacy product remains visible by compatibility default');
+$GLOBALS['catalog_status']='disabled';
+verify_editor(false,sanro_studio_public_editor_config(17)['valid'],'disabled Studio listing hidden from buyer');
+verify_editor(true,sanro_studio_public_editor_config(17,true)['valid'],'disabled listing remains configurable in admin');
+$GLOBALS['catalog_status']='archived';
+verify_editor(false,sanro_studio_public_editor_config(17)['valid'],'archived Studio listing hidden from buyer');
+verify_editor(true,sanro_studio_public_editor_config(17,true)['valid'],'archived listing configuration remains readable');
+$GLOBALS['catalog_status']='';
 verify_editor(32.0,sanro_studio_public_editor_config(17)['safe_areas']['front']['width'],'admin geometry');
 verify_editor('cm',sanro_studio_public_editor_config(17)['unit'],'cm units');
 verify_editor(false,isset(sanro_studio_public_editor_config(17)['owner_token']),'no owner token');
@@ -83,4 +94,15 @@ $available_response = sanro_studio_rest_editor_config(new SanroConfigTestRequest
 verify_editor(true, $available_response['valid'], 'REST configured product valid');
 verify_editor(17, $available_response['product_id'], 'REST product ID');
 verify_editor(false, isset($available_response['owner_token']), 'REST response hides owner token');
+$GLOBALS['catalog_status'] = 'unmapped';
+verify_editor(false,sanro_studio_public_editor_config(17)['valid'],'new explicitly unmapped product cannot be purchased despite complete config');
+verify_editor(true,sanro_studio_public_editor_config(17,true)['valid'],'unmapped product config remains editable');
+$GLOBALS['catalog_status'] = '';
+$GLOBALS['profile'] = '';
+verify_editor(false,sanro_studio_catalog_is_mapped(17),'default native fields without pricing are not a legacy mapping');
+verify_editor('unmapped',sanro_studio_catalog_status(17),'incomplete native product is unmapped');
+verify_editor(false,sanro_studio_public_editor_config(17)['valid'],'incomplete native product is buyer-invisible');
+$GLOBALS['profile'] = 'cotton_combed_24s';
+verify_editor(true,sanro_studio_catalog_is_mapped(17),'real validator recognizes complete legacy product');
+verify_editor(true,sanro_studio_public_editor_config(17)['valid'],'complete legacy product remains buyer-visible');
 echo "SANRO editor REST config: {$checks} assertions PASS, 0 FAIL\n";

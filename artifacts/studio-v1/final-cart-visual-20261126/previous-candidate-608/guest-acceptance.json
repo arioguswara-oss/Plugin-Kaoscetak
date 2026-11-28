@@ -1,0 +1,37 @@
+{
+  "fresh_guest": true,
+  "viewport": "390x844",
+  "designs": [
+    {
+      "design_id": "8be5b561-d8ad-454d-846f-fe739bef6574",
+      "quote": "Harga server draft tersimpan: Rp 65.000 untuk 1 pcs. M: 1 × Rp 65.000 = Rp 65.000. Repeat 5% memerlukan email checkout yang cocok dan riwayat berbayar. Harga terverifikasi; lanjutkan melalui keranjang."
+    },
+    {
+      "design_id": "27d7f3ab-3882-4382-a054-62e41678cf87",
+      "quote": "Harga server draft tersimpan: Rp 127.000 untuk 2 pcs. S: 1 × Rp 62.000 = Rp 62.000 · M: 1 × Rp 65.000 = Rp 65.000. Repeat 5% memerlukan email checkout yang cocok dan riwayat berbayar. Harga terverifikasi; lanjutkan melalui keranjang."
+    }
+  ],
+  "cart": {
+    "design_groups": 2,
+    "edit_links": 2,
+    "native_size_rows": 3,
+    "loaded_private_artwork_previews": 3,
+    "subtotal": "Rp192.000",
+    "continue_shopping": true,
+    "mini_cart_widget_present": false,
+    "cart_link": "https://saddlebrown-peafowl-616656.hostingersite.com/cart/"
+  },
+  "checkout": {
+    "guest_form": true,
+    "design_groups": 2,
+    "loaded_private_artwork_previews": 5,
+    "subtotal": "Subtotal\tRp192.000",
+    "total": "Total\tRp192.000",
+    "price_matches_cart": true,
+    "place_order_clicked": false
+  },
+  "private_preview_without_matching_session_http": 404,
+  "cart_badge": "3",
+  "orders_created": 0,
+  "payments": 0
+}
