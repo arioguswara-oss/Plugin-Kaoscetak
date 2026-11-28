@@ -383,5 +383,28 @@
     "atomic_lock_runtime": "ISOLATED_DATABASE_CAS_PASS_ROLLBACK_VERIFIED",
     "pagination_runtime_evidence": "artifacts/studio-v1/final-candidate-20261127/pagination-runtime-20261128.json",
     "hpos_order_write": "AUTHORIZED_TRANSPORT_DISPATCH_DISABLED"
+  },
+  "staging_qa_harness_v1": {
+    "reviewed_source_head": "24817098889853a2bf0c1295a0d65e21fb66f2b0",
+    "installed_studio_source": "7aa6eb23d226272bc8a523b28854ccbed64ae497",
+    "version": "1.1.0",
+    "artifact_directory": "artifacts/studio-v1/staging-qa-harness-v1-20261128",
+    "archive": "sanro-studio-staging-qa-harness-v1.zip",
+    "archive_sha256": "1f4f84e34ce8d57221c023380e7a255a18682e6bf12668420117148647648969",
+    "manifest_sha256": "58a7d08da6afef7aa943f415c04399c51f6bf99599fed416c41910fadcda17ed",
+    "checker": "tests/staging-qa-harness-contract.php",
+    "contract_checks": "PASS_15_OF_15_OFFLINE_SOURCE_ASSERTIONS",
+    "reused_regressions": "50_TARGETED_CHECKS_AND_POSITIVE_PAGINATION_PASS_REUSED",
+    "order56_preview_pdf": "PASS_EXISTING_READBACK_EVIDENCE_REUSED",
+    "hpos_studio_checkout_write": "BLOCKED_CURRENT_TRANSPORT_403",
+    "classic_mixed_submit": "NOT_TESTED_LIVE",
+    "store_api_submit": "NOT_TESTED_LIVE",
+    "duplicate_browser_submit": "NOT_TESTED_LIVE_ISOLATED_CAS_PREVIOUSLY_PASS",
+    "frozen_configuration_runtime": "NOT_TESTED",
+    "repeat_discount_runtime": "NOT_TESTED",
+    "staging_install_or_execution": "NOT_RUN",
+    "baseline_percent": 96.6,
+    "final_release": false,
+    "report": "docs/qa/studio-staging-qa-harness-v1-20261128.md"
   }
 }
