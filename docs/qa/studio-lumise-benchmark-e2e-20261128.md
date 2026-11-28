@@ -16,3 +16,11 @@ Keranjang uji kembali kosong. Draft sintetis dipertahankan sebagai bukti. Tidak 
 Jalur lanjutan memerlukan persetujuan menyiapkan runner QA terpisah khusus URL staging yang sama dengan kemampuan membatasi satu order synthetic tanpa gateway, memverifikasi pemblokiran email/webhook/fulfillment sebelum write, menjalankan hook checkout Studio/WooCommerce dan melakukan readback HPOS melalui aplikasi. Default 403, plugin Studio, dan tampilan buyer dipertahankan. Runner harus tersedia dan diverifikasi sebelum dispatch. **NO-GO Final Release** hingga uji order baru dan file yang dipakai operator tertutup.
 
 [Bukti runtime](../../artifacts/studio-v1/final-candidate-20261127/lumise-benchmark-e2e-20261128.json)
+
+## Preflight runner setelah persetujuan Owner
+
+Izin untuk satu order sintetis dan runner sementara di staging existing diterima. WordPress Connector mengonfirmasi WooPayments nonaktif, Studio/WooCommerce aktif serta transport staging nonaktif. Hostinger Reach dan Jetpack masih aktif. Daftar webhook native WooCommerce kosong pada bukti admin sebelumnya. Bukti itu belum mencakup seluruh jalur email, webhook, antrean, dan fulfillment yang dapat dijalankan saat order dibuat.
+
+Transport existing tetap menolak aksi order/produksi. Runner PR32 membuktikan jalur CRUD HPOS tanpa produk, sehingga tidak memenuhi uji checkout Studio. Jalur eksekusi terisolasi yang bisa memverifikasi efek keluar dan tetap menjalankan hook native Studio belum tersedia melalui akses saat ini. Tidak ada runner yang dipasang, checkout POST, order, pembayaran, atau perubahan konfigurasi. **Gate HPOS dan produksi BLOCKED. NO-GO Final Release.**
+
+[Bukti preflight](../../artifacts/studio-v1/final-candidate-20261127/order-runner-preflight-20261128.json)
