@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """Build a reproducible, default-OFF Studio staging candidate from a clean Git HEAD. Never deploy."""
 import argparse, hashlib, json, pathlib, re, subprocess, zipfile
-parser=argparse.ArgumentParser();parser.add_argument('--out',required=True);parser.add_argument('--release',action='store_true');args=parser.parse_args()
+parser=argparse.ArgumentParser();parser.add_argument('--out',required=True);parser.add_argument('--release',action='store_true');parser.add_argument('--source-commit',help='Verified upstream Git commit represented by this exact local plugin tree');args=parser.parse_args()
 repo=pathlib.Path(__file__).resolve().parents[1]
 def git(*parts):return subprocess.check_output(['git',*parts],cwd=repo,text=True).strip()
 if git('status','--porcelain'):raise SystemExit('Refused: candidate requires a clean committed tree')
-commit=git('rev-parse','HEAD');root='plugins/sanro-studio/'
+commit=git('rev-parse','HEAD')
+if args.source_commit:
+    if not re.fullmatch(r'[0-9a-f]{40}',args.source_commit):raise SystemExit('Invalid source commit SHA')
+    commit=args.source_commit
+root='plugins/sanro-studio/'
 entries=[];contents={}
 for line in git('ls-tree','-r','HEAD','--',root).splitlines():
     meta,path=line.split('\t',1);mode,kind,blob=meta.split();relative=path[len(root):]

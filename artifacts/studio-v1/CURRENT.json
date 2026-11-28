@@ -410,5 +410,19 @@
     "baseline_percent": 96.6,
     "final_release": false,
     "report": "docs/qa/studio-staging-qa-harness-v1-20261128.md"
+  },
+  "latest_candidate": {
+    "source_commit": "4772561ded172bd1d62bb88867b92646f878091e",
+    "version": "1.1.0",
+    "artifact_directory": "artifacts/studio-v1/lifecycle-fix-20261128",
+    "archive": "sanro-studio-staging-candidate.zip",
+    "archive_sha256": "f34140e754fce2c8915afcead9fbc61be3466b0f026f96f709e0124c9bd6d46a",
+    "manifest": "candidate-manifest.json",
+    "manifest_sha256": "0a837204a8a78a209a84b3f3f705637fb29762087b95724b4124b6778dfd4935",
+    "plugin_digest": "883c11ffc3d900264610eb9a0900083bdfb7d7a32bb29903a6c35c377ca55442",
+    "build": "TWO_IDENTICAL_REPRODUCIBLE_BUILDS; ZIP_INTEGRITY_PASS",
+    "targeted_tests": "PHP_LINT_PASS; STORE_API_GUARD_PASS; PRODUCTION_PACKAGE_FLOW_PASS; ORDER_PREVIEW_PASS; MASTER_BINDING_PASS; BATCH_LOCK_PASS",
+    "runtime": "NOT_TESTED; NOT_INSTALLED",
+    "final_release": false
   }
 }
