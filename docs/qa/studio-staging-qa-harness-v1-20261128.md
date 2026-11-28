@@ -39,3 +39,13 @@ The candidate's exact-host transport UI declares new orders disabled and `admin_
 Do not remove the 403, forge a request, use the Store API as a side door, or run the CLI writer to claim buyer-checkout evidence. ChatGPT Work needs an officially approved disposable staging site/database or an explicit revised staging policy for one synthetic unpaid order, including a verified no-email/no-outbound-webhook arrangement and an order retention/cleanup decision. Until then, write/checkout runtime gates remain open.
 
 No application source, candidate ZIP, staging configuration, order, payment, or production state was changed. Official baseline remains 96.60%.
+
+## Review independen setelah checkpoint 0af2e43
+
+- **Artefak PASS.** SHA-256 cocok dengan `SHA256SUMS`. Arsip memiliki tiga entri dan dua payload cocok dengan manifest. 15/15 dipakai ulang. Checker memakai pola source dan tidak membuktikan execution order hook, konfigurasi mail/webhook, atau lifecycle WooCommerce.
+- **Runtime tanpa checkout POST.** Buyer fixture #53 membuka sisi Belakang dan panel Desain Saya melalui sesi browser yang login. WooCommerce Features menampilkan HPOS sebagai penyimpanan order otoritatif dengan compatibility sync nonaktif. Daftar Webhooks WooCommerce kosong. Status ini belum membuktikan pemblokiran email atau seluruh trafik keluar.
+- **Visual lokal PASS.** HTML editor dirender dari ZIP kandidat `7aa6eb2` dengan fixture, aset paket asli dan blokir trafik luar. Pada 320/390/430/1280 CSS px, preview, Simpan, Keranjang dan navigasi bawah berada dalam viewport tanpa overflow horizontal. Exact mobile live tetap terbuka. Bukti Android Owner dipakai ulang untuk penerimaan konsep.
+- **Jalur disposable.** Dokumentasi Hostinger menyediakan hPanel → Website → Kelola → Staging apabila paket mendukung. Buat staging QA terpisah dari sumber staging yang sudah disetujui dan gunakan data sintetis. WordPress Connector mengembalikan `INVALID_ARGUMENT` pada daftar clone untuk host yang ada. Slot/paket hPanel dan kontrol egress belum diverifikasi. Salinan hanya layak dipakai sesudah URL/DB terpisah, payment nyata nonaktif, email ditangkap lokal dan webhook/fulfillment eksternal terblokir. ZIP harness adalah alat kontrak offline dan tidak perlu dipasang ke WordPress.
+- **NO-GO Final Release.** 403 lama dipertahankan. Checkout POST, order, pembayaran dan perubahan konfigurasi nihil. Pengujian write/mixed/duplicate dan produksi menunggu disposable staging resmi serta keputusan retensi. Baseline tetap 96,60%.
+
+[Bukti review independen](../../artifacts/studio-v1/staging-qa-harness-v1-20261128/independent-review.json)
